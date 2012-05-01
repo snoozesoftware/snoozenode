@@ -1,0 +1,6 @@
+debian/input/init.d/snoozenode /etc/init.d
+debian/input/pm-utils/00snoozenode /etc/pm/sleep.d
+debian/input/snoozenode.jar /usr/share/snoozenode
+debian/input/configs/log4j.xml /usr/share/snoozenode/configs
+debian/input/configs/snooze_node.cfg /usr/share/snoozenode/configs
+debian/input/configs/quartz.properties /usr/share/snoozenode/configs

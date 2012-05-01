@@ -1,0 +1,2 @@
+Need to restart local snooze daemon upon resume from suspend!
+Make sure the file "00snoozenode" is placed in /etc/pm/sleep.d/

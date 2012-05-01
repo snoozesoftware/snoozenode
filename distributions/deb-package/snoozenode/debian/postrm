@@ -1,0 +1,5 @@
+#!/bin/bash
+
+SCRIPT_NAME="snoozenode"
+update-rc.d $SCRIPT_NAME remove
+rm -Rf $SCRIPT_NAME

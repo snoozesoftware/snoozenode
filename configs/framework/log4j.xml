@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (C) 2010-2012 Eugen Feller, INRIA <eugen.feller@inria.fr>
+
+    This file is part of Snooze, a scalable, autonomic, and
+    energy-aware virtual machine (VM) management framework.
+
+    This program is free software: you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation, either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, see <http://www.gnu.org/licenses>.
+
+-->
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd" >
+<log4j:configuration>
+	<appender name="CA" class="org.apache.log4j.ConsoleAppender">
+		<param name="Threshold" value="INFO"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[%-5p] |%d{MMM dd HH:mm:ss}| [%t] %c{2} %x - %m%n" />
+		</layout>
+	</appender>	
+	
+	<appender name="FA" class="org.apache.log4j.FileAppender">
+    		<param name="file" value="/tmp/snooze_node.log"/>
+    		<param name="Threshold" value="DEBUG"/> 	
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[%-5p] |%d{MMM dd HH:mm:ss}| [%t] %c{2} %x - %m%n" />
+		</layout>
+	</appender>	
+	
+	<category name="org.quartz" additivity="false">  
+		<priority value="WARN" />  
+		<appender-ref ref="FA"/>   
+	</category> 
+
+	<logger name="org.apache.commons.httpclient">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>	
+	</logger>
+
+	<logger name="httpclient.wire">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>	
+	</logger>
+
+	<logger name="httpclient.content">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>	
+	</logger>
+	
+	<logger name="org.restlet">
+		<level value="OFF"/>
+		<appender-ref ref="FA"/>
+	</logger>
+		
+	<logger name="LogService">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger>
+    
+	<logger name="org.mortbay.jetty">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger>
+
+	<logger name="org.apache.http">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger>
+
+	<logger name="org.apache.zookeeper">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger>
+	    
+	<logger name="org.eclipse.jetty">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger>
+	
+	<logger name="org.inria.myriads.snoozecommon">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger>
+
+	<logger name="org.inria.myriads.snoozenode.groupmanager.backend">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger>  
+	
+	<logger name="org.inria.myriads.snoozenode.groupmanager.GroupManagerResource">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger> 
+	
+	<logger name="org.inria.myriads.snoozenode.groupmanager.monitoring.receiver.LocalControllerSummaryReceiver">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger> 
+
+	<logger name="org.inria.myriads.snoozenode.groupmanager.estimator">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger> 
+	
+	<logger name="org.inria.myriads.snoozenode.database">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger>
+
+	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring.consumer">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger> 
+
+	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger> 
+							
+	<logger name="org.inria.myriads.snoozenode.groupmanager.virtualnetworkmanager">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger> 
+
+	<logger name="org.inria.myriads.snoozenode.groupmanager.virtualclusterparser">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger> 
+				
+	<logger name="org.inria.myriads.snoozenode.heartbeat">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger>  
+	
+	<logger name="org.inria.myriads.snoozenode.util">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger>
+	
+	<logger name="org.inria.myriads.snoozenode">
+		<level value="DEBUG"/>
+		<appender-ref ref="FA"/>
+		<appender-ref ref="CA"/>
+	</logger>
+</log4j:configuration>

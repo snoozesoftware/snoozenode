@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Root directory
+chown -R root:root /usr/share/snoozenode/
+
+# Power management
+chmod +x /etc/pm/sleep.d/00snoozenode
+chown root:root /etc/pm/sleep.d/00snoozenode
+
+# Init script
+chmod +x /etc/init.d/snoozenode
+update-rc.d snoozenode defaults

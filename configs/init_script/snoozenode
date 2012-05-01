@@ -1,0 +1,119 @@
+#!/bin/sh
+#
+# Copyright (C) 2010-2012 Eugen Feller, INRIA <eugen.feller@inria.fr>
+#
+# This file is part of Snooze, a scalable, autonomic, and
+# energy-aware virtual machine (VM) management framework.
+#
+# This program is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation, either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, see <http://www.gnu.org/licenses>.
+#
+
+### BEGIN INIT INFO
+# Provides: snoozenode
+# Required-Start: $all
+# Required-Stop: $all
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Starts snoozenode daemon at the end of the boot
+### END INIT INFO 
+
+# Environment variables
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+JAVA_HOME=/usr/lib/jvm/java-6-sun/jre
+JAVA=$JAVA_HOME/bin/java
+
+# Script settings
+DESCRIPTION="Snooze node daemon"
+USER="snoozeadmin"
+SCRIPT_NAME="snoozenode"
+INIT_SCRIPT="/etc/init.d/$SCRIPT_NAME"
+INSTALL_DIRECTORY="/usr/share/snoozenode"
+CONFIGS_DIRECTORY="$INSTALL_DIRECTORY/configs"
+JAR_FILE="$INSTALL_DIRECTORY/snoozenode.jar"
+PID_FILE="/var/run/snoozenode.pid"
+SYSTEM_CONFIGURATION_FILE="$CONFIGS_DIRECTORY/snooze_node.cfg"
+LOGGER_CONFIGURATION_FILE="$CONFIGS_DIRECTORY/log4j.xml"
+
+. /lib/lsb/init-functions
+
+start_daemon() {    
+    log_progress_msg "$SCRIPT_NAME"
+    start-stop-daemon -b --start --quiet --chuid $USER -m -p $PID_FILE --exec $JAVA -- -jar $JAR_FILE \
+            	      $SYSTEM_CONFIGURATION_FILE $LOGGER_CONFIGURATION_FILE
+    return $?
+}
+
+stop_daemon() {
+    log_progress_msg "$SCRIPT_NAME"
+    start-stop-daemon --stop --oknodo --quiet --chuid $USER -p $PID_FILE
+    rm -Rf $PID_FILE
+    return $?
+}
+
+case "$1" in
+    start)
+        log_daemon_msg "Starting $DESCRIPTION"
+        start_daemon
+        RET=$?
+        if [ $RET != 0 ]; then
+            log_end_msg $RET
+            exit $RET
+        fi
+
+        log_end_msg 0
+    ;;
+
+    stop)
+        log_daemon_msg "Stopping the $DESCRIPTION"
+        stop_daemon
+        RET=$?
+        if [ $RET != 0 ]; then
+            log_end_msg $RET
+            exit $RET
+        fi
+        
+        log_end_msg 0
+    ;;
+
+    status)
+        pid=`cat $PID_FILE` 2>/dev/null
+        if [ $? -ne 0 ]
+        then
+            echo "Sorry! Unable to open PID file!"
+            exit 1
+        fi
+        
+        if ps -p $pid > /dev/null
+        then
+            echo "$DESCRIPTION is running"
+            exit 0
+        else
+            echo "$DESCRIPTION is not running"
+            exit 3
+        fi
+    ;;
+
+    restart)
+        $INIT_SCRIPT stop
+        sleep 5
+        $INIT_SCRIPT start
+    ;;
+
+    *)
+    log_success_msg "Usage: $INIT_SCRIPT {start|stop|restart|status}"
+    exit 1
+    ;;
+esac
+
+exit 0
