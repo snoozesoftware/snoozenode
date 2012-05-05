@@ -308,7 +308,7 @@
 		<dependency>
 			<groupId>org.inria.myriads</groupId>
 			<artifactId>snoozecommon</artifactId>
-			<version>1.0.1-SNAPSHOT</version>
+			<version>1.1.0-SNAPSHOT</version>
 		</dependency>
     </dependencies>
 </project>
