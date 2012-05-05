@@ -64,7 +64,7 @@ public final class GroupManagerResource extends ServerResource
     public GroupManagerResource()
     {
         log_.debug("Starting group manager resource");
-        backend_ =  (GroupManagerBackend) getApplication().getContext().getAttributes().get("backend");
+        backend_ = (GroupManagerBackend) getApplication().getContext().getAttributes().get("backend");
     }
        
     /**

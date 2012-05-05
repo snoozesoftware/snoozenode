@@ -1,3 +1,9 @@
+snoozenode (1.0-1) unstable; urgency=low
+
+   * Changed the default value of estimator.static parameter to true
+
+ -- Eugen Feller <eugen.feller@inria.fr>  Mon,  5 May 2012 21:01:49 -0700
+ 
 snoozenode (1.0-0) unstable; urgency=low
 
    * First release 
