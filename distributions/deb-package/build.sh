@@ -34,7 +34,7 @@ cp -R ../../configs/powermanagement/pm-utils-hook/00snoozenode \
 cp -R ../../target/$SNOOZE_JAR_NAME $SNOOZE_PACKAGE_NAME/debian/input/snoozenode.jar
 
 # Generate package (with fakeroot)
-export LD_LIBRARY_PATH=/usr/lib/libfakeroot
+export LD_LIBRARY_PATH=/usr/lib/libfakeroot:/usr/lib/x86_64-linux-gnu/libfakeroot/
 export LD_PRELOAD=libfakeroot-sysv.so
 
 cd $SNOOZE_PACKAGE_NAME
