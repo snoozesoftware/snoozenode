@@ -135,12 +135,7 @@
 	<logger name="org.inria.myriads.snoozenode.groupmanager.virtualclusterparser">
 		<level value="WARN"/>
 		<appender-ref ref="FA"/>
-	</logger> 
-				
-	<logger name="org.inria.myriads.snoozenode.heartbeat">
-		<level value="WARN"/>
-		<appender-ref ref="FA"/>
-	</logger>  
+	</logger>
 	
 	<logger name="org.inria.myriads.snoozenode.util">
 		<level value="WARN"/>
