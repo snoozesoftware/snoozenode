@@ -107,12 +107,10 @@
 		<appender-ref ref="FA"/>
 	</logger> 
 
-	<!--
 	<logger name="org.inria.myriads.snoozenode.groupmanager.estimator">
 		<level value="WARN"/>
 		<appender-ref ref="FA"/>
-	</logger> 
-	-->
+	</logger>
 	
 	<logger name="org.inria.myriads.snoozenode.database">
 		<level value="WARN"/>
