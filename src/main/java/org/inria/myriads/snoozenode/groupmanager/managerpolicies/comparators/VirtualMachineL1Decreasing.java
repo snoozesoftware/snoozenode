@@ -56,8 +56,7 @@ public final class VirtualMachineL1Decreasing
      * @param secondVirtualMachine   Second virtual machine
      * @return                       -1, 0, 1
      */
-    public int compare(VirtualMachineMetaData firstVirtualMachine, 
-                       VirtualMachineMetaData secondVirtualMachine)
+    public int compare(VirtualMachineMetaData firstVirtualMachine, VirtualMachineMetaData secondVirtualMachine)
     {
         Guard.check(firstVirtualMachine, secondVirtualMachine);
         ArrayList<Double> estunatedDemand1 = 

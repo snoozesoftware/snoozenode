@@ -28,7 +28,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.util.EstimatorUtils;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.plan.MigrationPlan;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,10 +63,11 @@ public final class RelocationUtility
      * @param state                         The local controller state
      * @return                              The migration plan
      */
-    public static MigrationPlan computeMigrationPlan(List<VirtualMachineMetaData> migrationCandidates,
-                                                     List<LocalControllerDescription> destinationLocalControllers,
-                                                     ResourceDemandEstimator estimator,
-                                                     LocalControllerState state) 
+    public static ReconfigurationPlan 
+        computeReconfigurationPlan(List<VirtualMachineMetaData> migrationCandidates,
+                                   List<LocalControllerDescription> destinationLocalControllers,
+                                   ResourceDemandEstimator estimator,
+                                   LocalControllerState state) 
     {
         Guard.check(migrationCandidates, destinationLocalControllers, estimator);
         log_.debug(String.format("Computing migration plan for %d virtual machines", migrationCandidates.size()));
@@ -128,7 +129,7 @@ public final class RelocationUtility
         }
         
         int numberOfUsedNodes = destinationLocalControllers.size() - 1;
-        MigrationPlan migrationPlan = new MigrationPlan(mapping, numberOfUsedNodes, NUMBER_OF_RELEASED_NODES);      
+        ReconfigurationPlan migrationPlan = new ReconfigurationPlan(mapping, numberOfUsedNodes, NUMBER_OF_RELEASED_NODES);      
         return migrationPlan;
     }
 }

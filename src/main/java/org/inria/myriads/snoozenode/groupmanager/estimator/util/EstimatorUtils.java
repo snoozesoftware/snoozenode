@@ -65,21 +65,21 @@ public final class EstimatorUtils
         log_.debug(String.format("Starting to find a suitable local controller for virtual machine: %s", 
                                  virtualMachineId));
          
-        for (LocalControllerDescription localControllerDescription : localControllers) 
+        for (LocalControllerDescription localController : localControllers) 
         {
-            String localControllerId = localControllerDescription.getId();
+            String localControllerId = localController.getId();
             if (localControllerId.equals(virtualMachine.getVirtualMachineLocation().getLocalControllerId()))
             {
                 log_.debug("Do not consider myself as local controller candidate!");
                 continue;
             }
                         
-            if (estimator.hasEnoughLocalControllerCapacity(virtualMachine, localControllerDescription))
+            if (estimator.hasEnoughLocalControllerCapacity(virtualMachine, localController))
             {
                 log_.debug(String.format("Virtual machine: %s fits into the local controller: %s", 
                                          virtualMachineId, 
                                          localControllerId));
-                return localControllerDescription;
+                return localController;
             }
             
             log_.debug(String.format("Virtual machine: %s does not fit into the local controller: %s", 

@@ -78,10 +78,10 @@ public final class OutputUtils
         Guard.check(virtualMachines);
         log_.debug("Printing virtual machines");
         
-        for (VirtualMachineMetaData metaData : virtualMachines)
+        for (VirtualMachineMetaData virtualMachine : virtualMachines)
         {
-            String virtualMachineId = metaData.getVirtualMachineLocation().getVirtualMachineId();
-            Map<Long, VirtualMachineMonitoringData> usedCapacity = metaData.getUsedCapacity();
+            String virtualMachineId = virtualMachine.getVirtualMachineLocation().getVirtualMachineId();
+            Map<Long, VirtualMachineMonitoringData> usedCapacity = virtualMachine.getUsedCapacity();
             if (usedCapacity.size() == 0)
             {
                 log_.debug(String.format("No monitoring data available on virtual machine: %s", virtualMachineId));
@@ -90,9 +90,9 @@ public final class OutputUtils
             
             VirtualMachineMonitoringData monitoringData = 
                 MonitoringUtils.getLatestVirtualMachineMonitoringData(usedCapacity);
-            log_.debug(String.format("Virtual machine ID: %s, requested capacity: %s, latest used capacity: %s", 
+            log_.debug(String.format("Virtual machine id: %s, requested capacity: %s, latest used capacity: %s", 
                                      virtualMachineId,
-                                     metaData.getRequestedCapacity(),
+                                     virtualMachine.getRequestedCapacity(),
                                      monitoringData.getUsedCapacity()));
         }
     }

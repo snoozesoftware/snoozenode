@@ -22,16 +22,19 @@ package org.inria.myriads.snoozenode.groupmanager.managerpolicies.util;
 import java.util.Collections;
 import java.util.List;
 
+import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.comparators.GroupManagerL1Decreasing;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators.LocalControllerL1Decreasing;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators.LocalControllerL1Increasing;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators.VirtualMachineEuclidDecreasing;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators.VirtualMachineL1Decreasing;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators.VirtualMachineL1Increasing;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators.VirtualMachineMaxDecreasing;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,6 +75,29 @@ public final class SortUtils
                         
             default:
                 log_.debug("Unknown virtual machine demand measure selected!");
+                break;
+        }
+    }
+    
+    /**
+     * Sorts group managers in decreasing order.
+     * 
+     * @param groupManagers   The group managers
+     * @param sortNorm        The sort norm
+     */
+    public static void sortGroupManagerDesceasing(List<GroupManagerDescription> groupManagers, SortNorm sortNorm) 
+    {
+        Guard.check(groupManagers, sortNorm);
+        log_.debug(String.format("Sorting group managers in decreasing order according to %s norm!", sortNorm));
+        
+        switch (sortNorm)
+        {
+            case L1 : 
+                Collections.sort(groupManagers, new GroupManagerL1Decreasing());
+                break;
+                        
+            default:
+                log_.debug("Unknown group manager sort norm selected!");
                 break;
         }
     }

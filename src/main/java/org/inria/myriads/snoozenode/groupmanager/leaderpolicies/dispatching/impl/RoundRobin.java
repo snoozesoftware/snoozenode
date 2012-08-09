@@ -30,8 +30,8 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDes
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPlan;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.plan.DispatchPlan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,11 +41,11 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Eugen Feller
  */
-public class RoundRobinSingleGroupManager 
+public class RoundRobin 
     implements DispatchingPolicy 
 {
     /** Logger. */
-    private static final Logger log_ = LoggerFactory.getLogger(RoundRobinSingleGroupManager.class);
+    private static final Logger log_ = LoggerFactory.getLogger(RoundRobin.class);
     
     /** Resource demand estimator. */
     private ResourceDemandEstimator estimator_;
@@ -55,9 +55,9 @@ public class RoundRobinSingleGroupManager
      * 
      * @param estimator     The estimator
      */
-    public RoundRobinSingleGroupManager(ResourceDemandEstimator estimator) 
+    public RoundRobin(ResourceDemandEstimator estimator) 
     {
-        log_.debug("Initializing the round robin single group manager virtual cluster assignement policy");  
+        log_.debug("Initializing the round robin virtual cluster dispatching policy");  
         estimator_ = estimator;
     }
     
@@ -66,13 +66,13 @@ public class RoundRobinSingleGroupManager
      * 
      * @param virtualMachines              The virtual machines
      * @param groupManagerDescriptions     The group manager descriptions
-     * @return                             The dispatch plan
+     * @return                             The dispatching plan
      */
-    public DispatchPlan dispatch(List<VirtualMachineMetaData> virtualMachines,
-                                 List<GroupManagerDescription> groupManagerDescriptions)
+    public DispatchingPlan dispatch(List<VirtualMachineMetaData> virtualMachines,
+                                    List<GroupManagerDescription> groupManagerDescriptions)
     {
         Guard.check(virtualMachines, groupManagerDescriptions);      
-        log_.debug("Computing assignment according to the round robin single group manager policy");
+        log_.debug("Dispatching virtual machines according to the round robin policy");
         
         Map<String, GroupManagerDescription> candidateGroupManagers = new HashMap<String, GroupManagerDescription>();
         int runningIndex = 0;
@@ -117,10 +117,9 @@ public class RoundRobinSingleGroupManager
             runningIndex++;
         }
         
-        DispatchPlan dispatchPlan = new DispatchPlan();
         ArrayList<GroupManagerDescription> groupManagers = 
             new ArrayList<GroupManagerDescription>(candidateGroupManagers.values()); 
-        dispatchPlan.setGroupManagers(groupManagers);
+        DispatchingPlan dispatchPlan = new DispatchingPlan(groupManagers);
         return dispatchPlan;
     }        
 }

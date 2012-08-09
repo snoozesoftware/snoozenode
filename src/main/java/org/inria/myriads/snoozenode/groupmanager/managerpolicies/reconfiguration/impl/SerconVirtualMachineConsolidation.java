@@ -29,8 +29,8 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.util.EstimatorUtils;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPolicy;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.plan.MigrationPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.util.SortUtils;
 import org.inria.myriads.snoozenode.util.OutputUtils;
 import org.slf4j.Logger;
@@ -62,13 +62,13 @@ public final class SerconVirtualMachineConsolidation
     }
     
     /**
-     * Computes the optimized placement.
+     * Computes the consolidated placement.
      * 
      * @param localControllers   The local controller descriptions
-     * @return                   The optimized placement
+     * @return                   The reconfiguration plan
      */
     @Override
-    public MigrationPlan reconfigure(List<LocalControllerDescription> localControllers) 
+    public ReconfigurationPlan reconfigure(List<LocalControllerDescription> localControllers) 
     {
         Guard.check(localControllers);
         log_.debug("Starting to compute the optimized virtual machine placement");
@@ -135,8 +135,10 @@ public final class SerconVirtualMachineConsolidation
         log_.debug(String.format("Total number of active local controllers: %d, released local controllers: %d", 
                                  localControllers.size(), numberOfReleasedNodes));  
         int numberOfUsedNodes = localControllers.size() - numberOfReleasedNodes;
-        MigrationPlan migrationPlan = new MigrationPlan(mapping, numberOfUsedNodes, numberOfReleasedNodes);
-        return migrationPlan;
+        ReconfigurationPlan reconfigurationPlan = new ReconfigurationPlan(mapping, 
+                                                                          numberOfUsedNodes, 
+                                                                          numberOfReleasedNodes);
+        return reconfigurationPlan;
     }
     
     /**

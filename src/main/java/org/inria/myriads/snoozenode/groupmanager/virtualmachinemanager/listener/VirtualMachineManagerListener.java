@@ -19,7 +19,7 @@
  */
 package org.inria.myriads.snoozenode.groupmanager.virtualmachinemanager.listener;
 
-import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmission;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
 
 /**
  * Virtual machine manager listener.
@@ -31,8 +31,8 @@ public interface VirtualMachineManagerListener
     /**
      * Called on virtual machine submission finished.
      * 
-     * @param virtualMachineId      The virtual machine identifier
-     * @param response              The virtual machine submission response
+     * @param taskIdentifier      The task identifier
+     * @param submissionResponse  The virtual machine submission response
      */
-    void onSubmissionFinished(String virtualMachineId, VirtualMachineSubmission response);
+    void onSubmissionFinished(String taskIdentifier, VirtualMachineSubmissionResponse submissionResponse);
 }

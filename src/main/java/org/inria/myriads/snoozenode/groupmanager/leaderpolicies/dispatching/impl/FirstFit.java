@@ -28,9 +28,10 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDes
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPlan;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.plan.DispatchPlan;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.util.LeaderPolicyUtils;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.util.SortUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,11 +40,11 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Eugen Feller
  */
-public final class FirstFitSingleGroupManager 
+public final class FirstFit 
     implements DispatchingPolicy 
 {
     /** Logger. */
-    private static final Logger log_ = LoggerFactory.getLogger(FirstFitSingleGroupManager.class);
+    private static final Logger log_ = LoggerFactory.getLogger(FirstFit.class);
 
     /** Estimator.*/
     private ResourceDemandEstimator estimator_;
@@ -53,9 +54,9 @@ public final class FirstFitSingleGroupManager
      * 
      * @param estimator     The estimator
      */
-    public FirstFitSingleGroupManager(ResourceDemandEstimator estimator) 
+    public FirstFit(ResourceDemandEstimator estimator) 
     {
-        log_.debug("Initializing the round robin single group manager virtual cluster assignement policy");  
+        log_.debug("Initializing the first-fit virtual cluster dispatching policy");  
         estimator_ = estimator;
     }
     
@@ -66,13 +67,13 @@ public final class FirstFitSingleGroupManager
      * @param groupManagerDescriptions     The group manager descriptions
      * @return                             The dispatch plan
      */
-    public DispatchPlan dispatch(List<VirtualMachineMetaData> virtualMachines,
-                                 List<GroupManagerDescription> groupManagerDescriptions)
+    public DispatchingPlan dispatch(List<VirtualMachineMetaData> virtualMachines,
+                                    List<GroupManagerDescription> groupManagerDescriptions)
     {
         Guard.check(virtualMachines, groupManagerDescriptions);      
-        log_.debug("Computing assignment according to the round robin single group manager policy");
+        log_.debug("Computing dispatching according to the first-fit policy");
          
-        LeaderPolicyUtils.sortGroupManagerDesceasing(groupManagerDescriptions, estimator_.getSortNorm());
+        SortUtils.sortGroupManagerDesceasing(groupManagerDescriptions, estimator_.getSortNorm());
         LeaderPolicyUtils.printGroupManagerDescriptions(groupManagerDescriptions);
 
         ArrayList<GroupManagerDescription> candidateGroupManagers = new ArrayList<GroupManagerDescription>(); 
@@ -87,18 +88,18 @@ public final class FirstFitSingleGroupManager
             Iterator<VirtualMachineMetaData> iterator = virtualMachines.iterator();
             while (iterator.hasNext())
             {
-                VirtualMachineMetaData metaData = iterator.next();
-                if (estimator_.hasEnoughGroupManagerCapacity(metaData, groupManager))
+                VirtualMachineMetaData virtualMachine = iterator.next();
+                if (estimator_.hasEnoughGroupManagerCapacity(virtualMachine, groupManager))
                 {
-                    String virtualMachineId = metaData.getVirtualMachineLocation().getVirtualMachineId();
+                    String virtualMachineId = virtualMachine.getVirtualMachineLocation().getVirtualMachineId();
                     log_.debug(String.format("Virtual machine: %s assigned to be potentially scheduled on " +
                                               "group manager: %s", 
                                               virtualMachineId,
                                               groupManager.getId()));
                     
                     NetworkAddress address = groupManager.getListenSettings().getControlDataAddress();
-                    metaData.setGroupManagerControlDataAddress(address);
-                    groupManager.getVirtualMachines().add(metaData);
+                    virtualMachine.setGroupManagerControlDataAddress(address);
+                    groupManager.getVirtualMachines().add(virtualMachine);
                     iterator.remove();
                 }
             }
@@ -109,8 +110,7 @@ public final class FirstFitSingleGroupManager
             }
         }
         
-        DispatchPlan dispatchPlan = new DispatchPlan();
-        dispatchPlan.setGroupManagers(candidateGroupManagers);
+        DispatchingPlan dispatchPlan = new DispatchingPlan(candidateGroupManagers);
         return dispatchPlan;
     }        
 }

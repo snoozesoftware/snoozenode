@@ -22,7 +22,6 @@ package org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguratio
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.plan.MigrationPlan;
 
 /**
  * Reconfiguration policy interface.
@@ -37,5 +36,5 @@ public interface ReconfigurationPolicy
      * @param localControllerDescriptions     The local controller descriptions
      * @return                                The migration plan
      */
-    MigrationPlan reconfigure(List<LocalControllerDescription> localControllerDescriptions);
+    ReconfigurationPlan reconfigure(List<LocalControllerDescription> localControllerDescriptions);
 }

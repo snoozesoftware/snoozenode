@@ -26,7 +26,7 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.plan.MigrationPlan;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.VirtualMachineRelocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.utility.RelocationUtility;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.util.SortUtils;
@@ -66,7 +66,7 @@ public final class GreedyUnderloadRelocation
      * @param destinationLocalControllers   The destination local controller candidates
      * @return                              The migration plan
      */
-    public MigrationPlan relocateVirtualMachines(LocalControllerDescription sourceLocalController, 
+    public ReconfigurationPlan relocateVirtualMachines(LocalControllerDescription sourceLocalController, 
                                                  List<LocalControllerDescription> destinationLocalControllers)
     {
         Guard.check(sourceLocalController, destinationLocalControllers);
@@ -77,10 +77,11 @@ public final class GreedyUnderloadRelocation
             new ArrayList<VirtualMachineMetaData>(sourceLocalController.getVirtualMachineMetaData().values());
         SortUtils.sortVirtualMachinesDecreasing(candidatevirtualMachines, estimator_);
         SortUtils.sortLocalControllersDecreasing(destinationLocalControllers, estimator_);
-        MigrationPlan migrationPlan = RelocationUtility.computeMigrationPlan(candidatevirtualMachines,
-                                                                              destinationLocalControllers, 
-                                                                              estimator_,
-                                                                              LocalControllerState.UNDERLOADED);
-        return migrationPlan;
+        ReconfigurationPlan reconfigurationPlan = 
+                RelocationUtility.computeReconfigurationPlan(candidatevirtualMachines,
+                                                             destinationLocalControllers, 
+                                                             estimator_,
+                                                             LocalControllerState.UNDERLOADED);
+        return reconfigurationPlan;
     }
 }

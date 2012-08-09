@@ -35,7 +35,8 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionResponse;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmission;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
@@ -201,14 +202,14 @@ public final class GroupManagerResource extends ServerResource
     }
     
     /**
-     * Starts a virtual machines on the group manager.
+     * Starts virtual machines on the group manager.
      * (called by group leader)
      * 
      * @param submissionRequest        The virtual machine submission
      * @return                         The task identifier
      */
     @Override
-    public String startVirtualMachines(VirtualMachineSubmission submissionRequest) 
+    public String startVirtualMachines(VirtualMachineSubmissionRequest submissionRequest) 
     {
         Guard.check(submissionRequest);
         log_.debug("Received start virtual machines command from group leader");
@@ -578,19 +579,19 @@ public final class GroupManagerResource extends ServerResource
     {
         Guard.check(virtualMachineLocation);
         boolean isDropped = backend_.getGroupManagerInit()
-                                    .getRepository()
-                                    .dropVirtualMachineData(virtualMachineLocation);
+                                        .getRepository()
+                                        .dropVirtualMachineData(virtualMachineLocation);
         return isDropped;
     }
 
     /**
-     * Returns the virtual machine response.
+     * Returns the virtual machine submission finish.
      * 
      * @param taskIdentifier    The virtual machine task identifier
-     * @return                  The virtual machine response
+     * @return                  The virtual machine submission response
      */
     @Override
-    public VirtualMachineSubmission getVirtualMachineResponse(String taskIdentifier) 
+    public VirtualMachineSubmissionResponse getVirtualMachineSubmissionResponse(String taskIdentifier) 
     {
         Guard.check(taskIdentifier);
         log_.debug(String.format("Received a request for virtual machine %s response lookup", taskIdentifier));
@@ -600,11 +601,11 @@ public final class GroupManagerResource extends ServerResource
             return null;
         }
  
-        VirtualMachineSubmission virtualMachineResponse = backend_.getGroupManagerInit()
+        VirtualMachineSubmissionResponse submissionResponse = backend_.getGroupManagerInit()
                                                                   .getStateMachine()
-                                                                  .getVirtualMachineResponse(taskIdentifier);
-        log_.debug(String.format("Returning virtual machine response: %s", virtualMachineResponse));
-        return virtualMachineResponse;
+                                                                  .getVirtualMachineSubmissionResponse(taskIdentifier);
+        log_.debug(String.format("Returning virtual machine response: %s", submissionResponse));
+        return submissionResponse;
     }
     
     /**

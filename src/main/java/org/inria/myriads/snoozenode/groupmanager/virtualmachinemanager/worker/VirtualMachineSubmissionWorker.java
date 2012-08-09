@@ -29,9 +29,10 @@ import org.inria.myriads.snoozecommon.communication.rest.api.LocalControllerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmission;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
-import org.inria.myriads.snoozenode.exception.VirtualMachineSubmissionException;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinemanager.listener.VirtualMachineManagerListener;
@@ -51,7 +52,7 @@ public final class VirtualMachineSubmissionWorker
     private static final Logger log_ = LoggerFactory.getLogger(VirtualMachineSubmissionWorker.class);
     
     /** Virtual machine submission request. */
-    private VirtualMachineSubmission submissionRequest_;
+    private VirtualMachineSubmissionRequest submissionRequest_;
     
     /** Submission policy. */
     private PlacementPolicy placementPolicy_;
@@ -84,7 +85,7 @@ public final class VirtualMachineSubmissionWorker
      */
     public VirtualMachineSubmissionWorker(String taskIdentifier,
                                           int numberOfMonitoringEntries,
-                                          VirtualMachineSubmission submissionRequest, 
+                                          VirtualMachineSubmissionRequest submissionRequest, 
                                           GroupManagerRepository repository,
                                           PlacementPolicy placementPolicy,
                                           StateMachine stateMachine,
@@ -100,111 +101,125 @@ public final class VirtualMachineSubmissionWorker
     }
     
     /**
-     * Starts the virtual machine.
+     * Updates the virtual machine repository information.
      * 
-     * @param virtualMachine    The virtual machine meta data
-     * @param localController   The local controller description
-     * @return                  true if started, false otherwise
-     */ 
-    private boolean startVirtualMachine(VirtualMachineMetaData virtualMachine, 
-                                        LocalControllerDescription localController)
-    {
-        LocalControllerAPI communicator = 
-            CommunicatorFactory.newLocalControllerCommunicator(localController.getControlDataAddress());
-        boolean isStarted = communicator.startVirtualMachine(virtualMachine);
-        return isStarted;
+     * @param virtualMachine    The virtual machine
+     */
+    private void updateVirtualMachineRepositoryInformation(VirtualMachineMetaData virtualMachine)
+    {       
+        if (virtualMachine.getStatus().equals(VirtualMachineStatus.RUNNING))
+        {
+            boolean isAdded = repository_.addVirtualMachine(virtualMachine);
+            if (!isAdded)
+            {              
+                ManagementUtils.updateVirtualMachineMetaData(virtualMachine,
+                                                             VirtualMachineStatus.ERROR,
+                                                             VirtualMachineErrorCode.FAILED_TO_UPDATE_REPOSITORY);
+            }      
+        }
     }
     
     /**
-     * Schedules a virtual machine.
+     * Starts virtual machines assingned to a local controller.
      * 
-     * @param metaData               The virtual machine meta data
-     * @param localControllers       The list of local controllers
+     * @param localController   The local controller description
+     * @return                  The virtual machine submission response
      */
-    private void scheduleVirtualMachine(VirtualMachineMetaData metaData,
-                                        List<LocalControllerDescription> localControllers)
+    private VirtualMachineSubmissionResponse startVirtualMachines(LocalControllerDescription localController)
     {
-        String virtualMachineId = metaData.getVirtualMachineLocation().getVirtualMachineId();
-        log_.debug(String.format("Scheduling virtual machine: %s", virtualMachineId));
+        List<VirtualMachineMetaData> virtualMachines = localController.getAssignedVirtualMachines();
+        log_.debug(String.format("Sending a request to start %d virtual machines to the local controller: %s", 
+                                 virtualMachines.size(), localController.getId()));
         
-        boolean isAdded = false;
-        try
+        VirtualMachineSubmissionRequest submissionRequest = new VirtualMachineSubmissionRequest();
+        submissionRequest.setVirtualMachineMetaData(localController.getAssignedVirtualMachines());
+        LocalControllerAPI communicator = 
+                CommunicatorFactory.newLocalControllerCommunicator(localController.getControlDataAddress());
+        VirtualMachineSubmissionResponse submissionResponse = communicator.startVirtualMachines(submissionRequest); 
+        log_.debug(String.format("Submission response received from local controller: %s", localController.getId()));
+        return submissionResponse;
+    }
+    
+    /**
+     * Wakes up a local controller if it is passive.
+     * 
+     * @param localController   The local controller
+     * @return                  true if everything ok, false otherwise
+     */
+    private boolean wakeupLocalControllerIfPassive(LocalControllerDescription localController)
+    {
+        boolean isWokenUp = true;
+        
+        if (localController.getStatus().equals(LocalControllerStatus.PASSIVE))
         {
-            String localControllerId = repository_.searchVirtualMachine(virtualMachineId);
-            if (localControllerId != null)
+            log_.debug("Found PASSIVE local controller! Will try to do wakeup!");
+            isWokenUp = stateMachine_.onWakeupLocalController(localController);
+        }
+        
+        return isWokenUp;
+    }
+    
+    /**
+     * Enforces the placement plan.
+     * 
+     * @param placementPlan    The placement plan
+     * @return                 The virtual machine submissions response
+     */ 
+    private VirtualMachineSubmissionResponse enforcePlacementPlan(PlacementPlan placementPlan)
+    {        
+        ArrayList<VirtualMachineMetaData> allVirtualMachines = new ArrayList<VirtualMachineMetaData>();
+        allVirtualMachines.addAll(placementPlan.gettUnassignedVirtualMachines());
+        
+        for (LocalControllerDescription localController : placementPlan.getLocalControllers())
+        {             
+            List<VirtualMachineMetaData> assignedVirtualMachines = localController.getAssignedVirtualMachines();
+            log_.debug(String.format("Starting to enforce the placement plan for local controller: %s", 
+                                     localController.getId()));
+            
+            boolean isWokenUp = wakeupLocalControllerIfPassive(localController);
+            if (!isWokenUp)
             {
-                metaData.setErrorCode(VirtualMachineErrorCode.ALREADY_RUNNING);
-                throw new VirtualMachineSubmissionException("Virtual machine is already running! Unable to start!");
+                ManagementUtils.updateAllVirtualMachineMetaData(assignedVirtualMachines,
+                                                                VirtualMachineStatus.ERROR,
+                                                                VirtualMachineErrorCode.LOCAL_CONTROLLER_WAKEUP_FAILED);
+                allVirtualMachines.addAll(assignedVirtualMachines);
+                continue;
             }
             
-            LocalControllerDescription localController = placementPolicy_.place(metaData, localControllers);
-            if (localController == null)
+            VirtualMachineSubmissionResponse submissionResponse = startVirtualMachines(localController);
+            if (submissionResponse == null)
             {
-                metaData.setErrorCode(VirtualMachineErrorCode.NOT_ENOUGH_LOCAL_CONTROLLER_CAPACITY);
-                throw new VirtualMachineSubmissionException("Unable to schedule virtual machine! Not enough capacity!");
+                ManagementUtils.updateAllVirtualMachineMetaData(assignedVirtualMachines,
+                                                                VirtualMachineStatus.ERROR,
+                                                                VirtualMachineErrorCode.INVALID_SUBMISSION_RESPONSE);
+                allVirtualMachines.addAll(assignedVirtualMachines);
+                continue;
             }
-                    
-            if (localController.getStatus().equals(LocalControllerStatus.PASSIVE))
+            
+            for (VirtualMachineMetaData virtualMachine : submissionResponse.getVirtualMachineMetaData())
             {
-                log_.debug("Found PASSIVE local controller! Will try to do wakeup!");
-                boolean isWokenUp = stateMachine_.onWakeupLocalController(localController);
-                if (!isWokenUp)
-                {
-                    metaData.setErrorCode(VirtualMachineErrorCode.LOCAL_CONTROLLER_WAKEUP_FAILED);
-                    throw new VirtualMachineSubmissionException("Failed to wakeup local controller");
-                }
-            }
-                 
-            boolean isStarted = startVirtualMachine(metaData, localController);
-            if (!isStarted)
-            {
-                metaData.setErrorCode(VirtualMachineErrorCode.UNABLE_TO_START_ON_LOCAL_CONTROLLER);
-                throw new VirtualMachineSubmissionException("Virtual machine could not be started!");
-            }
-                     
-            log_.debug(String.format("Virtual machine %s started!", virtualMachineId));
-            ManagementUtils.setVirtualMachineRunning(metaData, localController);
-            isAdded = repository_.addVirtualMachine(metaData);
-            if (!isAdded)
-            {
-                metaData.setErrorCode(VirtualMachineErrorCode.FAILED_TO_UPDATE_REPOSITORY);
-                throw new VirtualMachineSubmissionException("Failed to update repository!");
+                updateVirtualMachineRepositoryInformation(virtualMachine);
+                allVirtualMachines.add(virtualMachine);
             }
         }
-        catch (VirtualMachineSubmissionException exception)
-        {
-            log_.warn(String.format("Something wrong happened during virtual machine %s submission: %s", 
-                                    virtualMachineId, exception.getMessage()));
-        }
-        catch (Exception exception)
-        {
-            log_.error("Exception", exception);
-        }
-        finally
-        {
-            if (!isAdded)
-            {
-                metaData.setStatus(VirtualMachineStatus.ERROR);   
-            }
-        }
-    }
         
+        VirtualMachineSubmissionResponse submissionResponse = new VirtualMachineSubmissionResponse();
+        submissionResponse.setVirtualMachineMetaData(allVirtualMachines);
+        return submissionResponse;
+    }
+
     /** Run method. */
     @Override
-    public void run() 
+    public void run()
     {
-        log_.debug(String.format("Starting submission %s procedure", taskIdentifier_));
+        log_.debug(String.format("Starting the virtual machine submission %s procedure", taskIdentifier_));
           
         ArrayList<VirtualMachineMetaData> virtualMachines = submissionRequest_.getVirtualMachineMetaData(); 
-        for (VirtualMachineMetaData virtualMachine : virtualMachines)
-        {
-            List<LocalControllerDescription> localControllers = 
+        List<LocalControllerDescription> localControllers = 
                 repository_.getLocalControllerDescriptions(numberOfMonitoringEntries_, false);
-            scheduleVirtualMachine(virtualMachine, localControllers);
-        }
         
-        VirtualMachineSubmission submissionResponse = new VirtualMachineSubmission();
-        submissionResponse.setVirtualMachineMetaData(virtualMachines);
+        PlacementPlan placementPlan = placementPolicy_.place(virtualMachines, localControllers);
+        VirtualMachineSubmissionResponse submissionResponse = enforcePlacementPlan(placementPlan);
         managerListener_.onSubmissionFinished(taskIdentifier_, submissionResponse);
     }
 }

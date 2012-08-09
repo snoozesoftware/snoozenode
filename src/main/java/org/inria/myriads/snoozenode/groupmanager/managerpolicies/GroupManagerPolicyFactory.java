@@ -25,8 +25,8 @@ import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Placement
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfiguration;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Relocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.impl.FirstFitVirtualMachinePlacement;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.impl.RoundRobinVirtualMachinePlacement;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.impl.FirstFit;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.impl.RoundRobin;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPolicy;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.impl.SerconVirtualMachineConsolidation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.VirtualMachineRelocation;
@@ -56,48 +56,46 @@ public final class GroupManagerPolicyFactory
     /**
      * Creates a new virtual machine placement policy.
      * 
-     * @param virtualMachinePlacementPolicy    The desired virtual machine placement policy
-     * @param estimator                        The resource demand estimator
-     * @return                                 The selected virtual machine placement policy
+     * @param placementPolicy    The placement policy
+     * @param estimator          The resource demand estimator
+     * @return                   The placement policy implementation
      */
-    public static PlacementPolicy 
-        newVirtualMachinePlacement(Placement virtualMachinePlacementPolicy,
-                                   ResourceDemandEstimator estimator) 
+    public static PlacementPolicy newVirtualMachinePlacement(Placement placementPolicy,
+                                                             ResourceDemandEstimator estimator) 
     {
-        Guard.check(virtualMachinePlacementPolicy);
-        log_.debug(String.format("Selecting the virtual machine placement policy: %s", 
-                                 virtualMachinePlacementPolicy));
+        Guard.check(placementPolicy);
+        log_.debug(String.format("Selected virtual machine placement policy: %s", placementPolicy));
         
-        PlacementPolicy placementPolicy = null;
-        switch (virtualMachinePlacementPolicy) 
+        PlacementPolicy placement = null;
+        switch (placementPolicy) 
         {
             case FirstFit :
-                placementPolicy = new FirstFitVirtualMachinePlacement(estimator);
+                placement = new FirstFit(estimator);
                 break;
             
             case RoundRobin :
-                placementPolicy = new RoundRobinVirtualMachinePlacement(estimator);
+                placement = new RoundRobin(estimator);
                 break;
                 
             default :
                 log_.error("Unknown virtual machine placement policy selected!");
         }
         
-        return placementPolicy;
+        return placement;
     }
     
     /**
      * Creates a new virtual machine reconfiguration policy.
      * 
-     * @param reconfigurationPolicy  The desired virtual machine reconfiguration policy
+     * @param reconfigurationPolicy  The desired reconfiguration policy
      * @param estimator              The resource demand estimator
-     * @return                       The selected virtual machine reconfiguration policy
+     * @return                       The selected reconfiguration policy
      */
     public static ReconfigurationPolicy newVirtualMachineReconfiguration(Reconfiguration reconfigurationPolicy,
                                                                          ResourceDemandEstimator estimator) 
     {
         Guard.check(reconfigurationPolicy);
-        log_.debug(String.format("Selecting the virtual machine reconfiguration policy: %s", 
+        log_.debug(String.format("Selected virtual machine reconfiguration policy: %s", 
                                  reconfigurationPolicy));
         
         ReconfigurationPolicy reconfiguration = null;
@@ -117,9 +115,9 @@ public final class GroupManagerPolicyFactory
     /**
      * Creates a new virtual machine relocation policy.
      * 
-     * @param relocationPolicy  The desired virtual machine relocation policy
+     * @param relocationPolicy  The desired relocation policy
      * @param estimator         The resource demand estimator
-     * @return                  The selected virtual machine relocation policy
+     * @return                  The selected relocation policy
      */
     public static VirtualMachineRelocation newVirtualMachineRelocation(Relocation relocationPolicy,
                                                                        ResourceDemandEstimator estimator) 
