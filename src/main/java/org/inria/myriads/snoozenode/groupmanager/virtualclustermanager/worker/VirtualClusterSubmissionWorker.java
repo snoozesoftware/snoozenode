@@ -294,7 +294,7 @@ public final class VirtualClusterSubmissionWorker
     /**
      * Starts updating virtual machine meta data.
      * 
-     * @param submissionResponse    The submission finish
+     * @param submissionResponse  The submission finish
      * @param groupManager        The group managers
      */
     private void processVirtualMachineSubmissionResponse(VirtualMachineSubmissionResponse submissionResponse,
