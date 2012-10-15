@@ -125,7 +125,7 @@ public final class LibVirtVirtualMachineMonitor
         {
             throw new VirtualMachineMonitoringException(String.format("Unable to get domain XML description: %s",
                                                                       exception.getMessage()));
-        }
+        } 
         
         log_.debug(String.format("Size of the network list: %s", networkInterfaces.size()));
         
@@ -176,6 +176,9 @@ public final class LibVirtVirtualMachineMonitor
     /**
      * Returns the current memory usage of a domain.
      * 
+     * Note: xen driver doesn't support virDomainMemoryStats called by domain.memoryStats (libvirt 0.9.8)
+     * see http://libvirt.org/hvsupport.html  
+     * 
      * @param domain                                    The domain
      * @return                                          The memory usage
      * @throws VirtualMachineMonitoringException 
@@ -190,8 +193,15 @@ public final class LibVirtVirtualMachineMonitor
         MemoryStatistic[] memStats;
         try 
         {
-            memStats = domain.memoryStats(1);
-            log_.debug(String.format("Size of memory stats: %d", memStats.length));
+            try{
+                memStats = domain.memoryStats(1);
+                log_.debug(String.format("Size of memory stats: %d", memStats.length));
+            }
+            catch (LibvirtException exception)
+            {
+               log_.debug("No dynamic memory usage information available! Falling back to fixed memory allocation! : " + domain.getInfo().memory);
+               return domain.getInfo().memory ;
+            }
             
             if (memStats.length > 0)
             {
