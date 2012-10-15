@@ -99,7 +99,7 @@ public final class HostVirtualNetworkManager
     private boolean assignIpAddress(VirtualMachineMetaData virtualMachineMetaData) 
     {
         Guard.check(virtualMachineMetaData);
-        log_.debug(String.format("Assinging MAC address to virtual machine %s and updating IP pool",
+        log_.debug(String.format("Assigning MAC address to virtual machine %s and updating IP pool",
                                  virtualMachineMetaData.getVirtualMachineLocation().getVirtualMachineId()));
         
         String freeIpAddress = groupLeaderRepository_.getFreeIpAddress();
