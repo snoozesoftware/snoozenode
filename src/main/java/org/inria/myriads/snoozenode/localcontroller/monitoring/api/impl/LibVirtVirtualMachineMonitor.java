@@ -193,14 +193,15 @@ public final class LibVirtVirtualMachineMonitor
         MemoryStatistic[] memStats;
         try 
         {
-            try{
+            try 
+            {
                 memStats = domain.memoryStats(1);
                 log_.debug(String.format("Size of memory stats: %d", memStats.length));
             }
             catch (LibvirtException exception)
             {
-               log_.debug("No dynamic memory usage information available! Falling back to fixed memory allocation! : " + domain.getInfo().memory);
-               return domain.getInfo().memory ;
+               log_.debug("No dynamic memory usage information available! Falling back to fixed memory allocation! : ");
+               return domain.getInfo().memory;
             }
             
             if (memStats.length > 0)
