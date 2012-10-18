@@ -166,7 +166,7 @@ public final class VirtualClusterParserUtils
      * @param xml       the string to convert
      * @return          the Document DOM  representative of the String
      */
-    private static Document stringToDom(String xml)
+    public static Document stringToDom(String xml)
     {
         Guard.check(xml);        
         Document doc = null;
@@ -193,7 +193,7 @@ public final class VirtualClusterParserUtils
      * @param doc           Document DOM
      * @return xml          string representative of the Document DOM
      */
-    private static String domToString(Document doc)
+    public static String domToString(Document doc)
     {
         Guard.check(doc);        
         String xml = null;

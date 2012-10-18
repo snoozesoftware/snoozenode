@@ -24,7 +24,8 @@ import java.util.List;
 
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.exception.VirtualMachineMonitoringException;
-import org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.util.VirtualClusterParserUtils;
+import org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.VirtualClusterParserFactory;
+import org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.api.VirtualClusterParser;
 import org.inria.myriads.snoozenode.localcontroller.connector.Connector;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.VirtualMachineMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.information.NetworkTrafficInformation;
@@ -118,14 +119,16 @@ public final class LibVirtVirtualMachineMonitor
         
         List<String> networkInterfaces = null;
         try 
-        {
-            networkInterfaces = VirtualClusterParserUtils.getNetworkInterfacesFromXml(domain.getXMLDesc(1));
+        {   
+            VirtualClusterParser parser = VirtualClusterParserFactory.newVirtualClusterParser();
+            networkInterfaces = parser.getNetworkInterfaces(domain.getXMLDesc(1));
         } 
-        catch (LibvirtException exception) 
+        catch (Exception exception) 
         {
             throw new VirtualMachineMonitoringException(String.format("Unable to get domain XML description: %s",
                                                                       exception.getMessage()));
         } 
+        
         
         log_.debug(String.format("Size of the network list: %s", networkInterfaces.size()));
         

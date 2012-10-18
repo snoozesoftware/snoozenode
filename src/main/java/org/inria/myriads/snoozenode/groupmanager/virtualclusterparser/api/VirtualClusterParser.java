@@ -20,6 +20,7 @@
 package org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.api;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
@@ -35,10 +36,38 @@ public interface VirtualClusterParser
     /**
      * Creates virtual machine meta data.
      * 
-     * @param cluster                           The virual cluster description
+     * @param cluster                           The virtual cluster description
      * @return                                  The virtual machine meta data map
      * @throws VirtualClusterParserException 
      */
     ArrayList<VirtualMachineMetaData> createVirtualMachineMetaData(VirtualClusterSubmissionRequest cluster) 
         throws VirtualClusterParserException;
+
+    /**
+     * Get the network interfaces for the a xml description.
+     * 
+     * @param                                   xmlDescription    
+     * @return                                  List of network interfaces
+     * @throws VirtualClusterParserException
+     */
+    List<String> getNetworkInterfaces(String xmlDescription) throws VirtualClusterParserException;
+    
+    
+    /**
+     *  Gets the MAC from template.
+     * 
+     * @param xmlDescription        xml template
+     * @return                      mac address
+     */
+    String getMacAddress(String xmlDescription);
+    
+    /**
+     *  Replace the MAC from template.
+     * 
+     * @param xmlDesc           template
+     * @param newMacAddress     the new address
+     * @return                  mac address
+     */
+    String replaceMacAddressInTemplate(String xmlDesc, String newMacAddress);
+    
 }
