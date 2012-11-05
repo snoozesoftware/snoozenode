@@ -235,6 +235,48 @@ public final class VirtualMachineManager
     }  
     
     /**
+     * Reboot a virtual machine.
+     * 
+     * @param location     The virtual machine location 
+     * @return             true if everything ok, false otherwise
+     */
+    private boolean reboot(VirtualMachineLocation location)
+    {
+        String virtualMachineId = location.getVirtualMachineId();
+        log_.debug(String.format("Rebooting virtual machine %s", virtualMachineId));
+        
+        if (!repository_.checkVirtualMachineStatus(location, VirtualMachineStatus.RUNNING))
+        {
+            return false;
+        }
+
+        NetworkAddress localController = repository_.getLocalControllerControlDataAddress(location);
+        if (localController == null)
+        {
+            log_.debug(String.format("Unable to get local controller description from virtual machine: %s",
+                                     virtualMachineId));
+            return false;
+        }
+        
+        LocalControllerAPI communicator = CommunicatorFactory.newLocalControllerCommunicator(localController);
+        boolean isRebooted = communicator.rebootVirtualMachine(virtualMachineId);
+        if (!isRebooted)
+        {
+            log_.error(String.format("Unable to reboot virtual machine: %s", virtualMachineId));
+            return false;
+        }
+                                     
+        boolean isChanged = repository_.changeVirtualMachineStatus(location, VirtualMachineStatus.SHUTDOWN_PENDING);   
+        if (!isChanged)
+        {
+            log_.error("Failed to change virtual machine status");
+            return false;
+        }
+        
+        return true;
+    }  
+    
+    /**
      * Destroy a virtual machine.
      * 
      * @param location     The virtual machine location
@@ -332,6 +374,10 @@ public final class VirtualMachineManager
             
             case SHUTDOWN:
                 isProcessed = shutdown(location);
+                break;
+                
+            case REBOOT:
+                isProcessed = reboot(location);
                 break;
                 
             case DESTROY:

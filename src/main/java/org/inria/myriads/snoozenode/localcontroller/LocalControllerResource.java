@@ -276,6 +276,41 @@ public final class LocalControllerResource extends ServerResource
     } 
 
     /**
+     * Routine to reboot a virtual machine.
+     * 
+     * @param virtualMachineId   The virtual machine identifier
+     * @return                   true if everything ok, false otherwise
+     */
+    @Override
+    public boolean rebootVirtualMachine(String virtualMachineId)
+    {
+        log_.debug(String.format("Reboot virtual machine: %s on hypervisor", virtualMachineId));
+        
+        if (!isBackendActive())
+        {
+            log_.warn("Backend is not initialized yet!");
+            return false;
+        }
+                                        
+        boolean isRebooted = backend_.getVirtualMachineActuator().reboot(virtualMachineId);
+        if (!isRebooted)
+        {
+            log_.error("Unable to reboot the virtual machine");
+            return false;  
+        }
+        
+        boolean isChanged = backend_.getRepository().changeVirtualMachineStatus(virtualMachineId, 
+                                                                                VirtualMachineStatus.SHUTDOWN_PENDING);
+        if (!isChanged)
+        {
+            log_.error("Failed to change virtual machine status!");
+            return false;
+        }
+        
+        return true;    
+    } 
+    
+    /**
      * Routine to destroy a virtual machine.
      * 
      * @param virtualMachineId   The virtual machine identifier

@@ -326,6 +326,30 @@ public final class GroupManagerResource extends ServerResource
     }
     
     /**
+     * Routine to reboot a virtual machine.
+     * 
+     * @param location      The virtual machine location
+     * @return              true if everything ok, false otherwise
+     */
+    @Override
+    public boolean rebootVirtualMachine(VirtualMachineLocation location) 
+    {
+        Guard.check(location);
+        log_.debug(String.format("Received virtual machine reboot request for: %s", 
+                                 location.getVirtualMachineId()));
+        
+        if (!isGroupManagerActive())
+        {
+            return false;
+        }
+        
+        boolean isRebooted = backend_.getGroupManagerInit()
+                                     .getStateMachine()
+                                     .controlVirtualMachine(VirtualMachineCommand.REBOOT, location);
+        return isRebooted;
+    }
+    
+    /**
      * Routine to shutdown a virtual machine.
      * 
      * @param location      The virtual machine location
