@@ -300,7 +300,7 @@ public final class LocalControllerResource extends ServerResource
         }
         
         boolean isChanged = backend_.getRepository().changeVirtualMachineStatus(virtualMachineId, 
-                                                                                VirtualMachineStatus.SHUTDOWN_PENDING);
+                                                                                VirtualMachineStatus.RUNNING);
         if (!isChanged)
         {
             log_.error("Failed to change virtual machine status!");

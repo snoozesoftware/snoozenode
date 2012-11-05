@@ -266,7 +266,7 @@ public final class VirtualMachineManager
             return false;
         }
                                      
-        boolean isChanged = repository_.changeVirtualMachineStatus(location, VirtualMachineStatus.SHUTDOWN_PENDING);   
+        boolean isChanged = repository_.changeVirtualMachineStatus(location, VirtualMachineStatus.RUNNING);   
         if (!isChanged)
         {
             log_.error("Failed to change virtual machine status");
