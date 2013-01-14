@@ -61,26 +61,15 @@ public final class LibVirtUtil
         HypervisorDriver driver = settings.getDriver();
         log_.debug(String.format("Estabilishing connection to the: %s hypervisor",  driver));
         
+        String hypervisorConnection = ""; 
         Connect connect;
         try 
         {
-            if (driver.equals(HypervisorDriver.test)) 
-            {
-                log_.debug("Starting libvirt in testing mode");
-                connect = new Connect(driver + ":///default", false);
-            } else 
-            {
-                log_.debug("Starting libvirt in production mode");
-                String connectionAddress = listenAddress + ":" + settings.getPort();
-                String hypervisorConnection = driver + "+" + settings.getTransport() + "://" + 
-                                              connectionAddress + "/system";
-                
-                log_.debug(String.format("Connecting to: %s", hypervisorConnection));
-                connect = new Connect(hypervisorConnection, false);
-            }
+            hypervisorConnection = gethypervisorConnection(listenAddress, settings);
+            connect = new Connect(hypervisorConnection, false);
             
             log_.debug(String.format("Hostname: %s", connect.getHostName()));
-            log_.debug(String.format("Max number of VCPUs: %s", connect.getMaxVcpus("kvm")));
+            //log_.debug(String.format("Max number of VCPUs: %s", connect.getMaxVcpus("kvm")));
             log_.debug(String.format("Type: %s", connect.getType()));
             log_.debug(String.format("URI: %s", connect.getURI()));
             log_.debug(String.format("LibVirt version: %s", connect.getLibVirVersion())); 
@@ -92,5 +81,37 @@ public final class LibVirtUtil
         }
         
         return connect;
+    }
+    
+    /**
+     * Build the connection Address to the Hypervisor.
+     * 
+     * @param listenAddress         Listen address
+     * @param settings              The hypervisor settings
+     * @return                      Address String
+     */
+    private static String gethypervisorConnection(String listenAddress, HypervisorSettings settings)
+    {
+        Guard.check(listenAddress, settings);
+        log_.debug("Building the hypervisorConnection");
+        String hypervisorConnection = "";
+        HypervisorDriver driver = settings.getDriver();
+        switch(driver)
+        {
+        case test:
+            hypervisorConnection = driver + ":///default";
+            break;
+        case xen: 
+            hypervisorConnection  = driver + "+" + settings.getTransport() + "://" + 
+                    listenAddress + "/";
+            break;
+        default:
+            String connectionAddress = listenAddress + ":" + settings.getPort();
+            hypervisorConnection = driver + "+" + settings.getTransport() + "://" + 
+                                          connectionAddress + "/system";
+            break;
+        }
+        log_.debug(String.format("hypervisorConnection : %s",  hypervisorConnection));
+        return hypervisorConnection;
     }
 }

@@ -206,6 +206,32 @@ public final class LibVirtVirtualMachineActuator
         return true;
     }
 
+    /** 
+     * Reboot virtual machine. 
+     * 
+     * @param id    The virtual machine identifier
+     * @return      true if everything ok, false otherwise
+     */
+    @Override
+    public boolean reboot(String virtualMachineId) {
+        Guard.check(virtualMachineId);
+        log_.debug(String.format("Rebooting virtual machine: %s", virtualMachineId));
+        try 
+        {
+            connect_.domainLookupByName(virtualMachineId).reboot(0);
+        } 
+        catch (LibvirtException exception) 
+        {
+            log_.debug(String.format("Unable to reboot virtual machine: %s", 
+                                     exception.getMessage()));
+            return false;
+        }
+        
+        log_.debug("Shutdown was successfull");
+        
+        return true;
+    }
+    
     /**
      * Shutdown a virtual machine.
      * 
@@ -294,4 +320,6 @@ public final class LibVirtVirtualMachineActuator
         
         return true;
     }
+
+
 }

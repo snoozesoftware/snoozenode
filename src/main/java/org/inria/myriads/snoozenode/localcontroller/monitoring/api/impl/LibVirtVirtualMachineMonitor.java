@@ -24,7 +24,8 @@ import java.util.List;
 
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.exception.VirtualMachineMonitoringException;
-import org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.util.VirtualClusterParserUtils;
+import org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.VirtualClusterParserFactory;
+import org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.api.VirtualClusterParser;
 import org.inria.myriads.snoozenode.localcontroller.connector.Connector;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.VirtualMachineMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.information.NetworkTrafficInformation;
@@ -118,14 +119,16 @@ public final class LibVirtVirtualMachineMonitor
         
         List<String> networkInterfaces = null;
         try 
-        {
-            networkInterfaces = VirtualClusterParserUtils.getNetworkInterfacesFromXml(domain.getXMLDesc(1));
+        {   
+            VirtualClusterParser parser = VirtualClusterParserFactory.newVirtualClusterParser();
+            networkInterfaces = parser.getNetworkInterfaces(domain.getXMLDesc(1));
         } 
-        catch (LibvirtException exception) 
+        catch (Exception exception) 
         {
             throw new VirtualMachineMonitoringException(String.format("Unable to get domain XML description: %s",
                                                                       exception.getMessage()));
-        }
+        } 
+        
         
         log_.debug(String.format("Size of the network list: %s", networkInterfaces.size()));
         
@@ -176,6 +179,9 @@ public final class LibVirtVirtualMachineMonitor
     /**
      * Returns the current memory usage of a domain.
      * 
+     * Note: xen driver doesn't support virDomainMemoryStats called by domain.memoryStats (libvirt 0.9.8)
+     * see http://libvirt.org/hvsupport.html  
+     * 
      * @param domain                                    The domain
      * @return                                          The memory usage
      * @throws VirtualMachineMonitoringException 
@@ -190,8 +196,16 @@ public final class LibVirtVirtualMachineMonitor
         MemoryStatistic[] memStats;
         try 
         {
-            memStats = domain.memoryStats(1);
-            log_.debug(String.format("Size of memory stats: %d", memStats.length));
+            try 
+            {
+                memStats = domain.memoryStats(1);
+                log_.debug(String.format("Size of memory stats: %d", memStats.length));
+            }
+            catch (LibvirtException exception)
+            {
+               log_.debug("No dynamic memory usage information available! Falling back to fixed memory allocation! : ");
+               return domain.getInfo().memory;
+            }
             
             if (memStats.length > 0)
             {

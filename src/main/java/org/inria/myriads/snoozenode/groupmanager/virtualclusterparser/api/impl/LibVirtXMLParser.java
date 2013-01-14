@@ -34,6 +34,7 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.exception.VirtualClusterParserException;
 import org.inria.myriads.snoozenode.exception.VirtualMachineTemplateException;
 import org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.api.VirtualClusterParser;
+import org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.util.VirtualClusterParserUtils;
 import org.inria.myriads.snoozenode.util.MathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -208,4 +209,96 @@ public final class LibVirtXMLParser
         
         return null;
     }
+
+    @Override
+    public List<String> getNetworkInterfaces(String xmlDesc) throws VirtualClusterParserException 
+    {
+        Guard.check(xmlDesc);   
+        List<String> networkInterfaces = new ArrayList<String>();
+        try 
+        {  
+            Document doc = VirtualClusterParserUtils.stringToDom(xmlDesc);
+            NodeList nodes = doc.getElementsByTagName("interface");
+            for (int i = 0; i < nodes.getLength(); i++) 
+            {
+                Node node = nodes.item(i);
+                if (node.getNodeType() == Node.ELEMENT_NODE)
+                {
+                    Element element = (Element) node;
+                    NodeList snodes = element.getElementsByTagName("target");
+                    
+                    for (int j = 0; j < snodes.getLength(); j++)
+                    {
+                        Node snode = snodes.item(j);                   
+                        if (snode.getNodeType() == Node.ELEMENT_NODE)
+                        {
+                            networkInterfaces.add(((Element) snode).getAttribute("dev"));                    
+                        }
+                    }
+                }
+            }
+            return networkInterfaces;
+        }
+        catch (Exception exception)
+        { 
+            throw new VirtualClusterParserException(String.format("Unable to get network interface for XML : %s",
+                exception.getMessage()));
+        }
+    }
+
+    
+    /**
+     * Gets the MAC of the libvirt template.
+     * 
+     * Note: return the first one found in the template
+     * 
+     * @param xmlDescription      The template
+     * @return                    The mac address
+     */
+    public String getMacAddress(String xmlDescription)
+    {
+        Guard.check(xmlDescription);
+        String finalMacAddress = null;
+        
+        Document doc = VirtualClusterParserUtils.stringToDom(xmlDescription);
+        
+        NodeList nodes = doc.getElementsByTagName("mac");
+        if (nodes.getLength() > 0 && nodes.item(0).getNodeType() == Node.ELEMENT_NODE)
+        {
+            Element element = (Element) nodes.item(0);
+            finalMacAddress = element.getAttribute("address");
+            
+        }
+        return finalMacAddress;
+    }
+    
+   
+    
+    /**
+     * Replaces the MAC address inside libvirt template.
+     * 
+     * @param xmlDescription          The template
+     * @param newMacAddress           The new mac address
+     * @return                        Modified template string
+     */
+    public String replaceMacAddressInTemplate(String xmlDescription, String newMacAddress)
+    {
+        Guard.check(xmlDescription, newMacAddress);        
+        log_.debug("Replacing MAC address in the libvirt template with: " + newMacAddress);
+       
+        Document doc = VirtualClusterParserUtils.stringToDom(xmlDescription);
+        
+        NodeList nodes = doc.getElementsByTagName("mac");
+        if (nodes.getLength() > 0 && nodes.item(0).getNodeType() == Node.ELEMENT_NODE)
+        {
+            Element element = (Element) nodes.item(0);
+            element.setAttribute("address", newMacAddress);
+            
+        }
+        
+        String newTemplate = VirtualClusterParserUtils.domToString(doc);
+        
+        return newTemplate;
+    }
+        
 }

@@ -19,13 +19,29 @@
  */
 package org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.util;
 
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.exception.VirtualMachineMonitoringException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
 /**
  * Virtual cluster parser utilities.
@@ -42,7 +58,7 @@ public final class VirtualClusterParserUtils
     {
         throw new UnsupportedOperationException();
     }
-    
+   
     /**
      * Replaces the MAC address inside libvirt template.
      * 
@@ -54,77 +70,150 @@ public final class VirtualClusterParserUtils
     {
         Guard.check(template, newMacAddress);        
         log_.debug("Replacing MAC address in the libvirt template with: " + newMacAddress);
+       
+        Document doc = stringToDom(template);
         
-        String currentMacAddress = getMacAddressFromLibVirtTemplate(template);        
-        log_.debug("Current MAC address is: " + currentMacAddress);
-        String newTemplate = template.replaceAll(currentMacAddress, newMacAddress);        
+        NodeList nodes = doc.getElementsByTagName("mac");
+        if (nodes.getLength() > 0 && nodes.item(0).getNodeType() == Node.ELEMENT_NODE)
+        {
+            Element element = (Element) nodes.item(0);
+            element.setAttribute("address", newMacAddress);
+            
+        }
+        
+        String newTemplate = domToString(doc);
+        
         return newTemplate;
     }
     
+
     /**
      * Gets the MAC of the libvirt template.
+     * 
+     * Note: return the first one found in the template
      * 
      * @param template      The template
      * @return              The mac address
      */
-    public static String getMacAddressFromLibVirtTemplate(String template)
+    public static String getMacAddressFromLibVirtTemplate(String template) 
     {
         Guard.check(template);
-        StringTokenizer tokenizer = new StringTokenizer(template, "\n");
         String finalMacAddress = null;
         
-        while (tokenizer.hasMoreTokens())
-        {
-            String line = tokenizer.nextToken().trim();     
-            int macAddressPosition = line.indexOf("mac address");            
-            if (macAddressPosition <= 0)
-            {
-                continue;
-            }
-            
-            String macAddressCandidate = line.substring(macAddressPosition + 13).trim();
-            finalMacAddress = macAddressCandidate.substring(0, macAddressCandidate.length() - 3);
-        }
+        Document doc = stringToDom(template);
         
-        return finalMacAddress;       
+        NodeList nodes = doc.getElementsByTagName("mac");
+        if (nodes.getLength() > 0 && nodes.item(0).getNodeType() == Node.ELEMENT_NODE)
+        {
+            Element element = (Element) nodes.item(0);
+            finalMacAddress = element.getAttribute("address");
+            
+        }
+         
+        return finalMacAddress;
     }
-
+    
+    
+    
     /**
      * Returns a list of networks attached to a domain.
      * 
-     * Note: This implementation is fragile! Libvirt 0.9.4 is missing an API to get network 
-     * interfaces attached to a domain! Hence, we need to dump and parse domain XML description! 
-     * Open problem: The default network interface names (i.e., vnetX) could have been overridden by the users!
      *
      * @param xmlDescription    The xml description
      * @return                  The list of network interfaces
+     * @throws VirtualMachineMonitoringException 
      */
     public static List<String> getNetworkInterfacesFromXml(String xmlDescription) 
+            throws VirtualMachineMonitoringException 
     {
-        Guard.check(xmlDescription);
-        
-        StringTokenizer tokenizer = new StringTokenizer(xmlDescription, "\n");
+        Guard.check(xmlDescription);   
         List<String> networkInterfaces = new ArrayList<String>();
-        
-        while (tokenizer.hasMoreTokens())
-        {
-            String line = tokenizer.nextToken().trim();     
-            int devPosition = line.indexOf("vnet");            
-            if (devPosition <= 0)
+        try 
+        {            
+            Document doc = stringToDom(xmlDescription);
+            NodeList nodes = doc.getElementsByTagName("interface");
+            for (int i = 0; i < nodes.getLength(); i++) 
             {
-                continue;
-            }   
+                Node node = nodes.item(i);
+                if (node.getNodeType() == Node.ELEMENT_NODE)
+                {
+                    Element element = (Element) node;
+                    NodeList snodes = element.getElementsByTagName("target");
+                    
+                    for (int j = 0; j < snodes.getLength(); j++)
+                    {
+                        Node snode = snodes.item(j);                   
+                        if (snode.getNodeType() == Node.ELEMENT_NODE)
+                        {
+                            networkInterfaces.add(((Element) snode).getAttribute("dev"));                    
+                        }
+                    }
+                }
+            }
             
-            log_.debug("Line: " + line);
-            String interfaceCandidate = line.substring(devPosition).trim();
-            
-            log_.debug("Candidate: " + interfaceCandidate);
-            String finalInterface = interfaceCandidate.substring(0, interfaceCandidate.length() - 3);
-            
-            log_.debug("Found interface name: " + finalInterface);
-            networkInterfaces.add(finalInterface);
+            return networkInterfaces;
+        }
+        catch (Exception exception)
+        {
+            throw new VirtualMachineMonitoringException(String.format("Unable to get network interface for XML : %s",
+                    exception.getMessage()));
+        }
+    }
+    
+    /**
+     * Convert a string document to a Document DOM.
+     * 
+     * @param xml       the string to convert
+     * @return          the Document DOM  representative of the String
+     */
+    public static Document stringToDom(String xml)
+    {
+        Guard.check(xml);        
+        Document doc = null;
+        try
+        {
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            InputSource is = new InputSource();
+            is.setCharacterStream(new StringReader(xml));
+            doc = dBuilder.parse(is);
+            doc.getDocumentElement().normalize();
+            return doc;
+        }
+        catch (Exception exception)
+        {
+            log_.error("Unable to parse xml template");
+        }
+        return doc;
+    }
+    
+    /**
+     * Convert a DOM document to a String.
+     * 
+     * @param doc           Document DOM
+     * @return xml          string representative of the Document DOM
+     */
+    public static String domToString(Document doc)
+    {
+        Guard.check(doc);        
+        String xml = null;
+        try
+        {
+            TransformerFactory factory = TransformerFactory.newInstance();
+            Transformer transformer = factory.newTransformer();
+            StringWriter writer = new StringWriter();
+            Result result = new StreamResult(writer);
+            Source source = new DOMSource(doc);
+            transformer.transform(source, result);
+            writer.close();
+            xml = writer.toString();
+        }
+        catch (Exception exception)
+        {
+            log_.error("Unable to write for the xml template");
         }
         
-        return networkInterfaces;   
+        return xml;
     }
+    
 }
