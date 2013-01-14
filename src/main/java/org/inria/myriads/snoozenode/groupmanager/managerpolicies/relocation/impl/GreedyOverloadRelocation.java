@@ -78,8 +78,7 @@ public final class GreedyOverloadRelocation
         for (VirtualMachineMetaData metaData : virtualMachines)
         {            
             String virtualMachineId = metaData.getVirtualMachineLocation().getVirtualMachineId();
-            List<Double> virtualMachineUsage = 
-                estimator_.estimateVirtualMachineResourceDemand(metaData.getUsedCapacity());
+            List<Double> virtualMachineUsage = estimator_.estimateVirtualMachineResourceDemand(metaData);
             log_.debug(String.format("Estimated virtual machine %s resource demand: %s. Overload capacity: %s", 
                                       virtualMachineId,
                                       virtualMachineUsage, 
@@ -97,8 +96,7 @@ public final class GreedyOverloadRelocation
         for (VirtualMachineMetaData metaData : virtualMachines)
         {
             migrationCandidates.add(metaData);         
-            List<Double> virtualMachineUsage = 
-                estimator_.estimateVirtualMachineResourceDemand(metaData.getUsedCapacity());            
+            List<Double> virtualMachineUsage = estimator_.estimateVirtualMachineResourceDemand(metaData);            
             tmpUsage = MathUtils.addVectors(tmpUsage, virtualMachineUsage);
             log_.debug(String.format("Estimated virtual machine %s resource demand: %s. Total demand: %s", 
                                      metaData.getVirtualMachineLocation().getVirtualMachineId(),
@@ -125,13 +123,13 @@ public final class GreedyOverloadRelocation
     {
         log_.debug("Starting to compute the moderate loaded migration plan");
 
-        List<Double> usedCapacity = estimator_.computeUsedLocalControllerCapacity(sourceLocalController);    
-        log_.debug(String.format("Used local controller capacity: %s", usedCapacity));
+        List<Double> capacity = estimator_.computeLocalControllerCapacity(sourceLocalController);    
+        log_.debug(String.format("Local controller capacity: %s", capacity));
         
         List<Double> maxAllowedCapacity = estimator_.computeMaxAllowedCapacity(sourceLocalController);
         log_.debug(String.format("Max allowed local controller capacity: %s", maxAllowedCapacity));
         
-        List<Double> overloadCapacity = computeOverloadCapacity(usedCapacity, maxAllowedCapacity);
+        List<Double> overloadCapacity = computeOverloadCapacity(capacity, maxAllowedCapacity);
         log_.debug(String.format("Overload local controller capacity: %s", overloadCapacity));
         
         List<VirtualMachineMetaData> virtualMachines = 

@@ -121,7 +121,7 @@ public final class SerconVirtualMachineConsolidation
                 {
                     removeVirtualMachines(virtualMachines, mapping);
                 }
-                
+                    
                 leastLoadedController--;
                 log_.debug(String.format("Number of migrations: %d", mapping.size()));
             }

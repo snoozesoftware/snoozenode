@@ -286,6 +286,11 @@ public final class LibVirtVirtualMachineActuator
             log_.error(String.format("Error creating hypervisor connector: %s", exception.getMessage()));
             return false;
         }
+        catch (Exception exception)
+        {
+            log_.error(String.format("General migration exception: %s", exception.getMessage()));
+            return false;
+        }
         
         return true;
     }

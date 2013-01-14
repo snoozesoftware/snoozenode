@@ -62,8 +62,8 @@ public class LocalControllerL1Increasing
     {
         Guard.check(localController1, localController2);
         
-        ArrayList<Double>utilization1 = estimator_.computeUsedLocalControllerCapacity(localController1);                
-        ArrayList<Double> utilization2 = estimator_.computeUsedLocalControllerCapacity(localController2);  
+        ArrayList<Double>utilization1 = estimator_.computeLocalControllerCapacity(localController1);                
+        ArrayList<Double> utilization2 = estimator_.computeLocalControllerCapacity(localController2);  
         
         double value1 = MathUtils.computeL1Norm(utilization1);
         double value2 = MathUtils.computeL1Norm(utilization2);

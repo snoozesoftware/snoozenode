@@ -60,13 +60,10 @@ public final class VirtualMachineL1Increasing
                        VirtualMachineMetaData secondVirtualMachine)
     {
         Guard.check(firstVirtualMachine, secondVirtualMachine);
-        ArrayList<Double> estunatedDemand1 = 
-            estimator_.estimateVirtualMachineResourceDemand(firstVirtualMachine.getUsedCapacity());
+        ArrayList<Double> estunatedDemand1 = estimator_.estimateVirtualMachineResourceDemand(firstVirtualMachine);
         double utilization1 = MathUtils.computeL1Norm(estunatedDemand1);
-        
-        ArrayList<Double> estunatedDemand2 =    
-            estimator_.estimateVirtualMachineResourceDemand(secondVirtualMachine.getUsedCapacity());
-        
+
+        ArrayList<Double> estunatedDemand2 = estimator_.estimateVirtualMachineResourceDemand(secondVirtualMachine);        
         double utilization2 = MathUtils.computeL1Norm(estunatedDemand2);
         
         if (utilization1 < utilization2) 

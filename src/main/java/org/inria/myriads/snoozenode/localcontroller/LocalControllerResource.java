@@ -157,15 +157,43 @@ public final class LocalControllerResource extends ServerResource
     } 
     
     /**
+     * Routine to suspend a virtual machine on migration.
+     * 
+     * @param virtualMachineId   The virtual machine identifier
+     * @return                   true if everything ok, "false" otherwise
+     */
+    @Override
+    public boolean suspendVirtualMachineOnMigration(String virtualMachineId)
+    {
+        log_.debug(String.format("Suspending virtual machine: %s on hypervisor as part of migration", 
+                                 virtualMachineId));
+        
+        if (!isBackendActive())
+        {
+            log_.warn("Backend is not initialized yet!");
+            return false;
+        }
+
+        boolean isSuspended = backend_.getVirtualMachineActuator().suspend(virtualMachineId);
+        if (!isSuspended)
+        {
+            log_.error("Failed to suspend virtual machine!");
+            return false;    
+        }
+        
+        return true; 
+    }
+    
+    /**
      * Routine to suspend a virtual machine.
      * 
      * @param virtualMachineId   The virtual machine identifier
      * @return                   true if everything ok, "false" otherwise
      */
     @Override
-    public boolean suspendVirtualMachine(String virtualMachineId)
+    public boolean suspendVirtualMachineOnRequest(String virtualMachineId)
     {
-        log_.debug(String.format("Suspending virtual machine: %s on hypervisor", virtualMachineId));
+        log_.debug(String.format("Suspending virtual machine: %s on hypervisor as part of request", virtualMachineId));
         
         if (!isBackendActive())
         {

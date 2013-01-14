@@ -139,7 +139,7 @@ public final class VirtualMachineManager
         }
         
         LocalControllerAPI communicator = CommunicatorFactory.newLocalControllerCommunicator(localController);
-        boolean returnValue = communicator.suspendVirtualMachine(location.getVirtualMachineId());
+        boolean returnValue = communicator.suspendVirtualMachineOnRequest(location.getVirtualMachineId());
         if (!returnValue)
         {
             log_.error(String.format("Unable to suspend virtual machine: %s", location.getVirtualMachineId()));

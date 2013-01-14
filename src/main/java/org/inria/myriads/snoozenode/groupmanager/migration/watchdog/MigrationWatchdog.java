@@ -82,7 +82,7 @@ public final class MigrationWatchdog
                                  virtualMachineId, localControllerAddress.getAddress()));
         
         LocalControllerAPI communicator = CommunicatorFactory.newLocalControllerCommunicator(localControllerAddress);
-        return communicator.suspendVirtualMachine(virtualMachineId); 
+        return communicator.suspendVirtualMachineOnMigration(virtualMachineId); 
     }
     
     /**

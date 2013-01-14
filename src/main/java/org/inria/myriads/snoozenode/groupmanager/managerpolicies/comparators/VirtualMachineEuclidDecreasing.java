@@ -36,7 +36,7 @@ public final class VirtualMachineEuclidDecreasing
     implements Comparator<VirtualMachineMetaData> 
 {
     /** Resource demand estimator. */
-    private ResourceDemandEstimator resourceDemandEstimator_;
+    private ResourceDemandEstimator estimator_;
 
     /**
      * Constructor.
@@ -46,7 +46,7 @@ public final class VirtualMachineEuclidDecreasing
     public VirtualMachineEuclidDecreasing(ResourceDemandEstimator resourceDemandEstimator) 
     {
         Guard.check(resourceDemandEstimator);
-        resourceDemandEstimator_ = resourceDemandEstimator;
+        estimator_ = resourceDemandEstimator;
     }
 
     /**
@@ -60,14 +60,11 @@ public final class VirtualMachineEuclidDecreasing
                        VirtualMachineMetaData secondVirtualMachine)
     {
         Guard.check(firstVirtualMachine, secondVirtualMachine);
-        ArrayList<Double> estunatedDemand1 = 
-            resourceDemandEstimator_.estimateVirtualMachineResourceDemand(firstVirtualMachine.getUsedCapacity());
-        double utilization1 = MathUtils.computeEuclidNorm(estunatedDemand1);
+        ArrayList<Double> estimatedDemand1 = estimator_.estimateVirtualMachineResourceDemand(firstVirtualMachine);
+        ArrayList<Double> estimatedDemand2 = estimator_.estimateVirtualMachineResourceDemand(secondVirtualMachine);
         
-        ArrayList<Double> estunatedDemand2 = 
-          resourceDemandEstimator_.estimateVirtualMachineResourceDemand(secondVirtualMachine.getUsedCapacity());
-        
-        double utilization2 = MathUtils.computeEuclidNorm(estunatedDemand2);
+        double utilization1 = MathUtils.computeEuclidNorm(estimatedDemand1);
+        double utilization2 = MathUtils.computeEuclidNorm(estimatedDemand2);
         
         if (utilization1 < utilization2) 
         {
