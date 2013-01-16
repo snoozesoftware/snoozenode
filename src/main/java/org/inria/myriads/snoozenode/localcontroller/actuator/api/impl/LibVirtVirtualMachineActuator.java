@@ -209,8 +209,8 @@ public final class LibVirtVirtualMachineActuator
     /** 
      * Reboot virtual machine. 
      * 
-     * @param id    The virtual machine identifier
-     * @return      true if everything ok, false otherwise
+     * @param virtualMachineId    The virtual machine identifier
+     * @return                    true if everything ok, false otherwise
      */
     @Override
     public boolean reboot(String virtualMachineId) {
