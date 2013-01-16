@@ -433,8 +433,8 @@ public final class ResourceDemandEstimator
     /**
      * Estimates virtual machine resource demands.
      * 
-     * @param virtualMachineHistory     The virtual machine history
-     * @return                          The estimated virtual machine monitoring data
+     * @param virtualMachine     The virtual machine meta data
+     * @return                   The estimated virtual machine monitoring data
      */
     public ArrayList<Double> estimateVirtualMachineResourceDemand(VirtualMachineMetaData virtualMachine) 
     {              
