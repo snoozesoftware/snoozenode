@@ -529,7 +529,7 @@ public final class LocalControllerResource extends ServerResource
        
         
         VirtualMachineMetaData virtualMachine = backend_.getRepository().getVirtualMachineMetaData(virtualMachineId);
-        virtualMachine.setRequestedCapacity(resizeRequest.getResizedCapacity());
+        
         
         VirtualClusterParser parser = VirtualClusterParserFactory.newVirtualClusterParser();
         String newXmlDescription = parser.handleResizeRequest(virtualMachine.getXmlRepresentation(), resizeRequest); 
@@ -554,12 +554,14 @@ public final class LocalControllerResource extends ServerResource
         if (!isShutdown)
         {
             log_.error("impossible to shutdown the virtual machine before resizing");
+            backend_.getRepository().addVirtualMachineMetaData(virtualMachine);
+            backend_.getVirtualMachineMonitoringService().resume(virtualMachineId);
             return null;
         }
         try 
         {
-            log_.debug("(ugly) waiting 5 seconds...");
-            Thread.sleep(10000);
+            log_.debug("(ugly) waiting 20 seconds...");
+            Thread.sleep(20000);
             log_.debug("resuming resize");
         } 
         catch (InterruptedException e) 
@@ -574,6 +576,13 @@ public final class LocalControllerResource extends ServerResource
         if (!isStarted)
         {
             log_.error("impossible to restart VM ...");
+            if (backend_.getVirtualMachineActuator().isActive(virtualMachineId))
+            {
+                log_.error("virtual machine already running...");   
+                log_.info("resuming to previous state ...");
+                backend_.getRepository().addVirtualMachineMetaData(virtualMachine);
+                backend_.getVirtualMachineMonitoringService().resume(virtualMachineId);
+            }
             return null;
         }
         log_.debug("resuming vm");
@@ -584,6 +593,8 @@ public final class LocalControllerResource extends ServerResource
             return null;
         }
        
+        virtualMachine.setRequestedCapacity(resizeRequest.getResizedCapacity());
+        
         return virtualMachine;
     }
 }
