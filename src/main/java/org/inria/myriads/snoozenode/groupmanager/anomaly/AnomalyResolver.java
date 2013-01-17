@@ -182,7 +182,8 @@ public final class AnomalyResolver
             throw new AnomalyResolverException("Destination local controller descriptions are not available!");
         }
         
-        ReconfigurationPlan migrationPlan = computeRelocationPlan(state, anomalyLocalController, destinationControllers);  
+        ReconfigurationPlan migrationPlan = 
+                computeRelocationPlan(state, anomalyLocalController, destinationControllers);  
         if (migrationPlan == null)
         {
             throw new AnomalyResolverException("Migration plan is not available!");

@@ -29,8 +29,11 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSavingAction;
+import org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.VirtualClusterParserFactory;
+import org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.api.VirtualClusterParser;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
@@ -84,7 +87,10 @@ public final class LocalControllerResource extends ServerResource
         {
             VirtualMachineLocation location = virtualMachine.getVirtualMachineLocation();
             log_.debug(String.format("Starting virtual machine: %s", location.getVirtualMachineId()));
-                           
+            
+            
+            
+            
             boolean isStarted = backend_.getVirtualMachineActuator().start(virtualMachine.getXmlRepresentation());
             if (!isStarted)
             {
@@ -459,4 +465,126 @@ public final class LocalControllerResource extends ServerResource
         
         return backend_.getVirtualMachineMonitoringService().start(virtualMachineMetaData);
     }
+
+    
+    /**
+     * 
+     * Resizes a virtual machine.
+     * 
+     * @param resizeRequest             resize request
+     * @return                          the new virtual machine meta data 
+     * 
+     */
+    public VirtualMachineMetaData softResizeVirtualMachine(ResizeRequest resizeRequest) 
+    {
+        log_.debug("Resize virtual machine request arrived");
+        
+        
+        if (!isBackendActive())
+        {
+           log_.warn("Backend is not initialized yet!");
+               return null;
+           }
+       String virtualMachineId = resizeRequest.getVirtualMachineLocation().getVirtualMachineId();
+       VirtualMachineMetaData virtualMachine = backend_.getRepository().getVirtualMachineMetaData(virtualMachineId);
+       virtualMachine.setRequestedCapacity(resizeRequest.getResizedCapacity());
+       Long memory = resizeRequest.getResizedCapacity().get(1).longValue();
+       
+       boolean isResized = 
+               backend_.getVirtualMachineActuator().setMemory(virtualMachineId, memory);
+       
+       if (!isResized)
+           return null;
+       
+       int vcpu = new Double(resizeRequest.getResizedCapacity().get(0)).intValue();
+       isResized =
+               backend_.getVirtualMachineActuator().setVcpu(virtualMachineId, vcpu);
+
+       if (!isResized)
+           return null;
+
+       
+       return virtualMachine;
+    }
+    
+    /**
+     * 
+     * Resizes a virtual machine.
+     * 
+     * @param resizeRequest             resize request
+     * @return                          the new virtual machine meta data 
+     * 
+     */
+    public VirtualMachineMetaData resizeVirtualMachine(ResizeRequest resizeRequest) 
+    {
+        log_.debug("Hard resize virtual machine request arrived");
+        
+        
+        if (!isBackendActive())
+        {
+           log_.warn("Backend is not initialized yet!");
+               return null;
+           }
+        String virtualMachineId = resizeRequest.getVirtualMachineLocation().getVirtualMachineId();
+       
+        
+        VirtualMachineMetaData virtualMachine = backend_.getRepository().getVirtualMachineMetaData(virtualMachineId);
+        virtualMachine.setRequestedCapacity(resizeRequest.getResizedCapacity());
+        
+        VirtualClusterParser parser = VirtualClusterParserFactory.newVirtualClusterParser();
+        String newXmlDescription = parser.handleResizeRequest(virtualMachine.getXmlRepresentation(), resizeRequest); 
+        
+        log_.debug(newXmlDescription);
+        
+        boolean isSuspended = backend_.getVirtualMachineMonitoringService().suspend(virtualMachineId);
+        if (!isSuspended)
+        {
+            log_.error("impossible to suspend the monitoring for resizing");
+            return null;
+        }
+       
+        boolean isDropped = backend_.getRepository().dropVirtualMachineMetaData(virtualMachineId);
+        if (!isDropped)
+        {
+            log_.error("impossible to drop the virtual machine metadata");
+            return null;
+        }
+       
+        boolean isShutdown = backend_.getVirtualMachineActuator().shutdown(virtualMachineId);
+        if (!isShutdown)
+        {
+            log_.error("impossible to shutdown the virtual machine before resizing");
+            return null;
+        }
+        try 
+        {
+            log_.debug("(ugly) waiting 5 seconds...");
+            Thread.sleep(10000);
+            log_.debug("resuming resize");
+        } 
+        catch (InterruptedException e) 
+        {
+            log_.error("impossible to wait for shutdown");
+            return null;
+        }
+       
+       
+        log_.debug("starting vm");
+        boolean isStarted = backend_.getVirtualMachineActuator().start(newXmlDescription);
+        if (!isStarted)
+        {
+            log_.error("impossible to restart VM ...");
+            return null;
+        }
+        log_.debug("resuming vm");
+        boolean isResumed = backend_.getVirtualMachineMonitoringService().resume(virtualMachineId);
+        if (!isResumed)
+        {
+            log_.error("impossible to resume virtual machine monitoring");
+            return null;
+        }
+       
+        return virtualMachine;
+    }
 }
+

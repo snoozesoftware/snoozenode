@@ -19,8 +19,16 @@
  */
 package org.inria.myriads.snoozenode.bootstrap;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
+import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupManagerRepositoryInformation;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
+import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.heartbeat.HeartbeatFactory;
@@ -106,5 +114,85 @@ public final class BootstrapBackend
         {
             groupLeaderDescription_ = null;
         }
+    }
+
+    
+    /**
+     * 
+     * Gets the complete hierarchy of the snooze system.
+     * 
+     * @return      The group leader repository completed with localcontrollers informations.
+     */
+    public GroupLeaderRepositoryInformation getCompleteHierarchy()
+    {
+
+        log_.debug("Starting the hierarchy building");
+        
+        NetworkAddress groupLeaderAddress = groupLeaderDescription_.getListenSettings().getControlDataAddress();
+        
+        GroupLeaderRepositoryInformation groupLeaderInformation = 
+                getGroupLeaderRepositoryInformation(groupLeaderAddress, 10);
+
+        GroupLeaderRepositoryInformation hierarchy = new GroupLeaderRepositoryInformation();
+        ArrayList<GroupManagerDescription> groupManagers = groupLeaderInformation.getGroupManagerDescriptions();
+        hierarchy.setGroupManagerDescriptions(groupManagers);
+        int i = 0;
+        for (GroupManagerDescription groupManager : groupManagers) 
+        {
+            NetworkAddress address = groupManager.getListenSettings().getControlDataAddress();
+            GroupManagerRepositoryInformation information = getGroupManagerRepositoryInformations(address, 10);
+            HashMap<String, LocalControllerDescription> localControllers =
+                    new HashMap<String, LocalControllerDescription>();
+            for (LocalControllerDescription localController : information.getLocalControllerDescriptions())
+            {
+                localControllers.put(localController.getId(), localController);
+            }
+            hierarchy.getGroupManagerDescriptions().get(i).setLocalControllers(localControllers);  
+            i++;
+        }   
+        return hierarchy;
+    }
+    
+    /**
+     * 
+     * Gets the group leader repository informations.
+     * 
+     * @param groupLeaderAddress                The group leader address
+     * @param numberOfBacklogEntries            The number of log wanted
+     * @return                                  The group leader repository 
+     */
+    public GroupLeaderRepositoryInformation getGroupLeaderRepositoryInformation(
+            NetworkAddress groupLeaderAddress, 
+            int numberOfBacklogEntries)
+    {      
+        Guard.check(groupLeaderAddress);
+        log_.info(String.format("Getting group leader repository information"));
+        GroupManagerAPI groupLeaderCommunicator = 
+                CommunicatorFactory.newGroupManagerCommunicator(groupLeaderAddress); 
+        GroupLeaderRepositoryInformation information = 
+            groupLeaderCommunicator.getGroupLeaderRepositoryInformation(numberOfBacklogEntries);
+        return information;
+    }
+    
+    /**
+     * 
+     * Gets the group manager repository informations.
+     * 
+     * @param groupManagerAddress               The group manager address
+     * @param numberOfBacklogEntries            The number of logs wanted
+     * @return                                  The group manager repository
+     */
+    public GroupManagerRepositoryInformation getGroupManagerRepositoryInformations(
+            NetworkAddress groupManagerAddress, 
+            int numberOfBacklogEntries)
+    {
+        Guard.check(groupManagerAddress);
+        log_.info(String.format("Getting group manager repository informations"));
+        
+        GroupManagerAPI groupManagerCommunicator = 
+                CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress); 
+        GroupManagerRepositoryInformation information = 
+                groupManagerCommunicator.getGroupManagerRepositoryInformation(numberOfBacklogEntries);
+        return information;        
     }
 }

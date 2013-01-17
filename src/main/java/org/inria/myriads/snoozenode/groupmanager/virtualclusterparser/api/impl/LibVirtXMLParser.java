@@ -30,6 +30,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineTemplate;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.exception.VirtualClusterParserException;
 import org.inria.myriads.snoozenode.exception.VirtualMachineTemplateException;
@@ -301,4 +302,38 @@ public final class LibVirtXMLParser
         return newTemplate;
     }
         
+    
+    /**
+     *  Handle the Resize request.
+     * 
+     * @param xmlDescription    template
+     * @param resizeRequest     the resize request
+     * @return                  the new xml description of the domain
+     */
+    public String handleResizeRequest(String xmlDescription, ResizeRequest resizeRequest)
+    {
+        Guard.check(xmlDescription, resizeRequest);
+        log_.debug("Modifying the libvirt to handle the resize request");
+        String newTemplate = xmlDescription;
+        
+        Document doc = VirtualClusterParserUtils.stringToDom(xmlDescription);
+        
+        NodeList nodes = doc.getElementsByTagName("vcpu");
+        if (nodes.getLength() > 0 && nodes.item(0).getNodeType() == Node.ELEMENT_NODE)
+        {
+            Node node = nodes.item(0);
+            node = node.getFirstChild();
+            node.setNodeValue(String.valueOf(resizeRequest.getResizedCapacity().get(0)));
+        }
+        nodes = doc.getElementsByTagName("memory");
+        if (nodes.getLength() > 0 && nodes.item(0).getNodeType() == Node.ELEMENT_NODE)
+        {
+            Element element = (Element) nodes.item(0);
+            element.setNodeValue(String.valueOf(resizeRequest.getResizedCapacity().get(1)));
+        }
+
+        newTemplate = VirtualClusterParserUtils.domToString(doc);
+        
+        return newTemplate;
+    }
 }

@@ -193,6 +193,7 @@ public final class LibVirtVirtualMachineActuator
         try 
         {
             connect_.domainLookupByName(virtualMachineId).shutdown();
+            
         } 
         catch (LibvirtException exception) 
         {
@@ -209,11 +210,12 @@ public final class LibVirtVirtualMachineActuator
     /** 
      * Reboot virtual machine. 
      * 
-     * @param id    The virtual machine identifier
-     * @return      true if everything ok, false otherwise
+     * @param virtualMachineId    The virtual machine identifier
+     * @return                    true if everything ok, false otherwise
      */
     @Override
-    public boolean reboot(String virtualMachineId) {
+    public boolean reboot(String virtualMachineId)
+    {
         Guard.check(virtualMachineId);
         log_.debug(String.format("Rebooting virtual machine: %s", virtualMachineId));
         try 
@@ -312,6 +314,62 @@ public final class LibVirtVirtualMachineActuator
             log_.error(String.format("Error creating hypervisor connector: %s", exception.getMessage()));
             return false;
         }
+        
+        return true;
+    }
+
+    /**
+     * Dynamically changes the maximum amount of physical memory allocated to a virtual machine.
+     * 
+     * @param virtualMachineId      The virtual machine identifier
+     * @param memory                The amount of memory to set
+     * @return                      true if active, false otherwise
+     */
+    public boolean setMemory(String virtualMachineId, long memory)
+    {
+        Guard.check(virtualMachineId);
+        log_.debug(String.format("Set memory of virtual machine : %s", virtualMachineId));
+        
+        try 
+        {
+            connect_.domainLookupByName(virtualMachineId).setMemory(memory);
+        } 
+        catch (LibvirtException exception) 
+        {
+            log_.debug(String.format("Unable to set virtual machine memory: %s",
+                                      exception.getMessage()));
+            return false;
+        }
+        
+        log_.debug("Memory set");
+        
+        return true;
+    }
+
+    /**
+     * Dynamically changes the maximum vcpu allocated to a virtual machine.
+     * 
+     * @param virtualMachineId      The virtual machine identifier
+     * @param vcpu                  The number of vcpu to set
+     * @return                      true if active, false otherwise
+     */
+    public boolean setVcpu(String virtualMachineId, int vcpu)
+    {
+        Guard.check(virtualMachineId);
+        log_.debug(String.format("Set vcpu of virtual machine: %s", virtualMachineId));
+        
+        try 
+        {
+            connect_.domainLookupByName(virtualMachineId).setVcpus(vcpu);
+        } 
+        catch (LibvirtException exception) 
+        {
+            log_.debug(String.format("Unable to set virtual machine vcpu : %s",
+                                      exception.getMessage()));
+            return false;
+        }
+        
+        log_.debug("VCPU set");
         
         return true;
     }

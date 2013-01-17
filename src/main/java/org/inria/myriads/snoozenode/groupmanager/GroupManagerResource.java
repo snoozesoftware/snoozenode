@@ -37,6 +37,8 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.Vi
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ClientMigrationRequest;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
@@ -500,7 +502,7 @@ public final class GroupManagerResource extends ServerResource
         GroupManagerRepositoryInformation groupManagerInformation = new GroupManagerRepositoryInformation();
         ArrayList<LocalControllerDescription> localControllers = 
           backend_.getGroupManagerInit().getRepository().getLocalControllerDescriptions(numberOfMonitoringEntries,
-                                                                                         true);
+                                                                                         false);
         groupManagerInformation.setLocalControllerDescriptions(localControllers);
         
         log_.debug(String.format("Returning reference: %s, number of local controllers: %d", 
@@ -655,4 +657,50 @@ public final class GroupManagerResource extends ServerResource
         log_.debug(String.format("Returning virtual cluster response: %s", respomse));
         return respomse;
     }
+
+    /**
+     * Resize a virtual machine.
+     * (call by the client)
+     * 
+     * @param resizeRequest     The resize Request
+     * @return                  true if ok false otherwise
+     */
+    public boolean resizeVirtualMachine(ResizeRequest resizeRequest) 
+    {
+        Guard.check(resizeRequest);
+        if (!isGroupManagerActive())
+        {
+            return false;
+        }
+        
+        boolean isResized = backend_.getGroupManagerInit()
+                .getStateMachine()
+                .resizeVirtualMachine(resizeRequest);
+
+        return isResized;
+    }
+
+    /**
+     * Migrate a virtual machine.
+     * (call by the client)
+     * 
+     * @param clientMigrationRequest     The client migration Request
+     * @return                           true if ok false otherwise
+     */
+    public boolean migrateVirtualMachine(ClientMigrationRequest clientMigrationRequest) 
+    {
+        Guard.check(clientMigrationRequest);
+        if (!isGroupManagerActive())
+        {
+            return false;
+        }
+        
+        boolean isMigrated = backend_.getGroupManagerInit()
+                .getStateMachine().startMigration(clientMigrationRequest);
+
+        return isMigrated;
+        
+    }
+
+   
 }

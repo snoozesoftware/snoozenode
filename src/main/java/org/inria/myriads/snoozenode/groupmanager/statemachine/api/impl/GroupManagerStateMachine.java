@@ -19,12 +19,17 @@
  */
 package org.inria.myriads.snoozenode.groupmanager.statemachine.api.impl;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ClientMigrationRequest;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.energymanagement.EnergyManagementSettings;
@@ -197,6 +202,8 @@ public class GroupManagerStateMachine
         String taskIdentifier = virtualMachineManager_.start(submissionRequest);
         return taskIdentifier;
     }
+    
+    
     
     /**
      * Processes virtual machine command.
@@ -469,5 +476,70 @@ public class GroupManagerStateMachine
     public VirtualMachineSubmissionResponse getVirtualMachineSubmissionResponse(String taskIdentifier) 
     {
         return virtualMachineManager_.getVirtualMachineSubmissionResponse(taskIdentifier);
+    }
+
+    /**
+     * 
+     * Resizes a virtual machine.
+     * 
+     * @param resizeRequest     The resize request
+     * @return                  true if everything ok, false otherwise
+     */
+    @Override
+    public boolean resizeVirtualMachine(ResizeRequest resizeRequest) 
+    {
+        log_.debug("Resizing virtual machines");
+        
+        if (!changeState(SystemState.MANAGEMENT))
+        {
+            return false;
+        }
+        
+        setIdle();
+        boolean isProcessed = virtualMachineManager_.processResizeCommand(resizeRequest);
+        return isProcessed;
+    }
+    
+    
+    /**
+     * Starts the migration of the vm.
+     * @param clientMigrationRequest clientMigrationRequest
+     * 
+     * 
+     * @return     true if everything ok, false otherwise
+     */
+    @Override
+    public boolean startMigration(ClientMigrationRequest clientMigrationRequest)
+    {
+        log_.debug("Starting the reconfiguration procedure");
+        
+        if (!changeState(SystemState.RECONFIGURATION))
+        {
+            return false;
+        }
+        
+        try
+        {
+            VirtualMachineLocation oldLocation = clientMigrationRequest.getOldLocation();
+            VirtualMachineLocation newLocation = clientMigrationRequest.getNewLocation();
+            VirtualMachineMetaData virtualMachine = repository_.getVirtualMachineMetaData(oldLocation, 0);
+            LocalControllerDescription newLocalController = 
+                    repository_.getLocalControllerDescription(newLocation.getLocalControllerId(), 0);
+            Map<VirtualMachineMetaData, LocalControllerDescription> mapping = 
+                    new HashMap<VirtualMachineMetaData, LocalControllerDescription>();
+            mapping.put(virtualMachine, newLocalController);
+            //construction of the migration plan with the migration request.
+            //artificially release node to use the logic behind.
+            ReconfigurationPlan migrationPlan = new ReconfigurationPlan(mapping, 1, 1);
+            
+            migrationPlanEnforcer_.enforceMigrationPlan(migrationPlan);
+        }
+        catch (Exception exception) 
+        {
+            setIdle();
+            log_.debug(String.format("Unable to execute the migration plan: %s", exception.getMessage()));
+            return false;
+        }
+        return true;
     }
 }

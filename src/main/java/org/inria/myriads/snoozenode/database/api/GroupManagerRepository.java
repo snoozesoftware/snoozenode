@@ -210,4 +210,13 @@ public interface GroupManagerRepository
      * @return                           The previous identifier, null otherwise
      */
     String hasLocalController(NetworkAddress localControllerAddress);
+
+    /**
+     * 
+     * Updates the virtual machine meta data.
+     * 
+     * @param virtualMachine        New virtual Machine Meta data
+     * @return                      true if everything ok
+     */
+    boolean updateVirtualMachineMetaData(VirtualMachineMetaData virtualMachine);
 }

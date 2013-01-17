@@ -25,6 +25,8 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ClientMigrationRequest;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 
@@ -74,6 +76,24 @@ public interface StateMachine
     boolean controlVirtualMachine(VirtualMachineCommand command, VirtualMachineLocation location);
     
     /**
+     * 
+     * Resizes a virtual machine.
+     * 
+     * @param resizeRequest     The resize request
+     * @return                  true if everything ok, false otherwise
+     */
+    boolean resizeVirtualMachine(ResizeRequest resizeRequest);
+    
+    /**
+     * Starts the migration of the vm.
+     * @param clientMigrationRequest clientMigrationRequest
+     * 
+     * 
+     * @return     true if everything ok, false otherwise
+     */
+    boolean startMigration(ClientMigrationRequest clientMigrationRequest);
+    
+    /**
      * Indicates if state machine is busy or not.
      * 
      * @return      true if busy, else otherwise
@@ -118,4 +138,6 @@ public interface StateMachine
      * @param anomalyLocalController    The anomalied local controller
      */
     void onAnomalyResolved(LocalControllerDescription anomalyLocalController);
+
+
 }

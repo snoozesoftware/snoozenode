@@ -96,6 +96,8 @@ public final class LocalControllerBackend
     /** Suspend logic. */
     private Suspend suspendLogic_;
     
+
+    
     /**
      * Constructor.
      * 
@@ -115,6 +117,7 @@ public final class LocalControllerBackend
         createLocalControllerDescription();
         onGroupManagerHeartbeatFailure();
     }
+
 
     /**
      * Initializes the database.

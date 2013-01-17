@@ -21,9 +21,8 @@ package org.inria.myriads.snoozenode.heartbeat.sender;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.MulticastSocket;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.guard.Guard;
@@ -50,7 +49,8 @@ public final class HeartbeatMulticastSender
     private NetworkAddress heartbeatAddress_;
     
     /** Datagram socket. */
-    private DatagramSocket socket_;
+    //private DatagramSocket socket_;
+    private MulticastSocket socket_;
     
     /** Lock object. */
     private Object lockObject_;
@@ -67,12 +67,12 @@ public final class HeartbeatMulticastSender
      * @param heartbeatAddress      The heartbeat address
      * @param heartbeatInterval     The heartbeat interval
      * @param hearbeatMessage       The heartbeat message
-     * @throws SocketException 
+     * @throws IOException 
      */
     public HeartbeatMulticastSender(NetworkAddress heartbeatAddress,
                                     int heartbeatInterval,
                                     HeartbeatMessage hearbeatMessage) 
-        throws SocketException 
+        throws IOException 
     {
         Guard.check(heartbeatAddress, heartbeatInterval, hearbeatMessage);
         log_.debug(String.format("Starting multicast heartbeat sender on the group %s with port %d",
@@ -81,8 +81,11 @@ public final class HeartbeatMulticastSender
         heartbeatAddress_ = heartbeatAddress;
         heartbeatInterval_ = heartbeatInterval;
         hearbeatMessage_ = hearbeatMessage;
-        socket_ = new DatagramSocket();
+        //socket_ = new DatagramSocket();
+        socket_ = new MulticastSocket();
+        //socket_.setNetworkInterface(NetworkInterface.getByName("eth1"));
         lockObject_ = new Object();
+        log_.debug("sending on interface : " + socket_.getNetworkInterface().getDisplayName());
     }
 
     /**

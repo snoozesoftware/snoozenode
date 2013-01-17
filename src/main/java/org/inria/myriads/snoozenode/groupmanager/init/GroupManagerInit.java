@@ -20,7 +20,6 @@
 package org.inria.myriads.snoozenode.groupmanager.init;
 
 import java.io.IOException;
-import java.net.SocketException;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
@@ -231,11 +230,10 @@ public final class GroupManagerInit
     
     /** 
      * Multicast group manager presence.
-     * 
-     * @throws SocketException 
+     * @throws IOException 
      */
     private void startHeartbeatSender() 
-        throws SocketException 
+        throws IOException 
     {
         log_.debug("Starting the group manager heartbeat sender");   
         

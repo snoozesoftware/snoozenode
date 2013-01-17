@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozenode.exception.VirtualClusterParserException;
 
 /**
@@ -48,7 +49,7 @@ public interface VirtualClusterParser
      * 
      * @param                                   xmlDescription    
      * @return                                  List of network interfaces
-     * @throws VirtualClusterParserException
+     * @throws VirtualClusterParserException    Exception
      */
     List<String> getNetworkInterfaces(String xmlDescription) throws VirtualClusterParserException;
     
@@ -70,4 +71,14 @@ public interface VirtualClusterParser
      */
     String replaceMacAddressInTemplate(String xmlDesc, String newMacAddress);
     
+    /**
+     *  Handle the Resize request.
+     * 
+     * @param xmlDesc           template
+     * @param resizeRequest     the resize request
+     * @return                  the new xml description of the domain
+     */
+    String handleResizeRequest(String xmlDesc, ResizeRequest resizeRequest);
+    
 }
+

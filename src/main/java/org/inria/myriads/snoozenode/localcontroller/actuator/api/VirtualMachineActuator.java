@@ -92,4 +92,24 @@ public interface VirtualMachineActuator
      * @return                      true if active, false otherwise
      */
     boolean isActive(String virtualMachineId);  
+    
+    /**
+     * Dynamically changes the maximum amount of physical memory allocated to a virtual machine.
+     * 
+     * @param virtualMachineId      The virtual machine identifier
+     * @param memory                The amount of memory to set
+     * @return                      True if active, false otherwise
+     */
+    boolean setMemory(String virtualMachineId, long memory);
+    
+    /**
+     * Dynamically changes the maximum vcpu allocated to a virtual machine.
+     * 
+     * @param virtualMachineId      The virtual machine identifier
+     * @param vcpu                  The vcpu number to set
+     * @return                      true if active, false otherwise
+     */
+    boolean setVcpu(String virtualMachineId, int vcpu);
+    
+    
 }
