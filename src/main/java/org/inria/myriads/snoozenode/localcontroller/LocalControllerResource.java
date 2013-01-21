@@ -477,7 +477,7 @@ public final class LocalControllerResource extends ServerResource
      */
     public VirtualMachineMetaData softResizeVirtualMachine(ResizeRequest resizeRequest) 
     {
-        log_.debug("Resize virtual machine request arrived");
+        log_.debug("Soft resize virtual machine request arrived");
         
         
         if (!isBackendActive())

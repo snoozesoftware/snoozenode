@@ -328,8 +328,9 @@ public final class LibVirtXMLParser
         nodes = doc.getElementsByTagName("memory");
         if (nodes.getLength() > 0 && nodes.item(0).getNodeType() == Node.ELEMENT_NODE)
         {
-            Element element = (Element) nodes.item(0);
-            element.setNodeValue(String.valueOf(resizeRequest.getResizedCapacity().get(1)));
+            Node node = nodes.item(0);
+            node = node.getFirstChild();
+            node.setNodeValue(String.valueOf(resizeRequest.getResizedCapacity().get(1)));
         }
 
         newTemplate = VirtualClusterParserUtils.domToString(doc);
