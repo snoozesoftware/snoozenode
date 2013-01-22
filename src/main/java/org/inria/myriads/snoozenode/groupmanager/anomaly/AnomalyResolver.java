@@ -33,7 +33,7 @@ import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.exception.AnomalyResolverException;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.GroupManagerPolicyFactory;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.plan.MigrationPlan;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.VirtualMachineRelocation;
 import org.inria.myriads.snoozenode.groupmanager.migration.MigrationPlanEnforcer;
 import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationPlanListener;
@@ -105,7 +105,7 @@ public final class AnomalyResolver
      * @param destinationLocalControllers   The destination local controller descriptions
      * @return                              The migration plan
      */
-    private MigrationPlan computeRelocationPlan(LocalControllerState localControllerState, 
+    private ReconfigurationPlan computeRelocationPlan(LocalControllerState localControllerState, 
                                                 LocalControllerDescription anomalyLocalController, 
                                                 List<LocalControllerDescription> destinationLocalControllers)
     {
@@ -113,7 +113,7 @@ public final class AnomalyResolver
         log_.debug(String.format("Computing migration plan for %s local controller: %s", 
                                  localControllerState, anomalyLocalController.getId()));
         
-        MigrationPlan relocationPlan = null;
+        ReconfigurationPlan relocationPlan = null;
         switch (localControllerState)
         {                
             case OVERLOADED:
@@ -182,7 +182,7 @@ public final class AnomalyResolver
             throw new AnomalyResolverException("Destination local controller descriptions are not available!");
         }
         
-        MigrationPlan migrationPlan = computeRelocationPlan(state, anomalyLocalController, destinationControllers);  
+        ReconfigurationPlan migrationPlan = computeRelocationPlan(state, anomalyLocalController, destinationControllers);  
         if (migrationPlan == null)
         {
             throw new AnomalyResolverException("Migration plan is not available!");
@@ -228,7 +228,7 @@ public final class AnomalyResolver
      * @param migrationPlan     The migration plan
      * @return                  The list of passive local controllers
      */
-    private List<LocalControllerDescription> getPassiveLocalControllers(MigrationPlan migrationPlan) 
+    private List<LocalControllerDescription> getPassiveLocalControllers(ReconfigurationPlan migrationPlan) 
     {
         log_.debug("Checking for passive local controllers in the migration plan");
         

@@ -23,7 +23,8 @@ import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmission;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.energymanagement.EnergyManagementSettings;
@@ -40,8 +41,8 @@ import org.inria.myriads.snoozenode.groupmanager.energysaver.wakeup.WakeupResour
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.GroupManagerPolicyFactory;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfiguration;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPolicy;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.plan.MigrationPlan;
 import org.inria.myriads.snoozenode.groupmanager.migration.MigrationPlanEnforcer;
 import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationPlanListener;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.SystemState;
@@ -184,7 +185,7 @@ public class GroupManagerStateMachine
      * @return                      The task identifier
      */
     @Override
-    public String startVirtualMachines(VirtualMachineSubmission submissionRequest)
+    public String startVirtualMachines(VirtualMachineSubmissionRequest submissionRequest)
     {
         log_.debug("Starting virtual machines");        
         
@@ -302,7 +303,7 @@ public class GroupManagerStateMachine
                 throw new GroupManagerInitException("Local controller list is empty!");
             }
         
-            MigrationPlan migrationPlan = reconfiguration_.reconfigure(localControllers);
+            ReconfigurationPlan migrationPlan = reconfiguration_.reconfigure(localControllers);
             if (migrationPlan == null)
             {
                 throw new GroupManagerInitException("Migration plan is not available!");        
@@ -462,11 +463,11 @@ public class GroupManagerStateMachine
      * Returns virtual machine submission response.
      * 
      * @param taskIdentifier    The task identifier
-     * @return                  The response
+     * @return                  The submission response
      */
     @Override
-    public VirtualMachineSubmission getVirtualMachineResponse(String taskIdentifier) 
+    public VirtualMachineSubmissionResponse getVirtualMachineSubmissionResponse(String taskIdentifier) 
     {
-        return virtualMachineManager_.getVirtualMachineResponse(taskIdentifier);
+        return virtualMachineManager_.getVirtualMachineSubmissionResponse(taskIdentifier);
     }
 }

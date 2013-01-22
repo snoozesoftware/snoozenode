@@ -26,8 +26,8 @@ package org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums;
  */
 public enum Dispatching 
 {
-    /** Round robin. */
-    RoundRobinSingleGroupManager,
-    /** First fit. */
-    FirstFitSingleGroupManager
+    /** First-fit. */
+    FirstFit,
+    /** Round Robin. */
+    RoundRobin,
 }

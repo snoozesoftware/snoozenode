@@ -148,7 +148,6 @@ public final class MathUtils
     public static ArrayList<Double> addVectors(List<Double> firstVector, List<Double> secondVector)   
     {
         Guard.check(firstVector, secondVector);
-        log_.debug(String.format("Adding vector %s with %s", firstVector, secondVector));
         
         ArrayList<Double> newVector = new ArrayList<Double>();
         if (!isCorrectDimension(firstVector, secondVector))

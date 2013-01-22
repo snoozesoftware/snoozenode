@@ -24,7 +24,8 @@ import java.util.List;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
-import org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.util.VirtualClusterParserUtils;
+import org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.VirtualClusterParserFactory;
+import org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.api.VirtualClusterParser;
 import org.inria.myriads.snoozenode.groupmanager.virtualnetworkmanager.api.VirtualNetworkManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,7 +100,7 @@ public final class HostVirtualNetworkManager
     private boolean assignIpAddress(VirtualMachineMetaData virtualMachineMetaData) 
     {
         Guard.check(virtualMachineMetaData);
-        log_.debug(String.format("Assinging MAC address to virtual machine %s and updating IP pool",
+        log_.debug(String.format("Assigning MAC address to virtual machine %s and updating IP pool",
                                  virtualMachineMetaData.getVirtualMachineLocation().getVirtualMachineId()));
         
         String freeIpAddress = groupLeaderRepository_.getFreeIpAddress();
@@ -112,10 +113,12 @@ public final class HostVirtualNetworkManager
         virtualMachineMetaData.setIpAddress(freeIpAddress);            
         String newMacAddress = embedIpToMac(freeIpAddress);
         log_.debug(String.format("Embedded MAC address: %s", newMacAddress));
-                    
-        String newXmlDescription = 
-            VirtualClusterParserUtils.replaceMacAddressInLibVirtTemplate(virtualMachineMetaData.getXmlRepresentation(), 
-                                                                         newMacAddress);
+        
+        
+        VirtualClusterParser parser = VirtualClusterParserFactory.newVirtualClusterParser();
+        String newXmlDescription = parser.replaceMacAddressInTemplate(virtualMachineMetaData.getXmlRepresentation(), 
+                                                                                            newMacAddress);
+
         virtualMachineMetaData.setXmlRepresentation(newXmlDescription);
         groupLeaderRepository_.removeIpAddress(freeIpAddress);
         return true;
@@ -162,8 +165,9 @@ public final class HostVirtualNetworkManager
         Guard.check(virtualMachineMetaData);
         log_.debug("Releasing assigned IP addresses");
         
-        String macAddress = VirtualClusterParserUtils.getMacAddressFromLibVirtTemplate(virtualMachineMetaData
-                                                                                       .getXmlRepresentation());
+        VirtualClusterParser parser = VirtualClusterParserFactory.newVirtualClusterParser();
+        String macAddress = parser.getMacAddress(virtualMachineMetaData.getXmlRepresentation());
+        
         log_.debug(String.format("The MAC address is: %s", macAddress));
         
         String ipAddress = convertMacToIp(macAddress);

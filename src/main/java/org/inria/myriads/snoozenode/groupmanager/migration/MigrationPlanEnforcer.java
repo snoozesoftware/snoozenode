@@ -34,7 +34,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.Vi
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.exception.MigrationPlanEnforcerException;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.plan.MigrationPlan;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
 import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationListener;
 import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationPlanListener;
 import org.inria.myriads.snoozenode.groupmanager.migration.watchdog.MigrationWatchdog;
@@ -262,7 +262,7 @@ public final class MigrationPlanEnforcer
      * @param migrationPlan                         The migration plan
      * @throws MigrationPlanEnforcerException 
      */
-    public void enforceMigrationPlan(MigrationPlan migrationPlan) 
+    public void enforceMigrationPlan(ReconfigurationPlan migrationPlan) 
         throws MigrationPlanEnforcerException 
     {
         if (migrationPlan == null)

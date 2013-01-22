@@ -32,6 +32,8 @@ public enum VirtualMachineCommand
     RESUME,
     /** Shutdown. */
     SHUTDOWN,
+    /** Reboot. */
+    REBOOT,
     /** Destroy. */
     DESTROY,
     /** Migrate. */

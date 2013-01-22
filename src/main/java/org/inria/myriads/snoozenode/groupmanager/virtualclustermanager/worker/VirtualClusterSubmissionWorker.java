@@ -36,15 +36,16 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionResponse;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmission;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
 import org.inria.myriads.snoozecommon.util.TimeUtils;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.exception.DispatchPlanException;
 import org.inria.myriads.snoozenode.exception.MissingGroupManagerException;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.util.EnergySaverUtils;
+import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPlan;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.plan.DispatchPlan;
 import org.inria.myriads.snoozenode.groupmanager.virtualclustermanager.listener.VirtualClusterSubmissionListener;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.slf4j.Logger;
@@ -167,7 +168,7 @@ public final class VirtualClusterSubmissionWorker
             new ArrayList<VirtualMachineMetaData>(Arrays.asList(new VirtualMachineMetaData[virtualMachines.size()]));  
         Collections.copy(virtualMachinesCopy, virtualMachines);
         
-        DispatchPlan dispatchPlan = dispatchingPolicy_.dispatch(virtualMachinesCopy, groupManagers); 
+        DispatchingPlan dispatchPlan = dispatchingPolicy_.dispatch(virtualMachinesCopy, groupManagers); 
         if (dispatchPlan == null)
         {
             throw new DispatchPlanException("Dispatch plan is not available!");
@@ -187,7 +188,7 @@ public final class VirtualClusterSubmissionWorker
      * @param dispatchPlan              The dispatching plan
      * @throws DispatchPlanException 
      */
-    private void startVirtualCluster(DispatchPlan dispatchPlan) 
+    private void startVirtualCluster(DispatchingPlan dispatchPlan) 
         throws DispatchPlanException 
     {        
         log_.debug("Starting virtual cluster submission");
@@ -209,8 +210,8 @@ public final class VirtualClusterSubmissionWorker
                 log_.debug(String.format("Failed to start virtual machine scheduling on group manager %s", 
                                          groupManager.getId()));
                 ManagementUtils.updateAllVirtualMachineMetaData(assignedVirtualMachines,
-                                                              VirtualMachineStatus.ERROR,
-                                                              VirtualMachineErrorCode.UNABLE_TO_START_ON_GROUP_MANAGER);
+                                                                VirtualMachineStatus.ERROR,
+                                                                VirtualMachineErrorCode.UNABLE_TO_START_ON_GROUP_MANAGER);
                 continue;
             }
             
@@ -238,22 +239,22 @@ public final class VirtualClusterSubmissionWorker
     {
         log_.debug("Starting submission response collection");
         
-        int numberOfResponses = 0;
+        int numberOfFinishes = 0;
         int numberOfSubmissions = responses.size();  
         int numberOfRetries = nodeConfiguration_.getSubmission().getCollection().getNumberOfRetries();
         int collectionInterval = nodeConfiguration_.getSubmission().getCollection().getRetryInterval();
         
         while (numberOfRetries > 0)
         {
-            if (numberOfResponses == numberOfSubmissions)
+            if (numberOfFinishes == numberOfSubmissions)
             {
-                log_.debug("Received all virtual machine responses! Terminating polling!");
+                log_.debug("Received all virtual machine submission finishes! Terminating polling!");
                 break;
             }
          
             try 
             {
-                log_.debug(String.format("Waiting %d seconds more before collecting responses", collectionInterval));
+                log_.debug(String.format("Waiting %d seconds more before collecting", collectionInterval));
                 Thread.sleep(TimeUtils.convertSecondsToMilliseconds(collectionInterval));
             } 
             catch (InterruptedException exception) 
@@ -269,18 +270,20 @@ public final class VirtualClusterSubmissionWorker
                 
                 String taskIdentifier = entry.getKey();
                 GroupManagerDescription groupManager = entry.getValue();
-                VirtualMachineSubmission submissionResponse = getVirtualMachineResponse(taskIdentifier, groupManager);
+                VirtualMachineSubmissionResponse submissionResponse = 
+                        getVirtualMachineSubmissionResponse(taskIdentifier, groupManager);
                 if (submissionResponse == null)
                 {
-                    log_.debug(String.format("No submission %s response available yet!", taskIdentifier));
+                    log_.debug(String.format("No submission %s finish available yet!", taskIdentifier));
                     ManagementUtils.updateAllVirtualMachineMetaData(virtualMachines_, 
-                        VirtualMachineStatus.ERROR, VirtualMachineErrorCode.UNABLE_TO_COLLECT_GROUP_MANAGER_RESPONSE);
+                                                                    VirtualMachineStatus.ERROR, 
+                                                                    VirtualMachineErrorCode.UNABLE_TO_COLLECT_GROUP_MANAGER_RESPONSE);
                     continue;
                 }
                                                 
                 processVirtualMachineSubmissionResponse(submissionResponse, groupManager);
                 iterator.remove();
-                numberOfResponses++;
+                numberOfFinishes++;
             }
             
             numberOfRetries--;
@@ -291,59 +294,59 @@ public final class VirtualClusterSubmissionWorker
     /**
      * Starts updating virtual machine meta data.
      * 
-     * @param submissionResponse    The submission response
-     * @param groupManager          The group managers
+     * @param submissionResponse  The submission finish
+     * @param groupManager        The group managers
      */
-    private void processVirtualMachineSubmissionResponse(VirtualMachineSubmission submissionResponse,
+    private void processVirtualMachineSubmissionResponse(VirtualMachineSubmissionResponse submissionResponse,
                                                          GroupManagerDescription groupManager) 
     {   
-        List<VirtualMachineMetaData> responseMetaData = submissionResponse.getVirtualMachineMetaData();
-        List<VirtualMachineMetaData> groupManagerMetaData = groupManager.getVirtualMachines();
-                        
-        log_.debug(String.format("Starting virtual machine submission response processing for %d virtual machines",
-                                 responseMetaData.size()));  
+        List<VirtualMachineMetaData> submittedVirtualMachines = groupManager.getVirtualMachines();
+        List<VirtualMachineMetaData> receivedVirtualMachines = submissionResponse.getVirtualMachineMetaData();
         
-        for (int i = 0; i < groupManagerMetaData.size(); i++)
+        log_.debug(String.format("Starting virtual machine submission response processing for %d " +
+        		                 "received virtual machines", receivedVirtualMachines.size()));  
+        
+        for (int i = 0; i < receivedVirtualMachines.size(); i++)
         {
-            VirtualMachineMetaData originalMetaData = groupManagerMetaData.get(i);
-            VirtualMachineMetaData newMetaData = responseMetaData.get(i);
-            ManagementUtils.updateVirtualMachineMetaData(originalMetaData,
-                                                         newMetaData.getStatus(), 
-                                                         newMetaData.getErrorCode());
-            originalMetaData.setVirtualMachineLocation(newMetaData.getVirtualMachineLocation());
+            VirtualMachineMetaData submittedVirtualMachine = submittedVirtualMachines.get(i);
+            VirtualMachineMetaData receivedVirtualMachine = receivedVirtualMachines.get(i);
+            ManagementUtils.updateVirtualMachineMetaData(submittedVirtualMachine,
+                                                         receivedVirtualMachine.getStatus(), 
+                                                         receivedVirtualMachine.getErrorCode());
+            submittedVirtualMachine.setVirtualMachineLocation(receivedVirtualMachine.getVirtualMachineLocation());
         }
     }
 
     /**
      * Try to start the virtual machines on the selected group manager.
      * 
-     * @param metaData          The virtual machine meta data
+     * @param virtualMachines   The virtual machines
      * @param groupManager      The group manager description
      * @return                  The task identifier
      */
-    private String startVirtualMachines(ArrayList<VirtualMachineMetaData> metaData,  
+    private String startVirtualMachines(ArrayList<VirtualMachineMetaData> virtualMachines,  
                                         GroupManagerDescription groupManager)
     {
         log_.debug(String.format("Sending virtual machines submission request to group manager: %s", 
                                  groupManager.getId()));
      
         String taskIdentifier = null;
-        VirtualMachineSubmission submissionRequest = new VirtualMachineSubmission();
-        submissionRequest.setVirtualMachineMetaData(metaData);
+        VirtualMachineSubmissionRequest submissionRequest = new VirtualMachineSubmissionRequest();
+        submissionRequest.setVirtualMachineMetaData(virtualMachines);
         
-        NetworkAddress address = groupManager.getListenSettings().getControlDataAddress();
-        GroupManagerAPI communicator = CommunicatorFactory.newGroupManagerCommunicator(address);
+        NetworkAddress groupManagerAddress = groupManager.getListenSettings().getControlDataAddress();
+        GroupManagerAPI groupManagerCommunicator = CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress);
         
         int numberOfRetries = nodeConfiguration_.getSubmission().getDispatching().getNumberOfRetries();
         int retryInterval = nodeConfiguration_.getSubmission().getDispatching().getRetryInterval();       
-        for (int i = 0; i < numberOfRetries; i++)
+        for (int count = 0; count < numberOfRetries; count++)
         {
-            taskIdentifier = communicator.startVirtualMachines(submissionRequest);
+            taskIdentifier = groupManagerCommunicator.startVirtualMachines(submissionRequest);
             if (taskIdentifier == null)
             {   
                 log_.debug(String.format("This is the %d virtual machine start attempt to schedule virtual machines " +
                                          "on group manager %s! Is it BUSY?! Waiting for %s seconds to try again!", 
-                                         i,
+                                         count,
                                          groupManager.getId(),
                                          retryInterval));
                 try 
@@ -372,8 +375,8 @@ public final class VirtualClusterSubmissionWorker
      * @param groupManager       The group manager description
      * @return                   The virtual machine response
      */
-    private VirtualMachineSubmission getVirtualMachineResponse(String taskIdentifier,  
-                                                               GroupManagerDescription groupManager)
+    private VirtualMachineSubmissionResponse getVirtualMachineSubmissionResponse(String taskIdentifier,  
+                                                                                 GroupManagerDescription groupManager)
     {      
         log_.debug(String.format("Sending virtual submission: %s response retrieval request to group manager: %s", 
                                  taskIdentifier, 
@@ -381,7 +384,7 @@ public final class VirtualClusterSubmissionWorker
         
         NetworkAddress address = groupManager.getListenSettings().getControlDataAddress();
         GroupManagerAPI communicator = CommunicatorFactory.newGroupManagerCommunicator(address);
-        VirtualMachineSubmission response = communicator.getVirtualMachineResponse(taskIdentifier);      
+        VirtualMachineSubmissionResponse response = communicator.getVirtualMachineSubmissionResponse(taskIdentifier);      
         return response;
     }
 }

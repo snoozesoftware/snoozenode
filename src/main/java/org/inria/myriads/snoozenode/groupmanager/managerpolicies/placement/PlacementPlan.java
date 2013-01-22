@@ -25,19 +25,48 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 
 /**
- * Placement policy interface.
+ * Placement plan.
  * 
  * @author Eugen Feller
  */
-public interface PlacementPolicy 
+public final class PlacementPlan 
 {
+    /** Used local controllers. */
+    private List<LocalControllerDescription> localControllers_;
+
+    /** Unassigned virtual machines. */
+    private List<VirtualMachineMetaData> unassignedVirtualMachines_;
+    
     /**
-     * Places the virtual machines.
+     * Constructor.
      * 
-     * @param virtualMachines       The virtual machines
-     * @param localControllers      The local controllers
-     * @return                      The placement plan
+     * @param localControllers              The local controllers
+     * @param unassignedVirtualMachines     The unassigned virtual machines
      */
-    PlacementPlan place(List<VirtualMachineMetaData> virtualMachines, 
-                        List<LocalControllerDescription> localControllers);
+    public PlacementPlan(List<LocalControllerDescription> localControllers, 
+                         List<VirtualMachineMetaData> unassignedVirtualMachines)
+    {
+        localControllers_ = localControllers;
+        unassignedVirtualMachines_ = unassignedVirtualMachines;
+    }
+
+    /**
+     * Returns the local controllers.
+     * 
+     * @return  The local controllers
+     */
+    public List<LocalControllerDescription> getLocalControllers() 
+    {
+        return localControllers_;
+    }
+    
+    /**
+     * Returns the unassigned virtual machines.
+     * 
+     * @return The unassigned virtual machines
+     */
+    public List<VirtualMachineMetaData> gettUnassignedVirtualMachines()
+    {
+        return unassignedVirtualMachines_;
+    }
 }

@@ -241,14 +241,14 @@ public final class GroupManagerMemoryRepository
         log_.debug(String.format("Getting local controller description for virtual machine: %s", virtualMachineId));
         
       
-        LocalControllerDescription description = localControllerDescriptions_.get(localControllerId);
-        if (description == null)
+        LocalControllerDescription localController = localControllerDescriptions_.get(localControllerId);
+        if (localController == null)
         {
             log_.debug("The local controller description is NULL");
             return null;
         }
         
-        VirtualMachineMetaData metaData = description.getVirtualMachineMetaData().get(virtualMachineId);
+        VirtualMachineMetaData metaData = localController.getVirtualMachineMetaData().get(virtualMachineId);
         if (metaData == null)
         {
             log_.debug(String.format("No virtual machine %s meta data exists on this local controller!",
@@ -256,7 +256,7 @@ public final class GroupManagerMemoryRepository
             return null;
         }
         
-        return description.getControlDataAddress();
+        return localController.getControlDataAddress();
     }
         
     /**

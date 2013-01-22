@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.plan;
+package org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration;
 
 import java.util.Map;
 
@@ -25,11 +25,11 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 
 /**
- * Migration plan.
+ * Reconfiguration plan.
  * 
  * @author Eugen Feller
  */
-public final class MigrationPlan 
+public final class ReconfigurationPlan 
 {        
     /** Number of used nodes. */
     private int numberOfUsedNodes_;
@@ -47,9 +47,9 @@ public final class MigrationPlan
      * @param numberOfUsedNodes         The number of used nodes
      * @param numberOfReleasedNodes     The number of released nodes
      */
-    public MigrationPlan(Map<VirtualMachineMetaData, LocalControllerDescription> mapping,  
-                         int numberOfUsedNodes,
-                         int numberOfReleasedNodes) 
+    public ReconfigurationPlan(Map<VirtualMachineMetaData, LocalControllerDescription> mapping,  
+                               int numberOfUsedNodes,
+                               int numberOfReleasedNodes) 
     {
         mapping_ = mapping;
         numberOfUsedNodes_ = numberOfUsedNodes;

@@ -17,28 +17,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.plan;
+package org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching;
 
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 
 /**
- * Dispatch plan.
+ * Dispatching plan.
  * 
  * @author Eugen Feller
  */
-public final class DispatchPlan 
+public final class DispatchingPlan 
 {
     /** List of group managers. */
     private List<GroupManagerDescription> groupManagers_;
 
     /**
-     * Sets the group managers.
+     * Constructor.
      * 
      * @param groupManagers     The group managers
      */
-    public void setGroupManagers(List<GroupManagerDescription> groupManagers) 
+    public DispatchingPlan(List<GroupManagerDescription> groupManagers)
     {
         groupManagers_ = groupManagers;
     }

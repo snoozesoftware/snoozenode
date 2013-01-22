@@ -206,6 +206,32 @@ public final class LibVirtVirtualMachineActuator
         return true;
     }
 
+    /** 
+     * Reboot virtual machine. 
+     * 
+     * @param virtualMachineId    The virtual machine identifier
+     * @return                    true if everything ok, false otherwise
+     */
+    @Override
+    public boolean reboot(String virtualMachineId) {
+        Guard.check(virtualMachineId);
+        log_.debug(String.format("Rebooting virtual machine: %s", virtualMachineId));
+        try 
+        {
+            connect_.domainLookupByName(virtualMachineId).reboot(0);
+        } 
+        catch (LibvirtException exception) 
+        {
+            log_.debug(String.format("Unable to reboot virtual machine: %s", 
+                                     exception.getMessage()));
+            return false;
+        }
+        
+        log_.debug("Shutdown was successfull");
+        
+        return true;
+    }
+    
     /**
      * Shutdown a virtual machine.
      * 
@@ -286,7 +312,14 @@ public final class LibVirtVirtualMachineActuator
             log_.error(String.format("Error creating hypervisor connector: %s", exception.getMessage()));
             return false;
         }
+        catch (Exception exception)
+        {
+            log_.error(String.format("General migration exception: %s", exception.getMessage()));
+            return false;
+        }
         
         return true;
     }
+
+
 }

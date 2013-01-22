@@ -23,7 +23,8 @@ import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmission;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 
@@ -56,7 +57,7 @@ public interface StateMachine
      * @param submissionRequest     The virtual machine submission
      * @return                      The task identifier
      */
-    String startVirtualMachines(VirtualMachineSubmission submissionRequest);
+    String startVirtualMachines(VirtualMachineSubmissionRequest submissionRequest);
 
     /**
      * Called upon virtual machine submission finished.
@@ -80,12 +81,12 @@ public interface StateMachine
     boolean isBusy();
     
     /**
-     * Returns virtual machine submission response.
+     * Returns virtual machine submission finish.
      * 
      * @param taskIdentifier    The task identifier
-     * @return                  The response
+     * @return                  The submission response
      */
-    VirtualMachineSubmission getVirtualMachineResponse(String taskIdentifier);
+    VirtualMachineSubmissionResponse getVirtualMachineSubmissionResponse(String taskIdentifier);
     
     /**
      * Wakeup local controller.

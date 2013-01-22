@@ -275,18 +275,14 @@ public final class ResourceDemandEstimator
      * @return                          The new capacity vector
      */
     public List<Double> applyPackingDensity(List<Double> requestedCapacity, PackingDensity packingDensity)
-    {
-        log_.debug("Creating requested capacity vector");
-        
+    {        
         double cpu = UtilizationUtils.getCpuUtilization(requestedCapacity) * packingDensity.getCPU();
         double memory = UtilizationUtils.getMemoryUtilization(requestedCapacity) * packingDensity.getMemory();
         double networkRx = UtilizationUtils.getNetworkRxUtilization(requestedCapacity) * packingDensity.getNetwork();
         double networkTx = UtilizationUtils.getNetworkTxUtilization(requestedCapacity) * packingDensity.getNetwork();
         
         NetworkDemand networkDemand = new NetworkDemand(networkRx, networkTx);
-        ArrayList<Double> newRequestedCapacity = MathUtils.createCustomVector(cpu, 
-                                                                              memory, 
-                                                                              networkDemand);
+        ArrayList<Double> newRequestedCapacity = MathUtils.createCustomVector(cpu, memory, networkDemand);
         return newRequestedCapacity;
     }   
     
@@ -300,11 +296,6 @@ public final class ResourceDemandEstimator
     {
         List<Double> requestedCapacity = virtualMachine.getRequestedCapacity();
         requestedCapacity = applyPackingDensity(requestedCapacity, packingDensity_);
-        
-        String virtualMachineId = virtualMachine.getVirtualMachineLocation().getVirtualMachineId();
-        log_.debug(String.format("Requested virtual machine %s capacity after packing density: %s", 
-                                 virtualMachineId,
-                                 requestedCapacity));
         return requestedCapacity;
     }
     
@@ -314,43 +305,23 @@ public final class ResourceDemandEstimator
      * @param virtualMachine    The virtual machine meta data
      * @return                  The virtual machine capacity
      */
-    private List<Double> computeUsedVirtualMachineCapacity(VirtualMachineMetaData virtualMachine)
+    private List<Double> computeVirtualMachineCapacity(VirtualMachineMetaData virtualMachine)
     {        
-        Map<Long, VirtualMachineMonitoringData> usedCapacity = virtualMachine.getUsedCapacity();  
-        if (usedCapacity.size() == 0)
+        Map<Long, VirtualMachineMonitoringData> capacity = virtualMachine.getUsedCapacity();  
+        if (capacity.size() == 0 || isStatic_)
         {
-            log_.debug("No virtual machine used capacity information available! Taking requested!");
+            log_.debug("No virtual machine used capacity information available or static mode enabled! " +
+            		   "Taking requested!");
             List<Double> requestedCapacity = computeRequestedVirtualMachineCapacity(virtualMachine);
             return requestedCapacity;
         } 
         
         String virtualMachineId = virtualMachine.getVirtualMachineLocation().getVirtualMachineId();
-        List<Double> estimatedUsedCapacity = estimateVirtualMachineResourceDemand(usedCapacity);
+        List<Double> estimatedUsedCapacity = estimateVirtualMachineResourceDemand(virtualMachine);
         log_.debug(String.format("Virtual machine %s used capacity is: %s",
                                  virtualMachineId,
                                  estimatedUsedCapacity));    
         return estimatedUsedCapacity;
-    }
-    
-    /**
-     * Returns the local controller capacity.
-     * 
-     * @param localController   The local controller description
-     * @return                  The capacity
-     */
-    private List<Double> getLocalControllerCapacity(LocalControllerDescription localController)
-    {
-        List<Double> capacity;
-        if (!isStatic_)
-        {
-            capacity = computeUsedLocalControllerCapacity(localController);
-            log_.debug(String.format("Considerung used local controller capacity: %s", capacity));
-            return capacity;
-        }
-        
-        capacity = computeRequestedLocalControllerCapacity(localController);
-        log_.debug(String.format("Considerung requested local controller capacity: %s", capacity));
-        return capacity; 
     }
     
     /** 
@@ -363,8 +334,8 @@ public final class ResourceDemandEstimator
     public boolean hasEnoughLocalControllerCapacity(VirtualMachineMetaData virtualMachine, 
                                                     LocalControllerDescription localController)
     {                   
-        List<Double> virtualMachineCapacity = getVirtualMachineCapacity(virtualMachine);
-        List<Double> localControllerCapacity = getLocalControllerCapacity(localController);
+        List<Double> virtualMachineCapacity = computeVirtualMachineCapacity(virtualMachine);
+        List<Double> localControllerCapacity = computeLocalControllerCapacity(localController);
         List<Double> newLocalControllerCapacity = MathUtils.addVectors(virtualMachineCapacity, 
                                                                        localControllerCapacity);  
         log_.debug(String.format("Local controller %s capacity: %s, VM capacity: %s, new LC capacity: %s", 
@@ -433,43 +404,46 @@ public final class ResourceDemandEstimator
      * @param localController    The local controller description
      * @return                   The estimated local controller utilization
      */
-    public ArrayList<Double> computeUsedLocalControllerCapacity(LocalControllerDescription localController)
+    public ArrayList<Double> computeLocalControllerCapacity(LocalControllerDescription localController)
     {
-       log_.debug(String.format("Computing used local controller %s capacity", localController.getId()));
+       log_.debug(String.format("Computing local controller %s capacity", localController.getId()));
        
-       ArrayList<Double> usedCapacity = MathUtils.createEmptyVector();
+       ArrayList<Double> capacity = MathUtils.createEmptyVector();
        for (VirtualMachineMetaData virtualMachine : localController.getVirtualMachineMetaData().values())
        {
            String virtualMachineId = virtualMachine.getVirtualMachineLocation().getVirtualMachineId();
            Map<Long, VirtualMachineMonitoringData> monitoringData = virtualMachine.getUsedCapacity();
-           if (monitoringData.size() == 0)
+           if (monitoringData.size() == 0 || isStatic_)
            {
-               log_.debug(String.format("Virtual machine %s has no monitoring data available! Consider requested!", 
-                                        virtualMachineId));
-               usedCapacity = MathUtils.addVectors(computeRequestedVirtualMachineCapacity(virtualMachine),
-                                                                                          usedCapacity);
+               capacity = MathUtils.addVectors(computeRequestedVirtualMachineCapacity(virtualMachine), capacity);
                continue;
            }
            
-           ArrayList<Double> estimatedData = estimateVirtualMachineResourceDemand(monitoringData);
+           ArrayList<Double> estimatedData = estimateVirtualMachineResourceDemand(virtualMachine);
            log_.debug(String.format("Estimated virtual machine %s resource demand is %s", 
                                      virtualMachineId,
                                      estimatedData));
-           usedCapacity = MathUtils.addVectors(estimatedData, usedCapacity);
+           capacity = MathUtils.addVectors(estimatedData, capacity);
        }
        
-       return usedCapacity;
+       log_.debug(String.format("Local controller capacity is: %s", capacity));
+       return capacity;
     }
     
     /**
      * Estimates virtual machine resource demands.
      * 
-     * @param virtualMachineHistory     The virtual machine history
-     * @return                          The estimated virtual machine monitoring data
+     * @param virtualMachine     The virtual machine meta data
+     * @return                   The estimated virtual machine monitoring data
      */
-    public ArrayList<Double> estimateVirtualMachineResourceDemand(Map<Long, VirtualMachineMonitoringData> 
-                                                                  virtualMachineHistory) 
+    public ArrayList<Double> estimateVirtualMachineResourceDemand(VirtualMachineMetaData virtualMachine) 
     {              
+        if (isStatic_)
+        {
+            return virtualMachine.getRequestedCapacity();
+        }
+        
+        Map<Long, VirtualMachineMonitoringData> virtualMachineHistory = virtualMachine.getUsedCapacity();
         double cpuUtilization = cpuDemandEstimator_.estimate(virtualMachineHistory);
         double memoryUtilization = memoryDemandEstimator_.estimate(virtualMachineHistory);
         NetworkDemand networkUtilization = networkDemandEstimator_.estimate(virtualMachineHistory);       
@@ -490,7 +464,7 @@ public final class ResourceDemandEstimator
         ArrayList<Double> usedCapacity = MathUtils.createEmptyVector();        
         for (LocalControllerDescription localController : localControllers) 
         {  
-            usedCapacity = MathUtils.addVectors(usedCapacity, computeUsedLocalControllerCapacity(localController));
+            usedCapacity = MathUtils.addVectors(usedCapacity, computeLocalControllerCapacity(localController));
         }      
         
         return usedCapacity;
@@ -631,26 +605,5 @@ public final class ResourceDemandEstimator
     public SortNorm getSortNorm() 
     {
         return sortNorm_;
-    }
-
-    /**
-     * Returns the virtual machine capacity.
-     * 
-     * @param virtualMachine    The virtual machine
-     * @return                  The capacity
-     */
-    private List<Double> getVirtualMachineCapacity(VirtualMachineMetaData virtualMachine)
-    {
-        List<Double> capacity;
-        if (!isStatic_)
-        {
-            capacity = computeUsedVirtualMachineCapacity(virtualMachine);
-            log_.debug(String.format("Considering used virtual machine: %s", capacity));
-            return capacity;
-        }
-        
-        capacity = computeRequestedVirtualMachineCapacity(virtualMachine);
-        log_.debug(String.format("Considering requested virtual machine capacity: %s", capacity));
-        return capacity;    
     }
 }

@@ -84,7 +84,7 @@ public final class GroupManagerL1Decreasing
 
         double passiveCapaciy1 = MathUtils.computeL1Norm(summary1.getPassiveCapacity());
         double passiveCapaciy2 = MathUtils.computeL1Norm(summary2.getPassiveCapacity());
-        log_.debug(String.format("L1 passive capacity of group manager 2 is %.2f, %.2f", 
+        log_.debug(String.format("L1 passive capacity of group manager 1 and 2 is %.2f, %.2f", 
                                  passiveCapaciy1, passiveCapaciy2));
         if (passiveCapaciy1 < passiveCapaciy2)
         {

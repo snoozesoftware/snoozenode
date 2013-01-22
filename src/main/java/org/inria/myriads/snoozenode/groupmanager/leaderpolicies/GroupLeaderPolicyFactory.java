@@ -25,8 +25,8 @@ import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.Assig
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.impl.RandomLocalController;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.impl.RoundRobinLocalController;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.impl.FirstFitSingleGroupManager;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.impl.RoundRobinSingleGroupManager;
+import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.impl.FirstFit;
+import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.impl.RoundRobin;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Assignment;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Dispatching;
 import org.slf4j.Logger;
@@ -56,12 +56,10 @@ public final class GroupLeaderPolicyFactory
      * @param localControllerAssignmentPolicy    The local controller assignment strategy
      * @return                                   The group manager description
      */
-    public static AssignmentPolicy 
-        newLocalControllerAssignment(Assignment localControllerAssignmentPolicy) 
+    public static AssignmentPolicy newLocalControllerAssignment(Assignment localControllerAssignmentPolicy) 
     {
         Guard.check(localControllerAssignmentPolicy);
-        log_.debug(String.format("Selecting the propper local controller asasignment policy: %s", 
-                                 localControllerAssignmentPolicy));
+        log_.debug(String.format("Selected local controller asasignment policy: %s", localControllerAssignmentPolicy));
         
         AssignmentPolicy assignmentPolicy = null;     
         switch (localControllerAssignmentPolicy) 
@@ -91,19 +89,18 @@ public final class GroupLeaderPolicyFactory
     public static DispatchingPolicy newVirtualClusterPlacement(Dispatching dispatchingPolicy,
                                                                ResourceDemandEstimator demandEstimator)
     {
-        Guard.check(dispatchingPolicy);
-        log_.debug(String.format("Selecting the propper virtual cluster asasignment policy: %s", 
-                                 dispatchingPolicy));
+        Guard.check(dispatchingPolicy, demandEstimator);
+        log_.debug(String.format("Selected virtual cluster dispatching policy: %s", dispatchingPolicy));
         
         DispatchingPolicy assignmentPolicy = null;
         switch (dispatchingPolicy) 
         {
-            case FirstFitSingleGroupManager :              
-                assignmentPolicy = new FirstFitSingleGroupManager(demandEstimator);
+            case FirstFit :              
+                assignmentPolicy = new FirstFit(demandEstimator);
                 break;
  
-            case RoundRobinSingleGroupManager :            
-                assignmentPolicy = new RoundRobinSingleGroupManager(demandEstimator);            
+            case RoundRobin :            
+                assignmentPolicy = new RoundRobin(demandEstimator);            
                 break;
                 
             default:

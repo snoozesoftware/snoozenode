@@ -22,7 +22,7 @@ package org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation;
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.plan.MigrationPlan;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
 
 /**
  * Virtual machine overload relocation interface.
@@ -38,6 +38,6 @@ public interface VirtualMachineRelocation
      * @param destinationLocalControllers   The destination local controller candidates
      * @return                              The migration plan
      */
-    MigrationPlan relocateVirtualMachines(LocalControllerDescription sourceLocalController, 
+    ReconfigurationPlan relocateVirtualMachines(LocalControllerDescription sourceLocalController, 
                                           List<LocalControllerDescription> destinationLocalControllers);
 }

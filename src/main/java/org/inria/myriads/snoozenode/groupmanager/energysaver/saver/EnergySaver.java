@@ -114,17 +114,18 @@ public final class EnergySaver
                 List<LocalControllerDescription> idleResources = getIdleLocalControllers(localControllers,
                                                                                          numberOfReservedNodes);
                 int numberOfIdleNodes = idleResources.size();              
+                log_.debug(String.format("Number of local controllers to power cycle: %d", numberOfIdleNodes));
+                
                 if (numberOfIdleNodes == 0)
                 {
                     log_.debug("Not enough idle resources to perform energy savings!");
                     continue;
                 }
                  
-                log_.debug(String.format("Number of idle local controllers: %d", numberOfIdleNodes));
                 stateMachine_.onEnergySavingsEnabled(idleResources);
             }            
         }
-        catch (InterruptedException exception)
+        catch (Exception exception)
         {
             log_.error("Energy saver was interrupted", exception);
         }
@@ -234,13 +235,11 @@ public final class EnergySaver
         }
         
         /*
-         * Check if enough nodes will be online after power 
-         * cycling idle LCs! If yes all idle detected LCs 
-         * can be power cycled!(e.g. 10 active, 5 idle, 3 reserved
-         * => Shutdown all idle)
+         * Check if enough active nodes will be online after power cycling idle LCs! If yes all idle detected LCs 
+         * can be power cycled!(e.g. 10 active, 5 idle, 3 reserved => Shutdown all idle)
          */
-        int newNumberOfLocalControllers = localControllers.size() - idleLocalControllers.size();
-        boolean isAllowed = newNumberOfLocalControllers >= numberOfReservedNodes;
+        int numberOfActiveLocalControllers = localControllers.size() - idleLocalControllers.size();
+        boolean isAllowed = numberOfActiveLocalControllers >= numberOfReservedNodes;
         if (isAllowed)
         {
             return idleLocalControllers;
@@ -255,7 +254,9 @@ public final class EnergySaver
          */
         for (int i = 0; i < numberOfReservedNodes; i++)
         {
-            idleLocalControllers.remove(i);
+            log_.debug(String.format("Removing reserved node: %d from idle nodes: %d", 
+                                     i, idleLocalControllers.size()));
+            idleLocalControllers.remove(0);
         }
         
         return idleLocalControllers;

@@ -60,6 +60,15 @@ public interface VirtualMachineActuator
      */
     boolean shutdown(String id);
     
+    
+    /** 
+     * Reboot virtual machine. 
+     * 
+     * @param id    The virtual machine identifier
+     * @return      true if everything ok, false otherwise
+     */
+    boolean reboot(String id);
+    
     /** 
      * Destroy virtual machine. 
      * 

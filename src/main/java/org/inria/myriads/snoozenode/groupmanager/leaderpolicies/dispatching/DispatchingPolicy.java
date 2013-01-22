@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.plan.DispatchPlan;
 
 /**
  * Virtual cluster dispatching policy.
@@ -35,10 +34,10 @@ public interface DispatchingPolicy
     /**
      * Dispatches a virtual cluster.
      * 
-     * @param virtualMachines              The virtual machines
-     * @param groupManagerDescriptions     The group manager descriptions
-     * @return                             The dispatch plan
+     * @param virtualMachines   The virtual machines
+     * @param groupManagers     The group managers
+     * @return                  The dispatch plan
      */
-    DispatchPlan dispatch(List<VirtualMachineMetaData> virtualMachines,
-                          List<GroupManagerDescription> groupManagerDescriptions);
+    DispatchingPlan dispatch(List<VirtualMachineMetaData> virtualMachines,
+                             List<GroupManagerDescription> groupManagers);
 }

@@ -19,13 +19,19 @@
  */
 package org.inria.myriads.snoozenode.localcontroller;
 
+import java.util.ArrayList;
+
 import org.inria.myriads.snoozecommon.communication.rest.api.LocalControllerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSavingAction;
+import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,42 +60,56 @@ public final class LocalControllerResource extends ServerResource
     }
     
     /** 
-     * Start a virtual machine.
+     * Starts the virtual machines.
      * (called by the group manager)
      *  
-     * @param virtualMachineMetaData        The virtual machine description
-     * @return                              true if everything ok, "false" otherwise
+     * @param submissionRequest     The submission request
+     * @return                      true if everything ok, "false" otherwise
      */
     @Override
-    public boolean startVirtualMachine(VirtualMachineMetaData virtualMachineMetaData) 
+    public VirtualMachineSubmissionResponse startVirtualMachines(VirtualMachineSubmissionRequest submissionRequest) 
     {
-        Guard.check(virtualMachineMetaData);
-        
-        VirtualMachineLocation location = virtualMachineMetaData.getVirtualMachineLocation();
-        log_.debug(String.format("Starting virtual machine: %s on hypervisor", location.getVirtualMachineId()));
+        Guard.check(submissionRequest);
         
         if (!isBackendActive())
         {
             log_.warn("Backend is not initialized yet!");
-            return false;
-        }
-           
-        boolean isStarted = backend_.getVirtualMachineActuator().start(virtualMachineMetaData.getXmlRepresentation());
-        if (!isStarted)
-        {
-            log_.debug("Failed to start the virtual machine!");
-            return false;
-        }
-                             
-        log_.debug("Virtual machine started! Now starting the monitoring!");
-        isStarted = backend_.getVirtualMachineMonitoringService().start(virtualMachineMetaData);
-        if (!isStarted)
-        {
-            log_.debug("Failed to start the virtual machine monitoring!");
-            return false;
+            return null;
         }
         
-        return true;
+        ArrayList<VirtualMachineMetaData> virtualMachines = submissionRequest.getVirtualMachineMetaData();
+        log_.debug(String.format("Received a request to start %d virtual machines", virtualMachines.size()));
+        
+        for (VirtualMachineMetaData virtualMachine : submissionRequest.getVirtualMachineMetaData())
+        {
+            VirtualMachineLocation location = virtualMachine.getVirtualMachineLocation();
+            log_.debug(String.format("Starting virtual machine: %s", location.getVirtualMachineId()));
+                           
+            boolean isStarted = backend_.getVirtualMachineActuator().start(virtualMachine.getXmlRepresentation());
+            if (!isStarted)
+            {
+                log_.error("Failed to start virtual machine on hypervisor!");
+                ManagementUtils.updateVirtualMachineMetaData(virtualMachine,
+                                                             VirtualMachineStatus.ERROR,
+                                                             VirtualMachineErrorCode.FAILED_TO_START_ON_HYPERVISOR);
+                continue;
+            }
+                                 
+            log_.debug("Virtual machine started! Now starting the monitoring!");
+            isStarted = backend_.getVirtualMachineMonitoringService().start(virtualMachine);
+            if (!isStarted)
+            {
+                log_.error("Failed to start virtual machine monitoring!");
+                ManagementUtils.updateVirtualMachineMetaData(virtualMachine,
+                                                             VirtualMachineStatus.ERROR,
+                                                             VirtualMachineErrorCode.FAILED_TO_START_MONITORING);
+                continue;
+            }
+        }
+        
+        VirtualMachineSubmissionResponse submissionResponse = new VirtualMachineSubmissionResponse();
+        submissionResponse.setVirtualMachineMetaData(submissionRequest.getVirtualMachineMetaData());
+        return submissionResponse;
     }
     
     /**
@@ -137,15 +157,43 @@ public final class LocalControllerResource extends ServerResource
     } 
     
     /**
+     * Routine to suspend a virtual machine on migration.
+     * 
+     * @param virtualMachineId   The virtual machine identifier
+     * @return                   true if everything ok, "false" otherwise
+     */
+    @Override
+    public boolean suspendVirtualMachineOnMigration(String virtualMachineId)
+    {
+        log_.debug(String.format("Suspending virtual machine: %s on hypervisor as part of migration", 
+                                 virtualMachineId));
+        
+        if (!isBackendActive())
+        {
+            log_.warn("Backend is not initialized yet!");
+            return false;
+        }
+
+        boolean isSuspended = backend_.getVirtualMachineActuator().suspend(virtualMachineId);
+        if (!isSuspended)
+        {
+            log_.error("Failed to suspend virtual machine!");
+            return false;    
+        }
+        
+        return true; 
+    }
+    
+    /**
      * Routine to suspend a virtual machine.
      * 
      * @param virtualMachineId   The virtual machine identifier
      * @return                   true if everything ok, "false" otherwise
      */
     @Override
-    public boolean suspendVirtualMachine(String virtualMachineId)
+    public boolean suspendVirtualMachineOnRequest(String virtualMachineId)
     {
-        log_.debug(String.format("Suspending virtual machine: %s on hypervisor", virtualMachineId));
+        log_.debug(String.format("Suspending virtual machine: %s on hypervisor as part of request", virtualMachineId));
         
         if (!isBackendActive())
         {
@@ -255,6 +303,41 @@ public final class LocalControllerResource extends ServerResource
         return true;    
     } 
 
+    /**
+     * Routine to reboot a virtual machine.
+     * 
+     * @param virtualMachineId   The virtual machine identifier
+     * @return                   true if everything ok, false otherwise
+     */
+    @Override
+    public boolean rebootVirtualMachine(String virtualMachineId)
+    {
+        log_.debug(String.format("Reboot virtual machine: %s on hypervisor", virtualMachineId));
+        
+        if (!isBackendActive())
+        {
+            log_.warn("Backend is not initialized yet!");
+            return false;
+        }
+                                        
+        boolean isRebooted = backend_.getVirtualMachineActuator().reboot(virtualMachineId);
+        if (!isRebooted)
+        {
+            log_.error("Unable to reboot the virtual machine");
+            return false;  
+        }
+        
+        boolean isChanged = backend_.getRepository().changeVirtualMachineStatus(virtualMachineId, 
+                                                                                VirtualMachineStatus.RUNNING);
+        if (!isChanged)
+        {
+            log_.error("Failed to change virtual machine status!");
+            return false;
+        }
+        
+        return true;    
+    } 
+    
     /**
      * Routine to destroy a virtual machine.
      * 

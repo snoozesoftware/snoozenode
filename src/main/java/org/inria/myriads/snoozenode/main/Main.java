@@ -128,17 +128,21 @@ public final class Main
         catch (VirtualMachineMonitoringException exception) 
         {
             ErrorUtils.processError(String.format("Something critical happened during monitoring: %s", 
-                                                      exception.getMessage()));
+                                                  exception.getMessage()));
         }
         catch (SocketException exception)
         {
             ErrorUtils.processError(String.format("Socket exception: %s! Are you sure network is available?", 
-                                                     exception.getMessage()));
+                                                  exception.getMessage()));
         }
         catch (HostMonitoringException exception) 
         {
             ErrorUtils.processError(String.format("Something critical happened during host monitoring: %s", 
                                                   exception.getMessage()));
+        }
+        catch (UnsatisfiedLinkError error)
+        {
+            ErrorUtils.processError(String.format("Link error: %s", error.getMessage()));
         }
         catch (IOException exception) 
         {

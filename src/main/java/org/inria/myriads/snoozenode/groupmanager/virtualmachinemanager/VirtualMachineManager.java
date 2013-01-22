@@ -28,7 +28,8 @@ import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.LocalControllerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmission;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
@@ -63,7 +64,7 @@ public final class VirtualMachineManager
     private StateMachine stateMachine_;
     
     /** Finsished submissions. */
-    private Map<String, VirtualMachineSubmission> virtualMachineResponses_;
+    private Map<String, VirtualMachineSubmissionResponse> submissionResponses_;
     
     /** Number of monitoring entries. */
     private int numberOfMonitoringEntries_;
@@ -87,7 +88,7 @@ public final class VirtualMachineManager
         numberOfMonitoringEntries_ = estimator.getNumberOfMonitoringEntries();        
         repository_ = groupManagerRepository;
         stateMachine_ = stateMachine;
-        virtualMachineResponses_ = new HashMap<String, VirtualMachineSubmission>();
+        submissionResponses_ = new HashMap<String, VirtualMachineSubmissionResponse>();
         placementPolicy_ = GroupManagerPolicyFactory.newVirtualMachinePlacement(schedulerSettings.getPlacementPolicy(), 
                                                                                 estimator);
     }
@@ -98,7 +99,7 @@ public final class VirtualMachineManager
      * @param submissionRequest     The virtual machine description
      * @return                      The task identifier
      */
-    public String start(VirtualMachineSubmission submissionRequest) 
+    public String start(VirtualMachineSubmissionRequest submissionRequest) 
     {
         Guard.check(submissionRequest);
         
@@ -138,7 +139,7 @@ public final class VirtualMachineManager
         }
         
         LocalControllerAPI communicator = CommunicatorFactory.newLocalControllerCommunicator(localController);
-        boolean returnValue = communicator.suspendVirtualMachine(location.getVirtualMachineId());
+        boolean returnValue = communicator.suspendVirtualMachineOnRequest(location.getVirtualMachineId());
         if (!returnValue)
         {
             log_.error(String.format("Unable to suspend virtual machine: %s", location.getVirtualMachineId()));
@@ -234,6 +235,48 @@ public final class VirtualMachineManager
     }  
     
     /**
+     * Reboot a virtual machine.
+     * 
+     * @param location     The virtual machine location 
+     * @return             true if everything ok, false otherwise
+     */
+    private boolean reboot(VirtualMachineLocation location)
+    {
+        String virtualMachineId = location.getVirtualMachineId();
+        log_.debug(String.format("Rebooting virtual machine %s", virtualMachineId));
+        
+        if (!repository_.checkVirtualMachineStatus(location, VirtualMachineStatus.RUNNING))
+        {
+            return false;
+        }
+
+        NetworkAddress localController = repository_.getLocalControllerControlDataAddress(location);
+        if (localController == null)
+        {
+            log_.debug(String.format("Unable to get local controller description from virtual machine: %s",
+                                     virtualMachineId));
+            return false;
+        }
+        
+        LocalControllerAPI communicator = CommunicatorFactory.newLocalControllerCommunicator(localController);
+        boolean isRebooted = communicator.rebootVirtualMachine(virtualMachineId);
+        if (!isRebooted)
+        {
+            log_.error(String.format("Unable to reboot virtual machine: %s", virtualMachineId));
+            return false;
+        }
+                                     
+        boolean isChanged = repository_.changeVirtualMachineStatus(location, VirtualMachineStatus.RUNNING);   
+        if (!isChanged)
+        {
+            log_.error("Failed to change virtual machine status");
+            return false;
+        }
+        
+        return true;
+    }  
+    
+    /**
      * Destroy a virtual machine.
      * 
      * @param location     The virtual machine location
@@ -274,36 +317,36 @@ public final class VirtualMachineManager
     /**
      * Adds a virtual cluster response.
      *
-     * @param taskIdentifier    The task identifier
-     * @param response          The virtual machine response
+     * @param taskIdentifier        The task identifier
+     * @param submissionResponse    The virtual machine submisson response
      */
     @Override
-    public void onSubmissionFinished(String taskIdentifier, VirtualMachineSubmission response) 
+    public void onSubmissionFinished(String taskIdentifier, VirtualMachineSubmissionResponse submissionResponse) 
     {
-        Guard.check(taskIdentifier, response);
-        log_.debug(String.format("Adding submission %s response: %s", taskIdentifier, response));
-        virtualMachineResponses_.put(taskIdentifier, response);
+        Guard.check(taskIdentifier, submissionResponse);
+        log_.debug(String.format("Adding submission %s response", taskIdentifier));
+        submissionResponses_.put(taskIdentifier, submissionResponse);
         stateMachine_.onVirtualMachineSubmissionFinished();
     }
     
     /**
      * Returns virtual cluster response if available.
      * 
-     * @param virtualMachineId   The virtual machine identifier
-     * @return                   The virtual machine response
+     * @param taskIdentifier   The submission task identifier
+     * @return                 The virtual machine submission response
      */
-    public VirtualMachineSubmission getVirtualMachineResponse(String virtualMachineId)
+    public VirtualMachineSubmissionResponse getVirtualMachineSubmissionResponse(String taskIdentifier)
     {
-        Guard.check(virtualMachineId);        
+        Guard.check(taskIdentifier);        
         
-        VirtualMachineSubmission response = virtualMachineResponses_.get(virtualMachineId);
-        if (response != null)
+        VirtualMachineSubmissionResponse submissionResponse = submissionResponses_.get(taskIdentifier);
+        if (submissionResponse != null)
         {
-            virtualMachineResponses_.remove(virtualMachineId);
+            submissionResponses_.remove(taskIdentifier);
         }
         
-        log_.debug(String.format("Returning virtual machine response: %s", response));
-        return response;
+        log_.debug(String.format("Returning virtual machine submission response: %s", submissionResponse));
+        return submissionResponse;
     } 
     
     /**
@@ -331,6 +374,10 @@ public final class VirtualMachineManager
             
             case SHUTDOWN:
                 isProcessed = shutdown(location);
+                break;
+                
+            case REBOOT:
+                isProcessed = reboot(location);
                 break;
                 
             case DESTROY:

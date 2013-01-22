@@ -36,7 +36,7 @@ public final class VirtualMachineMaxDecreasing
     implements Comparator<VirtualMachineMetaData> 
 {    
     /** The resource demand estimator. */
-    private ResourceDemandEstimator resourceDemandEstimator_;
+    private ResourceDemandEstimator estimator_;
 
     /**
      * Constructor.
@@ -46,7 +46,7 @@ public final class VirtualMachineMaxDecreasing
     public VirtualMachineMaxDecreasing(ResourceDemandEstimator resourceDemandEstimator) 
     {
         Guard.check(resourceDemandEstimator);
-        resourceDemandEstimator_ = resourceDemandEstimator;
+        estimator_ = resourceDemandEstimator;
     }
 
     /**
@@ -60,13 +60,10 @@ public final class VirtualMachineMaxDecreasing
                        VirtualMachineMetaData secondVirtualMachine)
     {
         Guard.check(firstVirtualMachine, secondVirtualMachine);    
-        ArrayList<Double> estunatedDemand1 = 
-            resourceDemandEstimator_.estimateVirtualMachineResourceDemand(firstVirtualMachine.getUsedCapacity());
+        ArrayList<Double> estunatedDemand1 = estimator_.estimateVirtualMachineResourceDemand(firstVirtualMachine);        
+        ArrayList<Double> estunatedDemand2 = estimator_.estimateVirtualMachineResourceDemand(secondVirtualMachine);
+        
         double utilization1 = MathUtils.computeMaxNorm(estunatedDemand1);
-        
-        ArrayList<Double> estunatedDemand2 = 
-          resourceDemandEstimator_.estimateVirtualMachineResourceDemand(secondVirtualMachine.getUsedCapacity());
-        
         double utilization2 = MathUtils.computeMaxNorm(estunatedDemand2);
        
         if (utilization1 < utilization2) 
