@@ -658,27 +658,6 @@ public final class GroupManagerResource extends ServerResource
         return respomse;
     }
 
-    /**
-     * Resize a virtual machine.
-     * (call by the client)
-     * 
-     * @param resizeRequest     The resize Request
-     * @return                  true if ok false otherwise
-     */
-    public boolean resizeVirtualMachine(ResizeRequest resizeRequest) 
-    {
-        Guard.check(resizeRequest);
-        if (!isGroupManagerActive())
-        {
-            return false;
-        }
-        
-        boolean isResized = backend_.getGroupManagerInit()
-                .getStateMachine()
-                .resizeVirtualMachine(resizeRequest);
-
-        return isResized;
-    }
 
     /**
      * Migrate a virtual machine.

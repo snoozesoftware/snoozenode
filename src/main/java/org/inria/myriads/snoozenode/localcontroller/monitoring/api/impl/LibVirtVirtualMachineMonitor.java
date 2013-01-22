@@ -23,9 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozecommon.parser.VirtualClusterParserFactory;
+import org.inria.myriads.snoozecommon.parser.api.VirtualClusterParser;
 import org.inria.myriads.snoozenode.exception.VirtualMachineMonitoringException;
-import org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.VirtualClusterParserFactory;
-import org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.api.VirtualClusterParser;
 import org.inria.myriads.snoozenode.localcontroller.connector.Connector;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.VirtualMachineMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.information.NetworkTrafficInformation;

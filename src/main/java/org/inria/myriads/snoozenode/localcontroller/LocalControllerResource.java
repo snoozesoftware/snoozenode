@@ -31,9 +31,9 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.Vi
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
 import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozecommon.parser.VirtualClusterParserFactory;
+import org.inria.myriads.snoozecommon.parser.api.VirtualClusterParser;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSavingAction;
-import org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.VirtualClusterParserFactory;
-import org.inria.myriads.snoozenode.groupmanager.virtualclusterparser.api.VirtualClusterParser;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
@@ -507,95 +507,6 @@ public final class LocalControllerResource extends ServerResource
        return virtualMachine;
     }
     
-    /**
-     * 
-     * Resizes a virtual machine.
-     * 
-     * @param resizeRequest             resize request
-     * @return                          the new virtual machine meta data 
-     * 
-     */
-    public VirtualMachineMetaData resizeVirtualMachine(ResizeRequest resizeRequest) 
-    {
-        log_.debug("Hard resize virtual machine request arrived");
-        
-        
-        if (!isBackendActive())
-        {
-           log_.warn("Backend is not initialized yet!");
-               return null;
-           }
-        String virtualMachineId = resizeRequest.getVirtualMachineLocation().getVirtualMachineId();
-       
-        
-        VirtualMachineMetaData virtualMachine = backend_.getRepository().getVirtualMachineMetaData(virtualMachineId);
-        
-        
-        VirtualClusterParser parser = VirtualClusterParserFactory.newVirtualClusterParser();
-        String newXmlDescription = parser.handleResizeRequest(virtualMachine.getXmlRepresentation(), resizeRequest); 
-        
-        log_.debug(newXmlDescription);
-        
-        boolean isSuspended = backend_.getVirtualMachineMonitoringService().suspend(virtualMachineId);
-        if (!isSuspended)
-        {
-            log_.error("impossible to suspend the monitoring for resizing");
-            return null;
-        }
-       
-        boolean isDropped = backend_.getRepository().dropVirtualMachineMetaData(virtualMachineId);
-        if (!isDropped)
-        {
-            log_.error("impossible to drop the virtual machine metadata");
-            return null;
-        }
-       
-        boolean isShutdown = backend_.getVirtualMachineActuator().shutdown(virtualMachineId);
-        if (!isShutdown)
-        {
-            log_.error("impossible to shutdown the virtual machine before resizing");
-            backend_.getRepository().addVirtualMachineMetaData(virtualMachine);
-            backend_.getVirtualMachineMonitoringService().resume(virtualMachineId);
-            return null;
-        }
-        try 
-        {
-            log_.debug("(ugly) waiting 20 seconds...");
-            Thread.sleep(20000);
-            log_.debug("resuming resize");
-        } 
-        catch (InterruptedException e) 
-        {
-            log_.error("impossible to wait for shutdown");
-            return null;
-        }
-       
-       
-        log_.debug("starting vm");
-        boolean isStarted = backend_.getVirtualMachineActuator().start(newXmlDescription);
-        if (!isStarted)
-        {
-            log_.error("impossible to restart VM ...");
-            if (backend_.getVirtualMachineActuator().isActive(virtualMachineId))
-            {
-                log_.error("virtual machine already running...");   
-                log_.info("resuming to previous state ...");
-                backend_.getRepository().addVirtualMachineMetaData(virtualMachine);
-                backend_.getVirtualMachineMonitoringService().resume(virtualMachineId);
-            }
-            return null;
-        }
-        log_.debug("resuming vm");
-        boolean isResumed = backend_.getVirtualMachineMonitoringService().resume(virtualMachineId);
-        if (!isResumed)
-        {
-            log_.error("impossible to resume virtual machine monitoring");
-            return null;
-        }
-       
-        virtualMachine.setRequestedCapacity(resizeRequest.getResizedCapacity());
-        
-        return virtualMachine;
-    }
+    
 }
 

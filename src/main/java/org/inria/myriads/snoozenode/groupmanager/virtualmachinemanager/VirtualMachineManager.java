@@ -35,6 +35,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.Vi
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
 import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozecommon.util.MathUtils;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
@@ -44,7 +45,6 @@ import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineComm
 import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinemanager.listener.VirtualMachineManagerListener;
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinemanager.worker.VirtualMachineSubmissionWorker;
-import org.inria.myriads.snoozenode.util.MathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -397,77 +397,4 @@ public final class VirtualMachineManager
         return isProcessed;
     }
 
-    /**
-     * 
-     * Process the resize request.
-     * 
-     * @param resizeRequest     The resize request
-     * @return                  true if everything ok.
-     */
-    public boolean processResizeCommand(ResizeRequest resizeRequest)
-    {
-        
-        VirtualMachineLocation location = resizeRequest.getVirtualMachineLocation();
-        String virtualMachineId = location.getVirtualMachineId();
-        log_.debug(String.format("Resizing virtual machine %s", virtualMachineId));
-        
-        //check status ? 
-
-        //check capacity 
-        LocalControllerDescription localControllerDescription = 
-                repository_.getLocalControllerDescription(location.getLocalControllerId(), 0);
-        if (localControllerDescription == null)
-        {
-            log_.debug(String.format("Unable to get the local controller desciption"));
-            return false;
-        }
-        
-        ArrayList<Double> totalCapacity = localControllerDescription.getTotalCapacity();
-        
-        ArrayList<VirtualMachineMetaData> virtualMachines = localControllerDescription.getAssignedVirtualMachines();
-        
-        ArrayList<Double> requestedCapacities = MathUtils.createEmptyVector();
-        requestedCapacities = MathUtils.addVectors(requestedCapacities, resizeRequest.getResizedCapacity());
-        
-        for (VirtualMachineMetaData virtualMachine : virtualMachines)
-        {
-            //compute the requested capacity
-             requestedCapacities = MathUtils.addVectors(requestedCapacities, virtualMachine.getRequestedCapacity());
-        }
-        
-        
-        if (MathUtils.vectorCompareIsGreater(requestedCapacities, totalCapacity))
-        {
-            log_.debug("Unable to resize the vm on the same local controller, rescheduling");
-            log_.debug("NOT IMPLEMENTED");
-            return false;
-        }
-        //resize
-        NetworkAddress localController = repository_.getLocalControllerControlDataAddress(location);
-        if (localController == null)
-        {
-            log_.debug(String.format("Unable to get local controller description from virtual machine: %s",
-                                     virtualMachineId));
-            return false;
-        }
-
-        LocalControllerAPI communicator = CommunicatorFactory.newLocalControllerCommunicator(localController);
-        
-        VirtualMachineMetaData virtualMachine = communicator.resizeVirtualMachine(resizeRequest);
-        
-        if (virtualMachine == null)
-        {
-            log_.error(String.format("Unable to resize virtual machine: %s", virtualMachineId));
-            return false;
-        }
-                                     
-        boolean isChanged = repository_.updateVirtualMachineMetaData(virtualMachine); 
-        if (!isChanged)
-        {
-            log_.error("Failed to change virtual machine status");
-            return false;
-        }
-        
-        return true;
-    }
 }

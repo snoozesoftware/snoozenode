@@ -24,11 +24,11 @@ import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozecommon.util.MathUtils;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
-import org.inria.myriads.snoozenode.util.MathUtils;
 import org.inria.myriads.snoozenode.util.ThresholdUtils;
 import org.inria.myriads.snoozenode.util.UtilizationUtils;
 import org.slf4j.Logger;

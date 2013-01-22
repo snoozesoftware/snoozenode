@@ -75,14 +75,6 @@ public interface StateMachine
      */
     boolean controlVirtualMachine(VirtualMachineCommand command, VirtualMachineLocation location);
     
-    /**
-     * 
-     * Resizes a virtual machine.
-     * 
-     * @param resizeRequest     The resize request
-     * @return                  true if everything ok, false otherwise
-     */
-    boolean resizeVirtualMachine(ResizeRequest resizeRequest);
     
     /**
      * Starts the migration of the vm.

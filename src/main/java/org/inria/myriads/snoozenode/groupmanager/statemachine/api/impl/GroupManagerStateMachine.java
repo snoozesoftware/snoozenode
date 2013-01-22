@@ -478,27 +478,7 @@ public class GroupManagerStateMachine
         return virtualMachineManager_.getVirtualMachineSubmissionResponse(taskIdentifier);
     }
 
-    /**
-     * 
-     * Resizes a virtual machine.
-     * 
-     * @param resizeRequest     The resize request
-     * @return                  true if everything ok, false otherwise
-     */
-    @Override
-    public boolean resizeVirtualMachine(ResizeRequest resizeRequest) 
-    {
-        log_.debug("Resizing virtual machines");
-        
-        if (!changeState(SystemState.MANAGEMENT))
-        {
-            return false;
-        }
-        
-        setIdle();
-        boolean isProcessed = virtualMachineManager_.processResizeCommand(resizeRequest);
-        return isProcessed;
-    }
+
     
     
     /**
