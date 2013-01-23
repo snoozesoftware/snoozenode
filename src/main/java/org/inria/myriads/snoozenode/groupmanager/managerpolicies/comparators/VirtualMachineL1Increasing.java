@@ -63,7 +63,8 @@ public final class VirtualMachineL1Increasing
         ArrayList<Double> estunatedDemand1 = estimator_.estimateVirtualMachineResourceDemand(firstVirtualMachine);
         double utilization1 = MathUtils.computeL1Norm(estunatedDemand1);
 
-        ArrayList<Double> estunatedDemand2 = estimator_.estimateVirtualMachineResourceDemand(secondVirtualMachine);        
+        ArrayList<Double> estunatedDemand2 = 
+                estimator_.estimateVirtualMachineResourceDemand(secondVirtualMachine);        
         double utilization2 = MathUtils.computeL1Norm(estunatedDemand2);
         
         if (utilization1 < utilization2) 

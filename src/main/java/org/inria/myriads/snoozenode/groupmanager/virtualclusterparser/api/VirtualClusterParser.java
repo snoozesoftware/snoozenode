@@ -48,7 +48,7 @@ public interface VirtualClusterParser
      * 
      * @param                                   xmlDescription    
      * @return                                  List of network interfaces
-     * @throws VirtualClusterParserException
+     * @throws VirtualClusterParserException    Virtual cluster exception
      */
     List<String> getNetworkInterfaces(String xmlDescription) throws VirtualClusterParserException;
     

@@ -70,6 +70,7 @@ public final class RoundRobin implements PlacementPolicy
      * 
      * @param virtualMachines   The virtual machines
      * @param localControllers  The local controller descriptions
+     * @return                  Placement Plan
      */
     @Override
     public PlacementPlan place(List<VirtualMachineMetaData> virtualMachines,

@@ -311,7 +311,7 @@ public final class ResourceDemandEstimator
         if (capacity.size() == 0 || isStatic_)
         {
             log_.debug("No virtual machine used capacity information available or static mode enabled! " +
-            		   "Taking requested!");
+                    "Taking requested!");
             List<Double> requestedCapacity = computeRequestedVirtualMachineCapacity(virtualMachine);
             return requestedCapacity;
         } 

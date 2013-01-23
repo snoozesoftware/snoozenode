@@ -60,8 +60,10 @@ public final class VirtualMachineMaxDecreasing
                        VirtualMachineMetaData secondVirtualMachine)
     {
         Guard.check(firstVirtualMachine, secondVirtualMachine);    
-        ArrayList<Double> estunatedDemand1 = estimator_.estimateVirtualMachineResourceDemand(firstVirtualMachine);        
-        ArrayList<Double> estunatedDemand2 = estimator_.estimateVirtualMachineResourceDemand(secondVirtualMachine);
+        ArrayList<Double> estunatedDemand1 = 
+                estimator_.estimateVirtualMachineResourceDemand(firstVirtualMachine);        
+        ArrayList<Double> estunatedDemand2 = 
+                estimator_.estimateVirtualMachineResourceDemand(secondVirtualMachine);
         
         double utilization1 = MathUtils.computeMaxNorm(estunatedDemand1);
         double utilization2 = MathUtils.computeMaxNorm(estunatedDemand2);

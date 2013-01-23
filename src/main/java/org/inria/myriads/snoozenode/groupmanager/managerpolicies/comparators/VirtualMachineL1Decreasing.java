@@ -59,8 +59,10 @@ public final class VirtualMachineL1Decreasing
     public int compare(VirtualMachineMetaData firstVirtualMachine, VirtualMachineMetaData secondVirtualMachine)
     {
         Guard.check(firstVirtualMachine, secondVirtualMachine);
-        ArrayList<Double> estunatedDemand1 = estimator_.estimateVirtualMachineResourceDemand(firstVirtualMachine);       
-        ArrayList<Double> estunatedDemand2 = estimator_.estimateVirtualMachineResourceDemand(secondVirtualMachine);
+        ArrayList<Double> estunatedDemand1 = 
+                estimator_.estimateVirtualMachineResourceDemand(firstVirtualMachine);       
+        ArrayList<Double> estunatedDemand2 = 
+                estimator_.estimateVirtualMachineResourceDemand(secondVirtualMachine);
         
         double utilization1 = MathUtils.computeL1Norm(estunatedDemand1);
         double utilization2 = MathUtils.computeL1Norm(estunatedDemand2);

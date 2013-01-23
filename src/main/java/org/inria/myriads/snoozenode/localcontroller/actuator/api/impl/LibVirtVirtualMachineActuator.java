@@ -213,7 +213,8 @@ public final class LibVirtVirtualMachineActuator
      * @return                    true if everything ok, false otherwise
      */
     @Override
-    public boolean reboot(String virtualMachineId) {
+    public boolean reboot(String virtualMachineId) 
+    {
         Guard.check(virtualMachineId);
         log_.debug(String.format("Rebooting virtual machine: %s", virtualMachineId));
         try 

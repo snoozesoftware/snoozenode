@@ -129,7 +129,8 @@ public final class RelocationUtility
         }
         
         int numberOfUsedNodes = destinationLocalControllers.size() - 1;
-        ReconfigurationPlan migrationPlan = new ReconfigurationPlan(mapping, numberOfUsedNodes, NUMBER_OF_RELEASED_NODES);      
+        ReconfigurationPlan migrationPlan = 
+                new ReconfigurationPlan(mapping, numberOfUsedNodes, NUMBER_OF_RELEASED_NODES);      
         return migrationPlan;
     }
 }

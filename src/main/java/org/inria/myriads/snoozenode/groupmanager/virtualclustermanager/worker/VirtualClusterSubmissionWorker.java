@@ -384,7 +384,8 @@ public final class VirtualClusterSubmissionWorker
         
         NetworkAddress address = groupManager.getListenSettings().getControlDataAddress();
         GroupManagerAPI communicator = CommunicatorFactory.newGroupManagerCommunicator(address);
-        VirtualMachineSubmissionResponse response = communicator.getVirtualMachineSubmissionResponse(taskIdentifier);      
+        VirtualMachineSubmissionResponse response = 
+                communicator.getVirtualMachineSubmissionResponse(taskIdentifier);      
         return response;
     }
 }
