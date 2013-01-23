@@ -29,6 +29,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSavingAction;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
@@ -84,7 +85,10 @@ public final class LocalControllerResource extends ServerResource
         {
             VirtualMachineLocation location = virtualMachine.getVirtualMachineLocation();
             log_.debug(String.format("Starting virtual machine: %s", location.getVirtualMachineId()));
-                           
+            
+            
+            
+            
             boolean isStarted = backend_.getVirtualMachineActuator().start(virtualMachine.getXmlRepresentation());
             if (!isStarted)
             {
@@ -487,4 +491,48 @@ public final class LocalControllerResource extends ServerResource
         
         return backend_.getVirtualMachineMonitoringService().start(virtualMachineMetaData);
     }
+
+    
+    /**
+     * 
+     * Resizes a virtual machine.
+     * 
+     * @param resizeRequest             resize request
+     * @return                          the new virtual machine meta data 
+     * 
+     */
+    public VirtualMachineMetaData softResizeVirtualMachine(ResizeRequest resizeRequest) 
+    {
+        log_.debug("Soft resize virtual machine request arrived");
+        
+        
+        if (!isBackendActive())
+        {
+           log_.warn("Backend is not initialized yet!");
+               return null;
+           }
+       String virtualMachineId = resizeRequest.getVirtualMachineLocation().getVirtualMachineId();
+       VirtualMachineMetaData virtualMachine = backend_.getRepository().getVirtualMachineMetaData(virtualMachineId);
+       virtualMachine.setRequestedCapacity(resizeRequest.getResizedCapacity());
+       Long memory = resizeRequest.getResizedCapacity().get(1).longValue();
+       
+       boolean isResized = 
+               backend_.getVirtualMachineActuator().setMemory(virtualMachineId, memory);
+       
+       if (!isResized)
+           return null;
+       
+       int vcpu = new Double(resizeRequest.getResizedCapacity().get(0)).intValue();
+       isResized =
+               backend_.getVirtualMachineActuator().setVcpu(virtualMachineId, vcpu);
+
+       if (!isResized)
+           return null;
+
+       
+       return virtualMachine;
+    }
+    
+    
 }
+

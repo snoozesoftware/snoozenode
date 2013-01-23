@@ -60,11 +60,17 @@
         <url>http://repo1.maven.org/maven2</url>
     </repository>
     
-    <repository>
-        <id>riptano</id>
-        <name>riptano</name>
-        <url>http://mvn.riptano.com/content/repositories/public</url>
-     </repository>
+   <repository>
+       <id>riptano</id>
+       <name>riptano</name>
+       <url>http://mvn.riptano.com/content/repositories/public</url>
+    </repository>
+
+	<repository>
+	  <id>libvirt-org</id>
+	  <url>http://libvirt.org/maven2</url>
+	</repository>
+
   </repositories>
   
   <profiles>
@@ -254,7 +260,7 @@
         <dependency>
             <groupId>org.libvirt</groupId>
             <artifactId>libvirt</artifactId>
-            <version>0.4.7</version>
+            <version>0.4.9</version>
         </dependency>
         
         <dependency>

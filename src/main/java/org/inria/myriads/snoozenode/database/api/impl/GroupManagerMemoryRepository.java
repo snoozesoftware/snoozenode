@@ -863,4 +863,36 @@ public final class GroupManagerMemoryRepository
         log_.debug("Local controller detected!");
         return localController.getId();
     }
+
+    @Override
+    public boolean updateVirtualMachineMetaData(
+            VirtualMachineMetaData virtualMachine) 
+    {
+        Guard.check(virtualMachine);
+        VirtualMachineLocation location = virtualMachine.getVirtualMachineLocation();
+        log_.debug(String.format("Updating virtual machine meta data for: %s", 
+                                 location.getVirtualMachineId()));
+        
+        String virtualMachineId = location.getVirtualMachineId();
+        String localControllerId = location.getLocalControllerId();
+        
+        
+        LocalControllerDescription localControllerDescription = localControllerDescriptions_.get(localControllerId);
+        if (localControllerDescription == null)
+        {
+            log_.debug("Local controller description is NULL!");
+            return false;
+        }
+        
+        Map<String, VirtualMachineMetaData> metaData = localControllerDescription.getVirtualMachineMetaData();
+        if (metaData == null)
+        {
+            log_.debug("No meta data available on this local controller!");
+            return false;
+        }
+        metaData.put(virtualMachineId, virtualMachine);
+
+        return true;   
+      
+    }
 }

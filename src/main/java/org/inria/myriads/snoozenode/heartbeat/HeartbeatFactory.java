@@ -19,7 +19,7 @@
  */
 package org.inria.myriads.snoozenode.heartbeat;
 
-import java.net.SocketException;
+import java.io.IOException;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozenode.heartbeat.discovery.GroupLeaderDiscovery;
@@ -103,12 +103,12 @@ public final class HeartbeatFactory
      * @param interval                  The interval
      * @param heartbeatMessage          The heartbeat messsage
      * @return                          The heartbeat multicast sender
-     * @throws SocketException 
+     * @throws IOException              Exception
      */
     public static HeartbeatMulticastSender newHeartbeatMulticastSender(NetworkAddress heartbeatAddress, 
                                                                        int interval,
                                                                        HeartbeatMessage heartbeatMessage) 
-        throws SocketException 
+        throws IOException 
     {
         return new HeartbeatMulticastSender(heartbeatAddress, interval, heartbeatMessage);
     }

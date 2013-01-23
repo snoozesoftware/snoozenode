@@ -19,7 +19,7 @@
  */
 package org.inria.myriads.snoozenode.groupmanager.init;
 
-import java.net.SocketException;
+import java.io.IOException;
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
@@ -280,10 +280,10 @@ public final class GroupLeaderInit
      * Multicast the group leader presence.
      *  
      * @param  groupLeader   The group leader description
-     * @throws SocketException 
+     * @throws IOException 
      */
     private void startHeartbeatSender(GroupManagerDescription groupLeader) 
-        throws SocketException 
+        throws IOException 
     {
         Guard.check(groupLeader);
         log_.debug("Starting the group leader heartbeat sender");  

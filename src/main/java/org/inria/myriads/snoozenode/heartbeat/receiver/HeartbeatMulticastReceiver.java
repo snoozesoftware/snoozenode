@@ -121,7 +121,8 @@ public final class HeartbeatMulticastReceiver
         log_.debug(String.format("Joining multicast group: %d", heartbeatAddress.getPort()));
         mcastSocket_ = new MulticastSocket(heartbeatAddress.getPort());
         mcastSocket_.setSoTimeout(timeout_);
-
+        //mcastSocket_.setNetworkInterface(NetworkInterface.getByName("eth1"));
+        //log_.debug("listening on interface :  " + mcastSocket_.getInterface().getAddress().toString()); 
         InetAddress address = InetAddress.getByName(heartbeatAddress.getAddress());     
         mcastSocket_.joinGroup(address);  
     }

@@ -209,9 +209,11 @@ public final class VirtualClusterSubmissionWorker
             {   
                 log_.debug(String.format("Failed to start virtual machine scheduling on group manager %s", 
                                          groupManager.getId()));
-                ManagementUtils.updateAllVirtualMachineMetaData(assignedVirtualMachines,
-                                                                VirtualMachineStatus.ERROR,
-                                                                VirtualMachineErrorCode.UNABLE_TO_START_ON_GROUP_MANAGER);
+                ManagementUtils.updateAllVirtualMachineMetaData(
+                        assignedVirtualMachines,
+                        VirtualMachineStatus.ERROR,
+                        VirtualMachineErrorCode.UNABLE_TO_START_ON_GROUP_MANAGER);
+                
                 continue;
             }
             
@@ -275,9 +277,11 @@ public final class VirtualClusterSubmissionWorker
                 if (submissionResponse == null)
                 {
                     log_.debug(String.format("No submission %s finish available yet!", taskIdentifier));
-                    ManagementUtils.updateAllVirtualMachineMetaData(virtualMachines_, 
-                                                                    VirtualMachineStatus.ERROR, 
-                                                                    VirtualMachineErrorCode.UNABLE_TO_COLLECT_GROUP_MANAGER_RESPONSE);
+                    ManagementUtils.updateAllVirtualMachineMetaData(
+                            virtualMachines_, 
+                            VirtualMachineStatus.ERROR, 
+                            VirtualMachineErrorCode.UNABLE_TO_COLLECT_GROUP_MANAGER_RESPONSE);
+                    
                     continue;
                 }
                                                 
@@ -304,7 +308,7 @@ public final class VirtualClusterSubmissionWorker
         List<VirtualMachineMetaData> receivedVirtualMachines = submissionResponse.getVirtualMachineMetaData();
         
         log_.debug(String.format("Starting virtual machine submission response processing for %d " +
-        		                 "received virtual machines", receivedVirtualMachines.size()));  
+                                 "received virtual machines", receivedVirtualMachines.size()));  
         
         for (int i = 0; i < receivedVirtualMachines.size(); i++)
         {

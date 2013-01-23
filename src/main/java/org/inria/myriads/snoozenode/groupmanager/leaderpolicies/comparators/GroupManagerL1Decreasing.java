@@ -25,8 +25,8 @@ import java.util.Map;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozecommon.util.MathUtils;
 import org.inria.myriads.snoozecommon.util.MonitoringUtils;
-import org.inria.myriads.snoozenode.util.MathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

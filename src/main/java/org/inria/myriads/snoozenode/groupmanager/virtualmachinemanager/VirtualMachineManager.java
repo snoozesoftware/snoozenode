@@ -383,6 +383,7 @@ public final class VirtualMachineManager
             case DESTROY:
                 isProcessed = destroy(location);
                 break;
+            
                 
             default:
                 log_.error(String.format("Wrong command specified: %s", command));
@@ -390,4 +391,5 @@ public final class VirtualMachineManager
        
         return isProcessed;
     }
+
 }

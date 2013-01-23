@@ -20,6 +20,7 @@
 package org.inria.myriads.snoozenode.bootstrap;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
 import org.inria.myriads.snoozecommon.communication.rest.api.BootstrapAPI;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
@@ -73,6 +74,29 @@ public final class BootstrapResource extends ServerResource
         }
         
         return groupLeaderDescription;
+    }
+    
+    
+    /**
+     * 
+     * Gets the complete hierarchy.
+     * 
+     * @return                          The complete hierarchy of the system.
+     * 
+     */
+    public synchronized GroupLeaderRepositoryInformation getCompleteHierarchy()
+    {
+        log_.debug("Received complete hierarchy request");
+        
+        if (!isBackendActive())
+        {
+            log_.debug("Backend is not initialized yet!");
+            return null;
+        }
+        
+        GroupLeaderRepositoryInformation hierarchy = backend_.getCompleteHierarchy();
+        
+        return hierarchy;
     }
     
     /** 

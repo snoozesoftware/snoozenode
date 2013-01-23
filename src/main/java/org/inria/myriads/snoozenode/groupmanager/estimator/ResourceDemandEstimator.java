@@ -33,6 +33,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.Vi
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozecommon.util.MathUtils;
 import org.inria.myriads.snoozecommon.util.MonitoringUtils;
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
@@ -45,7 +46,6 @@ import org.inria.myriads.snoozenode.groupmanager.estimator.api.impl.AverageMemor
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.impl.AverageNetworkDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.enums.Estimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
-import org.inria.myriads.snoozenode.util.MathUtils;
 import org.inria.myriads.snoozenode.util.ThresholdUtils;
 import org.inria.myriads.snoozenode.util.UtilizationUtils;
 import org.slf4j.Logger;
