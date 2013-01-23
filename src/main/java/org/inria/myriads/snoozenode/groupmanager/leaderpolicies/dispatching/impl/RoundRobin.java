@@ -49,6 +49,9 @@ public class RoundRobin
     
     /** Resource demand estimator. */
     private ResourceDemandEstimator estimator_;
+    
+    /** Running index. */
+    int runningIndex_;
         
     /** 
      * Constructor. 
@@ -59,6 +62,7 @@ public class RoundRobin
     {
         log_.debug("Initializing the round robin virtual cluster dispatching policy");  
         estimator_ = estimator;
+        runningIndex_ = 0;
     }
     
     /**
@@ -75,7 +79,7 @@ public class RoundRobin
         log_.debug("Dispatching virtual machines according to the round robin policy");
         
         Map<String, GroupManagerDescription> candidateGroupManagers = new HashMap<String, GroupManagerDescription>();
-        int runningIndex = 0;
+        int runningIndex = runningIndex_;
         int numberOfVirtualMachines = virtualMachines.size();
         int numberOfGroupManagers = groupManagerDescriptions.size();
         while (runningIndex <= numberOfGroupManagers * numberOfVirtualMachines)
@@ -116,6 +120,8 @@ public class RoundRobin
             
             runningIndex++;
         }
+        
+        runningIndex_ = (runningIndex_ + 1) % numberOfGroupManagers;
         
         ArrayList<GroupManagerDescription> groupManagers = 
             new ArrayList<GroupManagerDescription>(candidateGroupManagers.values()); 
