@@ -54,7 +54,7 @@ public final class BootstrapResource extends ServerResource
      *  
      * @return   The group leader description
      */
-    public synchronized GroupManagerDescription getGroupLeaderDescription() 
+    public GroupManagerDescription getGroupLeaderDescription() 
     {
         log_.debug("Received group leader information request");
         
