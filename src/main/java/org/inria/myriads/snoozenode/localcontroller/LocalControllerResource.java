@@ -359,12 +359,6 @@ public final class LocalControllerResource extends ServerResource
             return false;
         }
         
-        boolean isStopped = backend_.getVirtualMachineMonitoringService().stop(virtualMachineId);
-        if (!isStopped)
-        {
-            log_.error("Unable to stop virtual machine monitoring");
-            return false;     
-        }
                             
         boolean isDestroyed = backend_.getVirtualMachineActuator().destroy(virtualMachineId);
         if (!isDestroyed)
@@ -373,13 +367,16 @@ public final class LocalControllerResource extends ServerResource
             return false; 
         }
         
-        boolean isDropped = backend_.getRepository().dropVirtualMachineMetaData(virtualMachineId);
-        if (!isDropped)
+        
+        boolean isChanged = backend_.getRepository().changeVirtualMachineStatus(virtualMachineId, 
+                VirtualMachineStatus.SHUTDOWN_PENDING);
+        if (!isChanged)
         {
-            log_.error("Failed to drop the virtual machine meta data!");
+            log_.error("Failed to change virtual machine status!");
             return false;
         }
         
+       
         return true;  
     } 
             
