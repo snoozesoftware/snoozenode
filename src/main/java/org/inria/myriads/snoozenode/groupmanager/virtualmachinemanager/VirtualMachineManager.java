@@ -302,11 +302,10 @@ public final class VirtualMachineManager
             return false;
         }
 
-        returnValue = repository_.dropVirtualMachineData(location);
-        if (!returnValue)
+        boolean isChanged = repository_.changeVirtualMachineStatus(location, VirtualMachineStatus.SHUTDOWN_PENDING);   
+        if (!isChanged)
         {
-            log_.error(String.format("Unable to remove virtual machine data for: %s", 
-                                     location.getVirtualMachineId()));
+            log_.error("Failed to change virtual machine status");
             return false;
         }
         
