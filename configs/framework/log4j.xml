@@ -144,6 +144,5 @@
 	<logger name="org.inria.myriads.snoozenode">
 		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>
-		<appender-ref ref="CA"/>
 	</logger>
 </log4j:configuration>
