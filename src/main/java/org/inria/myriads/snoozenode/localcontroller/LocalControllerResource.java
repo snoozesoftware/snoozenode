@@ -358,7 +358,6 @@ public final class LocalControllerResource extends ServerResource
             log_.warn("Backend is not initialized yet!");
             return false;
         }
-        
                             
         boolean isDestroyed = backend_.getVirtualMachineActuator().destroy(virtualMachineId);
         if (!isDestroyed)
@@ -367,9 +366,11 @@ public final class LocalControllerResource extends ServerResource
             return false; 
         }
         
-        
+
         boolean isChanged = backend_.getRepository().changeVirtualMachineStatus(virtualMachineId, 
                 VirtualMachineStatus.SHUTDOWN_PENDING);
+
+        
         if (!isChanged)
         {
             log_.error("Failed to change virtual machine status!");

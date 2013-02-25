@@ -160,7 +160,6 @@ public final class VirtualMachineMonitorDataProducer
         {
             while (true)
             {            
-                isSuspend();
                 
                 if (isTerminated_)
                 {
@@ -173,29 +172,34 @@ public final class VirtualMachineMonitorDataProducer
                     samplingTimeDifference_ = currentSystemTime_ - beforeSleepTime_; 
                 }
                 
+                // this call allow us to know if the vm is still alive.
                 VirtualMachineInformation virtualMachineInformation = 
-                    virtualMachineMonitor.getVirtualMachineInformation(virtualMachineId);   
-                VirtualMachineMonitoringData monitoringData = 
-                    createDynamicMonitoringData(virtualMachineInformation);
+                    virtualMachineMonitor.getVirtualMachineInformation(virtualMachineId);
                 
-                log_.debug(String.format("Size of aggregated virtual machnine %s monitoring data is %d / %d",
-                                         virtualMachineId, aggregatedData_.size(), historySize));                
-                if (aggregatedData_.size() == historySize)
+                if (!isSuspended_)
                 {
-                    log_.debug(String.format("Adding aggregated virtual machine %s monitoring data to the " +
-                                             "monitoring service queue", 
-                                             virtualMachineId));
+                    VirtualMachineMonitoringData monitoringData = 
+                        createDynamicMonitoringData(virtualMachineInformation);
                     
-                    AggregatedVirtualMachineData data = createAggregatedVirtualMachineData(aggregatedData_);
-                    dataQueue_.put(data);
-                    aggregatedData_.clear();
-                } else
-                {
-                    log_.debug(String.format("Adding virtual machine %s monitoring data: %s to " +
-                                             "the local monitoring data list", 
-                                             virtualMachineId,
-                                             monitoringData.getUsedCapacity()));
-                    aggregatedData_.add(monitoringData);
+                    log_.debug(String.format("Size of aggregated virtual machnine %s monitoring data is %d / %d",
+                                             virtualMachineId, aggregatedData_.size(), historySize));                
+                    if (aggregatedData_.size() == historySize)
+                    {
+                        log_.debug(String.format("Adding aggregated virtual machine %s monitoring data to the " +
+                                                 "monitoring service queue", 
+                                                 virtualMachineId));
+                        
+                        AggregatedVirtualMachineData data = createAggregatedVirtualMachineData(aggregatedData_);
+                        dataQueue_.put(data);
+                        aggregatedData_.clear();
+                    } else
+                    {
+                        log_.debug(String.format("Adding virtual machine %s monitoring data: %s to " +
+                                                 "the local monitoring data list", 
+                                                 virtualMachineId,
+                                                 monitoringData.getUsedCapacity()));
+                        aggregatedData_.add(monitoringData);
+                    }
                 }
                 
                 beforeSleepTime_ = System.nanoTime();      
@@ -375,29 +379,6 @@ public final class VirtualMachineMonitorDataProducer
         {
             wakeup();
         }
-    }
-    
-    /** 
-     * Suspend the thread if needed.
-     * 
-     * @throws InterruptedException     The exception
-     */
-    private void isSuspend() 
-        throws InterruptedException 
-    { 
-        synchronized (lockObject_)
-        {  
-            while (isSuspended_)
-            {
-                String virtualMachineId = virtualMachineMetaData_.getVirtualMachineLocation().getVirtualMachineId();
-                log_.debug(String.format("Virtual machine %s monitoring data producer thread suspended!", 
-                                         virtualMachineId));
-                aggregatedData_.clear();
-                lockObject_.wait();
-                log_.debug(String.format("Virtual machine %s monitoring data producer thread woken up!",
-                                         virtualMachineId));
-            }
-        }           
     }
     
     /**
