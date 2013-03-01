@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2010-2012 Eugen Feller, INRIA <eugen.feller@inria.fr>
+# Copyright (C) 2010-2013 Eugen Feller, INRIA <eugen.feller@inria.fr>
 #
 # This file is part of Snooze, a scalable, autonomic, and
 # energy-aware virtual machine (VM) management framework.
