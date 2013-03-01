@@ -149,7 +149,7 @@ public final class LocalControllerSummaryReceiver extends TCPDataReceiver
                                  workerThreadId,
                                  localControllerId));
         
-        if (stateMachine_.isBusy() && !monitoringData.equals(LocalControllerState.STABLE))
+        if (stateMachine_.isBusy() && !monitoringData.getState().equals(LocalControllerState.STABLE))
         {
             log_.debug("System is BUSY! Skipping overloaded/underloaded local controller monitoring data!");
             return;
