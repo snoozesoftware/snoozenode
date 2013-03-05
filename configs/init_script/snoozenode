@@ -30,8 +30,7 @@
 
 # Environment variables
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-JAVA_HOME=/usr/lib/jvm/java-6-sun/jre
-JAVA=$JAVA_HOME/bin/java
+JAVA=/usr/bin/java
 
 # Script settings
 DESCRIPTION="Snooze node daemon"
