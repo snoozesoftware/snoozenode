@@ -3,10 +3,10 @@ Section: misc
 Priority: optional
 Maintainer: Eugen Feller <eugen.feller@inria.fr> 
 Standards-Version: 3.8.0
-Build-Depends: debhelper (>= 5), sun-java6-jre
+Build-Depends: debhelper (>= 5), openjdk-6-jre
 Homepage: http://snooze.inria.fr
 
 Package: snoozenode
 Architecture: all
-Depends: sun-java6-jre
+Depends: openjdk-6-jre
 Description: This is the core system management component of the Snooze cloud manager.
