@@ -93,7 +93,7 @@ public final class GroupManagerMemoryRepository
      */
     @Override
     public synchronized ArrayList<LocalControllerDescription> 
-        getLocalControllerDescriptions(int numberOfMonitoringEntries, boolean isActiveOnly)
+        getLocalControllerDescriptions(int numberOfMonitoringEntries, boolean isActiveOnly, boolean withVirtualMachines)
     {
         Guard.check(numberOfMonitoringEntries);
         log_.debug(String.format("Getting all local controllers, number of monitoring entries: %d",     
@@ -117,7 +117,9 @@ public final class GroupManagerMemoryRepository
             
             log_.debug(String.format("Gettung local controller description for %s", localController.getId()));
             LocalControllerDescription copy = new LocalControllerDescription(localController, 
-                                                                             numberOfMonitoringEntries);
+                                                                             numberOfMonitoringEntries,
+                                                                             withVirtualMachines
+                                                                              );
             localControllers.add(copy);
         }
         
@@ -268,7 +270,9 @@ public final class GroupManagerMemoryRepository
      */
     @Override
     public synchronized LocalControllerDescription getLocalControllerDescription(String localControllerId,
-                                                                                 int numberOfMonitoringEntries)
+                                                                                 int numberOfMonitoringEntries,
+                                                                                 boolean withVirtualMachines
+            )
     {
         Guard.check(localControllerId, numberOfMonitoringEntries);       
         log_.debug(String.format("Getting local controller description for %s", localControllerId));
@@ -281,7 +285,9 @@ public final class GroupManagerMemoryRepository
         }
         
         LocalControllerDescription localControllerCopy = new LocalControllerDescription(localController,
-                                                                                        numberOfMonitoringEntries);
+                                                                                        numberOfMonitoringEntries,
+                                                                                        withVirtualMachines
+                                                                                        );
         return localControllerCopy;
     }
     

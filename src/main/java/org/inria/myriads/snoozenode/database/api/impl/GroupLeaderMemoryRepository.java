@@ -266,8 +266,28 @@ public final class GroupLeaderMemoryRepository
         Map<Long, GroupManagerSummaryInformation> historyData = groupManagerDescription.getSummaryInformation();
         historyData.put(summary.getTimeStamp(), summary);
         updateNetworkingInformation(summary);
+        updateLocalControllerInformation(groupManagerId, summary);
     }
    
+    /**
+     * 
+     * Updates the mapping local controllers - group manager.
+     * 
+     * @param summary           The summary information
+     */
+    private void updateLocalControllerInformation(String groupManagerId, GroupManagerSummaryInformation summary)
+    {
+        log_.debug("Updating the local controllers settings");
+        GroupManagerDescription groupManagerDescription = groupManagerDescriptions_.get(groupManagerId);
+        HashMap<String, LocalControllerDescription> localControllers = new HashMap<String, LocalControllerDescription>();
+        for (LocalControllerDescription localController : summary.getLocalControllers())
+        {
+            log_.debug(String.format("Adding localController %s to the mapping", localController.getId()));
+            localControllers.put(localController.getId(), localController);
+        }
+        groupManagerDescription.setLocalControllers(localControllers);
+    }
+
     /**
      * Updates the networking information.
      * 
@@ -275,7 +295,7 @@ public final class GroupLeaderMemoryRepository
      */
     private void updateNetworkingInformation(GroupManagerSummaryInformation groupManagerData) 
     {
-        log_.debug("Processing the group manager summary information");
+        log_.debug("Updating the network information");
         
         List<String> legacyIpAddresses = groupManagerData.getLegacyIpAddresses();
         if (legacyIpAddresses == null)
@@ -351,5 +371,25 @@ public final class GroupLeaderMemoryRepository
         }
         
         return 0;
+    }
+    
+    /**
+     * 
+     * Returns the local controllers list.
+     * 
+     * @return  The local controllers list
+     */
+    @Override
+    public ArrayList<LocalControllerDescription> getLocalControllerList()
+    {
+        ArrayList<LocalControllerDescription> localControllers = new ArrayList<LocalControllerDescription>();
+        for (GroupManagerDescription groupManager : groupManagerDescriptions_.values()) 
+        {
+            for (LocalControllerDescription localController : groupManager.getLocalControllers().values())
+            {
+                localControllers.add(localController);
+            }
+        }
+        return localControllers;
     }
 }

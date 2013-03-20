@@ -91,8 +91,7 @@ public final class EnergySaver
             while (true)
             {                            
                 log_.debug(String.format("Waiting for: %s seconds", idleTimeThreshold));
-                localControllers = repository_.getLocalControllerDescriptions(NUMBER_OF_MONITORING_ENTRIES, true);
-                synchronized (lockObject_)
+                localControllers = repository_.getLocalControllerDescriptions(NUMBER_OF_MONITORING_ENTRIES, true, true);
                 {
                     lockObject_.wait(TimeUtils.convertSecondsToMilliseconds(idleTimeThreshold));
                 }
@@ -203,7 +202,7 @@ public final class EnergySaver
         
         List<LocalControllerDescription> idleLocalControllers = new ArrayList<LocalControllerDescription>();
         List<LocalControllerDescription> localControllers = 
-            repository_.getLocalControllerDescriptions(NUMBER_OF_MONITORING_ENTRIES, true);
+            repository_.getLocalControllerDescriptions(NUMBER_OF_MONITORING_ENTRIES, true, true);
         if (localControllers.size() <= numberOfReservedNodes)
         {
             log_.debug("Number of active local controllers is less/equal the number of reserved nodes!");

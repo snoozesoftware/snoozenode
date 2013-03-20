@@ -20,6 +20,7 @@
 package org.inria.myriads.snoozenode.groupmanager;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
@@ -27,6 +28,7 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.repository.Grou
 import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupManagerRepositoryInformation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerList;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.discovery.VirtualMachineDiscoveryResponse;
@@ -42,6 +44,7 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinediscovery.VirtualMachineDiscovery;
+import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -501,7 +504,8 @@ public final class GroupManagerResource extends ServerResource
         GroupManagerRepositoryInformation groupManagerInformation = new GroupManagerRepositoryInformation();
         ArrayList<LocalControllerDescription> localControllers = 
           backend_.getGroupManagerInit().getRepository().getLocalControllerDescriptions(numberOfMonitoringEntries,
-                                                                                         false);
+                                                                                         false,
+                                                                                         true);
         groupManagerInformation.setLocalControllerDescriptions(localControllers);
         
         log_.debug(String.format("Returning reference: %s, number of local controllers: %d", 
@@ -657,7 +661,32 @@ public final class GroupManagerResource extends ServerResource
         return respomse;
     }
 
+    
+    /**
+     * 
+     * Gets the list of local controllers.
+     * 
+     * @return      The local controller list
+     */
+    public LocalControllerList getLocalControllerList()
+    {
+        log_.debug(String.format("Received a request for local controller list"));
+        
+        if (!isGroupLeaderActive())
+        {
+            return null;
+        }
+        
+        ArrayList<LocalControllerDescription> localControllers = backend_.getGroupLeaderInit()
+                                                                               .getRepository()
+                                                                               .getLocalControllerList();
 
+        LocalControllerList localControllerList = new LocalControllerList(localControllers);
+        return localControllerList;
+
+        
+    }
+    
     /**
      * Migrate a virtual machine.
      * (call by the client)
@@ -679,6 +708,7 @@ public final class GroupManagerResource extends ServerResource
         return isMigrated;
         
     }
+
 
    
 }

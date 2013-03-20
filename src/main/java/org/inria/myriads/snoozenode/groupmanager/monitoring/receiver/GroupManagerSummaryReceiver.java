@@ -148,6 +148,7 @@ public final class GroupManagerSummaryReceiver extends TCPDataReceiver
                                  "Requested: %s, " +
                                  "Used: %s, " +
                                  "Legacy IP addresses: %s, " +
+                                 "Assigned localControllers: %d, " +
                                  "Worker thread id: %s",
                                  dataTransporter.getId(), 
                                  dataTransporter.getSummary().getActiveCapacity(),
@@ -155,6 +156,7 @@ public final class GroupManagerSummaryReceiver extends TCPDataReceiver
                                  dataTransporter.getSummary().getRequestedCapacity(),
                                  dataTransporter.getSummary().getUsedCapacity(), 
                                  dataTransporter.getSummary().getLegacyIpAddresses(),
+                                 dataTransporter.getSummary().getLocalControllers().size(),
                                  workerThreadId));
     
         if (groupManagerIds_.get(workerThreadId) == null)

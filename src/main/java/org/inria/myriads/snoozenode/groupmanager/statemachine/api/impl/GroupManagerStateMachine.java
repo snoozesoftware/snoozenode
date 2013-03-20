@@ -298,7 +298,7 @@ public class GroupManagerStateMachine
         {
             int numberOfMonitoringEntries = estimatorSettings_.getNumberOfMonitoringEntries();
             List<LocalControllerDescription> localControllers = 
-                repository_.getLocalControllerDescriptions(numberOfMonitoringEntries, true);
+                repository_.getLocalControllerDescriptions(numberOfMonitoringEntries, true, true);
             if (localControllers == null)
             {
                 throw new GroupManagerInitException("Local controllers list is not available!");
@@ -503,7 +503,7 @@ public class GroupManagerStateMachine
             VirtualMachineLocation newLocation = clientMigrationRequest.getNewLocation();
             VirtualMachineMetaData virtualMachine = repository_.getVirtualMachineMetaData(oldLocation, 0);
             LocalControllerDescription newLocalController = 
-                    repository_.getLocalControllerDescription(newLocation.getLocalControllerId(), 0);
+                    repository_.getLocalControllerDescription(newLocation.getLocalControllerId(), 0, true);
             Map<VirtualMachineMetaData, LocalControllerDescription> mapping = 
                     new HashMap<VirtualMachineMetaData, LocalControllerDescription>();
             mapping.put(virtualMachine, newLocalController);

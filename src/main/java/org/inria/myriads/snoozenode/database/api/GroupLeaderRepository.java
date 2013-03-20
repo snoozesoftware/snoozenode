@@ -23,6 +23,7 @@ import java.util.ArrayList;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 
 /**
  * Group leader repository interface.
@@ -92,4 +93,12 @@ public interface GroupLeaderRepository
      * @return  The number of free IP addresses
      */
     int getNumberOfFreeIpAddresses();
+
+    /**
+     * 
+     * Returns the local controllers list.
+     * 
+     * @return  The local controllers list
+     */
+    ArrayList<LocalControllerDescription> getLocalControllerList();
 }

@@ -20,8 +20,10 @@
 package org.inria.myriads.snoozenode.groupmanager.monitoring.transport;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 
 
 /**
@@ -41,6 +43,7 @@ public final class GroupManagerDataTransporter
     /** Summary information. */
     private GroupManagerSummaryInformation summary_;
     
+    
     /** Default constructor. */
     public GroupManagerDataTransporter() 
     {
@@ -53,7 +56,8 @@ public final class GroupManagerDataTransporter
      * @param summary           The summary information
      */
     public GroupManagerDataTransporter(String groupManagerId,
-                                       GroupManagerSummaryInformation summary)
+                                       GroupManagerSummaryInformation summary
+                                        )
     {
         groupManagerId_ = groupManagerId;
         summary_ = summary;
@@ -78,4 +82,6 @@ public final class GroupManagerDataTransporter
     {
         return summary_;
     }
+
+    
 }

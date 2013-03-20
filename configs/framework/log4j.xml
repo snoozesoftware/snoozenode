@@ -112,7 +112,6 @@
 	</logger>
 	
 	<logger name="org.inria.myriads.snoozenode.database">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger>
 

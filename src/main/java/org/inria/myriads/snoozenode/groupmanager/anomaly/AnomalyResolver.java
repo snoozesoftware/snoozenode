@@ -147,12 +147,12 @@ public final class AnomalyResolver
         if (state.equals(LocalControllerState.OVERLOADED))
         {
             log_.debug("Getting all local controllers (including PASSIVE)");
-            destination = groupManagerRepository_.getLocalControllerDescriptions(numberOfMonitoringEntries_, false);    
+            destination = groupManagerRepository_.getLocalControllerDescriptions(numberOfMonitoringEntries_, false, true);    
             return destination;
         }
         
         log_.debug("Getting all local controllers (excluding PASSIVE)");
-        destination = groupManagerRepository_.getLocalControllerDescriptions(numberOfMonitoringEntries_, true);       
+        destination = groupManagerRepository_.getLocalControllerDescriptions(numberOfMonitoringEntries_, true, true);       
         return destination;
     }
        
@@ -170,7 +170,7 @@ public final class AnomalyResolver
         log_.debug("Starting anomaly resolution");
                
         LocalControllerDescription anomalyLocalController = 
-            groupManagerRepository_.getLocalControllerDescription(localControllerId, numberOfMonitoringEntries_);
+            groupManagerRepository_.getLocalControllerDescription(localControllerId, numberOfMonitoringEntries_,true);
         if (anomalyLocalController == null)
         {
             throw new AnomalyResolverException("Local controller description is not available!");

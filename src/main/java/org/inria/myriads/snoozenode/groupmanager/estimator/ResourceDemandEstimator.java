@@ -501,8 +501,7 @@ public final class ResourceDemandEstimator
      * @return                      The group manager summary information
      */
     public synchronized GroupManagerSummaryInformation 
-        generateGroupManagerSummaryInformation(ArrayList<LocalControllerDescription> localControllers,
-                                               ArrayList<String> legacyIpAddresses) 
+        generateGroupManagerSummaryInformation(ArrayList<LocalControllerDescription> localControllers) 
     {        
         ArrayList<Double> requestedCapacity = computeRequestedGroupManagerCapacity(localControllers);        
         ArrayList<Double> usedCapacity = computeUsedGroupManagerCapacity(localControllers);
@@ -516,7 +515,7 @@ public final class ResourceDemandEstimator
         summary.setPassiveCapacity(totalPassiveCapacity);
         summary.setRequestedCapacity(requestedCapacity);
         summary.setUsedCapacity(usedCapacity);
-        summary.setLegacyIpAddresses(legacyIpAddresses);     
+    
         return summary;
     }
 

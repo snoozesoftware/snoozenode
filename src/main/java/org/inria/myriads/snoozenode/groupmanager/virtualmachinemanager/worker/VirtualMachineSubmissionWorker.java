@@ -216,7 +216,7 @@ public final class VirtualMachineSubmissionWorker
           
         ArrayList<VirtualMachineMetaData> virtualMachines = submissionRequest_.getVirtualMachineMetaData(); 
         List<LocalControllerDescription> localControllers = 
-                repository_.getLocalControllerDescriptions(numberOfMonitoringEntries_, false);
+                repository_.getLocalControllerDescriptions(numberOfMonitoringEntries_, false,true);
         
         PlacementPlan placementPlan = placementPolicy_.place(virtualMachines, localControllers);
         VirtualMachineSubmissionResponse submissionResponse = enforcePlacementPlan(placementPlan);

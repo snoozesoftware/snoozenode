@@ -90,11 +90,11 @@ public final class GroupManagerSummaryProducer extends TCPDataSender
     private GroupManagerDataTransporter createDataTransporter()
     {
         ArrayList<LocalControllerDescription> localControllers = 
-            repository_.getLocalControllerDescriptions(estimator_.getNumberOfMonitoringEntries(), false);
+            repository_.getLocalControllerDescriptions(estimator_.getNumberOfMonitoringEntries(), false, true);
         ArrayList<String> legacyIpAddresses = repository_.getLegacyIpAddresses();
-        
-        GroupManagerSummaryInformation summary = estimator_.generateGroupManagerSummaryInformation(localControllers, 
-                                                                                                   legacyIpAddresses);
+        GroupManagerSummaryInformation summary = estimator_.generateGroupManagerSummaryInformation(localControllers);
+        summary.setLegacyIpAddresses(legacyIpAddresses);
+        summary.setLocalControllers(repository_.getLocalControllerDescriptions(0, false, false));
         String groupManagerId = repository_.getGroupManagerId();
         GroupManagerDataTransporter dataTransporter = new GroupManagerDataTransporter(groupManagerId, summary);      
         return dataTransporter;
@@ -110,9 +110,10 @@ public final class GroupManagerSummaryProducer extends TCPDataSender
                 GroupManagerDataTransporter dataTransporter = createDataTransporter();
                 GroupManagerSummaryInformation summary = dataTransporter.getSummary();
                 log_.debug(String.format("Sending summary information to the group leader! " +
-                                         "Active: %s, passive: %s, requested: %s, and used: %s capacity", 
+                                         "Active: %s, passive: %s, requested: %s, used: %s capacity with %d local controllers assigned ", 
                                          summary.getActiveCapacity(), summary.getPassiveCapacity(),
-                                         summary.getRequestedCapacity(), summary.getUsedCapacity()));
+                                         summary.getRequestedCapacity(), summary.getUsedCapacity(),
+                                         summary.getLocalControllers().size()) );
                 send(dataTransporter);
                 synchronized (lockObject_)
                 {
