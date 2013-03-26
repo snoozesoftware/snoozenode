@@ -242,7 +242,20 @@ public final class GroupLeaderMemoryRepository
         
         return groupManagers;
     }
-                
+
+    @Override
+    public GroupManagerDescription getGroupManagerDescription(String groupManagerId, int numberOfBacklogEntries)
+    {
+        log_.debug(String.format("Getting group manager description, number of monitoring data entries: %d", 
+                numberOfBacklogEntries));
+        GroupManagerDescription groupManagerDescription = groupManagerDescriptions_.get(groupManagerId);
+        if (groupManagerDescription == null)
+        {
+            log_.debug(String.format("No group manager found with the id %s in the repository", groupManagerId));
+            return null;
+        }
+        return groupManagerDescription;
+    }
     /**
      * Adds group manager data.
      * 
@@ -392,4 +405,6 @@ public final class GroupLeaderMemoryRepository
         }
         return localControllers;
     }
+
+
 }

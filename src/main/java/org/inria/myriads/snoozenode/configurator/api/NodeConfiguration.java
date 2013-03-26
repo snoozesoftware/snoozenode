@@ -39,7 +39,7 @@ import org.inria.myriads.snoozenode.configurator.submission.SubmissionSettings;
  * 
  * @author Eugen Feller
  */
-public final class NodeConfiguration 
+public class NodeConfiguration 
     implements Serializable
 {
     /** Default serial version. */

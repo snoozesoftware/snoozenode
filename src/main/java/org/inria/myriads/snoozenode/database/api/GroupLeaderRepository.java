@@ -47,6 +47,15 @@ public interface GroupLeaderRepository
      * @return                          The group manager descriptions
      */
     ArrayList<GroupManagerDescription> getGroupManagerDescriptions(int numberOfBacklogEntries);
+    
+    /**
+     * Returns the group manager description.
+     * 
+     * @param groupManagerId            The group manager id
+     * @param numberOfBacklogEntries    The number of backlog entries
+     * @return                          The group manager description
+     */
+    GroupManagerDescription getGroupManagerDescription(String groupManagerId, int numberOfBacklogEntries);
                
     /** 
      * Adds group manager data.

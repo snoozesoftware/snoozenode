@@ -19,9 +19,13 @@
  */
 package org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 
 /**
  * Dispatching plan.
@@ -52,4 +56,43 @@ public final class DispatchingPlan
     {
         return groupManagers_;
     }
+    
+    /** 
+     * Check a dispatching plan for a given Resource estimator. 
+     * 
+     * @param estimator         The resource demand estimator.
+     * 
+     * @return                  true if ok, false if not enough capacity.
+     * 
+     * */
+    public boolean check(ResourceDemandEstimator estimator)
+    {
+        Guard.check(estimator);
+        for (GroupManagerDescription groupManager : groupManagers_)
+        {
+            ArrayList<VirtualMachineMetaData> virtualMachines = groupManager.getVirtualMachines() ;
+            
+            for (VirtualMachineMetaData virtualMachine : virtualMachines)
+            {
+                
+                ArrayList<Double> requestedCapacity = virtualMachine.getRequestedCapacity();
+            }
+        }
+        return true;
+    }
+    
+    /** 
+     * Merge a dispatching plan. 
+     * 
+     * @param dispatchPlan      The dispatch plan to merge with.
+     * @return 
+     * 
+     * */
+    public void merge(DispatchingPlan dispatchPlan)
+    {
+        Guard.check(dispatchPlan);
+        groupManagers_.addAll(dispatchPlan.getGroupManagers());
+    }
+
+    
 }

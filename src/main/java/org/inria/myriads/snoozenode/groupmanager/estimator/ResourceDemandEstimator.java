@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Eugen Feller
  */
-public final class ResourceDemandEstimator 
+public class ResourceDemandEstimator 
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(ResourceDemandEstimator.class);
