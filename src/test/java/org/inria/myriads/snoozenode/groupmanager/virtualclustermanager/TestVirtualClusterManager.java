@@ -8,6 +8,8 @@ import org.easymock.EasyMock;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.globals.Globals;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupLeaderSchedulerSettings;
@@ -78,7 +80,7 @@ public class TestVirtualClusterManager extends TestCase
     }
     
     /**
-     * Test with a gm set
+     * Test with a right gm set.
      * should position the gm only
      */
     public void testSetVirtualMachineLocationGMset()
@@ -93,8 +95,8 @@ public class TestVirtualClusterManager extends TestCase
     
     
     /**
-     * Test with a wrong gm set
-     * should position the gm only
+     * Test with a wrong gm set.
+     * should position the gm to default and set error code.
      */
     public void testSetVirtualMachineLocationWrongGMset()
     {
@@ -103,6 +105,8 @@ public class TestVirtualClusterManager extends TestCase
         
         assertEquals(Globals.DEFAULT_INITIALIZATION, vm.getGroupManagerLocation().getGroupManagerId());
         assertEquals(Globals.DEFAULT_INITIALIZATION, vm.getVirtualMachineLocation().getLocalControllerId());
+        assertEquals(VirtualMachineStatus.ERROR, vm.getStatus());
+        assertEquals(VirtualMachineErrorCode.INVALID_HOST_ID, vm.getErrorCode());
     }
     
     /**
@@ -119,8 +123,8 @@ public class TestVirtualClusterManager extends TestCase
     }
     
     /**
-     * Test with a wrong lc set
-     * should position the gm & the lc
+     * Test with a wrong lc set.
+     * should position the gm & the lc to default and error code to invalid_host_id
      */
     public void testSetVirtualMachineLocationWrongLCset()
     {
@@ -129,6 +133,8 @@ public class TestVirtualClusterManager extends TestCase
         
         assertEquals(Globals.DEFAULT_INITIALIZATION, vm.getGroupManagerLocation().getGroupManagerId());
         assertEquals(Globals.DEFAULT_INITIALIZATION, vm.getVirtualMachineLocation().getLocalControllerId());
+        assertEquals(VirtualMachineStatus.ERROR, vm.getStatus());
+        assertEquals(VirtualMachineErrorCode.INVALID_HOST_ID, vm.getErrorCode());
     }
     
 }

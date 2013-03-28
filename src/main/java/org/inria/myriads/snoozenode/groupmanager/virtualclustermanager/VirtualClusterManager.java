@@ -30,6 +30,7 @@ import java.util.UUID;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionResponse;
@@ -205,6 +206,8 @@ public final class VirtualClusterManager
             }                
         }
         log_.debug("Binding not found : fallback to default location");
+        virtualMachine.setStatus(VirtualMachineStatus.ERROR);
+        virtualMachine.setErrorCode(VirtualMachineErrorCode.INVALID_HOST_ID);
     }
 
     /**

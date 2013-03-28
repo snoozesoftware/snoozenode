@@ -69,6 +69,9 @@ public final class VirtualMachineManager
     /** Number of monitoring entries. */
     private int numberOfMonitoringEntries_;
 
+    /** Resource demand estimator*/
+    ResourceDemandEstimator estimator_ ;
+    
     /**
      * Constructor.
      * 
@@ -91,6 +94,7 @@ public final class VirtualMachineManager
         submissionResponses_ = new HashMap<String, VirtualMachineSubmissionResponse>();
         placementPolicy_ = GroupManagerPolicyFactory.newVirtualMachinePlacement(schedulerSettings.getPlacementPolicy(), 
                                                                                 estimator);
+        estimator_ = estimator;
     }
     
     /**
@@ -110,6 +114,7 @@ public final class VirtualMachineManager
                                                                                    repository_, 
                                                                                    placementPolicy_, 
                                                                                    stateMachine_,
+                                                                                   estimator_,
                                                                                    this);
         new Thread(worker).start();
         return taskIdentifier;

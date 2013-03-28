@@ -107,22 +107,16 @@ public class TestStatic extends TestCase
     public void testDispatchNoGm()
     {
         VirtualMachineMetaData vm1_  = new VirtualMachineMetaData();
-        GroupManagerDescription gm1_ = new GroupManagerDescription();
-        gm1_.setId("1");
         VirtualMachineGroupManagerLocation groupManagerLocation = new VirtualMachineGroupManagerLocation();
         groupManagerLocation.setGroupManagerId("1");
         vm1_.setGroupManagerLocation(groupManagerLocation);
         
         virtualMachines_.add(vm1_);
-        
-        expect(estimator_.hasEnoughGroupManagerCapacity(vm1_, gm1_)).andReturn(true);
-        replay(estimator_);
+
         DispatchingPlan dispatchPlan = staticDispatch_.dispatch(virtualMachines_, groupManagers_);
         List<GroupManagerDescription> groupManagersCandidates = dispatchPlan.getGroupManagers();
-        
-        //gm1 is assigned for this vm
+
         assertEquals(groupManagersCandidates.size(),0);
-        assertEquals(gm1_.getVirtualMachines().size(), 0);
     }
     
     public void testDispatchNoGmBound()

@@ -38,6 +38,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionResponse;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
+import org.inria.myriads.snoozecommon.globals.Globals;
 import org.inria.myriads.snoozecommon.util.TimeUtils;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
@@ -178,6 +179,7 @@ public final class VirtualClusterSubmissionWorker
                         
         ArrayList<VirtualMachineMetaData> virtualMachinesCopy = 
             new ArrayList<VirtualMachineMetaData>(Arrays.asList(new VirtualMachineMetaData[virtualMachines.size()]));  
+        
         Collections.copy(virtualMachinesCopy, virtualMachines);
         ArrayList<VirtualMachineMetaData> boundVirtualMachines = new ArrayList<VirtualMachineMetaData>();
         ArrayList<VirtualMachineMetaData> freeVirtualMachines = new ArrayList<VirtualMachineMetaData>();
@@ -211,36 +213,29 @@ public final class VirtualClusterSubmissionWorker
         }
     }
                
-    private void splitVirtualMachines(ArrayList<VirtualMachineMetaData> virtualMachinesCopy,
+    protected void splitVirtualMachines(ArrayList<VirtualMachineMetaData> virtualMachinesCopy,
             ArrayList<VirtualMachineMetaData> boundVirtualMachines,
             ArrayList<VirtualMachineMetaData> freeVirtualMachines)
     {
         
         for (VirtualMachineMetaData virtualMachine : virtualMachinesCopy)
         {
-            if (virtualMachine.getGroupManagerLocation().getGroupManagerId() != null )
+            if (virtualMachine.getErrorCode().equals(VirtualMachineErrorCode.INVALID_HOST_ID))
             {
-                String groupManagerId = virtualMachine.getGroupManagerLocation().getGroupManagerId();
-                log_.debug(String.format("The user force the start of this vm on group manager %s", groupManagerId));
-                GroupManagerDescription groupManager = repository_.getGroupManagerDescription(groupManagerId, 0);
-                if (groupManager != null)
-                {
-                    log_.debug("Found a bound virtual machine") ; 
-                    boundVirtualMachines.add(virtualMachine);
-                }
-                else
-                {
-                    log_.debug("Found a free virtual machine") ;
-                    freeVirtualMachines.add(virtualMachine);
-                }
-                
+                log_.debug("Skipping virtual machine with invalid host id");
+                continue;
+            }
+            if (virtualMachine.getGroupManagerLocation().getGroupManagerId().equals(Globals.DEFAULT_INITIALIZATION) )
+            {
+                log_.debug("Found a free virtual machine") ;
+                freeVirtualMachines.add(virtualMachine);
             }
             else
             {
-                freeVirtualMachines.add(virtualMachine);
+                log_.debug("Found a bound virtual machine") ; 
+                boundVirtualMachines.add(virtualMachine);   
             }
         }
-        
     }
 
     /**

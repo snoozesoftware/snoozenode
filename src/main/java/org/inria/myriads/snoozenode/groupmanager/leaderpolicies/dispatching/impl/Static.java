@@ -21,6 +21,7 @@ package org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.imp
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
@@ -56,7 +57,7 @@ public class Static
      */
     public Static(ResourceDemandEstimator estimator) 
     {
-        log_.debug("Initializing the round robin virtual cluster dispatching policy");  
+        log_.debug("Initializing the static virtual cluster dispatching policy");  
         estimator_ = estimator;
         runningIndex_ = 0;
     }
@@ -75,6 +76,8 @@ public class Static
         log_.debug("Dispatching virtual machines according to the Bound policy");
         log_.debug("Constructing the dispatch plan for bound virtual machines");
         ArrayList<GroupManagerDescription> groupManagerCandidates = new ArrayList<GroupManagerDescription>();
+
+        
         for(GroupManagerDescription groupManager : groupManagerDescriptions)
         {
             String groupManagerId = groupManager.getId();
@@ -93,6 +96,8 @@ public class Static
                         NetworkAddress address = groupManager.getListenSettings().getControlDataAddress();
                         virtualMachine.setGroupManagerControlDataAddress(address);
                         groupManager.getVirtualMachines().add(virtualMachine);
+                        
+
                     }
                     // NOT_ENOUGH_GM_CAPACITY is set by hasEnoughCapacity.
                 }
