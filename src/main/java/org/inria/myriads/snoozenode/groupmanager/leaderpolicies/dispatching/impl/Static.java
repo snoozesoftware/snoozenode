@@ -47,9 +47,6 @@ public class Static
     /** Resource demand estimator. */
     private ResourceDemandEstimator estimator_;
     
-    /** Running index. */
-    int runningIndex_;
-        
     /** 
      * Constructor. 
      * 
@@ -59,7 +56,6 @@ public class Static
     {
         log_.debug("Initializing the static virtual cluster dispatching policy");  
         estimator_ = estimator;
-        runningIndex_ = 0;
     }
     
     /**
@@ -78,12 +74,12 @@ public class Static
         ArrayList<GroupManagerDescription> groupManagerCandidates = new ArrayList<GroupManagerDescription>();
 
         
-        for(GroupManagerDescription groupManager : groupManagerDescriptions)
+        for (GroupManagerDescription groupManager : groupManagerDescriptions)
         {
             String groupManagerId = groupManager.getId();
             for (VirtualMachineMetaData virtualMachine : virtualMachines)
             {
-                if (virtualMachine.getGroupManagerLocation().getGroupManagerId().equals(groupManagerId))
+                if (virtualMachine.getVirtualMachineLocation().getGroupManagerId().equals(groupManagerId))
                 {
                     String virtualMachineId = virtualMachine.getVirtualMachineLocation().getVirtualMachineId();
                     if (estimator_.hasEnoughGroupManagerCapacity(virtualMachine, groupManager))
@@ -108,7 +104,8 @@ public class Static
                 groupManagerCandidates.add(groupManager);
             }
         }
-        log_.debug(String.format("Returning a new dispatch plan for bound virtual machines with %d groupmanagers used",groupManagerCandidates.size()));
+        log_.debug(String.format("Returning a new dispatch plan for bound " +
+                "virtual machines with %d groupmanagers used", groupManagerCandidates.size()));
         DispatchingPlan dispatchPlan = new DispatchingPlan(groupManagerCandidates);
         return dispatchPlan;
 

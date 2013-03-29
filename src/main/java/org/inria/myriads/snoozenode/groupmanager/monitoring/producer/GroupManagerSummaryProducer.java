@@ -110,10 +110,11 @@ public final class GroupManagerSummaryProducer extends TCPDataSender
                 GroupManagerDataTransporter dataTransporter = createDataTransporter();
                 GroupManagerSummaryInformation summary = dataTransporter.getSummary();
                 log_.debug(String.format("Sending summary information to the group leader! " +
-                                         "Active: %s, passive: %s, requested: %s, used: %s capacity with %d local controllers assigned ", 
+                                         "Active: %s, passive: %s, requested: %s, used: %s capacity with %d " +
+                                         "local controllers assigned ", 
                                          summary.getActiveCapacity(), summary.getPassiveCapacity(),
                                          summary.getRequestedCapacity(), summary.getUsedCapacity(),
-                                         summary.getLocalControllers().size()) );
+                                         summary.getLocalControllers().size()));
                 send(dataTransporter);
                 synchronized (lockObject_)
                 {

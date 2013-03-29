@@ -34,8 +34,6 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionResponse;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineGroupManagerLocation;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineTemplate;
 import org.inria.myriads.snoozecommon.exception.VirtualClusterParserException;
 import org.inria.myriads.snoozecommon.globals.Globals;
@@ -184,21 +182,23 @@ public final class VirtualClusterManager
             if (groupManager.getId().equals(hostId))
             {
                 log_.debug("Found a binding : the virtual machine will be started on group manager" + hostId);
-                virtualMachine.getGroupManagerLocation().setGroupManagerId(hostId);
+                virtualMachine.getVirtualMachineLocation().setGroupManagerId(hostId);
                 return;
             }
             else
             {
                 HashMap<String, LocalControllerDescription> localControllers = groupManager.getLocalControllers();
-                log_.debug(String.format("Lookup on %d local controllers of the group manager %s ",localControllers.size(), groupManager.getId() ));
+                log_.debug(String.format("Lookup on %d local controllers of the group manager %s ",
+                                          localControllers.size(), groupManager.getId()));
                 
                 for (LocalControllerDescription localController : localControllers.values())
                 {
                     if (localController.getId().equals(hostId))
                     {
-                        log_.debug("Found a binding : the virtual machine will be started on local controller" + hostId);
-                        
-                        virtualMachine.getGroupManagerLocation().setGroupManagerId(groupManager.getId());
+                        log_.debug(String.format(
+                                "Found a binding : the virtual machine will be started on local controller %s", 
+                                hostId));
+                        virtualMachine.getVirtualMachineLocation().setGroupManagerId(groupManager.getId());
                         virtualMachine.getVirtualMachineLocation().setLocalControllerId(hostId);
                         return;
                     }

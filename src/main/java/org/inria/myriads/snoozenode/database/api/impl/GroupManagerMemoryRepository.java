@@ -89,6 +89,7 @@ public final class GroupManagerMemoryRepository
      * 
      * @param numberOfMonitoringEntries     The number of monitoring entries
      * @param isActiveOnly                  true if active only controllers are required
+     * @param withVirtualMachines           true if virtual machines are needed
      * @return                              The local controller descriptions
      */
     @Override
@@ -266,6 +267,7 @@ public final class GroupManagerMemoryRepository
      * 
      * @param localControllerId         The local controller identifier
      * @param numberOfMonitoringEntries The number of monitoring entries
+     * @param withVirtualMachines       true if virtual machines are needed
      * @return                          The local controller description
      */
     @Override

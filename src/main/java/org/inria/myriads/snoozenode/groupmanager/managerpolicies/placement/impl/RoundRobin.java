@@ -119,9 +119,10 @@ public final class RoundRobin implements PlacementPolicy
             {
                 log_.debug(String.format("No suitable local controller to host the virtual machine: %s", 
                                          virtualMachineId));
-                ManagementUtils.updateVirtualMachineMetaData(virtualMachine, 
-                                                             VirtualMachineStatus.ERROR, 
-                                                             VirtualMachineErrorCode.NOT_ENOUGH_LOCAL_CONTROLLER_CAPACITY);
+                ManagementUtils.updateVirtualMachineMetaData(
+                        virtualMachine, 
+                        VirtualMachineStatus.ERROR, 
+                        VirtualMachineErrorCode.NOT_ENOUGH_LOCAL_CONTROLLER_CAPACITY);
                 unassignedVirtualMachines.add(virtualMachine);
             }
         }

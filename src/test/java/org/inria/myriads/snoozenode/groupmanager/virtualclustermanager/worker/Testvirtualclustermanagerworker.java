@@ -1,11 +1,13 @@
 package org.inria.myriads.snoozenode.groupmanager.virtualclustermanager.worker;
 
 import java.util.ArrayList;
+
+import junit.framework.TestCase;
+
 import org.easymock.EasyMock;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineGroupManagerLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
@@ -13,12 +15,19 @@ import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimat
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
 import org.inria.myriads.snoozenode.groupmanager.virtualclustermanager.listener.VirtualClusterSubmissionListener;
 
-import junit.framework.TestCase;
-
+/**
+ * 
+ * Test virtual cluster manager worker.
+ * 
+ * @author msimonin
+ *
+ */
 public class Testvirtualclustermanagerworker extends TestCase
 {
 
     /**
+     * 
+     * Test split.
      * 
      * vm1 bound gm
      * vm2 bound gm + lc
@@ -32,22 +41,20 @@ public class Testvirtualclustermanagerworker extends TestCase
         ResourceDemandEstimator estimator = EasyMock.createMock(ResourceDemandEstimator.class);
         DispatchingPolicy dispatchingPolicy = EasyMock.createMock(DispatchingPolicy.class);
         GroupLeaderRepository repository =  EasyMock.createMock(GroupLeaderRepository.class);
-        VirtualClusterSubmissionListener submissionListener = EasyMock.createMock(VirtualClusterSubmissionListener.class);
+        VirtualClusterSubmissionListener submissionListener = 
+                EasyMock.createMock(VirtualClusterSubmissionListener.class);
         NodeConfiguration nodeConfiguration =  EasyMock.createMock(NodeConfiguration.class);
         
-        
         VirtualMachineMetaData vm1 = new VirtualMachineMetaData();
-        VirtualMachineGroupManagerLocation gmLocation1 = new VirtualMachineGroupManagerLocation();
-        gmLocation1.setGroupManagerId("gm1");
-        vm1.setGroupManagerLocation(gmLocation1);
+        VirtualMachineLocation location1 = new VirtualMachineLocation();
+        location1.setGroupManagerId("gm1");
+        vm1.setVirtualMachineLocation(location1);
         
         VirtualMachineMetaData vm2 = new VirtualMachineMetaData();
-        VirtualMachineLocation location1 = new VirtualMachineLocation();
-        location1.setLocalControllerId("lc1");
-        VirtualMachineGroupManagerLocation gmLocation2 = new VirtualMachineGroupManagerLocation();
-        gmLocation2.setGroupManagerId("gm1");
-        vm2.setGroupManagerLocation(gmLocation2);
-        vm2.setVirtualMachineLocation(location1);
+        VirtualMachineLocation location2 = new VirtualMachineLocation();
+        location2.setGroupManagerId("gm1");
+        location2.setLocalControllerId("lc1");
+        vm2.setVirtualMachineLocation(location2);
         
         VirtualMachineMetaData vm3 = new VirtualMachineMetaData();
         vm3.setStatus(VirtualMachineStatus.ERROR);
@@ -61,18 +68,21 @@ public class Testvirtualclustermanagerworker extends TestCase
         virtualMachines.add(vm3);
         virtualMachines.add(vm4);
         
-        VirtualClusterSubmissionWorker managerWorker_ = 
-                new VirtualClusterSubmissionWorker("task1",virtualMachines, nodeConfiguration, dispatchingPolicy, repository, estimator, submissionListener);
+        VirtualClusterSubmissionWorker managerWorker = 
+                new VirtualClusterSubmissionWorker("task1",
+                                                    virtualMachines,
+                                                    nodeConfiguration,
+                                                    dispatchingPolicy,
+                                                    repository,
+                                                    estimator,
+                                                    submissionListener);
 
-//        ArrayList<VirtualMachineMetaData> virtualMachinesCopy = 
-//                new ArrayList<VirtualMachineMetaData>(Arrays.asList(new VirtualMachineMetaData[virtualMachines.size()]));  
-//            
-//            Collections.copy(virtualMachinesCopy, virtualMachines);
+        //usually works on a copy : see the code.
         ArrayList<VirtualMachineMetaData> boundVirtualMachines = new ArrayList<VirtualMachineMetaData>();
         ArrayList<VirtualMachineMetaData> freeVirtualMachines = new ArrayList<VirtualMachineMetaData>();
         
         
-        managerWorker_.splitVirtualMachines(virtualMachines, boundVirtualMachines, freeVirtualMachines);
+        managerWorker.splitVirtualMachines(virtualMachines, boundVirtualMachines, freeVirtualMachines);
         
         assertEquals(2, boundVirtualMachines.size());
         assertTrue(boundVirtualMachines.contains(vm1));

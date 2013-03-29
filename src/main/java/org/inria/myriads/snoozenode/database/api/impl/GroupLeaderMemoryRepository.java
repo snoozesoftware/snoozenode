@@ -287,12 +287,14 @@ public final class GroupLeaderMemoryRepository
      * Updates the mapping local controllers - group manager.
      * 
      * @param summary           The summary information
+     * @param groupManagerId    The group manager id
      */
     private void updateLocalControllerInformation(String groupManagerId, GroupManagerSummaryInformation summary)
     {
         log_.debug("Updating the local controllers settings");
         GroupManagerDescription groupManagerDescription = groupManagerDescriptions_.get(groupManagerId);
-        HashMap<String, LocalControllerDescription> localControllers = new HashMap<String, LocalControllerDescription>();
+        HashMap<String, LocalControllerDescription> localControllers = 
+                new HashMap<String, LocalControllerDescription>();
         for (LocalControllerDescription localController : summary.getLocalControllers())
         {
             log_.debug(String.format("Adding localController %s to the mapping", localController.getId()));

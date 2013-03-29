@@ -3,24 +3,27 @@ package org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.imp
 import java.util.ArrayList;
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.easymock.EasyMock;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineGroupManagerLocation;
-import org.inria.myriads.snoozecommon.globals.Globals;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPlan;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
 
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
-import junit.framework.TestCase;
+
+
+
+
 
 /**
- * @author msimonin
- *
- */
-/**
+ * 
+ * Test static dispatching policy (at GL level).
+ * 
  * @author msimonin
  *
  */
@@ -31,14 +34,14 @@ public class TestStatic extends TestCase
     private ResourceDemandEstimator estimator_;
     
     /** The static dispatch policy (under test).*/
-    DispatchingPolicy staticDispatch_;
+    private DispatchingPolicy staticDispatch_;
     
       
     /** List of virtual machines.*/
     private List<VirtualMachineMetaData> virtualMachines_;
     
     /** List of group managers.*/
-    List<GroupManagerDescription> groupManagers_;
+    private List<GroupManagerDescription> groupManagers_;
     
     
     
@@ -46,9 +49,8 @@ public class TestStatic extends TestCase
      * Setup method.
      * Initializes the estimator.
      * 
-     * 
      */
-    public void setUp() throws Exception 
+    public void setUp() 
     {
       estimator_ = EasyMock.createMock(ResourceDemandEstimator.class);
       staticDispatch_ = new Static(estimator_);
@@ -57,158 +59,192 @@ public class TestStatic extends TestCase
 
     }
     
+    /**
+     * 
+     * vm1 is bound to gm1.
+     * 
+     */
     public void testDispatchOneGmBound()
     {
-        VirtualMachineMetaData vm1_  = new VirtualMachineMetaData();
-        GroupManagerDescription gm1_ = new GroupManagerDescription();
-        gm1_.setId("1");
-        VirtualMachineGroupManagerLocation groupManagerLocation = new VirtualMachineGroupManagerLocation();
-        groupManagerLocation.setGroupManagerId("1");
-        vm1_.setGroupManagerLocation(groupManagerLocation);
+        VirtualMachineMetaData vm1  = new VirtualMachineMetaData();
+        GroupManagerDescription gm1 = new GroupManagerDescription();
+        gm1.setId("1");
+        VirtualMachineLocation location = new VirtualMachineLocation();
+        location.setGroupManagerId("1");
+        vm1.setVirtualMachineLocation(location);
         
-        virtualMachines_.add(vm1_);
-        groupManagers_.add(gm1_);  
+        virtualMachines_.add(vm1);
+        groupManagers_.add(gm1);  
         
-        expect(estimator_.hasEnoughGroupManagerCapacity(vm1_, gm1_)).andReturn(true);
+        expect(estimator_.hasEnoughGroupManagerCapacity(vm1, gm1)).andReturn(true);
         replay(estimator_);
         DispatchingPlan dispatchPlan = staticDispatch_.dispatch(virtualMachines_, groupManagers_);
         List<GroupManagerDescription> groupManagersCandidates = dispatchPlan.getGroupManagers();
         
         //gm1 is assigned for this vm
-        assertEquals(groupManagersCandidates.size(),1);
-        assertEquals(groupManagersCandidates.get(0), gm1_);
-        assertEquals(gm1_.getVirtualMachines().size(), 1);
-        assertEquals(gm1_.getVirtualMachines().get(0), vm1_);
+        assertEquals(groupManagersCandidates.size(), 1);
+        assertEquals(groupManagersCandidates.get(0), gm1);
+        assertEquals(gm1.getVirtualMachines().size(), 1);
+        assertEquals(gm1.getVirtualMachines().get(0), vm1);
     }
     
     
+    /**
+     * 
+     * no vm to dispatch.
+     * 
+     */
     public void testDispatchNoVm()
     {
-        VirtualMachineMetaData vm1_  = new VirtualMachineMetaData();
-        GroupManagerDescription gm1_ = new GroupManagerDescription();
-        gm1_.setId("1");
-        VirtualMachineGroupManagerLocation groupManagerLocation = new VirtualMachineGroupManagerLocation();
-        groupManagerLocation.setGroupManagerId("1");
-        vm1_.setGroupManagerLocation(groupManagerLocation);
+        VirtualMachineMetaData vm1  = new VirtualMachineMetaData();
+        GroupManagerDescription gm1 = new GroupManagerDescription();
+        gm1.setId("1");
+        VirtualMachineLocation location = new VirtualMachineLocation();
+        location.setGroupManagerId("1");
+        vm1.setVirtualMachineLocation(location);
         
-        groupManagers_.add(gm1_);  
+        groupManagers_.add(gm1);  
         
-        expect(estimator_.hasEnoughGroupManagerCapacity(vm1_, gm1_)).andReturn(true);
+        expect(estimator_.hasEnoughGroupManagerCapacity(vm1, gm1)).andReturn(true);
         replay(estimator_);
         DispatchingPlan dispatchPlan = staticDispatch_.dispatch(virtualMachines_, groupManagers_);
         List<GroupManagerDescription> groupManagersCandidates = dispatchPlan.getGroupManagers();
         
         //gm1 is assigned for this vm
-        assertEquals(groupManagersCandidates.size(),0);
-        assertEquals(gm1_.getVirtualMachines().size(), 0);
+        assertEquals(groupManagersCandidates.size(), 0);
+        assertEquals(gm1.getVirtualMachines().size(), 0);
     }
     
     
+    /**
+     * 
+     * vm1 is bound but no gm exist in the repository.
+     * 
+     */
     public void testDispatchNoGm()
     {
-        VirtualMachineMetaData vm1_  = new VirtualMachineMetaData();
-        VirtualMachineGroupManagerLocation groupManagerLocation = new VirtualMachineGroupManagerLocation();
-        groupManagerLocation.setGroupManagerId("1");
-        vm1_.setGroupManagerLocation(groupManagerLocation);
+        VirtualMachineMetaData vm1  = new VirtualMachineMetaData();
+        VirtualMachineLocation location = new VirtualMachineLocation();
+        location.setGroupManagerId("1");
+        vm1.setVirtualMachineLocation(location);
         
-        virtualMachines_.add(vm1_);
+        virtualMachines_.add(vm1);
 
         DispatchingPlan dispatchPlan = staticDispatch_.dispatch(virtualMachines_, groupManagers_);
         List<GroupManagerDescription> groupManagersCandidates = dispatchPlan.getGroupManagers();
 
-        assertEquals(groupManagersCandidates.size(),0);
+        assertEquals(groupManagersCandidates.size(), 0);
     }
     
+    /**
+     * 
+     * vm1 is bound but the binding doesn't exist in the repository.
+     * 
+     */
     public void testDispatchNoGmBound()
     {
-        VirtualMachineMetaData vm1_  = new VirtualMachineMetaData();
-        GroupManagerDescription gm1_ = new GroupManagerDescription();
-        gm1_.setId("1");
-        VirtualMachineGroupManagerLocation groupManagerLocation = new VirtualMachineGroupManagerLocation();
-        groupManagerLocation.setGroupManagerId("2");
-        vm1_.setGroupManagerLocation(groupManagerLocation);
+        VirtualMachineMetaData vm1  = new VirtualMachineMetaData();
+        GroupManagerDescription gm1 = new GroupManagerDescription();
+        gm1.setId("1");
+        VirtualMachineLocation location = new VirtualMachineLocation();
+        location.setGroupManagerId("2");
+        vm1.setVirtualMachineLocation(location);
         
-        virtualMachines_.add(vm1_);
-        groupManagers_.add(gm1_);  
+        virtualMachines_.add(vm1);
+        groupManagers_.add(gm1);  
         
-        expect(estimator_.hasEnoughGroupManagerCapacity(vm1_, gm1_)).andReturn(true);
+        expect(estimator_.hasEnoughGroupManagerCapacity(vm1, gm1)).andReturn(true);
         replay(estimator_);
         DispatchingPlan dispatchPlan = staticDispatch_.dispatch(virtualMachines_, groupManagers_);
         List<GroupManagerDescription> groupManagersCandidates = dispatchPlan.getGroupManagers();
         
         //no gm assigned for this vm
-        assertEquals(groupManagersCandidates.size(),0);
-        assertEquals(gm1_.getVirtualMachines().size(), 0);
+        assertEquals(groupManagersCandidates.size(), 0);
+        assertEquals(gm1.getVirtualMachines().size(), 0);
     }
     
+    /**
+     * 
+     * vm is not bound to any gm.
+     * 
+     */
     public void testDispatchUnknownGmBound()
     {
-        VirtualMachineMetaData vm1_  = new VirtualMachineMetaData();
-        GroupManagerDescription gm1_ = new GroupManagerDescription();
-        gm1_.setId("1");
-        VirtualMachineGroupManagerLocation groupManagerLocation = new VirtualMachineGroupManagerLocation();
-        groupManagerLocation.setGroupManagerId(Globals.DEFAULT_INITIALIZATION);
-        vm1_.setGroupManagerLocation(groupManagerLocation);
+        VirtualMachineMetaData vm1  = new VirtualMachineMetaData();
+        GroupManagerDescription gm1 = new GroupManagerDescription();
+        gm1.setId("1");
+        VirtualMachineLocation location = new VirtualMachineLocation();
+        vm1.setVirtualMachineLocation(location);
         
-        virtualMachines_.add(vm1_);
-        groupManagers_.add(gm1_);  
+        virtualMachines_.add(vm1);
+        groupManagers_.add(gm1);  
                 
-        expect(estimator_.hasEnoughGroupManagerCapacity(vm1_, gm1_)).andReturn(true);
+        expect(estimator_.hasEnoughGroupManagerCapacity(vm1, gm1)).andReturn(true);
         replay(estimator_);
         
         DispatchingPlan dispatchPlan = staticDispatch_.dispatch(virtualMachines_, groupManagers_);
         List<GroupManagerDescription> groupManagersCandidates = dispatchPlan.getGroupManagers();
         
         //no gm assigned for this vm
-        assertEquals(groupManagersCandidates.size(),0);
-        assertEquals(gm1_.getVirtualMachines().size(), 0);
+        assertEquals(groupManagersCandidates.size(), 0);
+        assertEquals(gm1.getVirtualMachines().size(), 0);
     }
     
+    /**
+     * 
+     * More comple submisstion request. 
+     *  vm1 -> gm1 ; 
+     *  vm2 -> gm4 ; 
+     *  vm3 -> gm4 ;
+     *  vm4 -> unassigned ;
+     * 
+     */
     public void testDispatchMultiple()
     {
-        VirtualMachineMetaData vm1_  = new VirtualMachineMetaData();
-        GroupManagerDescription gm1_ = new GroupManagerDescription();
-        gm1_.setId("1");
-        groupManagers_.add(gm1_);  
-        GroupManagerDescription gm2_ = new GroupManagerDescription();
-        gm2_.setId("2");
-        groupManagers_.add(gm2_);
-        GroupManagerDescription gm3_ = new GroupManagerDescription();
-        gm3_.setId("3");
-        groupManagers_.add(gm3_);
-        GroupManagerDescription gm4_ = new GroupManagerDescription();
-        gm4_.setId("4");
-        groupManagers_.add(gm4_);
+        //repo contains 4 gms.
+        GroupManagerDescription gm1 = new GroupManagerDescription();
+        gm1.setId("1");
+        groupManagers_.add(gm1);  
+        GroupManagerDescription gm2 = new GroupManagerDescription();
+        gm2.setId("2");
+        groupManagers_.add(gm2);
+        GroupManagerDescription gm3 = new GroupManagerDescription();
+        gm3.setId("3");
+        groupManagers_.add(gm3);
+        GroupManagerDescription gm4 = new GroupManagerDescription();
+        gm4.setId("4");
+        groupManagers_.add(gm4);
         
+        // request contains 4 vms.
+        VirtualMachineMetaData vm1  = new VirtualMachineMetaData();
+        VirtualMachineLocation location = new VirtualMachineLocation();
+        location.setGroupManagerId("1");
+        vm1.setVirtualMachineLocation(location);
+        virtualMachines_.add(vm1);
         
-        VirtualMachineGroupManagerLocation groupManagerLocation = new VirtualMachineGroupManagerLocation();
-        groupManagerLocation.setGroupManagerId("1");
-        vm1_.setGroupManagerLocation(groupManagerLocation);
-        virtualMachines_.add(vm1_);
+        VirtualMachineMetaData vm2 = new VirtualMachineMetaData();
+        VirtualMachineLocation location2 = new VirtualMachineLocation();
+        location2.setGroupManagerId("4");
+        vm2.setVirtualMachineLocation(location2);
+        virtualMachines_.add(vm2);
         
-        VirtualMachineMetaData vm2_ = new VirtualMachineMetaData();
-        VirtualMachineGroupManagerLocation groupManagerLocation2 = new VirtualMachineGroupManagerLocation();
-        groupManagerLocation2.setGroupManagerId("4");
-        vm2_.setGroupManagerLocation(groupManagerLocation2);
-        virtualMachines_.add(vm2_);
+        VirtualMachineMetaData vm3 = new VirtualMachineMetaData();
+        VirtualMachineLocation location3 = new VirtualMachineLocation();
+        location3.setGroupManagerId("4");
+        vm3.setVirtualMachineLocation(location3);
+        virtualMachines_.add(vm3);
         
-        VirtualMachineMetaData vm3_ = new VirtualMachineMetaData();
-        VirtualMachineGroupManagerLocation groupManagerLocation3 = new VirtualMachineGroupManagerLocation();
-        groupManagerLocation3.setGroupManagerId("4");
-        vm3_.setGroupManagerLocation(groupManagerLocation3);
-        virtualMachines_.add(vm3_);
+        VirtualMachineMetaData vm4 = new VirtualMachineMetaData();
+        VirtualMachineLocation location4 = new VirtualMachineLocation();
+        vm4.setVirtualMachineLocation(location4);
+        virtualMachines_.add(vm4);
         
-        VirtualMachineMetaData vm4_ = new VirtualMachineMetaData();
-        VirtualMachineGroupManagerLocation groupManagerLocation4 = new VirtualMachineGroupManagerLocation();
-        vm4_.setGroupManagerLocation(groupManagerLocation4);
-        virtualMachines_.add(vm4_);
+        assertEquals(virtualMachines_.size(), 4);
+        assertEquals(groupManagers_.size(), 4);
         
-        assertEquals(virtualMachines_.size(),4);
-        assertEquals(groupManagers_.size(),4);
-        
-        expect(estimator_.hasEnoughGroupManagerCapacity(vm1_, gm1_)).andReturn(true);
-        expect(estimator_.hasEnoughGroupManagerCapacity(vm2_, gm4_)).andReturn(true);
-        expect(estimator_.hasEnoughGroupManagerCapacity(vm3_, gm4_)).andReturn(true);
+        expect(estimator_.hasEnoughGroupManagerCapacity(vm1, gm1)).andReturn(true);
+        expect(estimator_.hasEnoughGroupManagerCapacity(vm2, gm4)).andReturn(true);
+        expect(estimator_.hasEnoughGroupManagerCapacity(vm3, gm4)).andReturn(true);
         replay(estimator_);
         
         // vm1 -> gm1 ; 
@@ -221,18 +257,18 @@ public class TestStatic extends TestCase
         //no gm assigned for this vm
         assertEquals(2, groupManagersCandidates.size());
         //gm1 -> vm1
-        assertEquals(1, gm1_.getVirtualMachines().size());
-        assertEquals(vm1_, gm1_.getVirtualMachines().get(0));
+        assertEquals(1, gm1.getVirtualMachines().size());
+        assertEquals(vm1, gm1.getVirtualMachines().get(0));
         
         //gm2 -> no vm
-        assertEquals(0, gm2_.getVirtualMachines().size());
+        assertEquals(0, gm2.getVirtualMachines().size());
         //gm3 -> no vm
-        assertEquals(0, gm3_.getVirtualMachines().size());
+        assertEquals(0, gm3.getVirtualMachines().size());
         
         //gm4 -> vm2 & vm3
-        assertEquals(2, gm4_.getVirtualMachines().size());
-        assertEquals(vm2_, gm4_.getVirtualMachines().get(0));
-        assertEquals(vm3_, gm4_.getVirtualMachines().get(1));
+        assertEquals(2, gm4.getVirtualMachines().size());
+        assertEquals(vm2, gm4.getVirtualMachines().get(0));
+        assertEquals(vm3, gm4.getVirtualMachines().get(1));
         
         
     }

@@ -51,7 +51,7 @@ public class RoundRobin
     private ResourceDemandEstimator estimator_;
     
     /** Running index. */
-    int runningIndex_;
+    private int runningIndex_;
         
     /** 
      * Constructor. 

@@ -86,8 +86,7 @@ public final class VirtualClusterSubmissionWorker
     /** Task identifier. */
     private String taskIdentifier_;
     
-    /** Resource Demand Estimator. */
-    private ResourceDemandEstimator estimator_;
+
     
     /**
      * Constructor.
@@ -96,6 +95,7 @@ public final class VirtualClusterSubmissionWorker
      * @param nodeConfiguration    The node configuration
      * @param dispatchingPolicy    The dispatching policy
      * @param repository           The group leader repository
+     * @param estimator            The resource demand estimator
      * @param virtualMachines      The virtual machines
      * @param submissionListener   The submission listener
      */
@@ -115,7 +115,6 @@ public final class VirtualClusterSubmissionWorker
         repository_ = repository;
         dispatchingPolicy_ = dispatchingPolicy;
         staticDispatchingPolicy_ = new Static(estimator);
-        estimator_ = estimator;
         submissionListener_ = submissionListener;
     }
         
@@ -187,17 +186,17 @@ public final class VirtualClusterSubmissionWorker
         splitVirtualMachines(virtualMachinesCopy, boundVirtualMachines, freeVirtualMachines);
         
         //dispatch static vms
-        DispatchingPlan boundDispatchPlan = staticDispatchingPolicy_.dispatch(boundVirtualMachines, groupManagers);
+        staticDispatchingPolicy_.dispatch(boundVirtualMachines, groupManagers);
         
         //dispatch free vms
-        DispatchingPlan freeDispatchPlan = dispatchingPolicy_.dispatch(freeVirtualMachines, groupManagers);
+        dispatchingPolicy_.dispatch(freeVirtualMachines, groupManagers);
 
         //merge the two dispatching plan
         ArrayList<GroupManagerDescription> groupManagerCandidates = new ArrayList<GroupManagerDescription>();
         
         for (GroupManagerDescription groupManager : groupManagers)
         {
-            if (groupManager.getVirtualMachines().size()>0)
+            if (groupManager.getVirtualMachines().size() > 0)
             {
                 groupManagerCandidates.add(groupManager);
             }
@@ -213,6 +212,14 @@ public final class VirtualClusterSubmissionWorker
         }
     }
                
+    /**
+     * 
+     * Splits the virtual machines.
+     * 
+     * @param virtualMachinesCopy   the virtual machines list to split
+     * @param boundVirtualMachines  the bound virtual machines
+     * @param freeVirtualMachines   the free virtual machines
+     */
     protected void splitVirtualMachines(ArrayList<VirtualMachineMetaData> virtualMachinesCopy,
             ArrayList<VirtualMachineMetaData> boundVirtualMachines,
             ArrayList<VirtualMachineMetaData> freeVirtualMachines)
@@ -225,14 +232,15 @@ public final class VirtualClusterSubmissionWorker
                 log_.debug("Skipping virtual machine with invalid host id");
                 continue;
             }
-            if (virtualMachine.getGroupManagerLocation().getGroupManagerId().equals(Globals.DEFAULT_INITIALIZATION) )
+            //if (virtualMachine.getGroupManagerLocation().getGroupManagerId().equals(Globals.DEFAULT_INITIALIZATION) )
+            if (virtualMachine.getVirtualMachineLocation().getGroupManagerId().equals(Globals.DEFAULT_INITIALIZATION))
             {
-                log_.debug("Found a free virtual machine") ;
+                log_.debug("Found a free virtual machine");
                 freeVirtualMachines.add(virtualMachine);
             }
             else
             {
-                log_.debug("Found a bound virtual machine") ; 
+                log_.debug("Found a bound virtual machine");
                 boundVirtualMachines.add(virtualMachine);   
             }
         }
@@ -251,7 +259,7 @@ public final class VirtualClusterSubmissionWorker
         
         Map<String, GroupManagerDescription> submissionResponses = new HashMap<String, GroupManagerDescription>(); 
         List<GroupManagerDescription> groupManagers = dispatchPlan.getGroupManagers();
-        log_.debug(String.format("starting placement on %d group managers",groupManagers.size()));
+        log_.debug(String.format("starting placement on %d group managers", groupManagers.size()));
         for (GroupManagerDescription groupManager : groupManagers) 
         {
             ArrayList<VirtualMachineMetaData> assignedVirtualMachines = groupManager.getVirtualMachines();

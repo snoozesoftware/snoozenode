@@ -497,7 +497,6 @@ public class ResourceDemandEstimator
      * Returns the current group manager summary data.
      * 
      * @param localControllers      The list of local controllers
-     * @param legacyIpAddresses     The list of legacy ip addresses
      * @return                      The group manager summary information
      */
     public synchronized GroupManagerSummaryInformation 

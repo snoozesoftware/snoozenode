@@ -3,24 +3,31 @@ package org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.impl
 import java.util.ArrayList;
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.easymock.EasyMock;
-import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineGroupManagerLocation;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.globals.Globals;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPlan;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.impl.Static;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
 
-import junit.framework.TestCase;
+
 
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 
+/**
+ * 
+ * Test static placement policy (at GM level).
+ * 
+ * @author msimonin
+ *
+ */
 public class TestStatic extends TestCase
 {
 
@@ -29,13 +36,13 @@ public class TestStatic extends TestCase
     private ResourceDemandEstimator estimator_;
     
     /** The static dispatch policy (under test).*/
-    PlacementPolicy staticPlacement_;
+    private PlacementPolicy staticPlacement_;
     
     /** List of virtual machines.*/
     private List<VirtualMachineMetaData> virtualMachines_;
     
     /** List of group managers.*/
-    List<LocalControllerDescription> localControllers_;
+    private List<LocalControllerDescription> localControllers_;
     
     /** 
      * Setup method.
@@ -43,7 +50,7 @@ public class TestStatic extends TestCase
      * 
      * 
      */
-    public void setUp() throws Exception 
+    public void setUp()
     {
       estimator_ = EasyMock.createMock(ResourceDemandEstimator.class);
       staticPlacement_ = new Static(estimator_);
@@ -53,7 +60,7 @@ public class TestStatic extends TestCase
     }
     
     /**
-     * vm1 is bound to lc1 and lc1 exist in the repository and has enough capacity 
+     * vm1 is bound to lc1 and lc1 exist in the repository and has enough capacity.
      *
      */
     public void testPlaceOneLcBoundHasNotEnoughCapacity()
@@ -82,7 +89,8 @@ public class TestStatic extends TestCase
     }
     
     /**
-     * vm1 is bound to lc1 and lc1 exist in the repository and has not enough capacity 
+     * 
+     * vm1 is bound to lc1 and lc1 exist in the repository and has not enough capacity. 
      *
      */
     public void testPlaceOneLcBoundNotEnoughCapacity()
@@ -108,21 +116,23 @@ public class TestStatic extends TestCase
         assertEquals(0, targetLocalControllers.size());
         assertEquals(1, unassignedVirtualMachines.size());
         assertEquals(vm1, unassignedVirtualMachines.get(0));
+        assertEquals(VirtualMachineStatus.ERROR, vm1.getStatus());
+        assertEquals(VirtualMachineErrorCode.NOT_ENOUGH_LOCAL_CONTROLLER_CAPACITY, vm1.getErrorCode());
     }
     
     
     /**
-     * vm1 should be dispatch on lc1 but no lc in the repository 
+     * vm1 should be dispatch on lc1 but no lc in the repository.
      */
     public void testDispatchNoLc()
     {
-        VirtualMachineMetaData vm1_  = new VirtualMachineMetaData();
+        VirtualMachineMetaData vm1  = new VirtualMachineMetaData();
         VirtualMachineLocation location = new VirtualMachineLocation();
         location.setLocalControllerId("1");
         
-        vm1_.setVirtualMachineLocation(location);
+        vm1.setVirtualMachineLocation(location);
         
-        virtualMachines_.add(vm1_);
+        virtualMachines_.add(vm1);
 
         PlacementPlan placementPlan = staticPlacement_.place(virtualMachines_, localControllers_);
         
@@ -134,7 +144,7 @@ public class TestStatic extends TestCase
     }
     
     /**
-     * vm1 is bound to lc1 but lc1 doesn't exist in the repository
+     * vm1 is bound to lc1 but lc1 doesn't exist in the repository.
      */
     public void testDispatchNoLcBound()
     {
@@ -163,7 +173,7 @@ public class TestStatic extends TestCase
     
     
     /**
-     * vm1 is not bound to any lc
+     * vm1 is not bound to any lc.
      */
     public void testDispatchUnknownBound()
     {

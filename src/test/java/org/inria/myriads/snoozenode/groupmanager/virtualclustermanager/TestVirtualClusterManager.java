@@ -2,7 +2,8 @@ package org.inria.myriads.snoozenode.groupmanager.virtualclustermanager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
+
+import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
@@ -17,17 +18,29 @@ import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Dispatching;
 
-import junit.framework.TestCase;
+
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 
+/**
+ * 
+ * Test virtual cluster manager.
+ * 
+ * @author msimonin
+ *
+ */
 public class TestVirtualClusterManager extends TestCase
 {
 
     
-    VirtualClusterManager virtualClusterManager_; 
+     
+    /** Virtual cluster manager (under test). */
+    private VirtualClusterManager virtualClusterManager_; 
     
-    public void setUp() throws Exception 
+    /**
+     * Setup method.
+     */
+    public void setUp() 
     {
         GroupLeaderRepository repository = EasyMock.createMock(GroupLeaderRepository.class);
         NodeConfiguration nodeConfiguration = EasyMock.createMock(NodeConfiguration.class);
@@ -73,8 +86,7 @@ public class TestVirtualClusterManager extends TestCase
         replay(repository);
         replay(nodeConfiguration);
         replay(estimator);
-        GroupLeaderSchedulerSettings gms = nodeConfiguration.getGroupLeaderScheduler();
-
+        
         virtualClusterManager_ = new VirtualClusterManager(nodeConfiguration, repository, estimator);
 
     }
@@ -88,7 +100,7 @@ public class TestVirtualClusterManager extends TestCase
         VirtualMachineMetaData vm = new VirtualMachineMetaData();
         virtualClusterManager_.setVirtualMachineLocation(vm, "gm1");
         
-        assertEquals("gm1", vm.getGroupManagerLocation().getGroupManagerId());
+        assertEquals("gm1", vm.getVirtualMachineLocation().getGroupManagerId());
         assertEquals(Globals.DEFAULT_INITIALIZATION, vm.getVirtualMachineLocation().getLocalControllerId());
     }
 
@@ -103,14 +115,14 @@ public class TestVirtualClusterManager extends TestCase
         VirtualMachineMetaData vm = new VirtualMachineMetaData();
         virtualClusterManager_.setVirtualMachineLocation(vm, "gm42");
         
-        assertEquals(Globals.DEFAULT_INITIALIZATION, vm.getGroupManagerLocation().getGroupManagerId());
+        assertEquals(Globals.DEFAULT_INITIALIZATION, vm.getVirtualMachineLocation().getGroupManagerId());
         assertEquals(Globals.DEFAULT_INITIALIZATION, vm.getVirtualMachineLocation().getLocalControllerId());
         assertEquals(VirtualMachineStatus.ERROR, vm.getStatus());
         assertEquals(VirtualMachineErrorCode.INVALID_HOST_ID, vm.getErrorCode());
     }
     
     /**
-     * Test with a lc set
+     * Test with a lc set.
      * should position the gm & the lc
      */
     public void testSetVirtualMachineLocationLCset()
@@ -118,7 +130,7 @@ public class TestVirtualClusterManager extends TestCase
         VirtualMachineMetaData vm = new VirtualMachineMetaData();
         virtualClusterManager_.setVirtualMachineLocation(vm, "lc1");
         
-        assertEquals("gm1", vm.getGroupManagerLocation().getGroupManagerId());
+        assertEquals("gm1", vm.getVirtualMachineLocation().getGroupManagerId());
         assertEquals("lc1", vm.getVirtualMachineLocation().getLocalControllerId());
     }
     
@@ -131,7 +143,7 @@ public class TestVirtualClusterManager extends TestCase
         VirtualMachineMetaData vm = new VirtualMachineMetaData();
         virtualClusterManager_.setVirtualMachineLocation(vm, "lc42");
         
-        assertEquals(Globals.DEFAULT_INITIALIZATION, vm.getGroupManagerLocation().getGroupManagerId());
+        assertEquals(Globals.DEFAULT_INITIALIZATION, vm.getVirtualMachineLocation().getGroupManagerId());
         assertEquals(Globals.DEFAULT_INITIALIZATION, vm.getVirtualMachineLocation().getLocalControllerId());
         assertEquals(VirtualMachineStatus.ERROR, vm.getStatus());
         assertEquals(VirtualMachineErrorCode.INVALID_HOST_ID, vm.getErrorCode());

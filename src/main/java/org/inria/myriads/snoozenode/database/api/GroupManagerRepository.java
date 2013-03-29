@@ -50,6 +50,7 @@ public interface GroupManagerRepository
      * 
      * @param numberOfMonitoringEntries    The number of monitoring entries
      * @param isActiveOnly                 true if active only controllers are needed
+     * @param withVirtualMachines          true if virtualMachines are needed
      * @return                             The local controller descriptions
      */
     ArrayList<LocalControllerDescription> getLocalControllerDescriptions(int numberOfMonitoringEntries, 
@@ -70,9 +71,12 @@ public interface GroupManagerRepository
      * 
      * @param localControllerId          The local controller identifier
      * @param numberOfMonitoringEntries  The number of monitoring entries
+     * @param withVirtualMachines        True if virtual machines are needed
      * @return                           The local controller description
      */
-    LocalControllerDescription getLocalControllerDescription(String localControllerId, int numberOfMonitoringEntries, boolean withVirtualMachines);
+    LocalControllerDescription getLocalControllerDescription(String localControllerId, 
+                                                             int numberOfMonitoringEntries, 
+                                                             boolean withVirtualMachines);
        
     /** 
      * Adds local controller description. 

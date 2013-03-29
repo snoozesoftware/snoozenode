@@ -69,8 +69,8 @@ public final class VirtualMachineManager
     /** Number of monitoring entries. */
     private int numberOfMonitoringEntries_;
 
-    /** Resource demand estimator*/
-    ResourceDemandEstimator estimator_ ;
+    /** Resource demand estimator. */
+    private ResourceDemandEstimator estimator_;
     
     /**
      * Constructor.

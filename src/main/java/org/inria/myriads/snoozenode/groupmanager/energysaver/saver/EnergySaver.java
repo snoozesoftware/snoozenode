@@ -91,10 +91,12 @@ public final class EnergySaver
             while (true)
             {                            
                 log_.debug(String.format("Waiting for: %s seconds", idleTimeThreshold));
-                localControllers = repository_.getLocalControllerDescriptions(NUMBER_OF_MONITORING_ENTRIES, true, true);
-                {
-                    lockObject_.wait(TimeUtils.convertSecondsToMilliseconds(idleTimeThreshold));
-                }
+                localControllers = repository_.getLocalControllerDescriptions(NUMBER_OF_MONITORING_ENTRIES,
+                                                                              true,
+                                                                              true);
+                                  
+                lockObject_.wait(TimeUtils.convertSecondsToMilliseconds(idleTimeThreshold));
+                
                          
                 if (isTerminated_)
                 {             

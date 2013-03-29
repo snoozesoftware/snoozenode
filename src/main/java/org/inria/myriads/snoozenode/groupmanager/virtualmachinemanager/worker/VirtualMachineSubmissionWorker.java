@@ -77,8 +77,6 @@ public final class VirtualMachineSubmissionWorker
     /** Task identifier. */
     private String taskIdentifier_;
     
-    /** Resource Demand Estimator.*/
-    ResourceDemandEstimator estimator_;
     
     /**
      * Constructor.
@@ -89,6 +87,7 @@ public final class VirtualMachineSubmissionWorker
      * @param repository                 The repository
      * @param placementPolicy            The placement policy
      * @param stateMachine               The state machine
+     * @param estimator                  The resource estimator
      * @param managerListener            The manager listener
      */
     public VirtualMachineSubmissionWorker(String taskIdentifier,
@@ -107,8 +106,7 @@ public final class VirtualMachineSubmissionWorker
         placementPolicy_ = placementPolicy;
         stateMachine_ = stateMachine;
         managerListener_ = managerListener;
-        //Resource Demand Estimator
-        estimator_ = estimator;
+    
         staticPlacementPolicy_ = new Static(estimator);
     }
     
@@ -228,7 +226,7 @@ public final class VirtualMachineSubmissionWorker
           
         ArrayList<VirtualMachineMetaData> virtualMachines = submissionRequest_.getVirtualMachineMetaData(); 
         List<LocalControllerDescription> localControllers = 
-                repository_.getLocalControllerDescriptions(numberOfMonitoringEntries_, false,true);
+                repository_.getLocalControllerDescriptions(numberOfMonitoringEntries_, false, true);
         
         ArrayList<VirtualMachineMetaData> boundVirtualMachines = new ArrayList<VirtualMachineMetaData>();
         ArrayList<VirtualMachineMetaData> freeVirtualMachines = new ArrayList<VirtualMachineMetaData>();
@@ -245,7 +243,7 @@ public final class VirtualMachineSubmissionWorker
         ArrayList<LocalControllerDescription> targetLocalControllers = new ArrayList<LocalControllerDescription>();
         for (LocalControllerDescription localController : localControllers)
         {
-            if (localController.getAssignedVirtualMachines().size()>0)
+            if (localController.getAssignedVirtualMachines().size() > 0)
             {
                 targetLocalControllers.add(localController);
             }
@@ -254,12 +252,20 @@ public final class VirtualMachineSubmissionWorker
         unassignedVirtualMachine.addAll(boundPlacementPlan.gettUnassignedVirtualMachines());
         unassignedVirtualMachine.addAll(freePlacementPlan.gettUnassignedVirtualMachines());
 
-        PlacementPlan placementPlan = new PlacementPlan(targetLocalControllers,unassignedVirtualMachine);
+        PlacementPlan placementPlan = new PlacementPlan(targetLocalControllers, unassignedVirtualMachine);
         
         VirtualMachineSubmissionResponse submissionResponse = enforcePlacementPlan(placementPlan);
         managerListener_.onSubmissionFinished(taskIdentifier_, submissionResponse);
     }
 
+    /**
+     * 
+     * Splits the virtual machines.
+     * 
+     * @param virtualMachines           the virtual machines list
+     * @param boundVirtualMachines      the bound virtual machines
+     * @param freeVirtualMachines       the free virtual machines
+     */
     protected void splitVirtualMachines(ArrayList<VirtualMachineMetaData> virtualMachines,
             ArrayList<VirtualMachineMetaData> boundVirtualMachines,
             ArrayList<VirtualMachineMetaData> freeVirtualMachines)
@@ -269,8 +275,11 @@ public final class VirtualMachineSubmissionWorker
             if (virtualMachine.getVirtualMachineLocation().getLocalControllerId() != null)
             {
                 String localControllerId = virtualMachine.getVirtualMachineLocation().getLocalControllerId();
-                log_.debug(String.format("The user force the start of this vm on local localcontroller %s", localControllerId));
-                LocalControllerDescription localController = repository_.getLocalControllerDescription(localControllerId, 0, false);
+                log_.debug(String.format(
+                        "The user force the start of this vm on local localcontroller %s",
+                        localControllerId));
+                LocalControllerDescription localController =
+                        repository_.getLocalControllerDescription(localControllerId, 0, false);
                 if (localController != null)
                 {
                     log_.debug("Found a bound virtual machine");
@@ -278,7 +287,7 @@ public final class VirtualMachineSubmissionWorker
                 }
                 else
                 {
-                    log_.debug("Found a free virtual machine") ;
+                    log_.debug("Found a free virtual machine");
                     freeVirtualMachines.add(virtualMachine);
                 }
             }

@@ -20,10 +20,8 @@
 package org.inria.myriads.snoozenode.groupmanager.monitoring.transport;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
-import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 
 
 /**
