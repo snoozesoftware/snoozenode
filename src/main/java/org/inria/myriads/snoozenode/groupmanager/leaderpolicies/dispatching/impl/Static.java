@@ -25,6 +25,8 @@ import java.util.List;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPlan;
@@ -95,7 +97,8 @@ public class Static
                         
 
                     }
-                    // NOT_ENOUGH_GM_CAPACITY is set by hasEnoughCapacity.
+                    virtualMachine.setStatus(VirtualMachineStatus.ERROR);
+                    virtualMachine.setErrorCode(VirtualMachineErrorCode.NOT_ENOUGH_GROUP_MANAGER_CAPACITY);
                 }
             }
             

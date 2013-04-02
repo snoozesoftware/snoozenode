@@ -852,6 +852,7 @@ public final class GroupManagerMemoryRepository
     
     /**
      * Checks if local controller exists.
+     * @deprecated
      * 
      * @param localControllerAddress     The lcoal controller address
      * @return                           The previous identifier, null otherwise

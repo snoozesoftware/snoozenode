@@ -27,8 +27,10 @@ import java.util.Map;
 
 import org.apache.commons.net.util.SubnetUtils;
 import org.apache.commons.net.util.SubnetUtils.SubnetInfo;
+import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
+import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
@@ -406,6 +408,35 @@ public final class GroupLeaderMemoryRepository
             }
         }
         return localControllers;
+    }
+
+    /**
+     * 
+     * Gets the group manager assigned to the localcontroller identified by its contact information.
+     * 
+     * @param contactInformation        the contact address/port of the local controller.
+     * @return                          The assigned group manager or null if none is found.
+     */
+    @Override
+    public AssignedGroupManager getAssignedGroupManager(NetworkAddress contactInformation)
+    {
+        for (GroupManagerDescription groupManager : groupManagerDescriptions_.values())
+        {
+            for (LocalControllerDescription localController : groupManager.getLocalControllers().values())
+            {
+                NetworkAddress tmpAddress = localController.getControlDataAddress();
+                boolean isEqualAddress = tmpAddress.getAddress().equals(contactInformation.getAddress());
+                boolean isEqualPort = tmpAddress.getPort() == contactInformation.getPort();
+                if (isEqualAddress && isEqualPort)
+                {
+                    AssignedGroupManager lookup = new AssignedGroupManager();
+                    lookup.setLocalControllerId(localController.getId());
+                    lookup.setGroupManager(groupManager);
+                    return lookup;
+                }
+            }
+        }
+        return null;
     }
 
 

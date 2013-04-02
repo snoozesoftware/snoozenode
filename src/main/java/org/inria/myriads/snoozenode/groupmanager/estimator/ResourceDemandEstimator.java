@@ -209,7 +209,6 @@ public class ResourceDemandEstimator
             summaryData.setPassiveCapacity(newPassiveCapacity);
             return true;
         }
-        
         virtualMachine.setStatus(VirtualMachineStatus.ERROR);
         virtualMachine.setErrorCode(VirtualMachineErrorCode.NOT_ENOUGH_GROUP_MANAGER_CAPACITY);
         return false;

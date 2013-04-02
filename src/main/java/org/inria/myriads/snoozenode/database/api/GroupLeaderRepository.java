@@ -21,8 +21,10 @@ package org.inria.myriads.snoozenode.database.api;
 
 import java.util.ArrayList;
 
+import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
+import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 
 /**
@@ -110,4 +112,15 @@ public interface GroupLeaderRepository
      * @return  The local controllers list
      */
     ArrayList<LocalControllerDescription> getLocalControllerList();
+
+    
+    /**
+     * 
+     * Gets the group manager assigned to the localcontroller identified by its contact information.
+     * 
+     * @param contactInformation        the contact address/port of the local controller.
+     * @return                          The assigned group manager or null if none is found.
+     */
+    AssignedGroupManager getAssignedGroupManager(NetworkAddress contactInformation);
+    
 }

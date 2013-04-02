@@ -8,6 +8,8 @@ import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPlan;
@@ -61,10 +63,10 @@ public class TestStatic extends TestCase
     
     /**
      * 
-     * vm1 is bound to gm1.
+     * vm1 is bound to gm1 and gm1 has enough capacity.
      * 
      */
-    public void testDispatchOneGmBound()
+    public void testDispatchOneGmBoundEnoughCapacity()
     {
         VirtualMachineMetaData vm1  = new VirtualMachineMetaData();
         GroupManagerDescription gm1 = new GroupManagerDescription();
@@ -88,6 +90,34 @@ public class TestStatic extends TestCase
         assertEquals(gm1.getVirtualMachines().get(0), vm1);
     }
     
+    /**
+     * 
+     * vm1 is bound to gm1 and gm1 hasn't enough capacity.
+     * 
+     */
+    public void testDispatchOneGmBoundNotEnoughCapacity()
+    {
+        VirtualMachineMetaData vm1  = new VirtualMachineMetaData();
+        GroupManagerDescription gm1 = new GroupManagerDescription();
+        gm1.setId("1");
+        VirtualMachineLocation location = new VirtualMachineLocation();
+        location.setGroupManagerId("1");
+        vm1.setVirtualMachineLocation(location);
+        
+        virtualMachines_.add(vm1);
+        groupManagers_.add(gm1);  
+        
+        expect(estimator_.hasEnoughGroupManagerCapacity(vm1, gm1)).andReturn(false);
+        replay(estimator_);
+        DispatchingPlan dispatchPlan = staticDispatch_.dispatch(virtualMachines_, groupManagers_);
+        List<GroupManagerDescription> groupManagersCandidates = dispatchPlan.getGroupManagers();
+        
+        //gm1 is assigned for this vm
+        assertEquals(0, groupManagersCandidates.size());
+        assertEquals(VirtualMachineErrorCode.NOT_ENOUGH_GROUP_MANAGER_CAPACITY, vm1.getErrorCode());
+        assertEquals(VirtualMachineStatus.ERROR, vm1.getStatus());
+        
+    }
     
     /**
      * 

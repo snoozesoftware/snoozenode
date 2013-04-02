@@ -425,9 +425,12 @@ public final class GroupManagerResource extends ServerResource
  
     /**
      * Checks if a virtual machine is active a particular local controller.
+     * (energy management)
      * 
+     * @deprecated
      * @param localControllerAddress      The virtual machine location
      * @return                            true if everything ok, false otherwise
+     * 
      */
     @Override
     public String hasLocalController(NetworkAddress localControllerAddress) 

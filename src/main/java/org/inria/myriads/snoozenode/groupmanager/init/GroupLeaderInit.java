@@ -258,22 +258,27 @@ public final class GroupLeaderInit
         log_.debug("Performing local controller lookup on group managers");
         NetworkAddress contactInformation = localController.getControlDataAddress();
         
-        for (GroupManagerDescription groupManager : groupManagers)
-        {
-            NetworkAddress groupManagerAddress = groupManager.getListenSettings().getControlDataAddress();
-            GroupManagerAPI groupManagerCommunicator = 
-                CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress);
-            String localControllerId = groupManagerCommunicator.hasLocalController(contactInformation);
-            if (localControllerId != null)
-            {
-                AssignedGroupManager lookup = new AssignedGroupManager();
-                lookup.setLocalControllerId(localControllerId);
-                lookup.setGroupManager(groupManager);
-                return lookup;
-            }
-        }
+
+        AssignedGroupManager lookup = groupLeaderRepository_.getAssignedGroupManager(contactInformation);
         
-        return null;
+        return lookup;
+        // We don't need this anymore since we got the LCs in the GL repo
+//        for (GroupManagerDescription groupManager : groupManagers)
+//        {
+//            NetworkAddress groupManagerAddress = groupManager.getListenSettings().getControlDataAddress();
+//            GroupManagerAPI groupManagerCommunicator = 
+//                CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress);
+//            String localControllerId = groupManagerCommunicator.hasLocalController(contactInformation);
+//            if (localControllerId != null)
+//            {
+//                AssignedGroupManager lookup = new AssignedGroupManager();
+//                lookup.setLocalControllerId(localControllerId);
+//                lookup.setGroupManager(groupManager);
+//                return lookup;
+//            }
+//        }
+        
+//        return null;
     }
     
     /** 
