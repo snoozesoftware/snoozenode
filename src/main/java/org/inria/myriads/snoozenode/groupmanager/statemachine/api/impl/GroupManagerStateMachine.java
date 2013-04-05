@@ -29,6 +29,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.Vi
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
 import org.inria.myriads.snoozecommon.communication.virtualmachine.ClientMigrationRequest;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.energymanagement.EnergyManagementSettings;
@@ -520,5 +521,25 @@ public class GroupManagerStateMachine
             return false;
         }
         return true;
+    }
+
+    @Override
+    public VirtualMachineMetaData resizeVirtualMachine(ResizeRequest resizeRequest)
+    {
+        log_.debug("Starting a resize request");
+        
+        if (!changeState(SystemState.MANAGEMENT))
+        {
+            return null;
+        }   
+        
+        setIdle();
+        VirtualMachineMetaData newVirtualMachineMetaData = 
+                virtualMachineManager_.resizeVirtualMachine(resizeRequest);
+        
+        VirtualMachineMetaData virtualMachine = repository_.getVirtualMachineMetaData(resizeRequest.getVirtualMachineLocation(), 0);
+        virtualMachine.setRequestedCapacity(newVirtualMachineMetaData.getRequestedCapacity());
+        return newVirtualMachineMetaData;
+        
     }
 }

@@ -26,10 +26,12 @@ import java.util.UUID;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.LocalControllerAPI;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
@@ -394,6 +396,40 @@ public final class VirtualMachineManager
         }
        
         return isProcessed;
+    }
+
+    /**
+     * 
+     * Resizes a resize request.
+     * 
+     * @param resizeRequest         The resize request.
+     * @return                      True if everything's fine, false otherwise.
+     */
+    public VirtualMachineMetaData resizeVirtualMachine(ResizeRequest resizeRequest)
+    {
+        //we can only request for less resources.
+        VirtualMachineLocation location = resizeRequest.getVirtualMachineLocation();
+        String virtualMachineId = location.getVirtualMachineId();
+        log_.debug(String.format("Resizing virtual machine %s", virtualMachineId));
+        
+        if (!repository_.checkVirtualMachineStatus(location, VirtualMachineStatus.RUNNING))
+        {
+            return null;
+        }
+
+        NetworkAddress localController = repository_.getLocalControllerControlDataAddress(location);
+        if (localController == null)
+        {
+            log_.debug(String.format("Unable to get local controller description from virtual machine: %s",
+                                     virtualMachineId));
+            return null;
+        }
+        
+        LocalControllerAPI communicator = CommunicatorFactory.newLocalControllerCommunicator(localController);
+        VirtualMachineMetaData newVirtualMachineMetaData = 
+                communicator.resizeVirtualMachine(resizeRequest);
+                                            
+        return newVirtualMachineMetaData;
     }
 
 }

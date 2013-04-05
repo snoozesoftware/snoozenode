@@ -22,10 +22,12 @@ package org.inria.myriads.snoozenode.groupmanager.statemachine.api;
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
 import org.inria.myriads.snoozecommon.communication.virtualmachine.ClientMigrationRequest;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 
@@ -129,6 +131,15 @@ public interface StateMachine
      * @param anomalyLocalController    The anomalied local controller
      */
     void onAnomalyResolved(LocalControllerDescription anomalyLocalController);
+
+    /**
+     * 
+     * Resizes a virtual Machine
+     * 
+     * @param resizeRequest     The resize request
+     * @return                  True if everything is ok, false otherwise.
+     */
+    VirtualMachineMetaData resizeVirtualMachine(ResizeRequest resizeRequest);
 
 
 }
