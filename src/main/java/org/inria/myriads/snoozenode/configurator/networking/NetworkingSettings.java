@@ -30,7 +30,7 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.ListenSettings;
 public final class NetworkingSettings 
 {
     /** Virtual machine subnet. */
-    private String virtualMachineSubnet_;
+    private String[] virtualMachineSubnets_;
    
     /** Listen parameters. */
     private ListenSettings listen_;
@@ -68,11 +68,11 @@ public final class NetworkingSettings
     /**
      * Sets the virtual machine subnet.
      * 
-     * @param virtualMachineSubnet  The virtual machine subnet
+     * @param subnets  The virtual machine subnet
      */
-    public void setVirtualMachineSubnet(String virtualMachineSubnet) 
+    public void setVirtualMachineSubnets(String[] subnets) 
     {
-        virtualMachineSubnet_ = virtualMachineSubnet;
+        virtualMachineSubnets_ = subnets;
     }
 
     /**
@@ -80,8 +80,8 @@ public final class NetworkingSettings
      * 
      * @return  The virtual machine subnet
      */
-    public String getVirtualMachineSubnet() 
+    public String[] getVirtualMachineSubnets() 
     {
-        return virtualMachineSubnet_;
+        return virtualMachineSubnets_;
     }
 }

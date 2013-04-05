@@ -127,7 +127,6 @@
 	</logger> 
 							
 	<logger name="org.inria.myriads.snoozenode.groupmanager.virtualnetworkmanager">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger> 
 
