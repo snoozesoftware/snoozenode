@@ -72,11 +72,12 @@ public final class HeartbeatFactory
      * @throws Exception            The exception
      */
     public static GroupManagerHeartbeatHandler newGroupManagerHeartbeatHandler(NetworkAddress heartbeatAddress,
+                                                                               String groupManagerId,
                                                                                int timeout,
                                                                                LocalControllerBackend backend)
         throws Exception
     {
-        return new GroupManagerHeartbeatHandler(heartbeatAddress, timeout, backend);
+        return new GroupManagerHeartbeatHandler(heartbeatAddress, groupManagerId,  timeout, backend);
     }
     
     /**
