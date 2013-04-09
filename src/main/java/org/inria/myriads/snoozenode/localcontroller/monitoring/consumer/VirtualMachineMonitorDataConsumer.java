@@ -31,7 +31,12 @@ import org.inria.myriads.snoozenode.localcontroller.monitoring.listener.VirtualM
 import org.inria.myriads.snoozenode.localcontroller.monitoring.threshold.ThresholdCrossingDetector;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
-import org.inria.myriads.snoozenode.tcpip.TCPDataSender;
+import org.inria.myriads.snoozenode.monitoring.connectionlistener.ConnectionListener;
+import org.inria.myriads.snoozenode.monitoring.connectionlistener.RabbitMQConnectionWorker;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.DevNullDataSender;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.RabbitMQDataSender;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.TCPDataSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +45,8 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Eugen Feller
  */
-public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
-    implements Runnable
+public final class VirtualMachineMonitorDataConsumer 
+    implements Runnable, ConnectionListener
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(VirtualMachineMonitorDataConsumer.class);
@@ -61,6 +66,14 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
     /** Signals termination. */
     private boolean isTerminated_;
     
+    /** internal sender. */
+    private DataSender internalSender_; 
+    
+    /** external sender. */
+    private DataSender externalSender_;
+    
+    /** connection worker.*/
+    RabbitMQConnectionWorker connectionWorker_; 
     /**
      * Constructor.
      * 
@@ -78,28 +91,40 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
                                              VirtualMachineMonitoringListener callback) 
         throws Exception
     {
-        super(groupManagerAddress);
+        
         log_.debug("Initializing the virtual machine monitoring data consumer"); 
         localControllerId_ = localController.getId();
         dataQueue_ = dataQueue;
         callback_ = callback; 
         crossingDetector_ = new ThresholdCrossingDetector(monitoringThresholds, localController.getTotalCapacity());
+        internalSender_ = new TCPDataSender(groupManagerAddress);
+        connectionWorker_ = new RabbitMQConnectionWorker(this,10000,"monitoring");
+        connectionWorker_.start();
+        
     }
    
     /**
      * Sends heartbeat data.
      * 
      * @param localControllerId     The local controller identifier
+     * @throws InterruptedException 
      * @throws IOException          The exception
      */
-    private void sendHeartbeatData(String localControllerId) 
-        throws IOException
+    private void sendHeartbeatData(String localControllerId) throws InterruptedException 
     {
         Guard.check(localControllerId);
         LocalControllerDataTransporter localControllerData = new LocalControllerDataTransporter(localControllerId, 
                                                                                                 null);
-        log_.debug("Sending local controller heartbeat information to group manager");
-        send(localControllerData);  
+        log_.debug("Sending local controller heartbeat information to group manager");        
+        try{
+            internalSender_.send(localControllerData);
+        }
+        catch(IOException exception)
+        {
+            log_.debug(String.format("I/O error during data sending heartbeat (%s)! Did the group manager close " +
+                    "its connection unexpectedly?", exception.getMessage()));
+            throw new InterruptedException();
+        }
     }
     
     /**
@@ -107,11 +132,11 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
      * 
      * @param localControllerId     The local controller identifier
      * @param aggregatedData        The aggregated data
+     * @throws InterruptedException 
      * @throws IOException          The I/O exception
      */
     @SuppressWarnings("unchecked")
-    private void sendRegularData(String localControllerId, ArrayList<AggregatedVirtualMachineData> aggregatedData) 
-        throws IOException
+    private void sendRegularData(String localControllerId, ArrayList<AggregatedVirtualMachineData> aggregatedData) throws InterruptedException 
     {
         Guard.check(localControllerId, aggregatedData);
         
@@ -128,15 +153,22 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
         }
         
         log_.debug("Sending aggregated local controller summary information to group maanger");
-        send(localControllerData);  
+        try{
+            internalSender_.send(localControllerData);
+        }
+        catch(IOException exception)
+        {
+            log_.debug(String.format("I/O error during data sending (%s)! Did the group manager close " +
+                    "its connection unexpectedly?", exception.getMessage()));
+            throw new InterruptedException();
+        }
     }
     
     /** Run method. */
     public void run() 
     {
         ArrayList<AggregatedVirtualMachineData> aggregatedData = new ArrayList<AggregatedVirtualMachineData>();
-        try 
-        {  
+        try{
             while (!isTerminated_)
             {                               
                 log_.debug("Waiting for virtual machine monitoring data to arrive...");
@@ -144,10 +176,16 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
                 log_.debug(String.format("Received virtual machine %s data", 
                                          virtualMachineData.getVirtualMachineId()));
                 
+                
                 if (virtualMachineData.getVirtualMachineId().equals("heartbeat"))
                 {
+                    
                     sendHeartbeatData(localControllerId_);
                     continue;
+                }
+                else
+                {
+                    sendExternal(virtualMachineData, localControllerId_);
                 }
                                 
                 aggregatedData.add(virtualMachineData);
@@ -162,15 +200,6 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
                     aggregatedData.clear();
                 }
             }   
-        }
-        catch (IOException exception) 
-        {
-            if (!isTerminated_)
-            {
-                log_.debug(String.format("I/O error during data sending (%s)! Did the group manager close " +
-                                         "its connection unexpectedly?", exception.getMessage()));
-                close();
-            }
         } 
         catch (InterruptedException exception)
         {
@@ -178,8 +207,31 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
         }  
         
         log_.debug("Virtual machine monitoring data consumer stopped!");
+        terminate();
     }
     
+    private void sendExternal(AggregatedVirtualMachineData virtualMachineData, String localControllerId)
+    {
+        if (externalSender_ != null){
+            try{
+                externalSender_.send(virtualMachineData, localControllerId_+"."+virtualMachineData.getVirtualMachineId());
+            }
+            catch(Exception exception)
+            {
+                log_.debug(String.format("I/O error during external data sending (%s)! Did the group manager close " +
+                        "its connection unexpectedly?", exception.getMessage()));
+                externalSender_.close();
+                externalSender_ = null;
+                if (! connectionWorker_.isRunning())
+                    connectionWorker_.restart();
+                
+                
+            }
+            
+        }
+        
+    }
+
     /**
      * Terminates the consumer.
      */
@@ -187,6 +239,13 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
     {
         log_.debug("Terminating the virtual machine monitoring data consumer");
         isTerminated_ = true;
-        close();
+        internalSender_.close();
+        externalSender_.close();
+    }
+
+    @Override
+    public void onConnectionSuccesfull(DataSender dataSender)
+    {
+        externalSender_ = dataSender;
     }
 }
