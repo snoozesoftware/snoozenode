@@ -84,7 +84,8 @@ public class RabbitMQConnectionWorker extends Thread
                 catch(Exception exception)
                 {
                     log_.debug(String.format("Failed to connect... retry in %d seconds", intervalRetry_));
-                    exception.printStackTrace();
+                    log_.debug(exception.getMessage());
+                    
                 }
                 
                 synchronized (lockObject_)
