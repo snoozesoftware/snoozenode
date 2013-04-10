@@ -69,10 +69,10 @@ public class RabbitMQDataSender implements DataSender
                 "password : %s \n"+
                 "vhost    : %s \n", address,username,password,vhost));
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
-        factory.setUsername("snooze");
-        factory.setPassword("snooze");
-        factory.setVirtualHost("snooze-vhost");
+        factory.setHost(address);
+        factory.setUsername(username);
+        factory.setPassword(password);
+        factory.setVirtualHost(vhost);
         connection_ = factory.newConnection();
         channel_ = connection_.createChannel();
         channel_.exchangeDeclare(exchangeName_, "topic");
