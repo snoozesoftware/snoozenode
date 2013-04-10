@@ -1,5 +1,6 @@
 package org.inria.myriads.snoozenode.monitoring.connectionlistener;
 
+import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.RabbitMQDataSender;
 import org.slf4j.Logger;
@@ -30,12 +31,18 @@ public class RabbitMQConnectionWorker extends Thread
     /** Exchange name.*/
     private String exchangeName_;
 
+    
+    private MonitoringExternalSettings monitoringExternalSettings_;
     /**
      * @param listener
      * @param intervalRetry
      * @param exchangeName
      */
-    public RabbitMQConnectionWorker(ConnectionListener listener, int intervalRetry, String exchangeName)
+    public RabbitMQConnectionWorker(ConnectionListener listener, 
+            int intervalRetry, 
+            String exchangeName,
+            MonitoringExternalSettings monitoringExternalSettings
+            )
     {
         log_.debug("Initialize the connection worker to the queue");
         listener_ = listener;
@@ -43,6 +50,7 @@ public class RabbitMQConnectionWorker extends Thread
         exchangeName_ = exchangeName;
         lockObject_ = new Object();
         isTerminated_ = false;
+        monitoringExternalSettings_ = monitoringExternalSettings;
     }
 
     @Override
@@ -64,7 +72,7 @@ public class RabbitMQConnectionWorker extends Thread
                 }
                 try{
                     log_.debug("Try to reconnect to the rabbit mq service");
-                    DataSender dataSender = new RabbitMQDataSender(exchangeName_);
+                    DataSender dataSender = new RabbitMQDataSender(exchangeName_, monitoringExternalSettings_);
                     listener_.onConnectionSuccesfull(dataSender);
                     isRunning_ = false;
                     waitTime = 0;

@@ -7,6 +7,7 @@ import java.net.InetAddress;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.util.SerializationUtils;
 import org.slf4j.Logger;
@@ -40,35 +41,39 @@ public class RabbitMQDataSender implements DataSender
     
     private String routingKey_;
     
+    private MonitoringExternalSettings monitoringExternalSettings_;
+    
     /**
      * TCP data sender consturctor.
      * 
      * @param networkAddress          The network address
      * @throws IOException            The I/O exception
      */
-    public RabbitMQDataSender(String exchangeName, String routingKey) 
+    public RabbitMQDataSender(String exchangeName, 
+                                String routingKey, 
+                                MonitoringExternalSettings monitoringExternalSettings) 
         throws IOException 
     {
         
         log_.debug(String.format("Initializing the RabbitMQ data sender"));
-        
+        monitoringExternalSettings_ = monitoringExternalSettings;
         exchangeName_ = exchangeName;
         routingKey_ = routingKey;
         ConnectionFactory factory = new ConnectionFactory();
         //hard coded
-        factory.setHost("localhost");
-        factory.setUsername("snooze");
-        factory.setPassword("snooze");
-        factory.setVirtualHost("snooze-vhost");
+        factory.setHost(monitoringExternalSettings.getAddress().getAddress());
+        factory.setUsername(monitoringExternalSettings.getUsername());
+        factory.setPassword(monitoringExternalSettings.getPassword());
+        factory.setVirtualHost(monitoringExternalSettings.getVhost());
         connection_ = factory.newConnection();
         channel_ = connection_.createChannel();
         channel_.exchangeDeclare(exchangeName_, "topic");
     }           
 
     
-    public RabbitMQDataSender(String exchangeName) throws IOException
+    public RabbitMQDataSender(String exchangeName, MonitoringExternalSettings monitoringExternalSettings) throws IOException
     {
-        this(exchangeName,"0");
+        this(exchangeName,"0", monitoringExternalSettings);
     }
     /** 
      * Main routine to send data.

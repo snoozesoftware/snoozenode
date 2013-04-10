@@ -103,7 +103,11 @@ public final class GroupManagerSummaryProducer
         {
         case RABBITMQ :
             externalSender_ = null;
-            connectionWorker_ = new RabbitMQConnectionWorker(this,10000,"grouleader");
+            connectionWorker_ = new RabbitMQConnectionWorker(this,
+                    10000,
+                    "grouleader",
+                    monitoringExternalSettings
+                    );
             connectionWorker_.start();
             break;
         default : 
