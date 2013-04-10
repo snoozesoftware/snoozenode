@@ -73,12 +73,11 @@ public final class GroupLeaderMemoryRepository
      * @param virtualMachineSubnet    The virtual machine subnet
      * @param maxCapacity             The maximum capacity
      */
-    public GroupLeaderMemoryRepository(String virtualMachineSubnet, int maxCapacity)
+    public GroupLeaderMemoryRepository(String[] virtualMachineSubnets, int maxCapacity)
     {
-        Guard.check(virtualMachineSubnet);
         log_.debug("Initializing the group leader memory repository");
         
-        ipAddressPool_ = generateAddressPool(virtualMachineSubnet);
+        ipAddressPool_ = generateAddressPool(virtualMachineSubnets);
         maxCapacity_ = maxCapacity;
         groupManagerDescriptions_ = new HashMap<String, GroupManagerDescription>();
     }
@@ -89,13 +88,17 @@ public final class GroupLeaderMemoryRepository
      * @param virtualMachineSubnet     The virtual machine subnet
      * @return                         The list of IP addresses
      */
-    private List<String> generateAddressPool(String virtualMachineSubnet)
+    protected List<String> generateAddressPool(String[] virtualMachineSubnets)
     {
         log_.debug("Generating address pool");
+        List<String> addressPool = new ArrayList<String>();
+        for (String virtualMachineSubnet : virtualMachineSubnets)
+        {
+            SubnetUtils subnetUtils = new SubnetUtils(virtualMachineSubnet);
+            SubnetInfo subnetInfo = subnetUtils.getInfo(); 
+            addressPool.addAll(Arrays.asList(subnetInfo.getAllAddresses()));
+        }
         
-        SubnetUtils subnetUtils = new SubnetUtils(virtualMachineSubnet);
-        SubnetInfo subnetInfo = subnetUtils.getInfo();
-        List<String> addressPool = new ArrayList<String>(Arrays.asList(subnetInfo.getAllAddresses()));
         return addressPool;
     }
     

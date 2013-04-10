@@ -22,11 +22,14 @@ package org.inria.myriads.snoozenode.groupmanager.virtualnetworkmanager.api.impl
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.parser.VirtualClusterParserFactory;
 import org.inria.myriads.snoozecommon.parser.api.VirtualClusterParser;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.groupmanager.virtualnetworkmanager.api.VirtualNetworkManager;
+import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,12 +73,12 @@ public final class HostVirtualNetworkManager
      */
     public boolean assignIpAddresses(List<VirtualMachineMetaData> virtualMachines)
     {
-        int size = groupLeaderRepository_.getNumberOfFreeIpAddresses();
-        if (size < virtualMachines.size())
-        {
-            log_.warn("Not enough IP addresses avaialble!");
-            return false;
-        }
+//        int size = groupLeaderRepository_.getNumberOfFreeIpAddresses();
+//        if (size < virtualMachines.size())
+//        {
+//            log_.warn("Not enough IP addresses available!");
+//            return false;
+//        }
         
         for (VirtualMachineMetaData virtualMachine : virtualMachines)
         {
@@ -83,8 +86,11 @@ public final class HostVirtualNetworkManager
             boolean isAssigned = assignIpAddress(virtualMachine);    
             if (!isAssigned)
             {
+                ManagementUtils.updateVirtualMachineMetaData(virtualMachine, 
+                                             VirtualMachineStatus.ERROR, 
+                                             VirtualMachineErrorCode.NOT_ENOUGH_IP_ADDRESSES);
                 log_.debug("Unable to assign IP address to virtual machine: %s!", virtualMachineId);
-                return false;
+                //return false;
             }        
         }
         

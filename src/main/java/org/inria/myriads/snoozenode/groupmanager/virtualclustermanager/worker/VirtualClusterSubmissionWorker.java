@@ -123,8 +123,12 @@ public final class VirtualClusterSubmissionWorker
     {
         VirtualClusterSubmissionResponse response = new VirtualClusterSubmissionResponse();
         try 
-        {          
-            startVirtualClusterDispatching(virtualMachines_);
+        {  
+            ArrayList<VirtualMachineMetaData> freeVirtualMachines = new ArrayList<VirtualMachineMetaData>();
+            ArrayList<VirtualMachineMetaData> errorVirtualMachines = new ArrayList<VirtualMachineMetaData>();
+            removeVirtualMachinesWithError(virtualMachines_, freeVirtualMachines,errorVirtualMachines);
+            
+            startVirtualClusterDispatching(freeVirtualMachines);
         }
         catch (DispatchPlanException exception)
         {
@@ -149,6 +153,25 @@ public final class VirtualClusterSubmissionWorker
         }
     }
     
+    private void removeVirtualMachinesWithError(
+            ArrayList<VirtualMachineMetaData> allVirtualMachines, 
+            ArrayList<VirtualMachineMetaData> freeVirtualMachines,
+            ArrayList<VirtualMachineMetaData> errorVirtualMachines)
+    {
+        for(VirtualMachineMetaData virtualMachine : allVirtualMachines)
+        {
+            if (virtualMachine.getStatus()==VirtualMachineStatus.ERROR)
+            {
+                errorVirtualMachines.add(virtualMachine);
+            }
+            else
+            {
+                freeVirtualMachines.add(virtualMachine);
+            }
+        }
+        
+    }
+
     /**
      * Dispatches the virtual cluster submission request.
      * 
@@ -178,6 +201,7 @@ public final class VirtualClusterSubmissionWorker
                         
         ArrayList<VirtualMachineMetaData> virtualMachinesCopy = 
             new ArrayList<VirtualMachineMetaData>(Arrays.asList(new VirtualMachineMetaData[virtualMachines.size()]));  
+
         
         Collections.copy(virtualMachinesCopy, virtualMachines);
         ArrayList<VirtualMachineMetaData> boundVirtualMachines = new ArrayList<VirtualMachineMetaData>();

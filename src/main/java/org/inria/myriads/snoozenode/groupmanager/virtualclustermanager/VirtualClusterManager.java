@@ -227,6 +227,7 @@ public final class VirtualClusterManager
         {
             virtualMachines = generateVirtualMachineMetaData(submissionRequest);  
             boolean isAssigned = virtualNetworkManager_.assignIpAddresses(virtualMachines);
+            
             if (!isAssigned)
             {
                 log_.error("Failed to assign IP addresses!");
@@ -311,7 +312,7 @@ public final class VirtualClusterManager
         for (VirtualMachineMetaData metaData : virtualMachines)
         {
             boolean isRunning = metaData.getStatus().equals(VirtualMachineStatus.RUNNING);
-            if (!isRunning)
+            if (!isRunning && metaData.getErrorCode()!=VirtualMachineErrorCode.NOT_ENOUGH_IP_ADDRESSES)
             {
                 log_.debug("Releasing IP address!");
                 virtualNetworkManager_.releaseIpAddress(metaData);

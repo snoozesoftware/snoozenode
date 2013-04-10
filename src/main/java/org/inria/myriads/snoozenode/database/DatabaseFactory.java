@@ -54,7 +54,7 @@ public final class DatabaseFactory
      * @param type                    The database type
      * @return                        The group leader repository
      */
-    public static GroupLeaderRepository newGroupLeaderRepository(String virtualMachineSubnet,   
+    public static GroupLeaderRepository newGroupLeaderRepository(String[] virtualMachineSubnets,   
                                                                  int maxCapacity,
                                                                  DatabaseType type) 
     {
@@ -62,7 +62,7 @@ public final class DatabaseFactory
         switch (type) 
         {
             case memory :       
-                repository = new GroupLeaderMemoryRepository(virtualMachineSubnet, maxCapacity);        
+                repository = new GroupLeaderMemoryRepository(virtualMachineSubnets, maxCapacity);        
                 break;
                        
             default:

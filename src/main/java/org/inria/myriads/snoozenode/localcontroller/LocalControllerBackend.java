@@ -301,7 +301,8 @@ public final class LocalControllerBackend
         log_.debug("Starting the system services");
         
         int heartbeatTimeout = nodeConfiguration_.getFaultTolerance().getHeartbeat().getTimeout();
-        HeartbeatFactory.newGroupManagerHeartbeatHandler(groupManager.getHeartbeatAddress(), 
+        HeartbeatFactory.newGroupManagerHeartbeatHandler(groupManager.getHeartbeatAddress(),
+                                                         groupManager.getId(),
                                                          heartbeatTimeout,
                                                          this);
         startVirtualMachineMonitoringService(groupManager);

@@ -46,6 +46,10 @@ public final class GroupManagerHeartbeatHandler
     /** Heartbeat failure callback. */
     private GroupManagerHeartbeatFailureListener heartbeatFailure_;
 
+    
+    /** GroupManagerId. */
+    private String groupManagerId_; 
+    
     /**
      * Group manager heartbeat handler constructor.
      * 
@@ -55,6 +59,7 @@ public final class GroupManagerHeartbeatHandler
      * @throws Exception        
      */
     public GroupManagerHeartbeatHandler(NetworkAddress heartbeatAddress,
+                                        String groupManagerId,
                                         int timeout,
                                         GroupManagerHeartbeatFailureListener heartbeatFailure) 
         throws Exception
@@ -63,6 +68,7 @@ public final class GroupManagerHeartbeatHandler
         log_.debug("Initializing the group manager heartbeat listener");
         heartbeatFailure_ = heartbeatFailure;
         hearbeatListener_ = HeartbeatFactory.newHeartbeatMulticastListener(heartbeatAddress, timeout, this);
+        groupManagerId_ = groupManagerId;
         new Thread(hearbeatListener_).start();       
     }
     
@@ -74,11 +80,20 @@ public final class GroupManagerHeartbeatHandler
     public void onHeartbeatArrival(HeartbeatMessage heartbeatMessage) 
     {
         Guard.check(heartbeatMessage);
-        log_.debug(String.format("Received group manager hearbeat message from %s, control data port: %s, " +
-                                 "monitoring data port: %s",
-                                 heartbeatMessage.getListenSettings().getControlDataAddress().getAddress(),
-                                 heartbeatMessage.getListenSettings().getControlDataAddress().getPort(),
-                                 heartbeatMessage.getListenSettings().getMonitoringDataAddress().getPort()));
+        String groupManagerId = heartbeatMessage.getId();
+        if (groupManagerId.equals(groupManagerId_))
+        {
+            log_.debug(String.format("Received group manager hearbeat message from %s, control data port: %s, " +
+                    "monitoring data port: %s",
+                    heartbeatMessage.getListenSettings().getControlDataAddress().getAddress(),
+                    heartbeatMessage.getListenSettings().getControlDataAddress().getPort(),
+                    heartbeatMessage.getListenSettings().getMonitoringDataAddress().getPort()));    
+        }
+        else
+        {
+            log_.debug("Received wrong group manager heartbeat message ... trigger a rejoin");
+            onHeartbeatFailure();
+        }
     }
 
     /**

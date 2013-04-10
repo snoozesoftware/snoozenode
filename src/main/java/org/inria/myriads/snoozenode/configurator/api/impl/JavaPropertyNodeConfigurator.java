@@ -169,8 +169,12 @@ public final class JavaPropertyNodeConfigurator
                                                                                              groupManagerHeartbeatPort);
         networkingSettings.getMulticast().setGroupManagerHeartbeatAddress(groupManagerMulticast);
         
-        String virtualMachineSubnet = getProperty("network.virtualMachineSubnet");     
-        networkingSettings.setVirtualMachineSubnet(virtualMachineSubnet);
+        // list strings separated by ,
+        String virtualMachineSubnets = getProperty("network.virtualMachineSubnet");
+        virtualMachineSubnets = virtualMachineSubnets.replace(" ", "");
+        String[] subnets = virtualMachineSubnets.split(",");
+        
+        networkingSettings.setVirtualMachineSubnets(subnets);
     }
     
     /**

@@ -1,5 +1,6 @@
 package org.inria.myriads.snoozenode.database.api.impl;
 
+
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
@@ -11,8 +12,7 @@ import junit.framework.TestCase;
 public class TestGroupLeaderMemoryRepository extends TestCase
 {
 
-    GroupLeaderRepository repository_ ;
-    
+    GroupLeaderMemoryRepository repository_;
     /**
      * 
      * Setup method.
@@ -21,10 +21,9 @@ public class TestGroupLeaderMemoryRepository extends TestCase
     @Override
     protected void setUp() throws Exception
     {
-        repository_ = new GroupLeaderMemoryRepository("192.168.122.1/22",10);
+        String[] virtualMachineSubnets = {"192.168.122.0/30"};
+        repository_ = new GroupLeaderMemoryRepository(virtualMachineSubnets,0);
     }
-    
-        
     
     /**
      * Empty repository.
@@ -87,6 +86,22 @@ public class TestGroupLeaderMemoryRepository extends TestCase
         
         assertEquals("lc1", assignedGroupManager.getLocalControllerId());
         assertEquals(gm1, assignedGroupManager.getGroupManager());
-        
+    }
+
+    public void testGenerateAddressPoolOneSubnet()
+    {
+        String[] virtualMachineSubnets = {"192.168.122.0/30"};
+        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(virtualMachineSubnets,0);
+        repository.generateAddressPool(virtualMachineSubnets);
+        assertEquals(2,repository.getNumberOfFreeIpAddresses());
+    }
+    
+    public void testGenerateAddressPoolTwoSubnets()
+    {
+        String[] virtualMachineSubnets = {"192.168.122.0/22", "10.0.0.1/22"};
+        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(virtualMachineSubnets,0);
+        repository.generateAddressPool(virtualMachineSubnets);
+        assertEquals(2044,repository.getNumberOfFreeIpAddresses());
+
     }
 }

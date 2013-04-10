@@ -43,18 +43,22 @@
 	</category> 
 
 	<logger name="org.apache.commons.httpclient">
+		<level value="WARN"/>
 		<appender-ref ref="FA"/>	
 	</logger>
 
 	<logger name="httpclient.wire">
+		<level value="WARN"/>
 		<appender-ref ref="FA"/>	
 	</logger>
 
 	<logger name="httpclient.content">
+		<level value="WARN"/>
 		<appender-ref ref="FA"/>	
 	</logger>
 	
 	<logger name="org.restlet">
+		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger>
 		
@@ -84,6 +88,7 @@
 	</logger>
 	
 	<logger name="org.inria.myriads.snoozecommon">
+		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger>
 
@@ -132,10 +137,7 @@
 		<appender-ref ref="FA"/>
 	</logger>
 	
-	<logger name="org.inria.myriads.snoozenode.util">
-		<level value="WARN"/>
-		<appender-ref ref="FA"/>
-	</logger>
+
 	
 	<logger name="org.inria.myriads.snoozenode">
 		<level value="DEBUG"/>
