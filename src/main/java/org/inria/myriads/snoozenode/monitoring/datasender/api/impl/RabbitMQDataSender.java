@@ -55,16 +55,24 @@ public class RabbitMQDataSender implements DataSender
         throws IOException 
     {
         
-        log_.debug(String.format("Initializing the RabbitMQ data sender"));
+        
         monitoringExternalSettings_ = monitoringExternalSettings;
         exchangeName_ = exchangeName;
         routingKey_ = routingKey;
+        String address = monitoringExternalSettings.getAddress().getAddress();
+        String username = monitoringExternalSettings.getUsername();
+        String password = monitoringExternalSettings.getPassword();
+        String vhost = monitoringExternalSettings.getVhost();
+        log_.debug(String.format("Initializing the RabbitMQ data sender with parameters :" +
+        		"address  : %s \n"+
+                "username : %s \n"+
+                "password : %s \n"+
+                "vhost    : %s \n", address,username,password,vhost));
         ConnectionFactory factory = new ConnectionFactory();
-        //hard coded
-        factory.setHost(monitoringExternalSettings.getAddress().getAddress());
-        factory.setUsername(monitoringExternalSettings.getUsername());
-        factory.setPassword(monitoringExternalSettings.getPassword());
-        factory.setVirtualHost(monitoringExternalSettings.getVhost());
+        factory.setHost("localhost");
+        factory.setUsername("snooze");
+        factory.setPassword("snooze");
+        factory.setVirtualHost("snooze-vhost");
         connection_ = factory.newConnection();
         channel_ = connection_.createChannel();
         channel_.exchangeDeclare(exchangeName_, "topic");

@@ -72,6 +72,10 @@ public class RabbitMQConnectionWorker extends Thread
                 }
                 try{
                     log_.debug("Try to reconnect to the rabbit mq service");
+                    log_.debug("host " + monitoringExternalSettings_.getAddress().getAddress() );
+                    log_.debug("username " + monitoringExternalSettings_.getUsername() );
+                    log_.debug("password " + monitoringExternalSettings_.getPassword() );
+                    log_.debug("vhost " + monitoringExternalSettings_.getVhost() );
                     DataSender dataSender = new RabbitMQDataSender(exchangeName_, monitoringExternalSettings_);
                     listener_.onConnectionSuccesfull(dataSender);
                     isRunning_ = false;
@@ -79,7 +83,8 @@ public class RabbitMQConnectionWorker extends Thread
                 }
                 catch(Exception exception)
                 {
-                    log_.debug(String.format("Failed to connect ... retry in %d seconds", intervalRetry_));
+                    log_.debug(String.format("Failed to connect... retry in %d seconds", intervalRetry_));
+                    exception.printStackTrace();
                 }
                 
                 synchronized (lockObject_)
