@@ -1,4 +1,5 @@
-# snoozennode
+# snoozenode (testing)
+
 
 This is the core system management component of Snooze, a scalable, autonomic, and energy-efficient virtual machine (VM) management 
 framework for private clouds. Snooze is one of the core results of [Eugen Feller`s](http://www.irisa.fr/myriads/members/efeller) PhD thesis 
