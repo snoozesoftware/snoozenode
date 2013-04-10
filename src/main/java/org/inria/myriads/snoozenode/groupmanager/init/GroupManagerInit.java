@@ -262,8 +262,7 @@ public final class GroupManagerInit
         Guard.check(groupLeader);              
         if (monitoringService_ == null)
         {
-            int monitoringInterval = nodeConfiguration_.getMonitoring().getInterval();
-            monitoringService_ = MonitoringFactory.newGroupManagerMonitoringService(repository_, monitoringInterval);
+            monitoringService_ = MonitoringFactory.newGroupManagerMonitoringService(repository_, nodeConfiguration_.getMonitoring(), nodeConfiguration_.getMonitoringExternal());
         }
         
         monitoringService_.startSummaryProducer(groupLeader.getListenSettings().getMonitoringDataAddress(), 

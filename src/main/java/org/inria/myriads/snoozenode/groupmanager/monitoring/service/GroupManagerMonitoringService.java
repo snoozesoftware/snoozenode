@@ -21,6 +21,8 @@ package org.inria.myriads.snoozenode.groupmanager.monitoring.service;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.producer.GroupManagerSummaryProducer;
@@ -43,8 +45,11 @@ public final class GroupManagerMonitoringService
     /** Group manager repository. */
     private GroupManagerRepository repository_;
 
-    /** Monitoring interval .*/
-    private int monitoringInterval_;
+    /** Monitoring settings.*/
+    private MonitoringSettings monitoringSettings_;
+    
+    /** Monitoring external.*/
+    private MonitoringExternalSettings monitoringExternalSettings_;
     
     /**
      * Group manager monitoring service.
@@ -54,13 +59,15 @@ public final class GroupManagerMonitoringService
      * @throws Exception            The exception
      */
     public GroupManagerMonitoringService(GroupManagerRepository repository, 
-                                         int monitoringInterval)
+                                         MonitoringSettings monitoringSettings,
+                                         MonitoringExternalSettings monitoringExternalSettings)
         throws Exception
     {
-        Guard.check(repository, monitoringInterval);
+        Guard.check(repository, monitoringSettings, monitoringExternalSettings);
         log_.debug("Initializing the group manager monitoring service");
         repository_ = repository;
-        monitoringInterval_ = monitoringInterval;
+        monitoringSettings_ = monitoringSettings;
+        monitoringExternalSettings_ = monitoringExternalSettings;
     }
     
     /**
@@ -77,7 +84,9 @@ public final class GroupManagerMonitoringService
         monitoringDataProducer_ = new GroupManagerSummaryProducer(repository_,
                                                                   groupLeader,
                                                                   estimator,
-                                                                  monitoringInterval_);
+                                                                  monitoringSettings_,
+                                                                  monitoringExternalSettings_
+                                                                  );
         new Thread(monitoringDataProducer_).start();
     }
         

@@ -123,11 +123,11 @@ public final class VirtualMachineMonitoringService
         Guard.check(groupManagerAddress);
         log_.debug("Starting the virtual machine monitoring data consumer");
       
-        MonitoringThresholds thresholds = monitoring_.getMonitoringSettings().getThresholds();
+        
         monitorDataConsumer_ = new VirtualMachineMonitorDataConsumer(localController_,
                                                                      groupManagerAddress, 
                                                                      dataQueue_,
-                                                                     thresholds,
+                                                                     monitoring_,
                                                                      this);
         new Thread(monitorDataConsumer_).start(); 
     }

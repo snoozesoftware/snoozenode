@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.transport.GroupManagerDataTransporter;
@@ -70,6 +72,7 @@ public final class GroupManagerSummaryProducer
     DataSender externalSender_;    
     
     RabbitMQConnectionWorker connectionWorker_;
+    
     /**
      * Constructor.
      * 
@@ -82,7 +85,9 @@ public final class GroupManagerSummaryProducer
     public GroupManagerSummaryProducer(GroupManagerRepository repository, 
                                        NetworkAddress groupLeaderAddress,
                                        ResourceDemandEstimator estimator,
-                                       int monitoringInterval)
+                                       MonitoringSettings monitoringSettings,
+                                       MonitoringExternalSettings monitoringExternalSettings
+                                       )
         throws  IOException 
     { 
         
@@ -90,10 +95,20 @@ public final class GroupManagerSummaryProducer
         internalSender_ = new TCPDataSender(groupLeaderAddress);
         repository_ = repository;
         estimator_ = estimator;
-        monitoringInterval_ = monitoringInterval;
+        monitoringInterval_ = monitoringSettings.getInterval();
         lockObject_ = new Object();
-        connectionWorker_ = new RabbitMQConnectionWorker(this,10000,"grouleader");
-        connectionWorker_.start();
+        // check the nature here.
+        switch(monitoringExternalSettings.getTransportProtocol())
+        {
+        case RABBITMQ :
+            externalSender_ = null;
+            connectionWorker_ = new RabbitMQConnectionWorker(this,10000,"grouleader");
+            connectionWorker_.start();
+            break;
+        default : 
+            externalSender_ = null;
+        }
+        
     }
     
     /**

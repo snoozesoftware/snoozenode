@@ -174,7 +174,8 @@ public final class LocalControllerBackend
         VirtualMachineMonitor virtualMachineMonitor =  MonitoringFactory.newVirtualMachineMonitor(connector); 
         resourceMonitoring_ = new InfrastructureMonitoring(virtualMachineMonitor, 
                                                            hostMonitor,
-                                                           nodeConfiguration_.getMonitoring());
+                                                           nodeConfiguration_.getMonitoring(),
+                                                           nodeConfiguration_.getMonitoringExternal());
     }
     
     /**

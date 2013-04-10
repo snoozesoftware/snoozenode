@@ -28,9 +28,11 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.listener.VirtualMachineMonitoringListener;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.service.InfrastructureMonitoring;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.threshold.ThresholdCrossingDetector;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
+import org.inria.myriads.snoozenode.monitoring.TransportProtocol;
 import org.inria.myriads.snoozenode.monitoring.connectionlistener.ConnectionListener;
 import org.inria.myriads.snoozenode.monitoring.connectionlistener.RabbitMQConnectionWorker;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
@@ -87,19 +89,30 @@ public final class VirtualMachineMonitorDataConsumer
     public VirtualMachineMonitorDataConsumer(LocalControllerDescription localController,
                                              NetworkAddress groupManagerAddress, 
                                              BlockingQueue<AggregatedVirtualMachineData> dataQueue,
-                                             MonitoringThresholds monitoringThresholds,
+                                             InfrastructureMonitoring infrastructureMonitoring,
                                              VirtualMachineMonitoringListener callback) 
         throws Exception
     {
         
-        log_.debug("Initializing the virtual machine monitoring data consumer"); 
+        log_.debug("Initializing the virtual machine monitoring data consumer");
+        MonitoringThresholds monitoringThresholds = infrastructureMonitoring.getMonitoringSettings().getThresholds();
         localControllerId_ = localController.getId();
         dataQueue_ = dataQueue;
         callback_ = callback; 
         crossingDetector_ = new ThresholdCrossingDetector(monitoringThresholds, localController.getTotalCapacity());
         internalSender_ = new TCPDataSender(groupManagerAddress);
-        connectionWorker_ = new RabbitMQConnectionWorker(this,10000,"monitoring");
-        connectionWorker_.start();
+        TransportProtocol transport = infrastructureMonitoring.getMonitoringExternalSettings().getTransportProtocol();
+        switch(transport)
+        {
+            case RABBITMQ :
+                externalSender_=null;
+                connectionWorker_ = new RabbitMQConnectionWorker(this,10000,"monitoring");
+                connectionWorker_.start();
+                break;
+             default : 
+                externalSender_ = null;
+        }
+                
         
     }
    
