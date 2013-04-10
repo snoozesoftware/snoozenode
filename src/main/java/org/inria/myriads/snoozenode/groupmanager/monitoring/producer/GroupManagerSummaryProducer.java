@@ -25,20 +25,28 @@ import java.util.ArrayList;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.transport.GroupManagerDataTransporter;
-import org.inria.myriads.snoozenode.tcpip.TCPDataSender;
+import org.inria.myriads.snoozenode.monitoring.connectionlistener.ConnectionListener;
+import org.inria.myriads.snoozenode.monitoring.connectionlistener.RabbitMQConnectionWorker;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.DevNullDataSender;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.RabbitMQDataSender;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.TCPDataSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * Group manager monitoring data producer.
  * 
  * @author Eugen Feller
  */
-public final class GroupManagerSummaryProducer extends TCPDataSender
-    implements Runnable
+public final class GroupManagerSummaryProducer
+    implements Runnable, ConnectionListener
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(GroupManagerSummaryProducer.class);
@@ -57,7 +65,15 @@ public final class GroupManagerSummaryProducer extends TCPDataSender
     
     /** Terminated. */
     private boolean isTerminated_;
-        
+    
+    /** internal sender.*/
+    DataSender internalSender_;
+    
+    /** external sender.*/
+    DataSender externalSender_;    
+    
+    RabbitMQConnectionWorker connectionWorker_;
+    
     /**
      * Constructor.
      * 
@@ -70,16 +86,30 @@ public final class GroupManagerSummaryProducer extends TCPDataSender
     public GroupManagerSummaryProducer(GroupManagerRepository repository, 
                                        NetworkAddress groupLeaderAddress,
                                        ResourceDemandEstimator estimator,
-                                       int monitoringInterval)
+                                       MonitoringSettings monitoringSettings,
+                                       MonitoringExternalSettings monitoringExternalSettings
+                                       )
         throws  IOException 
     { 
-        super(groupLeaderAddress);
-        log_.debug("Initializing the group manager summary information producer");
         
+        log_.debug("Initializing the group manager summary information producer");
+        internalSender_ = new TCPDataSender(groupLeaderAddress);
         repository_ = repository;
         estimator_ = estimator;
-        monitoringInterval_ = monitoringInterval;
+        monitoringInterval_ = monitoringSettings.getInterval();
         lockObject_ = new Object();
+        // check the nature here.
+        switch(monitoringExternalSettings.getTransportProtocol())
+        {
+        case RABBITMQ :
+            externalSender_ = null;
+            connectionWorker_ = new RabbitMQConnectionWorker(this,10000,"grouleader");
+            connectionWorker_.start();
+            break;
+        default : 
+            externalSender_ = null;
+        }
+        
     }
     
     /**
@@ -114,8 +144,22 @@ public final class GroupManagerSummaryProducer extends TCPDataSender
                                          "local controllers assigned ", 
                                          summary.getActiveCapacity(), summary.getPassiveCapacity(),
                                          summary.getRequestedCapacity(), summary.getUsedCapacity(),
-                                         summary.getLocalControllers().size()));
-                send(dataTransporter);
+                                         summary.getLocalControllers().size()
+                                         ));
+                
+                try{
+                    internalSender_.send(dataTransporter);
+                }
+                catch(IOException exception)
+                {
+                    log_.debug(String.format("I/O error during summary sending (%s). Did the group leader fail?", 
+                            exception.getMessage()));
+                    break;
+                }
+                
+                sendExternal(dataTransporter);
+                
+
                 synchronized (lockObject_)
                 {
                     lockObject_.wait(monitoringInterval_);
@@ -124,21 +168,36 @@ public final class GroupManagerSummaryProducer extends TCPDataSender
         } 
         catch (InterruptedException exception)
         {
-            log_.error(String.format("Group manager summary information producer was interruped", exception));
+            
         }
-        catch (IOException exception) 
-        {
-            if (!isTerminated_)
-            {
-                log_.debug(String.format("I/O error during summary sending (%s). Did the group leader fail?", 
-                                         exception.getMessage()));
-            }
-        } 
-        
-        close();
+        terminate();
         log_.debug("Group manager summary information producer is stopped!");
     }
     
+    private void sendExternal(GroupManagerDataTransporter dataTransporter)
+    {
+        if (externalSender_ != null)
+        {
+            try
+            {
+                externalSender_.send(dataTransporter, dataTransporter.getId());
+            }
+            catch(Exception exception)
+            {
+                log_.debug(String.format("I/O error during external data sending (%s)! Did the group manager close " +
+                        "its connection unexpectedly?", exception.getMessage()));
+                externalSender_.close();
+                externalSender_ = null;
+                
+                if (! connectionWorker_.isRunning())
+                    connectionWorker_.restart();
+            }
+            
+        }
+
+        
+    }
+
     /** 
      * Terminating the thread.
      */
@@ -150,5 +209,13 @@ public final class GroupManagerSummaryProducer extends TCPDataSender
             isTerminated_ = true;
             lockObject_.notify();
         }
+    }
+
+    @Override
+    public void onConnectionSuccesfull(DataSender dataSender)
+    {
+        log_.debug("Connection successfull to the rabbitmq service");
+        externalSender_ = dataSender;
+        
     }
 }

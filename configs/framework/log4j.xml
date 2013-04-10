@@ -137,7 +137,15 @@
 		<appender-ref ref="FA"/>
 	</logger>
 	
+	<logger name="org.inria.myriads.snoozenode.util">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger>
 
+	<logger name="org.inria.myriads.snoozenode.monitoring">
+		<level value="DEBUG"/>
+		<appender-ref ref="FA"/>
+	</logger>
 	
 	<logger name="org.inria.myriads.snoozenode">
 		<level value="DEBUG"/>

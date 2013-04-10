@@ -28,6 +28,7 @@ import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.faulttolerance.FaultToleranceSettings;
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
 import org.inria.myriads.snoozenode.configurator.networking.NetworkingSettings;
 import org.inria.myriads.snoozenode.configurator.node.NodeSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupLeaderSchedulerSettings;
@@ -74,6 +75,9 @@ public class NodeConfiguration
     
     /** Monitoring settings. */
     private MonitoringSettings monitoring_;
+    
+    /** Monitoring settings. */
+    private MonitoringExternalSettings monitoringExternal_;
 
     /** Energy management settings. */
     private EnergyManagementSettings energyManagement_;
@@ -94,6 +98,7 @@ public class NodeConfiguration
         groupManagerScheduler_ = new GroupManagerSchedulerSettings();
         submission_ = new SubmissionSettings();
         monitoring_ = new MonitoringSettings();
+        monitoringExternal_ = new MonitoringExternalSettings();
         energyManagement_ = new EnergyManagementSettings();
         networking_ = new NetworkingSettings();
     }
@@ -216,5 +221,13 @@ public class NodeConfiguration
     public SubmissionSettings getSubmission() 
     {
         return submission_;
+    }
+
+    /**
+     * @return the monitoringExternal
+     */
+    public MonitoringExternalSettings getMonitoringExternal()
+    {
+        return monitoringExternal_;
     }
 }

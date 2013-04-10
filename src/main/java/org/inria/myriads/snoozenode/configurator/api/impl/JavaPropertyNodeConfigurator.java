@@ -48,6 +48,7 @@ import org.inria.myriads.snoozenode.configurator.faulttolerance.FaultToleranceSe
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
 import org.inria.myriads.snoozenode.configurator.networking.NetworkingSettings;
 import org.inria.myriads.snoozenode.configurator.node.NodeSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupLeaderSchedulerSettings;
@@ -62,6 +63,7 @@ import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Placement
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfiguration;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Relocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
+import org.inria.myriads.snoozenode.monitoring.TransportProtocol;
 
 /**
  * Node configurator.
@@ -101,6 +103,7 @@ public final class JavaPropertyNodeConfigurator
         setDatabaseSettings();
         setFaultToleranceSettings();
         setMonitoringSettings();
+        setMonitoringExternalSettings();
         setEstimatorSettings();
         setGroupLeaderSchedulerSettings();
         setGroupManagerSchedulerSettings();
@@ -110,6 +113,7 @@ public final class JavaPropertyNodeConfigurator
         fileInput.close();
     }
     
+
     /**
      * Sets the general settings.
      * 
@@ -293,41 +297,60 @@ public final class JavaPropertyNodeConfigurator
         String heartbeatTimeout = getProperty("faultTolerance.heartbeat.timeout"); 
         faultToleranceSettings.getHeartbeat().setTimeout(Integer.valueOf(heartbeatTimeout));
     }
+    private void setMonitoringSettings() 
+            throws NodeConfiguratorException 
+        {     
+            String separator = ",";
             
+            MonitoringSettings monitoringSettings = nodeConfiguration_.getMonitoring();
+            String monitoringInterval = getProperty("monitoring.interval");   
+            monitoringSettings.setInterval(Integer.valueOf(monitoringInterval));
+            
+            String monitoringTimeout = getProperty("monitoring.timeout");   
+            monitoringSettings.setTimeout(Integer.valueOf(monitoringTimeout));
+            
+            String numberOfMonitoringEntries = getProperty("monitoring.numberOfMonitoringEntries"); 
+            monitoringSettings.setNumberOfMonitoringEntries(Integer.valueOf(numberOfMonitoringEntries));
+            
+            String tmpUtilizationThresholds = getProperty("monitoring.thresholds.cpu"); 
+       
+            List<Double> cpuThresholds = StringUtils.convertStringToDoubleArray(tmpUtilizationThresholds, separator);
+            tmpUtilizationThresholds = getProperty("monitoring.thresholds.memory"); 
+            List<Double> memoryUtilizationThresholds = StringUtils.convertStringToDoubleArray(tmpUtilizationThresholds,
+                                                                                              separator);        
+            tmpUtilizationThresholds = getProperty("monitoring.thresholds.network");
+            List<Double> networkUtilizationThresholds = StringUtils.convertStringToDoubleArray(tmpUtilizationThresholds, 
+                                                                                               separator);        
+            MonitoringThresholds monitoringThresholds = new MonitoringThresholds(cpuThresholds,
+                                                                                 memoryUtilizationThresholds,
+                                                                                 networkUtilizationThresholds);
+            monitoringSettings.setThresholds(monitoringThresholds);
+        }    
     /**
      * Sets the utilization settings.
      * 
      * @throws NodeConfiguratorException    The configuration exception
      */
-    private void setMonitoringSettings() 
+    private void setMonitoringExternalSettings() 
         throws NodeConfiguratorException 
     {     
-        String separator = ",";
+        MonitoringExternalSettings monitoringExternalSettings = nodeConfiguration_.getMonitoringExternal();
+        String transport = getProperty("monitoring.external.transport");
+        monitoringExternalSettings.setTransportProtocol(TransportProtocol.valueOf(transport));
         
-        MonitoringSettings monitoringSettings = nodeConfiguration_.getMonitoring();
-        String monitoringInterval = getProperty("monitoring.interval");   
-        monitoringSettings.setInterval(Integer.valueOf(monitoringInterval));
+        String address = getProperty("monitoring.external.address");
+        int port = Integer.valueOf(getProperty("monitoring.external.port"));
+        NetworkAddress sendDataAddress = NetworkUtils.createNetworkAddress(address, port);
+        monitoringExternalSettings.setAddress(sendDataAddress);
         
-        String monitoringTimeout = getProperty("monitoring.timeout");   
-        monitoringSettings.setTimeout(Integer.valueOf(monitoringTimeout));
-        
-        String numberOfMonitoringEntries = getProperty("monitoring.numberOfMonitoringEntries"); 
-        monitoringSettings.setNumberOfMonitoringEntries(Integer.valueOf(numberOfMonitoringEntries));
-        
-        String tmpUtilizationThresholds = getProperty("monitoring.thresholds.cpu"); 
-   
-        List<Double> cpuThresholds = StringUtils.convertStringToDoubleArray(tmpUtilizationThresholds, separator);
-        tmpUtilizationThresholds = getProperty("monitoring.thresholds.memory"); 
-        List<Double> memoryUtilizationThresholds = StringUtils.convertStringToDoubleArray(tmpUtilizationThresholds,
-                                                                                          separator);        
-        tmpUtilizationThresholds = getProperty("monitoring.thresholds.network");
-        List<Double> networkUtilizationThresholds = StringUtils.convertStringToDoubleArray(tmpUtilizationThresholds, 
-                                                                                           separator);        
-        MonitoringThresholds monitoringThresholds = new MonitoringThresholds(cpuThresholds,
-                                                                             memoryUtilizationThresholds,
-                                                                             networkUtilizationThresholds);
-        monitoringSettings.setThresholds(monitoringThresholds);
+        String username = getProperty("monitoring.external.username");
+        String password = getProperty("monitoring.external.password");
+        String vhost = getProperty("monitoring.external.vhost");
+        monitoringExternalSettings.setUsername(username);
+        monitoringExternalSettings.setPassword(password);
+        monitoringExternalSettings.setVhost(vhost);
     }
+    
     
     /**
      * Sets estimator settings.

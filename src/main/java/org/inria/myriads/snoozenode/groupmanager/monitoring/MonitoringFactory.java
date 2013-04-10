@@ -22,6 +22,8 @@ package org.inria.myriads.snoozenode.groupmanager.monitoring;
 import java.util.concurrent.BlockingQueue;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
+import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.consumer.LocalControllerSummaryConsumer;
@@ -114,9 +116,10 @@ public final class MonitoringFactory
      */
     public static GroupManagerMonitoringService 
         newGroupManagerMonitoringService(GroupManagerRepository repository, 
-                                         int monitoringInterval)
+                                         MonitoringSettings monitoringSettings,
+                                         MonitoringExternalSettings monitoringExternalSettings)
         throws Exception 
     {
-        return new GroupManagerMonitoringService(repository, monitoringInterval);
+        return new GroupManagerMonitoringService(repository, monitoringSettings, monitoringExternalSettings);
     }
 }
