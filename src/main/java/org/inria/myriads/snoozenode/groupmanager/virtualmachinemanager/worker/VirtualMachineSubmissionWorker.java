@@ -254,6 +254,7 @@ public final class VirtualMachineSubmissionWorker
 
         PlacementPlan placementPlan = new PlacementPlan(targetLocalControllers, unassignedVirtualMachine);
         
+        
         VirtualMachineSubmissionResponse submissionResponse = enforcePlacementPlan(placementPlan);
         managerListener_.onSubmissionFinished(taskIdentifier_, submissionResponse);
     }

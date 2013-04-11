@@ -26,11 +26,15 @@ public class RabbitMQConnectionWorker extends Thread
     private ConnectionListener listener_;
     
     /** Interval Retry.*/
-    private int intervalRetry_;
+    private int retryInterval_;
+    
+    /** Number of retries.*/
+    private int numberOfRetries_;
     
     /** Exchange name.*/
     private String exchangeName_;
 
+    
     
     private MonitoringExternalSettings monitoringExternalSettings_;
     /**
@@ -39,17 +43,17 @@ public class RabbitMQConnectionWorker extends Thread
      * @param exchangeName
      */
     public RabbitMQConnectionWorker(ConnectionListener listener, 
-            int intervalRetry, 
             String exchangeName,
             MonitoringExternalSettings monitoringExternalSettings
             )
     {
         log_.debug("Initialize the connection worker to the queue");
         listener_ = listener;
-        intervalRetry_ = intervalRetry;
         exchangeName_ = exchangeName;
         lockObject_ = new Object();
         isTerminated_ = false;
+        retryInterval_ = monitoringExternalSettings.getRetryInterval();
+        numberOfRetries_ = monitoringExternalSettings.getNumberOfRetries();
         monitoringExternalSettings_ = monitoringExternalSettings;
     }
 
@@ -57,7 +61,9 @@ public class RabbitMQConnectionWorker extends Thread
     public void run()
     {
         isRunning_=true;
-        int waitTime = intervalRetry_;
+        int retries = numberOfRetries_;
+        int waitTime = retryInterval_;
+        
         while (!isTerminated_)
         {        
             try 
@@ -67,7 +73,7 @@ public class RabbitMQConnectionWorker extends Thread
                 {
                     //wakeUp
                     log_.debug("Start periodic retry");
-                    waitTime=intervalRetry_;
+                    waitTime=retryInterval_;
                     setRunning();
                 }
                 try{
@@ -83,9 +89,9 @@ public class RabbitMQConnectionWorker extends Thread
                 }
                 catch(Exception exception)
                 {
-                    log_.debug(String.format("Failed to connect... retry in %d seconds", intervalRetry_));
+                    log_.debug(String.format("Failed to connect... retry in %d seconds", retryInterval_));
                     log_.debug(exception.getMessage());
-                    
+
                 }
                 
                 synchronized (lockObject_)

@@ -346,9 +346,13 @@ public final class JavaPropertyNodeConfigurator
         String username = getProperty("monitoring.external.username");
         String password = getProperty("monitoring.external.password");
         String vhost = getProperty("monitoring.external.vhost");
+        int numberOfRetries = Integer.valueOf(getProperty("monitoring.external.faultTolerance.numberOfRetries"));
+        int retryInterval = Integer.valueOf(getProperty("monitoring.external.faultTolerance.retryInterval"));
         monitoringExternalSettings.setUsername(username);
         monitoringExternalSettings.setPassword(password);
         monitoringExternalSettings.setVhost(vhost);
+        monitoringExternalSettings.setNumberOfRetries(numberOfRetries);
+        monitoringExternalSettings.setRetryInterval(retryInterval);
     }
     
     

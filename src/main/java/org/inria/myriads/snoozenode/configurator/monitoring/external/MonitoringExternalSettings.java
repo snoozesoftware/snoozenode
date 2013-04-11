@@ -44,6 +44,12 @@ public final class MonitoringExternalSettings
     /** vhost (rabbitmq specific).*/
     private String vhost;
 
+    /** number of retries. */
+    private int numberOfRetries_;
+    
+    /** retry interval (ms). */
+    private int retryInterval_;
+    
     /**
      * @return the transportProtocol
      */
@@ -122,6 +128,38 @@ public final class MonitoringExternalSettings
     public void setVhost(String vhost)
     {
         this.vhost = vhost;
+    }
+
+    /**
+     * @return the retryInterval
+     */
+    public int getRetryInterval()
+    {
+        return retryInterval_;
+    }
+
+    /**
+     * @return the numberOfRetries
+     */
+    public int getNumberOfRetries()
+    {
+        return numberOfRetries_;
+    }
+
+    /**
+     * @param numberOfRetries the numberOfRetries to set
+     */
+    public void setNumberOfRetries(int numberOfRetries)
+    {
+        numberOfRetries_ = numberOfRetries;
+    }
+
+    /**
+     * @param retryInterval the retryInterval to set
+     */
+    public void setRetryInterval(int retryInterval)
+    {
+        retryInterval_ = retryInterval;
     }
     
     

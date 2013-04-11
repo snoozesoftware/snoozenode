@@ -107,7 +107,6 @@ public final class VirtualMachineMonitorDataConsumer
             case RABBITMQ :
                 externalSender_=null;
                 connectionWorker_ = new RabbitMQConnectionWorker(this,
-                        10000,
                         "monitoring",
                         infrastructureMonitoring.getMonitoringExternalSettings()
                         );
