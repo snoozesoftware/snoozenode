@@ -453,15 +453,15 @@ public class GroupManagerStateMachine
     @Override
     public void onAnomalyResolved(LocalControllerDescription localController) 
     {   
-        log_.debug(String.format("Entering on anomaly resolved for local controller: %s", 
-                                  localController.getId()));
         if (localController != null)
         {
+            log_.debug(String.format("Entering on anomaly resolved for local controller: %s", 
+                    localController.getId()));
+            
             PowerSavingAction action = energyManagementSettings_.getPowerSavingAction();
             log_.debug(String.format("Power saving action to be executed: %s", action));
             EnergySaverUtils.powerCycleLocalController(localController, action, repository_);        
         }
-       
         setIdle();
     }
 
