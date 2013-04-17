@@ -372,16 +372,17 @@ public final class ResourceDemandEstimator
         double networkTxMid = ThresholdUtils.getMidThreshold(monitoringThresholds_.getNetwork());
         
         double numberOfPhysicalCores = UtilizationUtils.getCpuUtilization(localControllerTotalCapacity);
-        double cpuUtilization = UtilizationUtils.getCpuUtilization(localControllerUsedCapacity) ; 
         
+        double cpuUtilization = UtilizationUtils.getCpuUtilization(localControllerUsedCapacity) ; 
         if (cpuUtilization > cpuMid * numberOfPhysicalCores)
         {
             return false;
         } 
         
         double memoryUtilization = UtilizationUtils.getMemoryUtilization(localControllerUsedCapacity);
+        double memoryTotal =  UtilizationUtils.getMemoryUtilization(localControllerTotalCapacity);
         if (memoryUtilization > 
-            memoryUtilization * memoryMid)
+            memoryTotal * memoryMid)
         {
             return false;
         }
