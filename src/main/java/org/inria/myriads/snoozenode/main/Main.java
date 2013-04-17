@@ -33,6 +33,7 @@ import org.inria.myriads.snoozenode.configurator.NodeConfiguratorFactory;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfigurator;
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
 import org.inria.myriads.snoozenode.exception.ConnectorException;
 import org.inria.myriads.snoozenode.exception.HostMonitoringException;
 import org.inria.myriads.snoozenode.exception.NodeConfiguratorException;
@@ -42,6 +43,8 @@ import org.inria.myriads.snoozenode.localcontroller.LocalControllerBackend;
 import org.inria.myriads.snoozenode.main.applications.BootstrapApplication;
 import org.inria.myriads.snoozenode.main.applications.GroupManagerApplication;
 import org.inria.myriads.snoozenode.main.applications.LocalControllerApplication;
+import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.util.OutputUtils;
 import org.restlet.Application;
 import org.restlet.Component;
@@ -207,6 +210,10 @@ public final class Main
         
         Application application = null;
         NodeRole nodeRole = nodeConfiguration.getNode().getRole();
+        
+        MonitoringExternalSettings monitoringExternalSettings = nodeConfiguration.getMonitoringExternal();
+        DataSender externalSender = DataSenderFactory.newExternalDataSender("event", monitoringExternalSettings); 
+        
         switch (nodeRole) 
         {
             case bootstrap :
@@ -215,6 +222,7 @@ public final class Main
                 attachApplication(component, application);
                 BootstrapBackend bootstrap = new BootstrapBackend(nodeConfiguration);
                 context.getAttributes().put("backend", bootstrap);
+                context.getAttributes().put("externalSender", externalSender);
                 break;
 
             case groupmanager :
@@ -223,6 +231,7 @@ public final class Main
                 attachApplication(component, application);
                 GroupManagerBackend groupmanager = new GroupManagerBackend(nodeConfiguration);
                 context.getAttributes().put("backend", groupmanager);
+                context.getAttributes().put("externalSender", externalSender);
                 break;
 
             case localcontroller :
@@ -231,6 +240,7 @@ public final class Main
                 attachApplication(component, application);
                 LocalControllerBackend localcontroller = new LocalControllerBackend(nodeConfiguration);
                 context.getAttributes().put("backend", localcontroller);
+                context.getAttributes().put("externalSender", externalSender);
                 break;
     
             default:

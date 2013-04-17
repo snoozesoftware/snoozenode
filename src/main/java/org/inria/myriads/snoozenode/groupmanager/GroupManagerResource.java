@@ -21,6 +21,8 @@ package org.inria.myriads.snoozenode.groupmanager;
 
 import java.util.ArrayList;
 
+import org.inria.myriad.snoozenode.eventmessage.EventMessage;
+import org.inria.myriad.snoozenode.eventmessage.EventType;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
@@ -44,6 +46,7 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinediscovery.VirtualMachineDiscovery;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +65,9 @@ public final class GroupManagerResource extends ServerResource
     /** Define group manager backend. */
     private GroupManagerBackend backend_;
     
+    /** External sender.*/
+    private DataSender externalSender_; 
+    
     /**
      * Constructor.
      */
@@ -69,6 +75,7 @@ public final class GroupManagerResource extends ServerResource
     {
         log_.debug("Starting group manager resource");
         backend_ = (GroupManagerBackend) getApplication().getContext().getAttributes().get("backend");
+        externalSender_ = (DataSender) getApplication().getContext().getAttributes().get("externalSender");
     }
        
     /**
@@ -107,10 +114,13 @@ public final class GroupManagerResource extends ServerResource
     public boolean joinGroupLeader(GroupManagerDescription groupManager) 
     {
         Guard.check(groupManager);
+        
         log_.debug(String.format("Received join request from group manager %s at address %s",
                                  groupManager.getId(), 
                                  groupManager.getListenSettings().getControlDataAddress().getAddress()));
     
+        
+        
         if (!isGroupLeaderActive())
         {
             return false;
@@ -119,7 +129,26 @@ public final class GroupManagerResource extends ServerResource
         boolean isAdded = backend_.getGroupLeaderInit()
                                   .getRepository()
                                   .addGroupManagerDescription(groupManager);
+        
+        sendExternal(new EventMessage(EventType.GM_JOIN , groupManager)); 
+        
+        
         return isAdded;
+    }
+
+    //make it static
+    private void sendExternal(EventMessage eventMessage)
+    {
+        try
+        {
+            log_.debug("SENDING TO EXTERNAL");
+            externalSender_.send(eventMessage, "event");
+        }
+        catch(Exception e)
+        {
+            log_.error("Unable to send to external : " + e.getMessage());
+        }
+        
     }
 
     /** 

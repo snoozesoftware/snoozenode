@@ -30,11 +30,9 @@ import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringE
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.transport.GroupManagerDataTransporter;
-import org.inria.myriads.snoozenode.monitoring.connectionlistener.ConnectionListener;
-import org.inria.myriads.snoozenode.monitoring.connectionlistener.RabbitMQConnectionWorker;
+import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.DevNullDataSender;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.RabbitMQDataSender;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.RabbitMQExternalSender;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.TCPDataSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * @author Eugen Feller
  */
 public final class GroupManagerSummaryProducer
-    implements Runnable, ConnectionListener
+    implements Runnable
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(GroupManagerSummaryProducer.class);
@@ -72,7 +70,6 @@ public final class GroupManagerSummaryProducer
     /** external sender.*/
     DataSender externalSender_;    
     
-    RabbitMQConnectionWorker connectionWorker_;
     
     /**
      * Constructor.
@@ -93,25 +90,15 @@ public final class GroupManagerSummaryProducer
     { 
         
         log_.debug("Initializing the group manager summary information producer");
-        internalSender_ = new TCPDataSender(groupLeaderAddress);
+       
         repository_ = repository;
         estimator_ = estimator;
         monitoringInterval_ = monitoringSettings.getInterval();
         lockObject_ = new Object();
-        // check the nature here.
-        switch(monitoringExternalSettings.getTransportProtocol())
-        {
-        case RABBITMQ :
-            externalSender_ = null;
-            connectionWorker_ = new RabbitMQConnectionWorker(this,
-                    "groupleader",
-                    monitoringExternalSettings
-                    );
-            connectionWorker_.start();
-            break;
-        default : 
-            externalSender_ = null;
-        }
+        
+        internalSender_ = DataSenderFactory.newInternalDataSender(groupLeaderAddress);
+        externalSender_ = DataSenderFactory.newExternalDataSender("hierarchy", monitoringExternalSettings);
+
         
     }
     
@@ -188,14 +175,8 @@ public final class GroupManagerSummaryProducer
             catch(Exception exception)
             {
                 log_.debug(String.format("I/O error during external data sending (%s)! Did the group manager close " +
-                        "its connection unexpectedly?", exception.getMessage()));
-                externalSender_.close();
-                externalSender_ = null;
-                
-                if (! connectionWorker_.isRunning())
-                    connectionWorker_.restart();
+                        "its connection unexpectedly?", exception.getMessage()));   
             }
-            
         }
 
         
@@ -214,11 +195,5 @@ public final class GroupManagerSummaryProducer
         }
     }
 
-    @Override
-    public void onConnectionSuccesfull(DataSender dataSender)
-    {
-        log_.debug("Connection successfull to the rabbitmq service");
-        externalSender_ = dataSender;
-        
-    }
+    
 }

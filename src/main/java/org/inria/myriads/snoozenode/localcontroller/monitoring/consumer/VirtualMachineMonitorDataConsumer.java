@@ -32,13 +32,8 @@ import org.inria.myriads.snoozenode.localcontroller.monitoring.service.Infrastru
 import org.inria.myriads.snoozenode.localcontroller.monitoring.threshold.ThresholdCrossingDetector;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
-import org.inria.myriads.snoozenode.monitoring.TransportProtocol;
-import org.inria.myriads.snoozenode.monitoring.connectionlistener.ConnectionListener;
-import org.inria.myriads.snoozenode.monitoring.connectionlistener.RabbitMQConnectionWorker;
+import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.DevNullDataSender;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.RabbitMQDataSender;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.TCPDataSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * @author Eugen Feller
  */
 public final class VirtualMachineMonitorDataConsumer 
-    implements Runnable, ConnectionListener
+    implements Runnable
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(VirtualMachineMonitorDataConsumer.class);
@@ -74,8 +69,6 @@ public final class VirtualMachineMonitorDataConsumer
     /** external sender. */
     private DataSender externalSender_;
     
-    /** connection worker.*/
-    RabbitMQConnectionWorker connectionWorker_; 
     /**
      * Constructor.
      * 
@@ -100,22 +93,8 @@ public final class VirtualMachineMonitorDataConsumer
         dataQueue_ = dataQueue;
         callback_ = callback; 
         crossingDetector_ = new ThresholdCrossingDetector(monitoringThresholds, localController.getTotalCapacity());
-        internalSender_ = new TCPDataSender(groupManagerAddress);
-        TransportProtocol transport = infrastructureMonitoring.getMonitoringExternalSettings().getTransportProtocol();
-        switch(transport)
-        {
-            case RABBITMQ :
-                externalSender_=null;
-                connectionWorker_ = new RabbitMQConnectionWorker(this,
-                        "monitoring",
-                        infrastructureMonitoring.getMonitoringExternalSettings()
-                        );
-                connectionWorker_.start();
-                break;
-             default : 
-                externalSender_ = null;
-        }
-                
+        internalSender_ = DataSenderFactory.newInternalDataSender(groupManagerAddress);
+        externalSender_ = DataSenderFactory.newExternalDataSender("monitoring",infrastructureMonitoring.getMonitoringExternalSettings());
         
     }
    
@@ -236,14 +215,7 @@ public final class VirtualMachineMonitorDataConsumer
             {
                 log_.debug(String.format("I/O error during external data sending (%s)! Did the group manager close " +
                         "its connection unexpectedly?", exception.getMessage()));
-                externalSender_.close();
-                externalSender_ = null;
-                if (! connectionWorker_.isRunning())
-                    connectionWorker_.restart();
-                
-                
-            }
-            
+            }    
         }
         
     }
@@ -259,9 +231,4 @@ public final class VirtualMachineMonitorDataConsumer
         externalSender_.close();
     }
 
-    @Override
-    public void onConnectionSuccesfull(DataSender dataSender)
-    {
-        externalSender_ = dataSender;
-    }
 }

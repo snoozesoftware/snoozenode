@@ -98,7 +98,6 @@
 	</logger>  
 	
 	<logger name="org.inria.myriads.snoozenode.groupmanager.GroupManagerResource">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger> 
 	
@@ -139,10 +138,6 @@
 	
 	<logger name="org.inria.myriads.snoozenode.util">
 		<level value="WARN"/>
-		<appender-ref ref="FA"/>
-	</logger>
-
-	<logger name="org.inria.myriads.snoozenode.monitoring.datasender.api.impl">
 		<appender-ref ref="FA"/>
 	</logger>
 	
