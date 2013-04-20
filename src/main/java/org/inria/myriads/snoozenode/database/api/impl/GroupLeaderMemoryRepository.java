@@ -19,6 +19,7 @@
  */
 package org.inria.myriads.snoozenode.database.api.impl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -27,6 +28,8 @@ import java.util.Map;
 
 import org.apache.commons.net.util.SubnetUtils;
 import org.apache.commons.net.util.SubnetUtils.SubnetInfo;
+import org.inria.myriad.snoozenode.eventmessage.EventMessage;
+import org.inria.myriad.snoozenode.eventmessage.EventType;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
@@ -35,7 +38,11 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
+import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
+import org.inria.myriads.snoozenode.utils.EventUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +60,9 @@ public final class GroupLeaderMemoryRepository
     /** Start index for the IP address pool. */
     private static final int IP_ADDRESS_START_IDEX = 1;
 
+    /** private notifier.*/
+    private DataSender externalSender_;
+    
     /** 
      * History data of the group managers.
      * 
@@ -73,13 +83,14 @@ public final class GroupLeaderMemoryRepository
      * @param virtualMachineSubnet    The virtual machine subnet
      * @param maxCapacity             The maximum capacity
      */
-    public GroupLeaderMemoryRepository(String[] virtualMachineSubnets, int maxCapacity)
+    public GroupLeaderMemoryRepository(String[] virtualMachineSubnets, int maxCapacity, MonitoringExternalSettings monitoringExternalSettings)
     {
         log_.debug("Initializing the group leader memory repository");
         
         ipAddressPool_ = generateAddressPool(virtualMachineSubnets);
         maxCapacity_ = maxCapacity;
         groupManagerDescriptions_ = new HashMap<String, GroupManagerDescription>();
+        externalSender_ = DataSenderFactory.newExternalDataSender("event", monitoringExternalSettings);
     }
 
     /**
@@ -190,6 +201,9 @@ public final class GroupLeaderMemoryRepository
         groupManager.setSummaryInformation(new LRUCache<Long, GroupManagerSummaryInformation>(maxCapacity_));    
         groupManagerDescriptions_.put(groupManagerId, groupManager);     
         removeIpAddresses(groupManager.getLocalControllers());
+        
+        EventUtils.send(externalSender_, 
+                new EventMessage(EventType.GM_JOIN, groupManager));
         return true;
     }
        
@@ -370,6 +384,8 @@ public final class GroupLeaderMemoryRepository
         {
             log_.debug("Group manager dropped!");
             groupManagerDescriptions_.remove(groupManagerId);
+            EventUtils.send(externalSender_, 
+                    new EventMessage(EventType.GM_FAILED, groupManagerId));
             return true;
         }
         

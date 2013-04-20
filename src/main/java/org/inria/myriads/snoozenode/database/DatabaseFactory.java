@@ -19,6 +19,7 @@
  */
 package org.inria.myriads.snoozenode.database;
 
+import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
@@ -56,13 +57,15 @@ public final class DatabaseFactory
      */
     public static GroupLeaderRepository newGroupLeaderRepository(String[] virtualMachineSubnets,   
                                                                  int maxCapacity,
-                                                                 DatabaseType type) 
+                                                                 DatabaseType type,
+                                                                 MonitoringExternalSettings monitoringExternalSettings
+            ) 
     {
         GroupLeaderRepository repository = null;
         switch (type) 
         {
             case memory :       
-                repository = new GroupLeaderMemoryRepository(virtualMachineSubnets, maxCapacity);        
+                repository = new GroupLeaderMemoryRepository(virtualMachineSubnets, maxCapacity, monitoringExternalSettings);        
                 break;
                        
             default:
@@ -82,13 +85,15 @@ public final class DatabaseFactory
      */
     public static GroupManagerRepository newGroupManagerRepository(String groupManagerId, 
                                                                    int maxCapacity,
-                                                                   DatabaseType type) 
+                                                                   DatabaseType type,
+                                                                   MonitoringExternalSettings monitoringExternalSettings
+                                                                    ) 
     {
         GroupManagerRepository repository = null;
         switch (type) 
         {
             case memory :       
-                repository = new GroupManagerMemoryRepository(groupManagerId, maxCapacity);
+                repository = new GroupManagerMemoryRepository(groupManagerId, maxCapacity, monitoringExternalSettings);
                 break;
                        
             default:

@@ -42,14 +42,14 @@ public class DataSenderFactory
      * @param monitoringExternalSettings
      * @return
      */
-    public static DataSender newExternalDataSender(String routingKey, MonitoringExternalSettings monitoringExternalSettings)
+    public static DataSender newExternalDataSender(String exchange, MonitoringExternalSettings monitoringExternalSettings)
     {
         TransportProtocol transport = monitoringExternalSettings.getTransportProtocol();
         switch(transport)
         {
             case RABBITMQ :
                 log_.debug("Initializing the RabbitMQ external sender");
-                return new RabbitMQExternalSender(routingKey, monitoringExternalSettings);
+                return new RabbitMQExternalSender(exchange, monitoringExternalSettings);
              default : 
                 return null;
         }

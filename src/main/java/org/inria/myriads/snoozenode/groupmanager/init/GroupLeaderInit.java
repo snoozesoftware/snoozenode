@@ -143,7 +143,11 @@ public final class GroupLeaderInit
         String[] virtualMachineSubnets = nodeConfiguration_.getNetworking().getVirtualMachineSubnets();
         int maxCapacity = nodeConfiguration_.getDatabase().getNumberOfEntriesPerGroupManager();
         DatabaseType type = nodeConfiguration_.getDatabase().getType();
-        groupLeaderRepository_ = DatabaseFactory.newGroupLeaderRepository(virtualMachineSubnets, maxCapacity, type);
+        groupLeaderRepository_ = DatabaseFactory.newGroupLeaderRepository(
+                                virtualMachineSubnets, 
+                                maxCapacity,
+                                type,
+                                nodeConfiguration_.getMonitoringExternal());
     }
     
     /**

@@ -7,5 +7,7 @@ public enum TransportProtocol
     /** TCP (not used).*/
     TCP,
     /** UDP (not used).*/
-    UDP,
+    UDP, 
+    /** test transport.*/
+    TEST,
 }

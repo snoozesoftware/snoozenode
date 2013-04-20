@@ -1,11 +1,19 @@
 package org.inria.myriads.snoozenode.database.api.impl;
 
 
+import org.easymock.EasyMock;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
+import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.monitoring.TransportProtocol;
+import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
+
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
 
 import junit.framework.TestCase;
 
@@ -22,7 +30,11 @@ public class TestGroupLeaderMemoryRepository extends TestCase
     protected void setUp() throws Exception
     {
         String[] virtualMachineSubnets = {"192.168.122.0/30"};
-        repository_ = new GroupLeaderMemoryRepository(virtualMachineSubnets,0);
+       MonitoringExternalSettings monitoringExternalSettings = 
+               new MonitoringExternalSettings();
+       monitoringExternalSettings.setTransportProtocol(TransportProtocol.TEST);
+        
+        repository_ = new GroupLeaderMemoryRepository(virtualMachineSubnets,0,monitoringExternalSettings);
     }
     
     /**
@@ -91,7 +103,10 @@ public class TestGroupLeaderMemoryRepository extends TestCase
     public void testGenerateAddressPoolOneSubnet()
     {
         String[] virtualMachineSubnets = {"192.168.122.0/30"};
-        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(virtualMachineSubnets,0);
+        MonitoringExternalSettings monitoringExternalSettings = 
+                new MonitoringExternalSettings();
+        monitoringExternalSettings.setTransportProtocol(TransportProtocol.TEST);
+        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(virtualMachineSubnets,0,monitoringExternalSettings);
         repository.generateAddressPool(virtualMachineSubnets);
         assertEquals(2,repository.getNumberOfFreeIpAddresses());
     }
@@ -99,7 +114,10 @@ public class TestGroupLeaderMemoryRepository extends TestCase
     public void testGenerateAddressPoolTwoSubnets()
     {
         String[] virtualMachineSubnets = {"192.168.122.0/22", "10.0.0.1/22"};
-        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(virtualMachineSubnets,0);
+        MonitoringExternalSettings monitoringExternalSettings = 
+                new MonitoringExternalSettings();
+        monitoringExternalSettings.setTransportProtocol(TransportProtocol.TEST);
+        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(virtualMachineSubnets,0,monitoringExternalSettings);
         repository.generateAddressPool(virtualMachineSubnets);
         assertEquals(2044,repository.getNumberOfFreeIpAddresses());
 

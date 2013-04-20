@@ -165,7 +165,9 @@ public final class GroupManagerInit
         DatabaseType databaseType = nodeConfiguration_.getDatabase().getType();
         repository_ = DatabaseFactory.newGroupManagerRepository(groupManagerId, 
                                                                 maxCapacity, 
-                                                                databaseType);
+                                                                databaseType,
+                                                                nodeConfiguration_.getMonitoringExternal()
+                                                                );
     }
     
     /**

@@ -247,7 +247,8 @@ public class RabbitMQExternalSender implements DataSender
     @Override
     public void send(Object data) 
     {
-        
+        setRoutingKey("");
+        threadPool.submit( new SenderTask(data) );
     }
 
     @Override
