@@ -379,7 +379,9 @@ public final class GroupManagerMemoryRepository
         }
         
         virtualMachine.setUsedCapacity(new LRUCache<Long, VirtualMachineMonitoringData>(maxCapacity_));
-        metaData.put(virtualMachineId, virtualMachine);    
+        metaData.put(virtualMachineId, virtualMachine); 
+        
+        EventUtils.send(externalSender_, new EventMessage(EventType.VM_START, virtualMachine));
         return true;
     }
     
