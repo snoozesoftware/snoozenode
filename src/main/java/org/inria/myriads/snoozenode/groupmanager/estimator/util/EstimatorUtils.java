@@ -78,13 +78,13 @@ public final class EstimatorUtils
             {
                 log_.debug(String.format("Virtual machine: %s fits into the local controller: %s", 
                                          virtualMachineId, 
-                                         localControllerId));
+                                         localController.getControlDataAddress().getAddress()));
                 return localController;
             }
             
             log_.debug(String.format("Virtual machine: %s does not fit into the local controller: %s", 
                                      virtualMachineId, 
-                                     localControllerId)); 
+                                     localController.getControlDataAddress().getAddress())); 
         }
         
         return null;
