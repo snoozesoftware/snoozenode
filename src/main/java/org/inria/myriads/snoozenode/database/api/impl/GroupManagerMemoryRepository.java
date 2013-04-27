@@ -175,12 +175,14 @@ public final class GroupManagerMemoryRepository
      * 
      * @param groupManager      The group manager description
      */
+    @SuppressWarnings("unchecked")
     @Override
     public synchronized void fillGroupManagerDescription(GroupManagerDescription groupManager) 
     {   
         Guard.check(groupManager);
         log_.debug("Adding possible virtual machine meta data to group manager description");
-        groupManager.setLocalControllers(localControllerDescriptions_);   
+        //it should be a copy ?  
+        groupManager.setLocalControllers((HashMap<String, LocalControllerDescription>) localControllerDescriptions_.clone());   
     }
     
     /**

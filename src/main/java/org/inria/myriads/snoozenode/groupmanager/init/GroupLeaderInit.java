@@ -144,6 +144,7 @@ public final class GroupLeaderInit
         int maxCapacity = nodeConfiguration_.getDatabase().getNumberOfEntriesPerGroupManager();
         DatabaseType type = nodeConfiguration_.getDatabase().getType();
         groupLeaderRepository_ = DatabaseFactory.newGroupLeaderRepository(
+                                groupLeaderDescription,
                                 virtualMachineSubnets, 
                                 maxCapacity,
                                 type,

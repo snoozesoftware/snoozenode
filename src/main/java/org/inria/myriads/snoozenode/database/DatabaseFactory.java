@@ -19,6 +19,7 @@
  */
 package org.inria.myriads.snoozenode.database;
 
+import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
@@ -49,13 +50,14 @@ public final class DatabaseFactory
     
     /**
      * Returns the group leader repository.
+     * @param groupLeaderDescription 
      * 
      * @param virtualMachineSubnet    The virtual machine subnet
      * @param maxCapacity             The maximum capacity
      * @param type                    The database type
      * @return                        The group leader repository
      */
-    public static GroupLeaderRepository newGroupLeaderRepository(String[] virtualMachineSubnets,   
+    public static GroupLeaderRepository newGroupLeaderRepository(GroupManagerDescription groupLeaderDescription, String[] virtualMachineSubnets,   
                                                                  int maxCapacity,
                                                                  DatabaseType type,
                                                                  MonitoringExternalSettings monitoringExternalSettings
@@ -65,7 +67,7 @@ public final class DatabaseFactory
         switch (type) 
         {
             case memory :       
-                repository = new GroupLeaderMemoryRepository(virtualMachineSubnets, maxCapacity, monitoringExternalSettings);        
+                repository = new GroupLeaderMemoryRepository(groupLeaderDescription, virtualMachineSubnets, maxCapacity, monitoringExternalSettings);        
                 break;
                        
             default:

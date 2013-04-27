@@ -192,6 +192,7 @@ public final class GroupManagerBackend
             if (groupManagerInit_ != null)
             {
                 groupManagerInit_.getRepository().fillGroupManagerDescription(groupManagerDescription_);
+                log_.debug("groupManagerDescription filled and local controllers = " + groupManagerDescription_.getLocalControllers().size());
                 groupManagerInit_.stopServices();
             }
         } 

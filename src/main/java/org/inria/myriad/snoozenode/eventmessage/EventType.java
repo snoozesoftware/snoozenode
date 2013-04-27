@@ -2,6 +2,9 @@ package org.inria.myriad.snoozenode.eventmessage;
 
 public enum EventType
 {
+    /**GL join*/
+    GL_JOIN,
+    /**GL FAILED*/
     GL_FAILED,
     /** GM join. */
     GM_JOIN, 
@@ -38,6 +41,6 @@ public enum EventType
     /** VM Migrate.*/
     VM_MIGRATE,
     /** VM Migrated.*/
-    VM_MIGRATED
+    VM_MIGRATED,
     
 }

@@ -79,11 +79,12 @@ public final class GroupLeaderMemoryRepository
 
     /** 
      * Constructor.
+     * @param groupLeaderDescription 
      * 
      * @param virtualMachineSubnet    The virtual machine subnet
      * @param maxCapacity             The maximum capacity
      */
-    public GroupLeaderMemoryRepository(String[] virtualMachineSubnets, int maxCapacity, MonitoringExternalSettings monitoringExternalSettings)
+    public GroupLeaderMemoryRepository(GroupManagerDescription groupLeaderDescription, String[] virtualMachineSubnets, int maxCapacity, MonitoringExternalSettings monitoringExternalSettings)
     {
         log_.debug("Initializing the group leader memory repository");
         
@@ -91,6 +92,9 @@ public final class GroupLeaderMemoryRepository
         maxCapacity_ = maxCapacity;
         groupManagerDescriptions_ = new HashMap<String, GroupManagerDescription>();
         externalSender_ = DataSenderFactory.newExternalDataSender("event", monitoringExternalSettings);
+        log_.debug("Sending GL_JOIN to external with local controllers = " + groupLeaderDescription.getLocalControllers().size());
+        EventUtils.send(externalSender_, 
+                new EventMessage(EventType.GL_JOIN, groupLeaderDescription));
     }
 
     /**
@@ -296,6 +300,7 @@ public final class GroupLeaderMemoryRepository
         }
         
         Map<Long, GroupManagerSummaryInformation> historyData = groupManagerDescription.getSummaryInformation();
+        //summary contains all lcs informations (we probably need to store all of the timestamped monitoring datas from lcs ?)
         historyData.put(summary.getTimeStamp(), summary);
         updateNetworkingInformation(summary);
         updateLocalControllerInformation(groupManagerId, summary);
@@ -383,9 +388,11 @@ public final class GroupLeaderMemoryRepository
         if (groupManagerDescriptions_.containsKey(groupManagerId))
         {
             log_.debug("Group manager dropped!");
-            groupManagerDescriptions_.remove(groupManagerId);
             EventUtils.send(externalSender_, 
-                    new EventMessage(EventType.GM_FAILED, groupManagerId));
+                    new EventMessage(EventType.GM_FAILED, 
+                            groupManagerDescriptions_.get(groupManagerId)));
+            groupManagerDescriptions_.remove(groupManagerId);
+            
             return true;
         }
         
