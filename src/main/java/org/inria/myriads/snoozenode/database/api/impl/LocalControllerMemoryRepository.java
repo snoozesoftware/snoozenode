@@ -22,12 +22,18 @@ package org.inria.myriads.snoozenode.database.api.impl;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.inria.myriad.snoozenode.eventmessage.EventMessage;
+import org.inria.myriad.snoozenode.eventmessage.EventType;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
+import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
+import org.inria.myriads.snoozenode.utils.EventUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +48,9 @@ public final class LocalControllerMemoryRepository
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(LocalControllerMemoryRepository.class);
     
+    /** private notifier.*/
+    private DataSender externalSender_;
+    
     /** 
      * Virtual machine meta data map. 
      *  
@@ -53,10 +62,11 @@ public final class LocalControllerMemoryRepository
     /**
      * Local controller memory repository constructor.
      */
-    public LocalControllerMemoryRepository()
+    public LocalControllerMemoryRepository(MonitoringExternalSettings monitoringExternalSettings)
     {
         log_.debug("Initializing the local controller in-memory repository");
         virtualMachineMetaData_ = new HashMap<String, VirtualMachineMetaData>();
+        externalSender_ = DataSenderFactory.newExternalDataSender("event", monitoringExternalSettings);
     }
     
     /**
@@ -81,6 +91,7 @@ public final class LocalControllerMemoryRepository
         
         virtualMachineMetaData_.put(virtualMachineId, virtualMachineMetaData);
         log_.debug("Virtual machine meta data added!");
+        
         return true;
     }
     
@@ -129,6 +140,7 @@ public final class LocalControllerMemoryRepository
         
         virtualMachineMetaData_.remove(virtualMachineId);
         log_.debug("Virtual machine meta data mapping removed!");
+       
         return true;
     }
     

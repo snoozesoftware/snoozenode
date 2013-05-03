@@ -110,13 +110,14 @@ public final class DatabaseFactory
      * @param type       The database type
      * @return           The local controller repository
      */
-    public static LocalControllerRepository newLocalControllerRepository(DatabaseType type) 
+    public static LocalControllerRepository newLocalControllerRepository(DatabaseType type, 
+            MonitoringExternalSettings monitoringExternalSettings) 
     {
         LocalControllerRepository repository = null;
         switch (type) 
         {
             case memory :       
-                repository = new LocalControllerMemoryRepository();
+                repository = new LocalControllerMemoryRepository(monitoringExternalSettings);
                 break;
                        
             default:

@@ -25,7 +25,7 @@ import org.inria.myriads.snoozenode.monitoring.TransportProtocol;
 /**
  * Monitoring settings.
  * 
- * @author Eugen Feller
+ * @author msimonin
  */
 public final class MonitoringExternalSettings 
 {

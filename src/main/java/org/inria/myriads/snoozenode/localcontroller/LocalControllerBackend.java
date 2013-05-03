@@ -36,6 +36,7 @@ import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSavingAction;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.ShutdownDriver;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.SuspendDriver;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.database.enums.DatabaseType;
@@ -125,7 +126,8 @@ public final class LocalControllerBackend
     private void initializeDatabase()
     {
         DatabaseType type = nodeConfiguration_.getDatabase().getType();
-        localControllerRepository_ = DatabaseFactory.newLocalControllerRepository(type);
+        MonitoringExternalSettings monitoringExternalSettings = nodeConfiguration_.getMonitoringExternal();
+        localControllerRepository_ = DatabaseFactory.newLocalControllerRepository(type, monitoringExternalSettings);
     }
     
     /**

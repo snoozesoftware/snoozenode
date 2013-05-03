@@ -60,7 +60,7 @@ public final class GroupLeaderMemoryRepository
     /** Start index for the IP address pool. */
     private static final int IP_ADDRESS_START_IDEX = 1;
 
-    /** private notifier.*/
+    /** external notifier.*/
     private DataSender externalSender_;
     
     /** 

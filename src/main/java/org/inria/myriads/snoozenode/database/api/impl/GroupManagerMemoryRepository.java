@@ -354,7 +354,7 @@ public final class GroupManagerMemoryRepository
         {
             return false;
         }
-        
+        EventUtils.send(externalSender_, new EventMessage(EventType.VM_DESTROYED, location));
         return true;
     }
     
@@ -383,7 +383,7 @@ public final class GroupManagerMemoryRepository
         virtualMachine.setUsedCapacity(new LRUCache<Long, VirtualMachineMonitoringData>(maxCapacity_));
         metaData.put(virtualMachineId, virtualMachine); 
         
-        EventUtils.send(externalSender_, new EventMessage(EventType.VM_START, virtualMachine));
+        EventUtils.send(externalSender_, new EventMessage(EventType.VM_STARTED, virtualMachine));
         return true;
     }
     
@@ -706,7 +706,7 @@ public final class GroupManagerMemoryRepository
             localControllerDescriptions_.remove(localControllerId);        
         }
         
-        EventUtils.send(externalSender_, new EventMessage(EventType.LC_FAILED, localControllerId));
+        EventUtils.send(externalSender_, new EventMessage(EventType.LC_FAILED, localController));
         return true;
     }
         
