@@ -63,7 +63,7 @@ public final class VirtualMachineManager
     /** State machine. */
     private StateMachine stateMachine_;
     
-    /** Finsished submissions. */
+    /** Finished submissions. */
     private Map<String, VirtualMachineSubmissionResponse> submissionResponses_;
     
     /** Number of monitoring entries. */

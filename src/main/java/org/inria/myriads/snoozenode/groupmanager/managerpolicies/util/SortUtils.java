@@ -136,7 +136,7 @@ public final class SortUtils
     }
 
     /**
-     * Sort the local controlelrs in decreasing order according to the specified demand measure.
+     * Sort the local controllers in decreasing order according to the specified demand measure.
      *  
      * @param localControllers      The local controller descriptions
      * @param estimator             The estimator
