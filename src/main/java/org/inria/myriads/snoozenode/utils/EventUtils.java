@@ -22,11 +22,11 @@ public class EventUtils
         throw new UnsupportedOperationException();
     }
     
-    public static void send(DataSender sender, EventMessage message)
+    public static void send(DataSender sender, EventMessage message, String routingKey)
     {
         try
         {
-            sender.send(message);
+            sender.send(message, routingKey);
         }
         catch (Exception e)
         {

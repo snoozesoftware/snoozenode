@@ -41,6 +41,7 @@ public enum EventType
     /** VM Migrate.*/
     VM_MIGRATE,
     /** VM Migrated.*/
-    VM_MIGRATED,
-    
+    VM_MIGRATED, 
+    /** GL Summary*/
+    GL_SUMMARY,
 }

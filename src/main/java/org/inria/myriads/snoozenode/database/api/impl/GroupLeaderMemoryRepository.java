@@ -32,6 +32,7 @@ import org.inria.myriad.snoozenode.eventmessage.EventMessage;
 import org.inria.myriad.snoozenode.eventmessage.EventType;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
@@ -94,7 +95,7 @@ public final class GroupLeaderMemoryRepository
         externalSender_ = DataSenderFactory.newExternalDataSender("event", monitoringExternalSettings);
         log_.debug("Sending GL_JOIN to external with local controllers = " + groupLeaderDescription.getLocalControllers().size());
         EventUtils.send(externalSender_, 
-                new EventMessage(EventType.GL_JOIN, groupLeaderDescription));
+                new EventMessage(EventType.GL_JOIN, groupLeaderDescription), "groupleader");
     }
 
     /**
@@ -207,7 +208,7 @@ public final class GroupLeaderMemoryRepository
         removeIpAddresses(groupManager.getLocalControllers());
         
         EventUtils.send(externalSender_, 
-                new EventMessage(EventType.GM_JOIN, groupManager));
+                new EventMessage(EventType.GM_JOIN, groupManager), "groupleader");
         return true;
     }
        
@@ -299,14 +300,28 @@ public final class GroupLeaderMemoryRepository
             return;
         }
         
-        Map<Long, GroupManagerSummaryInformation> historyData = groupManagerDescription.getSummaryInformation();
-        //summary contains all lcs informations (we probably need to store all of the timestamped monitoring datas from lcs ?)
-        historyData.put(summary.getTimeStamp(), summary);
-        updateNetworkingInformation(summary);
         updateLocalControllerInformation(groupManagerId, summary);
+        updateNetworkingInformation(summary);
+        updateHistoryData(groupManagerId, summary);
+        
+        //send to external
+        GroupLeaderRepositoryInformation hierarchy = new GroupLeaderRepositoryInformation();
+        hierarchy.setGroupManagerDescriptions(getGroupManagerDescriptions(0));
+        
+        EventUtils.send(externalSender_, 
+                new EventMessage(EventType.GL_SUMMARY, hierarchy), "groupleader");
     }
-   
-    /**
+
+    private void updateHistoryData(String groupManagerId,
+			GroupManagerSummaryInformation summary) {
+    	
+        GroupManagerDescription groupManagerDescription = groupManagerDescriptions_.get(groupManagerId);
+        Map<Long, GroupManagerSummaryInformation> historyData = groupManagerDescription.getSummaryInformation();
+        summary.setLocalControllers(new ArrayList<LocalControllerDescription>());
+        historyData.put(summary.getTimeStamp(), summary);
+	}
+
+	/**
      * 
      * Updates the mapping local controllers - group manager.
      * 
@@ -390,7 +405,7 @@ public final class GroupLeaderMemoryRepository
             log_.debug("Group manager dropped!");
             EventUtils.send(externalSender_, 
                     new EventMessage(EventType.GM_FAILED, 
-                            groupManagerDescriptions_.get(groupManagerId)));
+                            groupManagerDescriptions_.get(groupManagerId)), "groupleader");
             groupManagerDescriptions_.remove(groupManagerId);
             
             return true;
