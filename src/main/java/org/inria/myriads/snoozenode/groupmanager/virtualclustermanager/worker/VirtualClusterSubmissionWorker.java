@@ -461,6 +461,7 @@ public final class VirtualClusterSubmissionWorker
         return taskIdentifier;
     }
     
+
     /**
      * Sends a message to get virtual machine response.
      * 

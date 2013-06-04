@@ -43,7 +43,6 @@
 	</category> 
 
 	<logger name="org.apache.commons.httpclient">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>	
 	</logger>
 
@@ -53,27 +52,22 @@
 	</logger>
 
 	<logger name="httpclient.content">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>	
 	</logger>
 	
 	<logger name="org.restlet">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger>
 		
 	<logger name="LogService">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger>
     
 	<logger name="org.mortbay.jetty">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger>
 
 	<logger name="org.apache.http">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger>
 
@@ -83,7 +77,6 @@
 	</logger>
 	    
 	<logger name="org.eclipse.jetty">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger>
 	
@@ -112,7 +105,6 @@
 	</logger>
 	
 	<logger name="org.inria.myriads.snoozenode.database">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger>
 
@@ -121,6 +113,10 @@
 		<appender-ref ref="FA"/>
 	</logger> 
 
+	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring.service.VirtualMachineMonitoringService">		
+		<appender-ref ref="FA"/>
+	</logger> 
+	
 	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl">
 		<level value="WARN"/>
 		<appender-ref ref="FA"/>
