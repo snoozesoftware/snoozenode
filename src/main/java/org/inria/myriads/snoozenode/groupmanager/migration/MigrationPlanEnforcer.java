@@ -27,6 +27,7 @@ import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorSettings;
 import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
+import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.communication.rest.api.LocalControllerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
@@ -106,8 +107,10 @@ public final class MigrationPlanEnforcer
         
         NetworkAddress destinationAddress =
             migrationRequest.getDestinationVirtualMachineLocation().getLocalControllerControlDataAddress();
+        
         if (destinationAddress == null)
         {
+            log_.error("Local controller destination address invalid!");
             throw new MigrationPlanEnforcerException("Local controller destination address invalid!");
         }
         
@@ -115,27 +118,59 @@ public final class MigrationPlanEnforcer
             migrationRequest.getDestinationVirtualMachineLocation().getLocalControllerId();
         if (destinationId == null)
         {
+            log_.error("Local controller identifier is invalid!");
             throw new MigrationPlanEnforcerException("Local controller identifier is invalid!");
         }
         
         VirtualMachineLocation oldLocation = migrationRequest.getSourceVirtualMachineLocation();
-        VirtualMachineLocation newLocation = createNewVirtualMachineLocation(virtualMachineId, 
-                                                                             destinationId, 
-                                                                             destinationAddress);  
-        boolean isUpdated = groupManagerRepository_.updateVirtualMachineLocation(oldLocation, newLocation);
+        
+        
+        VirtualMachineLocation newLocation = migrationRequest.getDestinationVirtualMachineLocation();
+        newLocation.setVirtualMachineId(oldLocation.getVirtualMachineId());
+        
+        boolean isUpdated = false;
+        VirtualMachineMetaData metaData = null;
+        log_.debug("Migration terminated : updating the group manager repository");
+        
+        if (oldLocation.getGroupManagerId().equals(newLocation.getGroupManagerId()))
+        {
+            log_.debug("Migration terminated : updating the LOCAL group manager repository");
+            isUpdated = groupManagerRepository_.updateVirtualMachineLocation(oldLocation, newLocation);
+            metaData = groupManagerRepository_.getVirtualMachineMetaData(newLocation, NUMBER_OF_MONITORING_ENTRIES);
+        }
+        else
+        {
+            log_.debug("Migration terminated : updating the REMOTE group manager repository");
+            metaData = groupManagerRepository_.getVirtualMachineMetaData(oldLocation, NUMBER_OF_MONITORING_ENTRIES);
+            NetworkAddress newGroupManager = newLocation.getGroupManagerControlDataAddress();
+            log_.debug(String.format("Migration terminated : sending a request to update the group manager %s", 
+                    newGroupManager.getAddress()
+                    ));
+            
+            boolean isRemoved = groupManagerRepository_.dropVirtualMachineData(oldLocation);
+            if (!isRemoved)
+            {
+                throw new MigrationPlanEnforcerException("Failed to update virtual machine location!");
+            }
+
+            
+            metaData.setVirtualMachineLocation(newLocation);
+            GroupManagerAPI communicator = CommunicatorFactory.newGroupManagerCommunicator(newGroupManager);
+            isUpdated = communicator.addVirtualMachineAfterMigration(metaData);
+            
+        }
         if (!isUpdated)
         {
             throw new MigrationPlanEnforcerException("Failed to update virtual machine location!");
         }
         
-        VirtualMachineMetaData metaData = 
-            groupManagerRepository_.getVirtualMachineMetaData(newLocation, NUMBER_OF_MONITORING_ENTRIES);   
         if (metaData == null)
         {
             throw new MigrationPlanEnforcerException("Virtual machine meta data is invalid!");
         }
         
-        boolean isStarted = startVirtualMachineMonitoring(destinationAddress, metaData);
+        boolean isStarted = startVirtualMachineMonitoring(destinationAddress, metaData);       
+        
         if (!isStarted)
         {
             log_.error("Unable to start virtual machine monitoring on destination!");
@@ -145,6 +180,7 @@ public final class MigrationPlanEnforcer
         return true;
     }
     
+   
     /**
      * Starts virtual machine monitoring.
      * 
@@ -239,7 +275,7 @@ public final class MigrationPlanEnforcer
      *  
      * @param migrationRequest      The migration request
      */
-    private void startMigration(MigrationRequest migrationRequest) 
+    public void startMigration(MigrationRequest migrationRequest) 
     {    
         log_.debug(String.format("Starting to migrate virtual machine %s from local controller %s:%d to %s:%d",
             migrationRequest.getSourceVirtualMachineLocation().getVirtualMachineId(),
@@ -304,5 +340,18 @@ public final class MigrationPlanEnforcer
                                                                        localController.getHypervisorSettings()); 
             startMigration(migrationRequest);
         }
+    }
+    
+    /**
+     * 
+     * Start a migration.
+     * Call by the client.
+     * 
+     * @param migrationRequest
+     */
+    public void startManualMigration(MigrationRequest migrationRequest)
+    {
+        numberOfMigrations_ = 1;
+        startMigration(migrationRequest);
     }  
 }

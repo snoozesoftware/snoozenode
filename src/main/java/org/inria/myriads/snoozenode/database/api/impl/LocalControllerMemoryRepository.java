@@ -22,8 +22,6 @@ package org.inria.myriads.snoozenode.database.api.impl;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.inria.myriad.snoozenode.eventmessage.EventMessage;
-import org.inria.myriad.snoozenode.eventmessage.EventType;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
@@ -33,7 +31,6 @@ import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringE
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
-import org.inria.myriads.snoozenode.utils.EventUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

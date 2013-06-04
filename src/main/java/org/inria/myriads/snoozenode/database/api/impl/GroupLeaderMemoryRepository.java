@@ -19,7 +19,7 @@
  */
 package org.inria.myriads.snoozenode.database.api.impl;
 
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -37,6 +37,7 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupMa
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
@@ -474,6 +475,64 @@ public final class GroupLeaderMemoryRepository
                     lookup.setLocalControllerId(localController.getId());
                     lookup.setGroupManager(groupManager);
                     return lookup;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 
+     * Gets the group manager assigned to the localcontroller identified by its Id.
+     * 
+     * @param localControllerId         The local controller Id.
+     * @return                          The assigned group manager or null if none is found.
+     */    
+    private AssignedGroupManager getAssignedGroupManager(String localControllerId)
+    {
+        for (GroupManagerDescription groupManager : groupManagerDescriptions_.values())
+        {
+            for (LocalControllerDescription localController : groupManager.getLocalControllers().values())
+            {
+                if (localController.getId().equals(localControllerId))
+                {
+                    AssignedGroupManager lookup = new AssignedGroupManager();
+                    lookup.setLocalControllerId(localController.getId());
+                    lookup.setGroupManager(groupManager);
+                    return lookup;
+                }
+            }
+        }
+        return null;
+    }
+    
+    @Override
+    public boolean updateLocation(VirtualMachineLocation location)
+    {
+        String localControllerId = location.getLocalControllerId();
+        AssignedGroupManager lookup = getAssignedGroupManager(localControllerId);
+        if (lookup == null)
+        {
+            return false;
+        }
+        
+        location.setGroupManagerId(lookup.getGroupManager().getId());
+        location.setGroupManagerControlDataAddress(lookup.getGroupManager().getListenSettings().getControlDataAddress());
+        return true;
+    }
+
+    
+    @Override
+    public LocalControllerDescription getLocalControllerDescription(String localControllerId)
+    {
+        
+        for (GroupManagerDescription groupManager : groupManagerDescriptions_.values())
+        {
+            for (LocalControllerDescription localController : groupManager.getLocalControllers().values())
+            {
+                if (localController.getId().equals(localControllerId))
+                {
+                    return localController;
                 }
             }
         }

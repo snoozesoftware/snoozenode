@@ -28,9 +28,11 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.repository.Grou
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerList;
+import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.discovery.VirtualMachineDiscoveryResponse;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.requests.MetaDataRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
@@ -44,6 +46,7 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinediscovery.VirtualMachineDiscovery;
+import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -704,20 +707,48 @@ public final class GroupManagerResource extends ServerResource
      * @param clientMigrationRequest     The client migration Request
      * @return                           true if ok false otherwise
      */
-    public boolean migrateVirtualMachine(ClientMigrationRequest clientMigrationRequest) 
+    public boolean migrateVirtualMachine(MigrationRequest migrationRequest) 
     {
-        Guard.check(clientMigrationRequest);
+        Guard.check(migrationRequest);
         if (!isGroupManagerActive())
         {
-            return false;
+            // Group Leader Logic
+            VirtualMachineLocation oldLocation = migrationRequest.getSourceVirtualMachineLocation();
+            VirtualMachineLocation newLocation = migrationRequest.getDestinationVirtualMachineLocation();
+            boolean updated = true;
+            updated = backend_.getGroupLeaderInit().getRepository().updateLocation(oldLocation);
+            if (!updated)
+            {
+                return false;
+            }
+            updated = backend_.getGroupLeaderInit().getRepository().updateLocation(newLocation);
+            if (!updated)
+            {
+                return false;
+            }
+            LocalControllerDescription localController = 
+                    backend_.getGroupLeaderInit().getRepository().getLocalControllerDescription(newLocation.getLocalControllerId());
+            
+            migrationRequest.setDestinationHypervisorSettings(localController.getHypervisorSettings());
+            // call to the gm source to migrate the vm.
+            NetworkAddress groupManagerSource = oldLocation.getGroupManagerControlDataAddress();
+            GroupManagerAPI communicator = CommunicatorFactory.newGroupManagerCommunicator(groupManagerSource);
+            communicator.migrateVirtualMachine(migrationRequest);
+            
+            return true;
         }
-        
-        boolean isMigrated = backend_.getGroupManagerInit()
-                .getStateMachine().startMigration(clientMigrationRequest);
+        else
+        {
+            // Group Manager Logic
+            boolean isMigrated = backend_.getGroupManagerInit()
+                    .getStateMachine().startMigration(migrationRequest);
+    
+            return isMigrated;
 
-        return isMigrated;
-        
+        }
     }
+    
+    
 
     /**
      * Resize a virtual machine.
@@ -739,6 +770,19 @@ public final class GroupManagerResource extends ServerResource
                 .resizeVirtualMachine(resizeRequest);
         
         return newVirtualMachineMetaData;
+    }
+
+    
+    public boolean addVirtualMachineAfterMigration(VirtualMachineMetaData virtualMachine)
+    {
+        Guard.check(virtualMachine);
+        if ( !isGroupManagerActive())
+        {
+            return false;
+        }
+        
+        boolean isUpdated = backend_.getGroupManagerInit().getRepository().addVirtualMachine(virtualMachine);
+        return isUpdated;
     }
 
 

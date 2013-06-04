@@ -26,6 +26,7 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDes
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 
 /**
  * Group leader repository interface.
@@ -122,5 +123,21 @@ public interface GroupLeaderRepository
      * @return                          The assigned group manager or null if none is found.
      */
     AssignedGroupManager getAssignedGroupManager(NetworkAddress contactInformation);
+
+    /**
+     * Given a local controller location updates the location with the proper groupmanager.
+     * @param location
+     * @return
+     */
+    boolean updateLocation(VirtualMachineLocation location);
+
+    /**
+     * 
+     * Gets the localController description.
+     * 
+     * @param localControllerId
+     * @return
+     */
+    LocalControllerDescription getLocalControllerDescription(String localControllerId);
     
 }

@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
@@ -489,9 +490,9 @@ public class GroupManagerStateMachine
      * @return     true if everything ok, false otherwise
      */
     @Override
-    public boolean startMigration(ClientMigrationRequest clientMigrationRequest)
+    public boolean startMigration(MigrationRequest migrationRequest)
     {
-        log_.debug("Starting the reconfiguration procedure");
+        log_.debug("Starting the migration procedure");
         
         if (!changeState(SystemState.RECONFIGURATION))
         {
@@ -500,19 +501,7 @@ public class GroupManagerStateMachine
         
         try
         {
-            VirtualMachineLocation oldLocation = clientMigrationRequest.getOldLocation();
-            VirtualMachineLocation newLocation = clientMigrationRequest.getNewLocation();
-            VirtualMachineMetaData virtualMachine = repository_.getVirtualMachineMetaData(oldLocation, 0);
-            LocalControllerDescription newLocalController = 
-                    repository_.getLocalControllerDescription(newLocation.getLocalControllerId(), 0, true);
-            Map<VirtualMachineMetaData, LocalControllerDescription> mapping = 
-                    new HashMap<VirtualMachineMetaData, LocalControllerDescription>();
-            mapping.put(virtualMachine, newLocalController);
-            //construction of the migration plan with the migration request.
-            //artificially release node to use the logic behind.
-            ReconfigurationPlan migrationPlan = new ReconfigurationPlan(mapping, 1, 1);
-            
-            migrationPlanEnforcer_.enforceMigrationPlan(migrationPlan);
+            migrationPlanEnforcer_.startManualMigration(migrationRequest);
         }
         catch (Exception exception) 
         {
@@ -520,6 +509,7 @@ public class GroupManagerStateMachine
             log_.debug(String.format("Unable to execute the migration plan: %s", exception.getMessage()));
             return false;
         }
+        
         return true;
     }
 

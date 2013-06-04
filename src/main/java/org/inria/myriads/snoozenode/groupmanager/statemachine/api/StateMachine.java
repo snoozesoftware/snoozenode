@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
@@ -79,12 +80,12 @@ public interface StateMachine
     
     /**
      * Starts the migration of the vm.
-     * @param clientMigrationRequest clientMigrationRequest
+     * @param migrationRequest clientMigrationRequest
      * 
      * 
      * @return     true if everything ok, false otherwise
      */
-    boolean startMigration(ClientMigrationRequest clientMigrationRequest);
+    boolean startMigration(MigrationRequest migrationRequest);
     
     /**
      * Indicates if state machine is busy or not.
