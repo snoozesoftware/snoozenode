@@ -6,7 +6,7 @@ import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.monitoring.TransportProtocol;
@@ -31,8 +31,8 @@ public class TestGroupLeaderMemoryRepository extends TestCase
     {
         String[] virtualMachineSubnets = {"192.168.122.0/30"};
         GroupManagerDescription groupLeader = new GroupManagerDescription();
-       MonitoringExternalSettings monitoringExternalSettings = 
-               new MonitoringExternalSettings();
+       ExternalNotifierSettings monitoringExternalSettings = 
+               new ExternalNotifierSettings();
        monitoringExternalSettings.setTransportProtocol(TransportProtocol.TEST);
         
         repository_ = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0,monitoringExternalSettings);
@@ -105,8 +105,8 @@ public class TestGroupLeaderMemoryRepository extends TestCase
     {
         String[] virtualMachineSubnets = {"192.168.122.0/30"};
         GroupManagerDescription groupLeader = new GroupManagerDescription();
-        MonitoringExternalSettings monitoringExternalSettings = 
-                new MonitoringExternalSettings();
+        ExternalNotifierSettings monitoringExternalSettings = 
+                new ExternalNotifierSettings();
         monitoringExternalSettings.setTransportProtocol(TransportProtocol.TEST);
         GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0,monitoringExternalSettings);
         repository.generateAddressPool(virtualMachineSubnets);
@@ -117,8 +117,8 @@ public class TestGroupLeaderMemoryRepository extends TestCase
     {
         String[] virtualMachineSubnets = {"192.168.122.0/22", "10.0.0.1/22"};
         GroupManagerDescription groupLeader = new GroupManagerDescription();
-        MonitoringExternalSettings monitoringExternalSettings = 
-                new MonitoringExternalSettings();
+        ExternalNotifierSettings monitoringExternalSettings = 
+                new ExternalNotifierSettings();
         monitoringExternalSettings.setTransportProtocol(TransportProtocol.TEST);
         GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0,monitoringExternalSettings);
         repository.generateAddressPool(virtualMachineSubnets);

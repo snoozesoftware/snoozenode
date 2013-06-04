@@ -28,7 +28,7 @@ import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.faulttolerance.FaultToleranceSettings;
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.configurator.networking.NetworkingSettings;
 import org.inria.myriads.snoozenode.configurator.node.NodeSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupLeaderSchedulerSettings;
@@ -77,7 +77,7 @@ public class NodeConfiguration
     private MonitoringSettings monitoring_;
     
     /** Monitoring settings. */
-    private MonitoringExternalSettings monitoringExternal_;
+    private ExternalNotifierSettings externalNotifier_;
 
     /** Energy management settings. */
     private EnergyManagementSettings energyManagement_;
@@ -98,7 +98,7 @@ public class NodeConfiguration
         groupManagerScheduler_ = new GroupManagerSchedulerSettings();
         submission_ = new SubmissionSettings();
         monitoring_ = new MonitoringSettings();
-        monitoringExternal_ = new MonitoringExternalSettings();
+        externalNotifier_ = new ExternalNotifierSettings();
         energyManagement_ = new EnergyManagementSettings();
         networking_ = new NetworkingSettings();
     }
@@ -226,8 +226,8 @@ public class NodeConfiguration
     /**
      * @return the monitoringExternal
      */
-    public MonitoringExternalSettings getMonitoringExternal()
+    public ExternalNotifierSettings getExternalNotifier()
     {
-        return monitoringExternal_;
+        return externalNotifier_;
     }
 }

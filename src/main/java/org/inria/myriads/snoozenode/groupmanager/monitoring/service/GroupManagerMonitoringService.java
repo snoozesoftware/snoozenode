@@ -22,7 +22,7 @@ package org.inria.myriads.snoozenode.groupmanager.monitoring.service;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.producer.GroupManagerSummaryProducer;
@@ -49,7 +49,7 @@ public final class GroupManagerMonitoringService
     private MonitoringSettings monitoringSettings_;
     
     /** Monitoring external.*/
-    private MonitoringExternalSettings monitoringExternalSettings_;
+    private ExternalNotifierSettings monitoringExternalSettings_;
     
     /**
      * Group manager monitoring service.
@@ -60,7 +60,7 @@ public final class GroupManagerMonitoringService
      */
     public GroupManagerMonitoringService(GroupManagerRepository repository, 
                                          MonitoringSettings monitoringSettings,
-                                         MonitoringExternalSettings monitoringExternalSettings)
+                                         ExternalNotifierSettings monitoringExternalSettings)
         throws Exception
     {
         Guard.check(repository, monitoringSettings, monitoringExternalSettings);

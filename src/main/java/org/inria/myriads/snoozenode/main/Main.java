@@ -33,7 +33,7 @@ import org.inria.myriads.snoozenode.configurator.NodeConfiguratorFactory;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfigurator;
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.exception.ConnectorException;
 import org.inria.myriads.snoozenode.exception.HostMonitoringException;
 import org.inria.myriads.snoozenode.exception.NodeConfiguratorException;
@@ -211,7 +211,7 @@ public final class Main
         Application application = null;
         NodeRole nodeRole = nodeConfiguration.getNode().getRole();
         
-        MonitoringExternalSettings monitoringExternalSettings = nodeConfiguration.getMonitoringExternal();
+        ExternalNotifierSettings monitoringExternalSettings = nodeConfiguration.getExternalNotifier();
         DataSender externalSender = DataSenderFactory.newExternalDataSender("event", monitoringExternalSettings); 
         
         switch (nodeRole) 

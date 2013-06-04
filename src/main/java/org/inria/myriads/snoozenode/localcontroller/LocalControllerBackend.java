@@ -36,7 +36,7 @@ import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSavingAction;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.ShutdownDriver;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.SuspendDriver;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.database.enums.DatabaseType;
@@ -126,8 +126,8 @@ public final class LocalControllerBackend
     private void initializeDatabase()
     {
         DatabaseType type = nodeConfiguration_.getDatabase().getType();
-        MonitoringExternalSettings monitoringExternalSettings = nodeConfiguration_.getMonitoringExternal();
-        localControllerRepository_ = DatabaseFactory.newLocalControllerRepository(type, monitoringExternalSettings);
+        ExternalNotifierSettings externalNotifierSettings = nodeConfiguration_.getExternalNotifier();
+        localControllerRepository_ = DatabaseFactory.newLocalControllerRepository(type, externalNotifierSettings);
     }
     
     /**
@@ -177,7 +177,7 @@ public final class LocalControllerBackend
         resourceMonitoring_ = new InfrastructureMonitoring(virtualMachineMonitor, 
                                                            hostMonitor,
                                                            nodeConfiguration_.getMonitoring(),
-                                                           nodeConfiguration_.getMonitoringExternal());
+                                                           nodeConfiguration_.getExternalNotifier());
     }
     
     /**

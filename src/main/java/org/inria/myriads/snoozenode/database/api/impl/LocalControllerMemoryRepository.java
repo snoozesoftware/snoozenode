@@ -27,7 +27,7 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDes
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
@@ -59,11 +59,11 @@ public final class LocalControllerMemoryRepository
     /**
      * Local controller memory repository constructor.
      */
-    public LocalControllerMemoryRepository(MonitoringExternalSettings monitoringExternalSettings)
+    public LocalControllerMemoryRepository(ExternalNotifierSettings externalNotifierSettings)
     {
         log_.debug("Initializing the local controller in-memory repository");
         virtualMachineMetaData_ = new HashMap<String, VirtualMachineMetaData>();
-        externalSender_ = DataSenderFactory.newExternalDataSender("event", monitoringExternalSettings);
+        externalSender_ = DataSenderFactory.newExternalDataSender("event", externalNotifierSettings);
     }
     
     /**

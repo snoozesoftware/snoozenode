@@ -27,7 +27,7 @@ import org.inria.myriads.snoozenode.monitoring.TransportProtocol;
  * 
  * @author msimonin
  */
-public final class MonitoringExternalSettings 
+public final class ExternalNotifierSettings 
 {
     /** The transport protocol. */
     private TransportProtocol transportProtocol_; 

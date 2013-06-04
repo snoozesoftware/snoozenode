@@ -3,7 +3,7 @@ package org.inria.myriads.snoozenode.monitoring.datasender;
 import java.io.IOException;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.monitoring.TransportProtocol;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.RabbitMQExternalSender;
@@ -42,7 +42,7 @@ public class DataSenderFactory
      * @param monitoringExternalSettings
      * @return
      */
-    public static DataSender newExternalDataSender(String exchange, MonitoringExternalSettings monitoringExternalSettings)
+    public static DataSender newExternalDataSender(String exchange, ExternalNotifierSettings monitoringExternalSettings)
     {
         TransportProtocol transport = monitoringExternalSettings.getTransportProtocol();
         switch(transport)

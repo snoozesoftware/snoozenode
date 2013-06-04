@@ -26,7 +26,7 @@ import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.transport.GroupManagerDataTransporter;
@@ -84,7 +84,7 @@ public final class GroupManagerSummaryProducer
                                        NetworkAddress groupLeaderAddress,
                                        ResourceDemandEstimator estimator,
                                        MonitoringSettings monitoringSettings,
-                                       MonitoringExternalSettings monitoringExternalSettings
+                                       ExternalNotifierSettings monitoringExternalSettings
                                        )
         throws  IOException 
     { 

@@ -36,7 +36,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
@@ -82,9 +82,9 @@ public final class GroupManagerMemoryRepository
      * 
      * @param groupManagerId    The group manager identifier
      * @param maxCapacity       The maximum capacity
-     * @param monitoringExternalSettings 
+     * @param externalNotifierSettings 
      */
-    public GroupManagerMemoryRepository(String groupManagerId, int maxCapacity, MonitoringExternalSettings monitoringExternalSettings) 
+    public GroupManagerMemoryRepository(String groupManagerId, int maxCapacity, ExternalNotifierSettings externalNotifierSettings) 
     {
         Guard.check(groupManagerId);
         log_.debug("Initializing the group manager memory repository");
@@ -93,7 +93,7 @@ public final class GroupManagerMemoryRepository
         maxCapacity_ = maxCapacity;
         localControllerDescriptions_ = new HashMap<String, LocalControllerDescription>();
         legacyIpAddresses_ = new ArrayList<String>();
-        externalSender_ = DataSenderFactory.newExternalDataSender("event", monitoringExternalSettings);
+        externalSender_ = DataSenderFactory.newExternalDataSender("event", externalNotifierSettings);
     }
     
     /**
@@ -815,8 +815,14 @@ public final class GroupManagerMemoryRepository
                                                              VirtualMachineLocation newLocation) 
     {
         Guard.check(oldLocation, newLocation);
-        log_.debug(String.format("Updating virtual machine location for: %s", 
-                                 oldLocation.getVirtualMachineId()));
+        log_.debug(String.format("Updating virtual machine location for: %s (host : %s) to %s ( host : %s)", 
+                                 oldLocation.getVirtualMachineId(),
+                                 oldLocation.getLocalControllerControlDataAddress().getAddress(),
+                                 newLocation.getVirtualMachineId(),
+                                 newLocation.getGroupManagerControlDataAddress().getAddress()
+                ));
+        
+        
         
         VirtualMachineMetaData metaData = getVirtualMachineMetaData(oldLocation);
         if (metaData == null)

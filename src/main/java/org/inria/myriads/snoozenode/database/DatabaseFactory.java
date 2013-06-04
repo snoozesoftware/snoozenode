@@ -20,7 +20,7 @@
 package org.inria.myriads.snoozenode.database;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
@@ -60,14 +60,13 @@ public final class DatabaseFactory
     public static GroupLeaderRepository newGroupLeaderRepository(GroupManagerDescription groupLeaderDescription, String[] virtualMachineSubnets,   
                                                                  int maxCapacity,
                                                                  DatabaseType type,
-                                                                 MonitoringExternalSettings monitoringExternalSettings
-            ) 
+                                                                 ExternalNotifierSettings externalNotifierSettings) 
     {
         GroupLeaderRepository repository = null;
         switch (type) 
         {
             case memory :       
-                repository = new GroupLeaderMemoryRepository(groupLeaderDescription, virtualMachineSubnets, maxCapacity, monitoringExternalSettings);        
+                repository = new GroupLeaderMemoryRepository(groupLeaderDescription, virtualMachineSubnets, maxCapacity, externalNotifierSettings);        
                 break;
                        
             default:
@@ -88,14 +87,14 @@ public final class DatabaseFactory
     public static GroupManagerRepository newGroupManagerRepository(String groupManagerId, 
                                                                    int maxCapacity,
                                                                    DatabaseType type,
-                                                                   MonitoringExternalSettings monitoringExternalSettings
+                                                                   ExternalNotifierSettings externalNotifierSettings
                                                                     ) 
     {
         GroupManagerRepository repository = null;
         switch (type) 
         {
             case memory :       
-                repository = new GroupManagerMemoryRepository(groupManagerId, maxCapacity, monitoringExternalSettings);
+                repository = new GroupManagerMemoryRepository(groupManagerId, maxCapacity, externalNotifierSettings);
                 break;
                        
             default:
@@ -111,13 +110,13 @@ public final class DatabaseFactory
      * @return           The local controller repository
      */
     public static LocalControllerRepository newLocalControllerRepository(DatabaseType type, 
-            MonitoringExternalSettings monitoringExternalSettings) 
+            ExternalNotifierSettings externalNotifierSettings) 
     {
         LocalControllerRepository repository = null;
         switch (type) 
         {
             case memory :       
-                repository = new LocalControllerMemoryRepository(monitoringExternalSettings);
+                repository = new LocalControllerMemoryRepository(externalNotifierSettings);
                 break;
                        
             default:

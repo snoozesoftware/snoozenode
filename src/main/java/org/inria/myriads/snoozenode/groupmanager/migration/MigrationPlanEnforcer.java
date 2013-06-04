@@ -259,14 +259,16 @@ public final class MigrationPlanEnforcer
      * @param controlDataAddress  The control data address
      * @return                    The virtual machine location
      */
-    private VirtualMachineLocation createNewVirtualMachineLocation(String virtualMachineId,
+    private VirtualMachineLocation createNewVirtualMachineLocation(VirtualMachineLocation sourceLocation,
                                                                    String localControllerId,
                                                                    NetworkAddress controlDataAddress)
     {
         VirtualMachineLocation location = new VirtualMachineLocation();
-        location.setVirtualMachineId(virtualMachineId);
+        location.setVirtualMachineId(sourceLocation.getVirtualMachineId());
         location.setLocalControllerId(localControllerId);
         location.setLocalControllerControlDataAddress(controlDataAddress);
+        location.setGroupManagerControlDataAddress(sourceLocation.getGroupManagerControlDataAddress());
+        location.setGroupManagerId(location.getGroupManagerId());
         return location;
     }
 
@@ -332,9 +334,10 @@ public final class MigrationPlanEnforcer
             
             VirtualMachineLocation sourceLocation = virtualMachine.getVirtualMachineLocation();            
             VirtualMachineLocation destinationLocation = 
-                createNewVirtualMachineLocation(sourceLocation.getVirtualMachineId(),
+                createNewVirtualMachineLocation(sourceLocation,
                                                 localController.getId(), 
                                                 localController.getControlDataAddress());
+            
             MigrationRequest migrationRequest = createMigrationRequest(sourceLocation,
                                                                        destinationLocation,
                                                                        localController.getHypervisorSettings()); 

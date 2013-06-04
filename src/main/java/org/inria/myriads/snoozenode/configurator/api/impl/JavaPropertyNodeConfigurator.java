@@ -48,7 +48,7 @@ import org.inria.myriads.snoozenode.configurator.faulttolerance.FaultToleranceSe
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.configurator.networking.NetworkingSettings;
 import org.inria.myriads.snoozenode.configurator.node.NodeSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupLeaderSchedulerSettings;
@@ -334,20 +334,20 @@ public final class JavaPropertyNodeConfigurator
     private void setMonitoringExternalSettings() 
         throws NodeConfiguratorException 
     {     
-        MonitoringExternalSettings monitoringExternalSettings = nodeConfiguration_.getMonitoringExternal();
-        String transport = getProperty("monitoring.external.transport");
+        ExternalNotifierSettings monitoringExternalSettings = nodeConfiguration_.getExternalNotifier();
+        String transport = getProperty("external.notifier.transport");
         monitoringExternalSettings.setTransportProtocol(TransportProtocol.valueOf(transport));
         
-        String address = getProperty("monitoring.external.address");
-        int port = Integer.valueOf(getProperty("monitoring.external.port"));
+        String address = getProperty("external.notifier.address");
+        int port = Integer.valueOf(getProperty("external.notifier.port"));
         NetworkAddress sendDataAddress = NetworkUtils.createNetworkAddress(address, port);
         monitoringExternalSettings.setAddress(sendDataAddress);
         
-        String username = getProperty("monitoring.external.username");
-        String password = getProperty("monitoring.external.password");
-        String vhost = getProperty("monitoring.external.vhost");
-        int numberOfRetries = Integer.valueOf(getProperty("monitoring.external.faultTolerance.numberOfRetries"));
-        int retryInterval = Integer.valueOf(getProperty("monitoring.external.faultTolerance.retryInterval"));
+        String username = getProperty("external.notifier.username");
+        String password = getProperty("external.notifier.password");
+        String vhost = getProperty("external.notifier.vhost");
+        int numberOfRetries = Integer.valueOf(getProperty("external.notifier.faultTolerance.numberOfRetries"));
+        int retryInterval = Integer.valueOf(getProperty("external.notifier.faultTolerance.retryInterval"));
         monitoringExternalSettings.setUsername(username);
         monitoringExternalSettings.setPassword(password);
         monitoringExternalSettings.setVhost(vhost);

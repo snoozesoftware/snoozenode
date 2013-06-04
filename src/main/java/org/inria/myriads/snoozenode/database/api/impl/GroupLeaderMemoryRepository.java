@@ -40,7 +40,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
@@ -86,14 +86,14 @@ public final class GroupLeaderMemoryRepository
      * @param virtualMachineSubnet    The virtual machine subnet
      * @param maxCapacity             The maximum capacity
      */
-    public GroupLeaderMemoryRepository(GroupManagerDescription groupLeaderDescription, String[] virtualMachineSubnets, int maxCapacity, MonitoringExternalSettings monitoringExternalSettings)
+    public GroupLeaderMemoryRepository(GroupManagerDescription groupLeaderDescription, String[] virtualMachineSubnets, int maxCapacity, ExternalNotifierSettings externalNotifierSettings)
     {
         log_.debug("Initializing the group leader memory repository");
         
         ipAddressPool_ = generateAddressPool(virtualMachineSubnets);
         maxCapacity_ = maxCapacity;
         groupManagerDescriptions_ = new HashMap<String, GroupManagerDescription>();
-        externalSender_ = DataSenderFactory.newExternalDataSender("event", monitoringExternalSettings);
+        externalSender_ = DataSenderFactory.newExternalDataSender("event", externalNotifierSettings);
         log_.debug("Sending GL_JOIN to external with local controllers = " + groupLeaderDescription.getLocalControllers().size());
         EventUtils.send(externalSender_, 
                 new EventMessage(EventType.GL_JOIN, groupLeaderDescription), "groupleader");

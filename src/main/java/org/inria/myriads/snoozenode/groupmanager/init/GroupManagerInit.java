@@ -166,7 +166,7 @@ public final class GroupManagerInit
         repository_ = DatabaseFactory.newGroupManagerRepository(groupManagerId, 
                                                                 maxCapacity, 
                                                                 databaseType,
-                                                                nodeConfiguration_.getMonitoringExternal()
+                                                                nodeConfiguration_.getExternalNotifier()
                                                                 );
     }
     
@@ -264,7 +264,7 @@ public final class GroupManagerInit
         Guard.check(groupLeader);              
         if (monitoringService_ == null)
         {
-            monitoringService_ = MonitoringFactory.newGroupManagerMonitoringService(repository_, nodeConfiguration_.getMonitoring(), nodeConfiguration_.getMonitoringExternal());
+            monitoringService_ = MonitoringFactory.newGroupManagerMonitoringService(repository_, nodeConfiguration_.getMonitoring(), nodeConfiguration_.getExternalNotifier());
         }
         
         monitoringService_.startSummaryProducer(groupLeader.getListenSettings().getMonitoringDataAddress(), 

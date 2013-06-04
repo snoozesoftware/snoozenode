@@ -148,7 +148,7 @@ public final class GroupLeaderInit
                                 virtualMachineSubnets, 
                                 maxCapacity,
                                 type,
-                                nodeConfiguration_.getMonitoringExternal());
+                                nodeConfiguration_.getExternalNotifier());
     }
     
     /**

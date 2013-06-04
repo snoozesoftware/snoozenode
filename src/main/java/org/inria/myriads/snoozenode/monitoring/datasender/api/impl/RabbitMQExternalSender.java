@@ -5,7 +5,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.util.SerializationUtils;
 import org.slf4j.Logger;
@@ -71,7 +71,7 @@ public class RabbitMQExternalSender implements DataSender
      * 
      * @param monitoringExternalSettings
      */
-    public RabbitMQExternalSender(MonitoringExternalSettings monitoringExternalSettings)
+    public RabbitMQExternalSender(ExternalNotifierSettings monitoringExternalSettings)
     {
         this("amqp-exchange", monitoringExternalSettings);
     }
@@ -83,7 +83,7 @@ public class RabbitMQExternalSender implements DataSender
      * @param exchange
      * @param monitoringExternalSettings
      */
-    public RabbitMQExternalSender(String exchange, MonitoringExternalSettings monitoringExternalSettings)
+    public RabbitMQExternalSender(String exchange, ExternalNotifierSettings monitoringExternalSettings)
     {
         host_ = monitoringExternalSettings.getAddress().getAddress();
         port_ = monitoringExternalSettings.getAddress().getPort();

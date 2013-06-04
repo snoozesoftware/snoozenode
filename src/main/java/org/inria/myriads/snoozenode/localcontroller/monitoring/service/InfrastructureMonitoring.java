@@ -20,7 +20,7 @@
 package org.inria.myriads.snoozenode.localcontroller.monitoring.service;
 
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.MonitoringExternalSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.HostMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.VirtualMachineMonitor;
 
@@ -41,7 +41,7 @@ public final class InfrastructureMonitoring
     private MonitoringSettings monitoringSettings_;
     
     /** Monitoring External Settngs. */
-    private MonitoringExternalSettings monitoringExternalSettings_;
+    private ExternalNotifierSettings monitoringExternalSettings_;
    
     /**
      * Constructor.
@@ -53,7 +53,7 @@ public final class InfrastructureMonitoring
     public InfrastructureMonitoring(VirtualMachineMonitor virtualMachineMonitor, 
                                     HostMonitor hostMonitor, 
                                     MonitoringSettings monitoringSettings,
-                                    MonitoringExternalSettings monitoringExternalSettings
+                                    ExternalNotifierSettings monitoringExternalSettings
                                     ) 
     {
         virtualMachineMonitor_ = virtualMachineMonitor;
@@ -95,7 +95,7 @@ public final class InfrastructureMonitoring
     /**
      * @return the monitoringExternalSettings
      */
-    public MonitoringExternalSettings getMonitoringExternalSettings()
+    public ExternalNotifierSettings getMonitoringExternalSettings()
     {
         return monitoringExternalSettings_;
     }
