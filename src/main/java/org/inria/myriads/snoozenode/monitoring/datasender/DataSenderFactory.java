@@ -39,17 +39,17 @@ public class DataSenderFactory
      * 
      * Create external data sender.
      * 
-     * @param monitoringExternalSettings
+     * @param externalNotifierSettings
      * @return
      */
-    public static DataSender newExternalDataSender(String exchange, ExternalNotifierSettings monitoringExternalSettings)
+    public static DataSender newExternalDataSender(String exchange, ExternalNotifierSettings externalNotifierSettings)
     {
-        TransportProtocol transport = monitoringExternalSettings.getTransportProtocol();
+        TransportProtocol transport = externalNotifierSettings.getTransportProtocol();
         switch(transport)
         {
             case RABBITMQ :
                 log_.debug("Initializing the RabbitMQ external sender");
-                return new RabbitMQExternalSender(exchange, monitoringExternalSettings);
+                return new RabbitMQExternalSender(exchange, externalNotifierSettings);
              default : 
                 return null;
         }

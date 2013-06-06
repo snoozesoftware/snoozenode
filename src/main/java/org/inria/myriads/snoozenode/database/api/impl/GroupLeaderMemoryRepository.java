@@ -94,7 +94,7 @@ public final class GroupLeaderMemoryRepository
         maxCapacity_ = maxCapacity;
         groupManagerDescriptions_ = new HashMap<String, GroupManagerDescription>();
         externalSender_ = DataSenderFactory.newExternalDataSender("event", externalNotifierSettings);
-        log_.debug("Sending GL_JOIN to external with local controllers = " + groupLeaderDescription.getLocalControllers().size());
+        //log_.debug("Sending GL_JOIN to external with local controllers = " + groupLeaderDescription.getLocalControllers().size());
         EventUtils.send(externalSender_, 
                 new EventMessage(EventType.GL_JOIN, groupLeaderDescription), "groupleader");
     }
