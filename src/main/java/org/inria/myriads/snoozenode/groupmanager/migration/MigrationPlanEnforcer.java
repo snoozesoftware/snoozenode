@@ -33,6 +33,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.exception.MigrationPlanEnforcerException;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
@@ -40,6 +41,9 @@ import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationLis
 import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationPlanListener;
 import org.inria.myriads.snoozenode.groupmanager.migration.watchdog.MigrationWatchdog;
 import org.inria.myriads.snoozenode.groupmanager.migration.worker.MigrationWorker;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
+import org.inria.snoozenode.external.notifier.ExternalNotificationType;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,18 +73,25 @@ public final class MigrationPlanEnforcer
     /** Number of migrations. */
     private int numberOfMigrations_;
     
+    
+    /** External Sender. */
+    private ExternalNotifier externalNotifier_;
+    
     /**
      * Constructor.
      * 
      * @param groupManagerRepository     The group manager repository
      * @param listener                   Migration plan listener
      */
-    public MigrationPlanEnforcer(GroupManagerRepository groupManagerRepository, 
-                                 MigrationPlanListener listener)
+    public MigrationPlanEnforcer(
+                                GroupManagerRepository groupManagerRepository, 
+                                MigrationPlanListener listener,
+                                ExternalNotifier externalNotifier
+                                 )
     {
         Guard.check(groupManagerRepository);
         log_.debug("Initializing the migration plan enforcer");
-        
+        externalNotifier_ = externalNotifier;
         groupManagerRepository_ = groupManagerRepository;
         listener_ = listener;
         finishedMigrations_ = new ArrayList<MigrationRequest>();
@@ -176,6 +187,14 @@ public final class MigrationPlanEnforcer
             log_.error("Unable to start virtual machine monitoring on destination!");
             return false;
         }
+        
+        externalNotifier_.send(
+                ExternalNotificationType.MANAGEMENT,
+                migrationRequest,
+                groupManagerRepository_.getGroupManagerId() + "." +
+                metaData.getVirtualMachineLocation().getVirtualMachineId() + "." +
+                "migration"
+                );
         
         return true;
     }
@@ -325,6 +344,13 @@ public final class MigrationPlanEnforcer
                                  migrationPlan.getNumberOfReleasedNodes()));
         
         log_.debug(String.format("Number of migrations: %s", numberOfMigrations_));
+        
+        
+        externalNotifier_.send(ExternalNotificationType.SYSTEM,
+                migrationPlan, 
+                groupManagerRepository_.getGroupManagerId() + "." + 
+                "reconfiguration"
+                );
         
         Map<VirtualMachineMetaData, LocalControllerDescription> mapping = migrationPlan.getMapping();
         for (Map.Entry<VirtualMachineMetaData, LocalControllerDescription> entry : mapping.entrySet())

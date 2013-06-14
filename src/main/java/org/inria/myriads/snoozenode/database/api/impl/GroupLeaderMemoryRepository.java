@@ -28,8 +28,6 @@ import java.util.Map;
 
 import org.apache.commons.net.util.SubnetUtils;
 import org.apache.commons.net.util.SubnetUtils.SubnetInfo;
-import org.inria.myriad.snoozenode.eventmessage.EventMessage;
-import org.inria.myriad.snoozenode.eventmessage.EventType;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
@@ -42,6 +40,8 @@ import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
+import org.inria.myriads.snoozenode.eventmessage.EventMessage;
+import org.inria.myriads.snoozenode.eventmessage.EventType;
 import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.utils.EventUtils;

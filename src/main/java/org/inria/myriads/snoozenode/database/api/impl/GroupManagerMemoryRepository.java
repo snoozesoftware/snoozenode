@@ -24,8 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.inria.myriad.snoozenode.eventmessage.EventMessage;
-import org.inria.myriad.snoozenode.eventmessage.EventType;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
@@ -38,10 +36,14 @@ import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
+import org.inria.myriads.snoozenode.eventmessage.EventMessage;
+import org.inria.myriads.snoozenode.eventmessage.EventType;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.utils.EventUtils;
+import org.inria.snoozenode.external.notifier.ExternalNotificationType;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,8 +76,9 @@ public final class GroupManagerMemoryRepository
     private int maxCapacity_;
         
     
-    /** External notifier. */
-    private DataSender externalSender_;
+    
+    /**External notifier*/
+    private ExternalNotifier externalNotifier_; 
     
     /** 
      * Constructor.
@@ -84,16 +87,19 @@ public final class GroupManagerMemoryRepository
      * @param maxCapacity       The maximum capacity
      * @param externalNotifierSettings 
      */
-    public GroupManagerMemoryRepository(String groupManagerId, int maxCapacity, ExternalNotifierSettings externalNotifierSettings) 
+    public GroupManagerMemoryRepository(String groupManagerId, 
+            int maxCapacity, 
+            ExternalNotifierSettings externalNotifierSettings,
+            ExternalNotifier externalNotifier
+            ) 
     {
         Guard.check(groupManagerId);
         log_.debug("Initializing the group manager memory repository");
-        
+        externalNotifier_ = externalNotifier;
         groupManagerId_ = groupManagerId;
         maxCapacity_ = maxCapacity;
         localControllerDescriptions_ = new HashMap<String, LocalControllerDescription>();
         legacyIpAddresses_ = new ArrayList<String>();
-        externalSender_ = DataSenderFactory.newExternalDataSender("event", externalNotifierSettings);
     }
     
     /**
@@ -207,12 +213,18 @@ public final class GroupManagerMemoryRepository
         }
                      
         log_.debug("Local controller description added successfully!");
-        EventUtils.send(externalSender_, new EventMessage(EventType.LC_JOIN, localController),"groupmanager." + groupManagerId_);
+        
+        externalNotifier_.send(
+                ExternalNotificationType.SYSTEM,
+                new EventMessage(EventType.LC_JOIN, localController),
+                "groupmanager." + groupManagerId_);
+        
         return true;
     }
     
     /**
      * Updates the virtual machine assignment set.
+     * (When a new local controller join)
      *
      * @param localController   The local controller description
      * @return                  true if everything ok, false otherwise
@@ -354,10 +366,15 @@ public final class GroupManagerMemoryRepository
         {
             return false;
         }
-        EventUtils.send(externalSender_, 
-        		new EventMessage(EventType.VM_DESTROYED, location),
-        		"groupmanager" + groupManagerId_
-        		);
+        
+        externalNotifier_.send(
+                ExternalNotificationType.MANAGEMENT,
+                location,
+                groupManagerId_ + "." +
+                location.getVirtualMachineId() + "." +
+                "drop"
+                );
+        
         return true;
     }
     
@@ -386,10 +403,6 @@ public final class GroupManagerMemoryRepository
         virtualMachine.setUsedCapacity(new LRUCache<Long, VirtualMachineMonitoringData>(maxCapacity_));
         metaData.put(virtualMachineId, virtualMachine); 
         
-        EventUtils.send(externalSender_,
-        		new EventMessage(EventType.VM_STARTED, virtualMachine),
-        		"groupmanager." + groupManagerId_
-        		);
         return true;
     }
     
@@ -614,6 +627,14 @@ public final class GroupManagerMemoryRepository
         }
         
         virtualMachineMetaData.setStatus(status);
+        
+        externalNotifier_.send(
+                ExternalNotificationType.MANAGEMENT, 
+                virtualMachineMetaData,
+                groupManagerId_ + "." +
+                location.getVirtualMachineId() + "." +
+                status.toString()
+                );
         return true;
     }
     
@@ -712,10 +733,11 @@ public final class GroupManagerMemoryRepository
             localControllerDescriptions_.remove(localControllerId);        
         }
         
-        EventUtils.send(externalSender_,
-        		new EventMessage(EventType.LC_FAILED, localController),
-        		"groupmanager" + groupManagerId_
-        		);
+        externalNotifier_.send(
+                ExternalNotificationType.SYSTEM,
+                new EventMessage(EventType.LC_FAILED, localController),
+                "groupmanager." + groupManagerId_);
+        
         return true;
     }
         
@@ -845,7 +867,7 @@ public final class GroupManagerMemoryRepository
             log_.error("Failed to remove virtual machine meta data mapping");
             return false;
         }
-        
+        //send to external here : management/groupmanager.gmid.vm.vmid.migration(Metadata)
         return true;
     }
 

@@ -36,6 +36,7 @@ import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.energymanagement.EnergyManagementSettings;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSavingAction;
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.RelocationSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
@@ -56,6 +57,9 @@ import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineComm
 import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinemanager.VirtualMachineManager;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
+import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,6 +101,9 @@ public class GroupManagerStateMachine
     /** Anomaly resolver. */
     private AnomalyResolver anomalyResolver_;
     
+    /** External notifier*/
+    ExternalNotifier externalNotifier_;
+    
     /** 
      * Constructor. 
      * 
@@ -106,15 +113,18 @@ public class GroupManagerStateMachine
      */
     public GroupManagerStateMachine(NodeConfiguration nodeConfiguration,
                                     ResourceDemandEstimator estimator,
-                                    GroupManagerRepository repository)
+                                    GroupManagerRepository repository,
+                                    ExternalNotifier externalNotifier
+                                    )
     {
         log_.debug("Initializing the state machine");
         systemState_ = SystemState.IDLE; 
         energyManagementSettings_ = nodeConfiguration.getEnergyManagement();
         estimatorSettings_ = nodeConfiguration.getEstimator();
         repository_ = repository;
+        externalNotifier_ = externalNotifier;
         // Migration plan enforcer
-        migrationPlanEnforcer_ = new MigrationPlanEnforcer(repository, this);
+        migrationPlanEnforcer_ = new MigrationPlanEnforcer(repository, this, externalNotifier_);
         // Wakeup 
         wakeupResources_ = createWakeupResources(energyManagementSettings_, repository);
         // Virtual machine manager
@@ -142,7 +152,9 @@ public class GroupManagerStateMachine
         AnomalyResolver anomalyResolver = new AnomalyResolver(relocation, 
                                                               estimator, 
                                                               repository, 
-                                                              this);
+                                                              this,
+                                                              externalNotifier_
+                                                              );
         return anomalyResolver;
     }
     
@@ -158,8 +170,8 @@ public class GroupManagerStateMachine
                                                               ResourceDemandEstimator estimator,
                                                               GroupManagerRepository repository)
     {
-        GroupManagerSchedulerSettings settings = nodeConfiguration.getGroupManagerScheduler();
-        VirtualMachineManager virtualMachineManager = new VirtualMachineManager(settings, 
+        
+        VirtualMachineManager virtualMachineManager = new VirtualMachineManager(nodeConfiguration, 
                                                                                 estimator, 
                                                                                 repository, 
                                                                                 this);

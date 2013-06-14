@@ -1,8 +1,6 @@
 package org.inria.myriads.snoozenode.utils;
 
-import java.io.IOException;
-
-import org.inria.myriad.snoozenode.eventmessage.EventMessage;
+import org.inria.myriads.snoozenode.eventmessage.EventMessage;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,5 +30,17 @@ public class EventUtils
         {
             log_.error("Failed to send external datas" + e.getMessage());
         } 
+    }
+    
+    public static void send(DataSender sender, Object message, String routingKey)
+    {
+        try
+        {
+            sender.send(message, routingKey);
+        }
+        catch (Exception e)
+        {
+            log_.error("Failed to send external datas" + e.getMessage());
+        }
     }
 }

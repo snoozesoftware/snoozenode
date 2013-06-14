@@ -29,6 +29,7 @@ import org.inria.myriads.snoozenode.database.api.impl.GroupManagerMemoryReposito
 import org.inria.myriads.snoozenode.database.api.impl.LocalControllerMemoryRepository;
 import org.inria.myriads.snoozenode.database.enums.DatabaseType;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.GroupLeaderPolicyFactory;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,14 +88,15 @@ public final class DatabaseFactory
     public static GroupManagerRepository newGroupManagerRepository(String groupManagerId, 
                                                                    int maxCapacity,
                                                                    DatabaseType type,
-                                                                   ExternalNotifierSettings externalNotifierSettings
+                                                                   ExternalNotifierSettings externalNotifierSettings,
+                                                                   ExternalNotifier externalNotifier
                                                                     ) 
     {
         GroupManagerRepository repository = null;
         switch (type) 
         {
             case memory :       
-                repository = new GroupManagerMemoryRepository(groupManagerId, maxCapacity, externalNotifierSettings);
+                repository = new GroupManagerMemoryRepository(groupManagerId, maxCapacity, externalNotifierSettings, externalNotifier);
                 break;
                        
             default:

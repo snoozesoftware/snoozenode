@@ -38,7 +38,10 @@ import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.Place
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.impl.Static;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinemanager.listener.VirtualMachineManagerListener;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
+import org.inria.snoozenode.external.notifier.ExternalNotificationType;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,6 +80,8 @@ public final class VirtualMachineSubmissionWorker
     /** Task identifier. */
     private String taskIdentifier_;
     
+    /** External Notifier. */
+    private ExternalNotifier externalNotifier_;
     
     /**
      * Constructor.
@@ -97,7 +102,9 @@ public final class VirtualMachineSubmissionWorker
                                           PlacementPolicy placementPolicy,
                                           StateMachine stateMachine,
                                           ResourceDemandEstimator estimator,
-                                          VirtualMachineManagerListener managerListener)
+                                          VirtualMachineManagerListener managerListener,
+                                          ExternalNotifier externalNotifier
+                                          )
     {
         taskIdentifier_ = taskIdentifier;
         numberOfMonitoringEntries_ = numberOfMonitoringEntries;
@@ -108,6 +115,7 @@ public final class VirtualMachineSubmissionWorker
         managerListener_ = managerListener;
     
         staticPlacementPolicy_ = new Static(estimator);
+        externalNotifier_ = externalNotifier;
     }
     
     /**
@@ -125,8 +133,18 @@ public final class VirtualMachineSubmissionWorker
                 ManagementUtils.updateVirtualMachineMetaData(virtualMachine,
                                                              VirtualMachineStatus.ERROR,
                                                              VirtualMachineErrorCode.FAILED_TO_UPDATE_REPOSITORY);
-            }      
+            }
         }
+        
+      //emit to external here ? with vm meta data routing key : groupmanager.gid.vm.vmid(START, VMMETADATA) 
+      // groupmanager.gid.virtualmachine.vmid.start(VMMETADA)
+        externalNotifier_.send(
+                ExternalNotificationType.MANAGEMENT,
+                virtualMachine,
+                repository_.getGroupManagerId() + "." +
+                virtualMachine.getVirtualMachineLocation().getVirtualMachineId() + "." +
+                "start"
+                );
     }
     
     /**

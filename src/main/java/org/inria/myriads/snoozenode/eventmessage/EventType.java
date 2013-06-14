@@ -1,4 +1,4 @@
-package org.inria.myriad.snoozenode.eventmessage;
+package org.inria.myriads.snoozenode.eventmessage;
 
 public enum EventType
 {

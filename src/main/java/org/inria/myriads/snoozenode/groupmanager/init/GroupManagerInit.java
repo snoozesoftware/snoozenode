@@ -45,6 +45,7 @@ import org.inria.myriads.snoozenode.heartbeat.HeartbeatFactory;
 import org.inria.myriads.snoozenode.heartbeat.message.HeartbeatMessage;
 import org.inria.myriads.snoozenode.heartbeat.sender.HeartbeatMulticastSender;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,6 +90,12 @@ public final class GroupManagerInit
     /** State machine. */
     private StateMachine stateMachine_;
     
+    
+    /** External Notifier. */
+    private ExternalNotifier externalNotifier_;
+    
+    
+    
     /**
      * Group manager logic constructor.
      * 
@@ -105,14 +112,22 @@ public final class GroupManagerInit
         
         nodeConfiguration_ = nodeConfiguration; 
         description_ = groupManagerDescription;
+        initializeExternalNotifier();
         initializeRepository();
         initializeResourceDemandEstimator();
         initializeStateMachine();
         checkAndEnableFeatures();
         startLocalControllerMonitoringService();
         startHeartbeatSender();
+        
+
     }
         
+    private void initializeExternalNotifier()
+    {
+        externalNotifier_ = new ExternalNotifier(nodeConfiguration_); 
+    }
+
     /**
      * Stops the group manager services.
      * 
@@ -166,7 +181,8 @@ public final class GroupManagerInit
         repository_ = DatabaseFactory.newGroupManagerRepository(groupManagerId, 
                                                                 maxCapacity, 
                                                                 databaseType,
-                                                                nodeConfiguration_.getExternalNotifier()
+                                                                nodeConfiguration_.getExternalNotifier(),
+                                                                externalNotifier_
                                                                 );
     }
     
@@ -185,7 +201,7 @@ public final class GroupManagerInit
      */
     private void initializeStateMachine() 
     {
-        stateMachine_ = new GroupManagerStateMachine(nodeConfiguration_, estimator_, repository_);
+        stateMachine_ = new GroupManagerStateMachine(nodeConfiguration_, estimator_, repository_, externalNotifier_);
     }
     
     /**
