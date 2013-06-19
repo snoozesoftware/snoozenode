@@ -225,6 +225,22 @@ public final class JavaPropertyNodeConfigurator
         
         String maximumNumberOfConnections = getProperty("httpd.maxNumberOfConnections");
         httpdSettings.setMaximumNumberOfConnections(maximumNumberOfConnections);
+        
+        String maxThreads = getProperty("httpd.maxThreads");
+        httpdSettings.setMaxThreads(maxThreads);
+        
+        String minThreads = getProperty("httpd.minThreads");
+        httpdSettings.setMinThreads(minThreads);
+        
+        String lowThreads = getProperty("httpd.lowThreads");
+        httpdSettings.setLowThreads(lowThreads);
+        
+        String maxQueued = getProperty("httpd.maxQueued");
+        httpdSettings.setMaxQueued(maxQueued);
+        
+        String maxIoIdleTimeMs = getProperty("httpd.maxIoIdleTimeMs");
+        httpdSettings.setMaxIoIdleTimeMs(maxIoIdleTimeMs);
+
     }
     
     /**
