@@ -188,7 +188,7 @@ public final class Main
         jettyServer.getContext().getParameters().add("maxTotalConnections", settings.getMaximumNumberOfConnections());
         jettyServer.getContext().getParameters().add("maxThreads", settings.getMaximumNumberOfThreads());
         jettyServer.getContext().getParameters().add("maxTotalConnections", settings.getMaximumNumberOfConnections());
-        jettyServer.getContext().getParameters().add("minThreads",settings.getMinThreads());
+        jettyServer.getContext().getParameters().add("minThreads", settings.getMinThreads());
         jettyServer.getContext().getParameters().add("lowThreads", settings.getLowThreads());
         jettyServer.getContext().getParameters().add("maxThreads", settings.getMaxThreads());
         jettyServer.getContext().getParameters().add("maxQueued", settings.getMaxQueued());

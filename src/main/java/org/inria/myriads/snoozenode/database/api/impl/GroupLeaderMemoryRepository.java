@@ -68,8 +68,8 @@ public final class GroupLeaderMemoryRepository
     /** 
      * Constructor.
      * 
-     * @param virtualMachineSubnet    The virtual machine subnet
-     * @param maxCapacity             The maximum capacity
+     * @param virtualMachineSubnets    The virtual machine subnet
+     * @param maxCapacity              The maximum capacity
      */
     public GroupLeaderMemoryRepository(String[] virtualMachineSubnets, int maxCapacity)
     {
@@ -83,8 +83,8 @@ public final class GroupLeaderMemoryRepository
     /**
      * Generates the address pool.
      * 
-     * @param virtualMachineSubnet     The virtual machine subnet
-     * @return                         The list of IP addresses
+     * @param virtualMachineSubnets     The virtual machine subnet
+     * @return                          The list of IP addresses
      */
     protected List<String> generateAddressPool(String[] virtualMachineSubnets)
     {

@@ -29,6 +29,24 @@ public final class HTTPdSettings
     /** Maximum number of threads. */
     private String maxNumberOfThreads_;
     
+    /** Maximum number of connections. */
+    private String maximumNumberOfConnections_;
+    
+    /** Min number of threads. */
+    private String minThreads_; 
+    
+    /** Min number of threads. */
+    private String lowThreads_;
+    
+    /** Max number of threads. */
+    private String maxThreads_;
+    
+    /** Max number of threads queued. */
+    private String maxQueued_;
+    
+    /** Max amount of time during which the server waits an io. */
+    private String maxIoIdleTimeMs_;
+    
     /**
      * @return the minThreads
      */
@@ -122,7 +140,7 @@ public final class HTTPdSettings
      */
     public String getMaxIoIdleTimeMs()
     {
-        return maxIoIdleTimeMs;
+        return maxIoIdleTimeMs_;
     }
 
     /**
@@ -133,26 +151,10 @@ public final class HTTPdSettings
      */
     public void setMaxIoIdleTimeMs(String maxIoIdleTimeMs)
     {
-        this.maxIoIdleTimeMs = maxIoIdleTimeMs;
+        this.maxIoIdleTimeMs_ = maxIoIdleTimeMs;
     }
 
-    /** Maximum number of connections. */
-    private String maximumNumberOfConnections_;
-    
-    /** Min number of threads. */
-    private String minThreads_; 
-    
-    /** Min number of threads. */
-    private String lowThreads_;
-    
-    /** Max number of threads. */
-    private String maxThreads_;
-    
-    /** Max number of threads queued. */
-    private String maxQueued_;
-    
-    /** Max amount of time during which the server waits an io. */
-    private String maxIoIdleTimeMs;
+   
     
     /**
      * Sets the maximum number of threads.

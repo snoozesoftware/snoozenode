@@ -115,7 +115,7 @@ public final class VirtualClusterSubmissionWorker
         {  
             ArrayList<VirtualMachineMetaData> freeVirtualMachines = new ArrayList<VirtualMachineMetaData>();
             ArrayList<VirtualMachineMetaData> errorVirtualMachines = new ArrayList<VirtualMachineMetaData>();
-            splitVirtualMachines(virtualMachines_, freeVirtualMachines,errorVirtualMachines);
+            splitVirtualMachines(virtualMachines_, freeVirtualMachines, errorVirtualMachines);
             
             startVirtualClusterDispatching(freeVirtualMachines);
         }
@@ -142,14 +142,22 @@ public final class VirtualClusterSubmissionWorker
         }
     }
     
+    /**
+     * 
+     * Split the virtualmachines.
+     * 
+     * @param allVirtualMachines        VirtualMachines to split
+     * @param freeVirtualMachines       Virtual machines with no error
+     * @param errorVirtualMachines      Virtual machines wiht error
+     */
     private void splitVirtualMachines(
             ArrayList<VirtualMachineMetaData> allVirtualMachines, 
             ArrayList<VirtualMachineMetaData> freeVirtualMachines,
             ArrayList<VirtualMachineMetaData> errorVirtualMachines)
     {
-        for(VirtualMachineMetaData virtualMachine : allVirtualMachines)
+        for (VirtualMachineMetaData virtualMachine : allVirtualMachines)
         {
-            if (virtualMachine.getStatus()==VirtualMachineStatus.ERROR)
+            if (virtualMachine.getStatus() == VirtualMachineStatus.ERROR)
             {
                 errorVirtualMachines.add(virtualMachine);
             }

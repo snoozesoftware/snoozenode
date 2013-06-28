@@ -236,7 +236,7 @@ public final class VirtualClusterManager
         for (VirtualMachineMetaData metaData : virtualMachines)
         {
             boolean isRunning = metaData.getStatus().equals(VirtualMachineStatus.RUNNING);
-            if (!isRunning && metaData.getErrorCode()!=VirtualMachineErrorCode.NOT_ENOUGH_IP_ADDRESSES)
+            if (!isRunning && metaData.getErrorCode() != VirtualMachineErrorCode.NOT_ENOUGH_IP_ADDRESSES)
             {
                 log_.debug("Releasing IP address!");
                 virtualNetworkManager_.releaseIpAddress(metaData);
