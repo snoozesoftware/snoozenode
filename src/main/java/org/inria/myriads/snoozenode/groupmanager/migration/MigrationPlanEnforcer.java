@@ -41,6 +41,8 @@ import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationLis
 import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationPlanListener;
 import org.inria.myriads.snoozenode.groupmanager.migration.watchdog.MigrationWatchdog;
 import org.inria.myriads.snoozenode.groupmanager.migration.worker.MigrationWorker;
+import org.inria.myriads.snoozenode.message.ManagementMessage;
+import org.inria.myriads.snoozenode.message.ManagementMessageType;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
@@ -183,18 +185,11 @@ public final class MigrationPlanEnforcer
         boolean isStarted = startVirtualMachineMonitoring(destinationAddress, metaData);       
         
         if (!isStarted)
-        {
-            log_.error("Unable to start virtual machine monitoring on destination!");
-            return false;
+        {            
+            throw new MigrationPlanEnforcerException("Unable to start virtual machine monitoring on destination!");
         }
         
-        externalNotifier_.send(
-                ExternalNotificationType.MANAGEMENT,
-                migrationRequest,
-                groupManagerRepository_.getGroupManagerId() + "." +
-                metaData.getVirtualMachineLocation().getVirtualMachineId() + "." +
-                "migration"
-                );
+
         
         return true;
     }
@@ -237,14 +232,35 @@ public final class MigrationPlanEnforcer
                 try 
                 {               
                     processFinishedMigration(finishedMigration);
+
                 } 
                 catch (MigrationPlanEnforcerException exception) 
                 {
                     log_.error("Exception during migration processing", exception);
-                }    
+                    
+                    externalNotifier_.send(
+                            ExternalNotificationType.MANAGEMENT,
+                            new ManagementMessage(ManagementMessageType.ERROR , finishedMigration),
+                            groupManagerRepository_.getGroupManagerId() + "." +
+                            finishedMigration.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
+                            finishedMigration.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
+                            "MIGRATION"
+                            );
+                }
+                externalNotifier_.send(
+                        ExternalNotificationType.MANAGEMENT,
+                        new ManagementMessage(ManagementMessageType.PROCESSED , finishedMigration),
+                        groupManagerRepository_.getGroupManagerId() + "." +
+                        finishedMigration.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
+                        finishedMigration.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
+                        "MIGRATION"
+                        );
+                
             }
             
             log_.debug("Migration plan enforced!");
+            
+            
             listener_.onMigrationPlanEnforced();
             finishedMigrations_.clear();
         }

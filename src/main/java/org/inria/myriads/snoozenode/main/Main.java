@@ -211,9 +211,6 @@ public final class Main
         Application application = null;
         NodeRole nodeRole = nodeConfiguration.getNode().getRole();
         
-        ExternalNotifierSettings monitoringExternalSettings = nodeConfiguration.getExternalNotifier();
-        DataSender externalSender = DataSenderFactory.newExternalDataSender("event", monitoringExternalSettings); 
-        
         switch (nodeRole) 
         {
             case bootstrap :
@@ -222,7 +219,6 @@ public final class Main
                 attachApplication(component, application);
                 BootstrapBackend bootstrap = new BootstrapBackend(nodeConfiguration);
                 context.getAttributes().put("backend", bootstrap);
-                context.getAttributes().put("externalSender", externalSender);
                 break;
 
             case groupmanager :
@@ -231,7 +227,6 @@ public final class Main
                 attachApplication(component, application);
                 GroupManagerBackend groupmanager = new GroupManagerBackend(nodeConfiguration);
                 context.getAttributes().put("backend", groupmanager);
-                context.getAttributes().put("externalSender", externalSender);
                 break;
 
             case localcontroller :
@@ -240,7 +235,6 @@ public final class Main
                 attachApplication(component, application);
                 LocalControllerBackend localcontroller = new LocalControllerBackend(nodeConfiguration);
                 context.getAttributes().put("backend", localcontroller);
-                context.getAttributes().put("externalSender", externalSender);
                 break;
     
             default:

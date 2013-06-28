@@ -38,6 +38,8 @@ import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.Place
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.impl.Static;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinemanager.listener.VirtualMachineManagerListener;
+import org.inria.myriads.snoozenode.message.ManagementMessage;
+import org.inria.myriads.snoozenode.message.ManagementMessageType;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.inria.snoozenode.external.notifier.ExternalNotificationType;
@@ -136,14 +138,13 @@ public final class VirtualMachineSubmissionWorker
             }
         }
         
-      //emit to external here ? with vm meta data routing key : groupmanager.gid.vm.vmid(START, VMMETADATA) 
-      // groupmanager.gid.virtualmachine.vmid.start(VMMETADA)
         externalNotifier_.send(
                 ExternalNotificationType.MANAGEMENT,
-                virtualMachine,
+                new ManagementMessage(ManagementMessageType.PROCESSED, virtualMachine),
                 repository_.getGroupManagerId() + "." +
+                virtualMachine.getVirtualMachineLocation().getLocalControllerId() + "." + 
                 virtualMachine.getVirtualMachineLocation().getVirtualMachineId() + "." +
-                "start"
+                "START"
                 );
     }
     

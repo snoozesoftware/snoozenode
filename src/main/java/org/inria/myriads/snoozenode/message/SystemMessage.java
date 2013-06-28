@@ -1,9 +1,9 @@
-package org.inria.myriads.snoozenode.eventmessage;
+package org.inria.myriads.snoozenode.message;
 
-public class EventMessage
+public class SystemMessage
 {
     /** event type.*/
-    private EventType eventType_;
+    private SystemMessageType eventType_;
     
     /** message. */
     private Object message;
@@ -12,7 +12,7 @@ public class EventMessage
      * @param eventType
      * @param message
      */
-    public EventMessage(EventType eventType, Object message)
+    public SystemMessage(SystemMessageType eventType, Object message)
     {
         eventType_ = eventType;
         this.message = message;
@@ -21,7 +21,7 @@ public class EventMessage
     /**
      * @return the eventType
      */
-    public EventType getEventType()
+    public SystemMessageType getEventType()
     {
         return eventType_;
     }
@@ -29,7 +29,7 @@ public class EventMessage
     /**
      * @param eventType the eventType to set
      */
-    public void setEventType(EventType eventType)
+    public void setEventType(SystemMessageType eventType)
     {
         eventType_ = eventType;
     }

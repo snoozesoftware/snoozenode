@@ -36,9 +36,10 @@ import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
-import org.inria.myriads.snoozenode.eventmessage.EventMessage;
-import org.inria.myriads.snoozenode.eventmessage.EventType;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
+import org.inria.myriads.snoozenode.message.ManagementMessage;
+import org.inria.myriads.snoozenode.message.SystemMessage;
+import org.inria.myriads.snoozenode.message.SystemMessageType;
 import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.utils.EventUtils;
@@ -74,9 +75,7 @@ public final class GroupManagerMemoryRepository
 
     /** The maximum capacity. */
     private int maxCapacity_;
-        
-    
-    
+            
     /**External notifier*/
     private ExternalNotifier externalNotifier_; 
     
@@ -216,7 +215,7 @@ public final class GroupManagerMemoryRepository
         
         externalNotifier_.send(
                 ExternalNotificationType.SYSTEM,
-                new EventMessage(EventType.LC_JOIN, localController),
+                new SystemMessage(SystemMessageType.LC_JOIN, localController),
                 "groupmanager." + groupManagerId_);
         
         return true;
@@ -366,14 +365,6 @@ public final class GroupManagerMemoryRepository
         {
             return false;
         }
-        
-        externalNotifier_.send(
-                ExternalNotificationType.MANAGEMENT,
-                location,
-                groupManagerId_ + "." +
-                location.getVirtualMachineId() + "." +
-                "drop"
-                );
         
         return true;
     }
@@ -628,13 +619,6 @@ public final class GroupManagerMemoryRepository
         
         virtualMachineMetaData.setStatus(status);
         
-        externalNotifier_.send(
-                ExternalNotificationType.MANAGEMENT, 
-                virtualMachineMetaData,
-                groupManagerId_ + "." +
-                location.getVirtualMachineId() + "." +
-                status.toString()
-                );
         return true;
     }
     
@@ -735,7 +719,7 @@ public final class GroupManagerMemoryRepository
         
         externalNotifier_.send(
                 ExternalNotificationType.SYSTEM,
-                new EventMessage(EventType.LC_FAILED, localController),
+                new SystemMessage(SystemMessageType.LC_FAILED, localController),
                 "groupmanager." + groupManagerId_);
         
         return true;

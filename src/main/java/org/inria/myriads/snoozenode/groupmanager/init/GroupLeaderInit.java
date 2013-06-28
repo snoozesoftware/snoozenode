@@ -44,6 +44,7 @@ import org.inria.myriads.snoozenode.groupmanager.virtualmachinediscovery.Virtual
 import org.inria.myriads.snoozenode.heartbeat.HeartbeatFactory;
 import org.inria.myriads.snoozenode.heartbeat.message.HeartbeatMessage;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,6 +76,8 @@ public final class GroupLeaderInit
     /** Resource demand estimator. */
     private ResourceDemandEstimator estimator_;
 
+    private ExternalNotifier externalNotifier_;
+
     /**
      * Constructor.
      * 
@@ -87,11 +90,15 @@ public final class GroupLeaderInit
     {
         Guard.check(nodeConfiguration);
         log_.debug("Initializing the group leader logic");
-        
         nodeConfiguration_ = nodeConfiguration;    
         startInitialization(groupLeaderDescription);
     }
 
+    
+    private void initializeExternalNotifier()
+    {
+        externalNotifier_ = new ExternalNotifier(nodeConfiguration_); 
+    }
     /**
      * Starts the initialization.
      * 
@@ -104,6 +111,7 @@ public final class GroupLeaderInit
         Guard.check(groupLeaderDescription);
         log_.debug("Starting the group leader components initialization!");
         
+        initializeExternalNotifier();
         initializeLocalControllerAssignmentPolicy();
         initializeRepository(groupLeaderDescription);
         initializeResourceDemandEstimator();
@@ -148,7 +156,7 @@ public final class GroupLeaderInit
                                 virtualMachineSubnets, 
                                 maxCapacity,
                                 type,
-                                nodeConfiguration_.getExternalNotifier());
+                                externalNotifier_);
     }
     
     /**

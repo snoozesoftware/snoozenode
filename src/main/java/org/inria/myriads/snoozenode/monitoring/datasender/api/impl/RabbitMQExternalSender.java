@@ -5,6 +5,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.codehaus.jackson.JsonNode;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.util.SerializationUtils;
@@ -541,18 +542,13 @@ public class RabbitMQExternalSender implements DataSender
         @Override
         public Object call() throws Exception 
         {
-            
-//            AMQP.BasicProperties.Builder b = new AMQP.BasicProperties().builder();
-//            b.appId(identifier)
-//                    .type(loggingEvent.getLevel().toString())
-//                    .correlationId(id)
-//                    .contentType("text/json");
-            
+
             activateOptions();
                
             if (channel_ != null && channel_.isOpen()) 
             {                    
                 String message =  SerializationUtils.serializeObjectToJSON(eventMessage__);
+                
                 channel_.basicPublish(exchange_, routingKey_, null, message.getBytes());
             }
 

@@ -59,6 +59,7 @@ import org.inria.myriads.snoozenode.localcontroller.powermanagement.PowerManagem
 import org.inria.myriads.snoozenode.localcontroller.powermanagement.shutdown.Shutdown;
 import org.inria.myriads.snoozenode.localcontroller.powermanagement.suspend.Suspend;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,7 +98,8 @@ public final class LocalControllerBackend
     /** Suspend logic. */
     private Suspend suspendLogic_;
     
-
+    /**  External Notifier. */
+    private ExternalNotifier externalNotifier_;
     
     /**
      * Constructor.
@@ -112,11 +114,18 @@ public final class LocalControllerBackend
         log_.debug("Initializing the local controller backend");
         
         nodeConfiguration_ = configuration;
+        initializeExternalNotifier();
         initializeDatabase();
         initializePowerManagement();
         startHypervisorServices();  
         createLocalControllerDescription();
         onGroupManagerHeartbeatFailure();
+    }
+
+
+    private void initializeExternalNotifier()
+    {
+        externalNotifier_ = new ExternalNotifier(nodeConfiguration_);
     }
 
 
@@ -127,7 +136,7 @@ public final class LocalControllerBackend
     {
         DatabaseType type = nodeConfiguration_.getDatabase().getType();
         ExternalNotifierSettings externalNotifierSettings = nodeConfiguration_.getExternalNotifier();
-        localControllerRepository_ = DatabaseFactory.newLocalControllerRepository(type, externalNotifierSettings);
+        localControllerRepository_ = DatabaseFactory.newLocalControllerRepository(type, externalNotifier_);
     }
     
     /**

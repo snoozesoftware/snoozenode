@@ -95,11 +95,7 @@ public final class GroupManagerSummaryProducer
         estimator_ = estimator;
         monitoringInterval_ = monitoringSettings.getInterval();
         lockObject_ = new Object();
-        
         internalSender_ = DataSenderFactory.newInternalDataSender(groupLeaderAddress);
-        externalSender_ = DataSenderFactory.newExternalDataSender("hierarchy", monitoringExternalSettings);
-
-        
     }
     
     /**

@@ -46,6 +46,9 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinediscovery.VirtualMachineDiscovery;
+import org.inria.myriads.snoozenode.message.ManagementMessage;
+import org.inria.myriads.snoozenode.message.ManagementMessageType;
+import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
@@ -127,6 +130,8 @@ public final class GroupManagerResource extends ServerResource
         boolean isAdded = backend_.getGroupLeaderInit()
                                   .getRepository()
                                   .addGroupManagerDescription(groupManager);
+        
+        //backend group manager join
         
         
         return isAdded;
@@ -620,9 +625,27 @@ public final class GroupManagerResource extends ServerResource
     public boolean dropVirtualMachineMetaData(VirtualMachineLocation virtualMachineLocation)
     {
         Guard.check(virtualMachineLocation);
+        
+        
+        if (!isGroupManagerActive())
+        {
+            return false;
+        }
+        
+        
         boolean isDropped = backend_.getGroupManagerInit()
                                         .getRepository()
                                         .dropVirtualMachineData(virtualMachineLocation);
+        
+        backend_.getGroupManagerInit().getExternalNotifier().send(
+            ExternalNotificationType.MANAGEMENT,
+            new ManagementMessage(ManagementMessageType.PROCESSED, null),
+            virtualMachineLocation.getGroupManagerId() + "." +
+            virtualMachineLocation.getLocalControllerId() + "." + 
+            virtualMachineLocation.getVirtualMachineId() + "." +
+            "DROP"
+        );
+        
         return isDropped;
     }
 

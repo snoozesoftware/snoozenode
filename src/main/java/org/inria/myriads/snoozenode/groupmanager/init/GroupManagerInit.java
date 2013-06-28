@@ -44,6 +44,7 @@ import org.inria.myriads.snoozenode.groupmanager.statemachine.api.impl.GroupMana
 import org.inria.myriads.snoozenode.heartbeat.HeartbeatFactory;
 import org.inria.myriads.snoozenode.heartbeat.message.HeartbeatMessage;
 import org.inria.myriads.snoozenode.heartbeat.sender.HeartbeatMulticastSender;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.quartz.SchedulerException;
@@ -342,5 +343,10 @@ public final class GroupManagerInit
     public GroupManagerRepository getRepository()
     {
         return repository_;
+    }
+
+    public ExternalNotifier getExternalNotifier()
+    {
+        return externalNotifier_;
     }
 }

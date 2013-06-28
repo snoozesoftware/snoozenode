@@ -61,13 +61,13 @@ public final class DatabaseFactory
     public static GroupLeaderRepository newGroupLeaderRepository(GroupManagerDescription groupLeaderDescription, String[] virtualMachineSubnets,   
                                                                  int maxCapacity,
                                                                  DatabaseType type,
-                                                                 ExternalNotifierSettings externalNotifierSettings) 
+                                                                 ExternalNotifier externalNotifier) 
     {
         GroupLeaderRepository repository = null;
         switch (type) 
         {
             case memory :       
-                repository = new GroupLeaderMemoryRepository(groupLeaderDescription, virtualMachineSubnets, maxCapacity, externalNotifierSettings);        
+                repository = new GroupLeaderMemoryRepository(groupLeaderDescription, virtualMachineSubnets, maxCapacity, externalNotifier);        
                 break;
                        
             default:
@@ -112,13 +112,13 @@ public final class DatabaseFactory
      * @return           The local controller repository
      */
     public static LocalControllerRepository newLocalControllerRepository(DatabaseType type, 
-            ExternalNotifierSettings externalNotifierSettings) 
+            ExternalNotifier externalNotifier) 
     {
         LocalControllerRepository repository = null;
         switch (type) 
         {
             case memory :       
-                repository = new LocalControllerMemoryRepository(externalNotifierSettings);
+                repository = new LocalControllerMemoryRepository(externalNotifier);
                 break;
                        
             default:

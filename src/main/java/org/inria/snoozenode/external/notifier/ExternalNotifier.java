@@ -2,7 +2,7 @@ package org.inria.snoozenode.external.notifier;
 
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
-import org.inria.myriads.snoozenode.eventmessage.EventMessage;
+import org.inria.myriads.snoozenode.message.SystemMessage;
 import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.slf4j.Logger;
@@ -30,15 +30,15 @@ public class ExternalNotifier
     {
         ExternalNotifierSettings externalNotifierSettings = nodeConfiguration.getExternalNotifier();
         management_ = DataSenderFactory.newExternalDataSender(
-                ExternalNotificationType.MANAGEMENT.toString(),
+                ExternalNotificationType.MANAGEMENT,
                 externalNotifierSettings);
         
         system_ = DataSenderFactory.newExternalDataSender(
-                ExternalNotificationType.SYSTEM.toString(),
+                ExternalNotificationType.SYSTEM,
                 externalNotifierSettings);
         
         monitoring_ = DataSenderFactory.newExternalDataSender(
-                ExternalNotificationType.MONITORING.toString(),
+                ExternalNotificationType.MONITORING,
                 externalNotifierSettings);
     }
     

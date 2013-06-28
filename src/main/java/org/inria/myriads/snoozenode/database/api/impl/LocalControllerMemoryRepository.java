@@ -31,6 +31,7 @@ import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNot
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,8 +46,8 @@ public final class LocalControllerMemoryRepository
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(LocalControllerMemoryRepository.class);
     
-    /** private notifier.*/
-    private DataSender externalSender_;
+    /** external notifier.*/
+    private ExternalNotifier externalNotifier_;
     
     /** 
      * Virtual machine meta data map. 
@@ -59,11 +60,11 @@ public final class LocalControllerMemoryRepository
     /**
      * Local controller memory repository constructor.
      */
-    public LocalControllerMemoryRepository(ExternalNotifierSettings externalNotifierSettings)
+    public LocalControllerMemoryRepository(ExternalNotifier externalNotifier)
     {
         log_.debug("Initializing the local controller in-memory repository");
         virtualMachineMetaData_ = new HashMap<String, VirtualMachineMetaData>();
-        externalSender_ = DataSenderFactory.newExternalDataSender("event", externalNotifierSettings);
+        externalNotifier_ = externalNotifier;
     }
     
     /**

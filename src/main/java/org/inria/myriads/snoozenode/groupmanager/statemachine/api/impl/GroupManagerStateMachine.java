@@ -57,8 +57,11 @@ import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineComm
 import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinemanager.VirtualMachineManager;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
+import org.inria.myriads.snoozenode.message.ManagementMessage;
+import org.inria.myriads.snoozenode.message.ManagementMessageType;
 import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
+import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,7 +105,7 @@ public class GroupManagerStateMachine
     private AnomalyResolver anomalyResolver_;
     
     /** External notifier*/
-    ExternalNotifier externalNotifier_;
+    private ExternalNotifier externalNotifier_;
     
     /** 
      * Constructor. 
@@ -237,6 +240,16 @@ public class GroupManagerStateMachine
         
         setIdle();
         boolean isProcessed = virtualMachineManager_.processControlCommand(command, location);
+        
+        externalNotifier_.send(
+                ExternalNotificationType.MANAGEMENT,
+                new ManagementMessage(ManagementMessageType.PROCESSED, repository_.getVirtualMachineMetaData(location, 0)),
+                location.getGroupManagerId() + "." +
+                location.getLocalControllerId() + "." + 
+                location.getVirtualMachineId() + "." +
+                command
+                );
+        
         return isProcessed;
     }
 

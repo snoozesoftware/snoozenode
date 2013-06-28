@@ -93,9 +93,7 @@ public final class VirtualMachineMonitorDataConsumer
         dataQueue_ = dataQueue;
         callback_ = callback; 
         crossingDetector_ = new ThresholdCrossingDetector(monitoringThresholds, localController.getTotalCapacity());
-        internalSender_ = DataSenderFactory.newInternalDataSender(groupManagerAddress);
-        externalSender_ = DataSenderFactory.newExternalDataSender("monitoring",infrastructureMonitoring.getMonitoringExternalSettings());
-        
+        internalSender_ = DataSenderFactory.newInternalDataSender(groupManagerAddress);        
     }
    
     /**

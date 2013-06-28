@@ -6,11 +6,15 @@ import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.monitoring.TransportProtocol;
 import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.TestExternalSender;
+import org.inria.snoozenode.external.notifier.ExternalNotificationType;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
@@ -33,9 +37,14 @@ public class TestGroupLeaderMemoryRepository extends TestCase
         GroupManagerDescription groupLeader = new GroupManagerDescription();
        ExternalNotifierSettings monitoringExternalSettings = 
                new ExternalNotifierSettings();
-       monitoringExternalSettings.setTransportProtocol(TransportProtocol.TEST);
         
-        repository_ = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0,monitoringExternalSettings);
+        NodeConfiguration nodeConfiguration = EasyMock.createMock(NodeConfiguration.class);
+        ExternalNotifierSettings externalNotifierSettings = EasyMock.createMock(ExternalNotifierSettings.class);
+        expect(externalNotifierSettings.getTransportProtocol()).andReturn(TransportProtocol.TEST);
+        expect(nodeConfiguration.getExternalNotifier()).andReturn(externalNotifierSettings);
+        ExternalNotifier externalNotifier = new ExternalNotifier(nodeConfiguration);
+        
+        repository_ = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0,externalNotifier);
     }
     
     /**
@@ -108,7 +117,7 @@ public class TestGroupLeaderMemoryRepository extends TestCase
         ExternalNotifierSettings monitoringExternalSettings = 
                 new ExternalNotifierSettings();
         monitoringExternalSettings.setTransportProtocol(TransportProtocol.TEST);
-        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0,monitoringExternalSettings);
+        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0,null);
         repository.generateAddressPool(virtualMachineSubnets);
         assertEquals(2,repository.getNumberOfFreeIpAddresses());
     }
@@ -120,7 +129,7 @@ public class TestGroupLeaderMemoryRepository extends TestCase
         ExternalNotifierSettings monitoringExternalSettings = 
                 new ExternalNotifierSettings();
         monitoringExternalSettings.setTransportProtocol(TransportProtocol.TEST);
-        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0,monitoringExternalSettings);
+        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0,null);
         repository.generateAddressPool(virtualMachineSubnets);
         assertEquals(2044,repository.getNumberOfFreeIpAddresses());
 

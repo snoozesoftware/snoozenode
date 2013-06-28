@@ -142,5 +142,8 @@ public interface StateMachine
      */
     VirtualMachineMetaData resizeVirtualMachine(ResizeRequest resizeRequest);
 
+    
+    
+
 
 }

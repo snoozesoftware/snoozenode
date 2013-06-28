@@ -8,6 +8,8 @@ import org.inria.myriads.snoozenode.monitoring.TransportProtocol;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.RabbitMQExternalSender;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.TCPDataSender;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.TestExternalSender;
+import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,22 +37,19 @@ public class DataSenderFactory
     }
     
     
-    /**
-     * 
-     * Create external data sender.
-     * 
-     * @param externalNotifierSettings
-     * @return
-     */
-    public static DataSender newExternalDataSender(String exchange, ExternalNotifierSettings externalNotifierSettings)
+    public static DataSender newExternalDataSender(ExternalNotificationType externalNotificationType,
+            ExternalNotifierSettings externalNotifierSettings)
     {
         TransportProtocol transport = externalNotifierSettings.getTransportProtocol();
         switch(transport)
         {
             case RABBITMQ :
                 log_.debug("Initializing the RabbitMQ external sender");
-                return new RabbitMQExternalSender(exchange, externalNotifierSettings);
-             default : 
+                return new RabbitMQExternalSender(externalNotificationType.toString(), externalNotifierSettings);
+            case TEST:
+                log_.debug("Initializing the TEST external sender");
+                return new TestExternalSender();
+            default : 
                 return null;
         }
     }
