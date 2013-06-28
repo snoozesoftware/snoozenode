@@ -86,9 +86,9 @@ public final class SerconVirtualMachineConsolidation
             new HashMap<VirtualMachineMetaData, LocalControllerDescription>();
         
         
-        int runningIndex = localControllers.size() ; 
-        int leastLoadedController ;
-        while (runningIndex != 0 && localControllers.size()>0 )
+        int runningIndex = localControllers.size();
+        int leastLoadedController;
+        while (runningIndex != 0 && localControllers.size() > 0)
         {
             leastLoadedController = localControllers.size() - 1;
             log_.debug(String.format("There are still %d localControllers", leastLoadedController));
@@ -103,7 +103,7 @@ public final class SerconVirtualMachineConsolidation
                 {
                     log_.debug("No virtual machines available on this local controller!");
                     localControllers.remove(leastLoadedController);
-                    runningIndex -- ;
+                    runningIndex--;
                     continue;
                 }
                 
@@ -129,10 +129,10 @@ public final class SerconVirtualMachineConsolidation
                     
                 } else
                 {
-                    removeVirtualMachines(virtualMachines, mapping,localController);
+                    removeVirtualMachines(virtualMachines, mapping, localController);
                     
                 }
-                runningIndex -- ; 
+                runningIndex--; 
                 log_.debug(String.format("Number of migrations: %d", mapping.size()));
             }
             catch (Exception exception)
@@ -195,8 +195,9 @@ public final class SerconVirtualMachineConsolidation
     /**
      * Removes virtual machines from current schedule.
      * 
-     * @param virtualMachines       The virtual machines
-     * @param mapping               The current mapping
+     * @param virtualMachines           The virtual machines
+     * @param mapping                   The current mapping
+     * @param currentLocalController    The current localController
      */
     private void removeVirtualMachines(List<VirtualMachineMetaData> virtualMachines, 
                                        Map<VirtualMachineMetaData, LocalControllerDescription> mapping,
@@ -211,21 +212,22 @@ public final class SerconVirtualMachineConsolidation
             if (localControllerSource.equals(currentLocalController.getId()))
             {
                 log_.debug(String.format("virtual machine  : %s was initially on " +
-                		"the current local controller %s: removing from the migration plan", 
-                		virtualMachineId,
-                		currentLocalController.getControlDataAddress().getAddress()));
+                        "the current local controller %s: removing from the migration plan",
+                        virtualMachineId,
+                        currentLocalController.getControlDataAddress().getAddress()));
                 LocalControllerDescription localController = mapping.remove(metaData);
                 if (localController != null)
                 {
                     localController.getVirtualMachineMetaData().remove(virtualMachineId);
                 }
             }
-            else{
+            else
+            {
                 log_.debug(String.format("virtual machine : %s wasn't on the current local controller %s" +
-                		": not removing", 
-                		virtualMachineId,
-                		currentLocalController.getControlDataAddress().getAddress()
-                		));
+                        ": not removing", 
+                        virtualMachineId,
+                        currentLocalController.getControlDataAddress().getAddress()
+                        ));
             }
             
             

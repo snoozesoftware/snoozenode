@@ -66,6 +66,7 @@ public final class HeartbeatFactory
      * Creates a new group manager heartbeat handler.
      * 
      * @param heartbeatAddress      The heartbeat address
+     * @param groupManagerId        The groupManagerId
      * @param timeout               The timeout
      * @param backend               The local controller backend
      * @return                      The group manager heartbeat handler

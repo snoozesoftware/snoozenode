@@ -54,6 +54,7 @@ public final class GroupManagerHeartbeatHandler
      * Group manager heartbeat handler constructor.
      * 
      * @param heartbeatAddress      The multicast address
+     * @param groupManagerId        The group manager id
      * @param timeout               The timeout
      * @param heartbeatFailure      The heartbeat failure callback
      * @throws Exception        
