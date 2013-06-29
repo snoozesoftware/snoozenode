@@ -53,7 +53,7 @@ public final class DatabaseFactory
      * Returns the group leader repository.
      * @param groupLeaderDescription 
      * 
-     * @param virtualMachineSubnet    The virtual machine subnet
+     * @param virtualMachineSubnets    The virtual machine subnets
      * @param maxCapacity             The maximum capacity
      * @param type                    The database type
      * @return                        The group leader repository

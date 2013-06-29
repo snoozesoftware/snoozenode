@@ -372,7 +372,7 @@ public class ResourceDemandEstimator
         
         double numberOfPhysicalCores = UtilizationUtils.getCpuUtilization(localControllerTotalCapacity);
         
-        double cpuUtilization = UtilizationUtils.getCpuUtilization(localControllerUsedCapacity) ; 
+        double cpuUtilization = UtilizationUtils.getCpuUtilization(localControllerUsedCapacity);
         if (cpuUtilization > cpuMid * numberOfPhysicalCores)
         {
             return false;

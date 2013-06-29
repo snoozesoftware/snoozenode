@@ -32,6 +32,130 @@ public final class HTTPdSettings
     /** Maximum number of connections. */
     private String maximumNumberOfConnections_;
     
+    /** Min number of threads. */
+    private String minThreads_; 
+    
+    /** Min number of threads. */
+    private String lowThreads_;
+    
+    /** Max number of threads. */
+    private String maxThreads_;
+    
+    /** Max number of threads queued. */
+    private String maxQueued_;
+    
+    /** Max amount of time during which the server waits an io. */
+    private String maxIoIdleTimeMs_;
+    
+    /**
+     * @return the minThreads
+     */
+    public String getMinThreads()
+    {
+        return minThreads_;
+    }
+
+    /**
+     * Sets the min Threads setting.
+     * 
+     * @param minThreads the minThreads to set
+     */
+    public void setMinThreads(String minThreads)
+    {
+        minThreads_ = minThreads;
+    }
+
+    /**
+     * 
+     * Gets the low Threads setting.
+     * 
+     * @return the lowThreads
+     */
+    public String getLowThreads()
+    {
+        return lowThreads_;
+    }
+
+    /**
+     * 
+     * Sets the low threads setting.
+     * 
+     * @param lowThreads the lowThreads to set
+     */
+    public void setLowThreads(String lowThreads)
+    {
+        lowThreads_ = lowThreads;
+    }
+
+    /**
+     * 
+     * Gets the max Threads setting.
+     * 
+     * @return the maxThreads
+     */
+    public String getMaxThreads()
+    {
+        return maxThreads_;
+    }
+
+    /**
+     * 
+     * Set the max Thread setting.
+     * 
+     * @param maxThreads the maxThreads to set
+     */
+    public void setMaxThreads(String maxThreads)
+    {
+        maxThreads_ = maxThreads;
+    }
+
+    /**
+     * 
+     * Gets the max queued setting.
+     * 
+     * @return the maxQueued
+     */
+    public String getMaxQueued()
+    {
+        return maxQueued_;
+    }
+
+    /**
+     * 
+     * Sets the max queued settings.
+     * 
+     * @param maxQueued the maxQueued to set
+     */
+    public void setMaxQueued(String maxQueued)
+    {
+        maxQueued_ = maxQueued;
+    }
+
+    
+    /**
+     * 
+     * Gets the maxIoIdleTimeMs setting.
+     * 
+     * @return the maxIoIdleTimeMs
+     */
+    public String getMaxIoIdleTimeMs()
+    {
+        return maxIoIdleTimeMs_;
+    }
+
+    /**
+     * 
+     * Sets the maxIoIdleTimeMs setting.
+     * 
+     * @param maxIoIdleTimeMs the maxIoIdleTimeMs to set
+     */
+    public void setMaxIoIdleTimeMs(String maxIoIdleTimeMs)
+    {
+        this.maxIoIdleTimeMs_ = maxIoIdleTimeMs;
+    }
+
+   
+    
     /**
      * Sets the maximum number of threads.
      * 

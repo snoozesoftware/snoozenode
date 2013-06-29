@@ -189,6 +189,13 @@ public final class Main
         HTTPdSettings settings = configuration.getHTTPd();
         jettyServer.getContext().getParameters().add("maxThreads", settings.getMaximumNumberOfThreads());
         jettyServer.getContext().getParameters().add("maxTotalConnections", settings.getMaximumNumberOfConnections());
+        jettyServer.getContext().getParameters().add("maxThreads", settings.getMaximumNumberOfThreads());
+        jettyServer.getContext().getParameters().add("maxTotalConnections", settings.getMaximumNumberOfConnections());
+        jettyServer.getContext().getParameters().add("minThreads", settings.getMinThreads());
+        jettyServer.getContext().getParameters().add("lowThreads", settings.getLowThreads());
+        jettyServer.getContext().getParameters().add("maxThreads", settings.getMaxThreads());
+        jettyServer.getContext().getParameters().add("maxQueued", settings.getMaxQueued());
+        jettyServer.getContext().getParameters().add("maxIoIdleTimeMs", settings.getMaxIoIdleTimeMs());
         component.getServers().add(jettyServer);
     }
     
