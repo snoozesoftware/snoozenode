@@ -39,6 +39,9 @@ import org.inria.myriads.snoozenode.groupmanager.migration.MigrationPlanEnforcer
 import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationPlanListener;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
+import org.inria.myriads.snoozenode.message.SystemMessage;
+import org.inria.myriads.snoozenode.message.SystemMessageType;
+import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
 import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
@@ -185,11 +188,11 @@ public final class AnomalyResolver
             groupManagerRepository_.getLocalControllerDescription(localControllerId, 
                                                                   numberOfMonitoringEntries_,
                                                                   true);
-        externalNotifier_.send(
+        ExternalNotifierUtils.send(
+                externalNotifier_,
                 ExternalNotificationType.SYSTEM,
-                anomalyLocalController,
-                groupManagerRepository_.getGroupManagerId() + "." + 
-                "anomaly"
+                new SystemMessage(SystemMessageType.LC_ANOMALY, anomalyLocalController),
+                groupManagerRepository_.getGroupManagerId()
                 );
         
         if (anomalyLocalController == null)

@@ -14,6 +14,10 @@ public enum SystemMessageType
     LC_JOIN,
     /** LC failed. */
     LC_FAILED,
-    /** GL Summary*/
-    GL_SUMMARY,
+    /** GL Summary.*/
+    GL_SUMMARY, 
+    /** LC anomaly (overload, underload).*/
+    LC_ANOMALY,
+    /** Reconfiguration. */
+    RECONFIGURATION,
 }

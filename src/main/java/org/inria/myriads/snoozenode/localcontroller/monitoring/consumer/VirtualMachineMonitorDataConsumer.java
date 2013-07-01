@@ -66,8 +66,6 @@ public final class VirtualMachineMonitorDataConsumer
     /** internal sender. */
     private DataSender internalSender_; 
     
-    /** external sender. */
-    private DataSender externalSender_;
     
     /**
      * Constructor.
@@ -176,10 +174,7 @@ public final class VirtualMachineMonitorDataConsumer
                     sendHeartbeatData(localControllerId_);
                     continue;
                 }
-                else
-                {
-                    sendExternal(virtualMachineData, localControllerId_);
-                }
+
                                 
                 aggregatedData.add(virtualMachineData);
                 
@@ -203,20 +198,7 @@ public final class VirtualMachineMonitorDataConsumer
         terminate();
     }
     
-    private void sendExternal(AggregatedVirtualMachineData virtualMachineData, String localControllerId)
-    {
-        if (externalSender_ != null){
-            try{
-                externalSender_.send(virtualMachineData, localControllerId_+"."+virtualMachineData.getVirtualMachineId());
-            }
-            catch(Exception exception)
-            {
-                log_.debug(String.format("I/O error during external data sending (%s)! Did the group manager close " +
-                        "its connection unexpectedly?", exception.getMessage()));
-            }    
-        }
-        
-    }
+
 
     /**
      * Terminates the consumer.
@@ -226,7 +208,6 @@ public final class VirtualMachineMonitorDataConsumer
         log_.debug("Terminating the virtual machine monitoring data consumer");
         isTerminated_ = true;
         internalSender_.close();
-        externalSender_.close();
     }
 
 }

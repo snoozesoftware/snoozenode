@@ -27,6 +27,8 @@ import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.database.api.impl.GroupLeaderMemoryRepository;
 import org.inria.myriads.snoozenode.database.api.impl.GroupManagerMemoryRepository;
 import org.inria.myriads.snoozenode.database.api.impl.LocalControllerMemoryRepository;
+import org.inria.myriads.snoozenode.database.api.wrapper.GroupLeaderWrapperRepository;
+import org.inria.myriads.snoozenode.database.api.wrapper.GroupManagerWrapperRepository;
 import org.inria.myriads.snoozenode.database.enums.DatabaseType;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.GroupLeaderPolicyFactory;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
@@ -50,7 +52,7 @@ public final class DatabaseFactory
     }
     
     /**
-     * Returns the group leader repository.
+     * Returns the group leader repository wrapper.
      * @param groupLeaderDescription 
      * 
      * @param virtualMachineSubnets    The virtual machine subnets
@@ -61,13 +63,33 @@ public final class DatabaseFactory
     public static GroupLeaderRepository newGroupLeaderRepository(GroupManagerDescription groupLeaderDescription, String[] virtualMachineSubnets,   
                                                                  int maxCapacity,
                                                                  DatabaseType type,
-                                                                 ExternalNotifier externalNotifier) 
+                                                                 ExternalNotifier externalNotifier
+                                                                 ) 
     {
+        
+        return new GroupLeaderWrapperRepository(groupLeaderDescription, virtualMachineSubnets, type, maxCapacity, externalNotifier);
+    }
+    
+    
+    /**
+     * Returns the group leader repository wrapper.
+     * @param groupLeaderDescription 
+     * 
+     * @param virtualMachineSubnets    The virtual machine subnets
+     * @param maxCapacity             The maximum capacity
+     * @param type                    The database type
+     * @return                        The group leader repository
+     */
+    public static GroupLeaderRepository newGroupLeaderRepository(GroupManagerDescription groupLeaderDescription, String[] virtualMachineSubnets,   
+                                                                 int maxCapacity,
+                                                                 DatabaseType type)
+    {
+        
         GroupLeaderRepository repository = null;
         switch (type) 
         {
             case memory :       
-                repository = new GroupLeaderMemoryRepository(groupLeaderDescription, virtualMachineSubnets, maxCapacity, externalNotifier);        
+                repository = new GroupLeaderMemoryRepository(groupLeaderDescription, virtualMachineSubnets, maxCapacity);        
                 break;
                        
             default:
@@ -92,11 +114,18 @@ public final class DatabaseFactory
                                                                    ExternalNotifier externalNotifier
                                                                     ) 
     {
+        return new GroupManagerWrapperRepository(groupManagerId, maxCapacity, type, externalNotifierSettings, externalNotifier);
+    }
+    
+    public static GroupManagerRepository newGroupManagerRepository(String groupManagerId, 
+            int maxCapacity,
+            DatabaseType type)
+    {
         GroupManagerRepository repository = null;
         switch (type) 
         {
             case memory :       
-                repository = new GroupManagerMemoryRepository(groupManagerId, maxCapacity, externalNotifierSettings, externalNotifier);
+                repository = new GroupManagerMemoryRepository(groupManagerId, maxCapacity);
                 break;
                        
             default:

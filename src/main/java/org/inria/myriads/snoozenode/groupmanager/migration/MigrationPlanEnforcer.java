@@ -43,7 +43,10 @@ import org.inria.myriads.snoozenode.groupmanager.migration.watchdog.MigrationWat
 import org.inria.myriads.snoozenode.groupmanager.migration.worker.MigrationWorker;
 import org.inria.myriads.snoozenode.message.ManagementMessage;
 import org.inria.myriads.snoozenode.message.ManagementMessageType;
+import org.inria.myriads.snoozenode.message.SystemMessage;
+import org.inria.myriads.snoozenode.message.SystemMessageType;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
+import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
 import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
@@ -238,7 +241,8 @@ public final class MigrationPlanEnforcer
                 {
                     log_.error("Exception during migration processing", exception);
                     
-                    externalNotifier_.send(
+                    ExternalNotifierUtils.send(
+                            externalNotifier_,
                             ExternalNotificationType.MANAGEMENT,
                             new ManagementMessage(ManagementMessageType.ERROR , finishedMigration),
                             groupManagerRepository_.getGroupManagerId() + "." +
@@ -247,7 +251,8 @@ public final class MigrationPlanEnforcer
                             "MIGRATION"
                             );
                 }
-                externalNotifier_.send(
+                ExternalNotifierUtils.send(
+                        externalNotifier_,
                         ExternalNotificationType.MANAGEMENT,
                         new ManagementMessage(ManagementMessageType.PROCESSED , finishedMigration),
                         groupManagerRepository_.getGroupManagerId() + "." +
@@ -327,6 +332,17 @@ public final class MigrationPlanEnforcer
         migrationThread.addMigrationListener(this);
         new Thread(migrationThread).start();
         new Thread(watchdogThread).start();
+        
+        ExternalNotifierUtils.send(
+                externalNotifier_,
+                ExternalNotificationType.MANAGEMENT,
+                new ManagementMessage(ManagementMessageType.PENDING , migrationRequest),
+                groupManagerRepository_.getGroupManagerId() + "." +
+                migrationRequest.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
+                migrationRequest.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
+                "MIGRATION"
+                );
+        
     }
         
     /**
@@ -362,10 +378,11 @@ public final class MigrationPlanEnforcer
         log_.debug(String.format("Number of migrations: %s", numberOfMigrations_));
         
         
-        externalNotifier_.send(ExternalNotificationType.SYSTEM,
-                migrationPlan, 
-                groupManagerRepository_.getGroupManagerId() + "." + 
-                "reconfiguration"
+        ExternalNotifierUtils.send(
+                externalNotifier_,
+                ExternalNotificationType.SYSTEM,
+                new SystemMessage(SystemMessageType.RECONFIGURATION, migrationPlan),
+                groupManagerRepository_.getGroupManagerId()
                 );
         
         Map<VirtualMachineMetaData, LocalControllerDescription> mapping = migrationPlan.getMapping();

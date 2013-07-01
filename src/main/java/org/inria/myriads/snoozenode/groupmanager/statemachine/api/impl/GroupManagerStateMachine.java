@@ -61,6 +61,7 @@ import org.inria.myriads.snoozenode.message.ManagementMessage;
 import org.inria.myriads.snoozenode.message.ManagementMessageType;
 import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
+import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
 import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
@@ -241,7 +242,8 @@ public class GroupManagerStateMachine
         setIdle();
         boolean isProcessed = virtualMachineManager_.processControlCommand(command, location);
         
-        externalNotifier_.send(
+        ExternalNotifierUtils.send(
+                externalNotifier_,
                 ExternalNotificationType.MANAGEMENT,
                 new ManagementMessage(ManagementMessageType.PROCESSED, repository_.getVirtualMachineMetaData(location, 0)),
                 location.getGroupManagerId() + "." +

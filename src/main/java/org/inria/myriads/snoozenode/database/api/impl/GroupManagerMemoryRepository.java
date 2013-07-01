@@ -42,7 +42,6 @@ import org.inria.myriads.snoozenode.message.SystemMessage;
 import org.inria.myriads.snoozenode.message.SystemMessageType;
 import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
-import org.inria.myriads.snoozenode.utils.EventUtils;
 import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
@@ -76,8 +75,7 @@ public final class GroupManagerMemoryRepository
     /** The maximum capacity. */
     private int maxCapacity_;
             
-    /**External notifier*/
-    private ExternalNotifier externalNotifier_; 
+
     
     /** 
      * Constructor.
@@ -87,14 +85,10 @@ public final class GroupManagerMemoryRepository
      * @param externalNotifierSettings 
      */
     public GroupManagerMemoryRepository(String groupManagerId, 
-            int maxCapacity, 
-            ExternalNotifierSettings externalNotifierSettings,
-            ExternalNotifier externalNotifier
-            ) 
+            int maxCapacity) 
     {
         Guard.check(groupManagerId);
         log_.debug("Initializing the group manager memory repository");
-        externalNotifier_ = externalNotifier;
         groupManagerId_ = groupManagerId;
         maxCapacity_ = maxCapacity;
         localControllerDescriptions_ = new HashMap<String, LocalControllerDescription>();
@@ -213,10 +207,6 @@ public final class GroupManagerMemoryRepository
                      
         log_.debug("Local controller description added successfully!");
         
-        externalNotifier_.send(
-                ExternalNotificationType.SYSTEM,
-                new SystemMessage(SystemMessageType.LC_JOIN, localController),
-                "groupmanager." + groupManagerId_);
         
         return true;
     }
@@ -716,12 +706,7 @@ public final class GroupManagerMemoryRepository
             log_.debug("Networking information released successfully!");
             localControllerDescriptions_.remove(localControllerId);        
         }
-        
-        externalNotifier_.send(
-                ExternalNotificationType.SYSTEM,
-                new SystemMessage(SystemMessageType.LC_FAILED, localController),
-                "groupmanager." + groupManagerId_);
-        
+                
         return true;
     }
         

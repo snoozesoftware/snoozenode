@@ -30,7 +30,6 @@ import org.apache.commons.net.util.SubnetUtils;
 import org.apache.commons.net.util.SubnetUtils.SubnetInfo;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
-import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
@@ -38,15 +37,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
-import org.inria.myriads.snoozenode.message.SystemMessage;
-import org.inria.myriads.snoozenode.message.SystemMessageType;
-import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
-import org.inria.myriads.snoozenode.utils.EventUtils;
-import org.inria.snoozenode.external.notifier.ExternalNotificationType;
-import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,8 +55,7 @@ public final class GroupLeaderMemoryRepository
     /** Start index for the IP address pool. */
     private static final int IP_ADDRESS_START_IDEX = 1;
 
-    /**External notifier*/
-    private ExternalNotifier externalNotifier_;
+    
     /** 
      * History data of the group managers.
      * 
@@ -89,8 +79,7 @@ public final class GroupLeaderMemoryRepository
      */
     public GroupLeaderMemoryRepository(GroupManagerDescription groupLeaderDescription,
             String[] virtualMachineSubnets,
-            int maxCapacity,
-            ExternalNotifier externalNotifier)
+            int maxCapacity)
     {
         log_.debug("Initializing the group leader memory repository");
         
@@ -98,15 +87,6 @@ public final class GroupLeaderMemoryRepository
         maxCapacity_ = maxCapacity;
         groupManagerDescriptions_ = new HashMap<String, GroupManagerDescription>();
         
-        externalNotifier_ = externalNotifier;
-        
-        //externalSender_ = DataSenderFactory.newExternalDataSender("event", externalNotifierSettings);
-
-        externalNotifier_.send(
-                ExternalNotificationType.SYSTEM, 
-                new SystemMessage(SystemMessageType.GL_JOIN, groupLeaderDescription),
-                "groupleader");        
-
     }
 
     /**
@@ -218,9 +198,7 @@ public final class GroupLeaderMemoryRepository
         groupManagerDescriptions_.put(groupManagerId, groupManager);     
         removeIpAddresses(groupManager.getLocalControllers());
         
-        externalNotifier_.send(ExternalNotificationType.SYSTEM,
-                new SystemMessage(SystemMessageType.GM_JOIN, groupManager),
-                "groupleader");
+
         
         return true;
     }
@@ -316,17 +294,6 @@ public final class GroupLeaderMemoryRepository
         updateLocalControllerInformation(groupManagerId, summary);
         updateNetworkingInformation(summary);
         updateHistoryData(groupManagerId, summary);
-        
-        //send to external
-        GroupLeaderRepositoryInformation hierarchy = new GroupLeaderRepositoryInformation();
-        hierarchy.setGroupManagerDescriptions(getGroupManagerDescriptions(0));
-        
-        //not scalable (better to send only the number ? )
-        externalNotifier_.send(
-                ExternalNotificationType.SYSTEM, 
-                new SystemMessage(SystemMessageType.GL_SUMMARY, hierarchy), 
-                "groupleader");
-        
     }
 
     private void updateHistoryData(String groupManagerId,
@@ -420,13 +387,7 @@ public final class GroupLeaderMemoryRepository
         if (groupManagerDescriptions_.containsKey(groupManagerId))
         {
             log_.debug("Group manager dropped!");
-            
-            externalNotifier_.send(
-                    ExternalNotificationType.SYSTEM, 
-                    new SystemMessage(SystemMessageType.GM_FAILED, 
-                            groupManagerDescriptions_.get(groupManagerId)), 
-                    "groupleader");
-            
+
             groupManagerDescriptions_.remove(groupManagerId);
             
             return true;

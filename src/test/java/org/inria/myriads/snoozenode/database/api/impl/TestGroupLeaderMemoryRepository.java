@@ -39,12 +39,7 @@ public class TestGroupLeaderMemoryRepository extends TestCase
                new ExternalNotifierSettings();
         
         NodeConfiguration nodeConfiguration = EasyMock.createMock(NodeConfiguration.class);
-        ExternalNotifierSettings externalNotifierSettings = EasyMock.createMock(ExternalNotifierSettings.class);
-        expect(externalNotifierSettings.getTransportProtocol()).andReturn(TransportProtocol.TEST);
-        expect(nodeConfiguration.getExternalNotifier()).andReturn(externalNotifierSettings);
-        ExternalNotifier externalNotifier = new ExternalNotifier(nodeConfiguration);
-        
-        repository_ = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0,externalNotifier);
+        repository_ = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0);
     }
     
     /**
@@ -114,10 +109,8 @@ public class TestGroupLeaderMemoryRepository extends TestCase
     {
         String[] virtualMachineSubnets = {"192.168.122.0/30"};
         GroupManagerDescription groupLeader = new GroupManagerDescription();
-        ExternalNotifierSettings monitoringExternalSettings = 
-                new ExternalNotifierSettings();
-        monitoringExternalSettings.setTransportProtocol(TransportProtocol.TEST);
-        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0,null);
+
+        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0);
         repository.generateAddressPool(virtualMachineSubnets);
         assertEquals(2,repository.getNumberOfFreeIpAddresses());
     }
@@ -126,10 +119,7 @@ public class TestGroupLeaderMemoryRepository extends TestCase
     {
         String[] virtualMachineSubnets = {"192.168.122.0/22", "10.0.0.1/22"};
         GroupManagerDescription groupLeader = new GroupManagerDescription();
-        ExternalNotifierSettings monitoringExternalSettings = 
-                new ExternalNotifierSettings();
-        monitoringExternalSettings.setTransportProtocol(TransportProtocol.TEST);
-        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0,null);
+        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0);
         repository.generateAddressPool(virtualMachineSubnets);
         assertEquals(2044,repository.getNumberOfFreeIpAddresses());
 

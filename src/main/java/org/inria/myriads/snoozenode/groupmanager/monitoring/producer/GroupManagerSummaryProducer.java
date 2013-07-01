@@ -67,8 +67,6 @@ public final class GroupManagerSummaryProducer
     /** internal sender.*/
     DataSender internalSender_;
     
-    /** external sender.*/
-    DataSender externalSender_;    
     
     
     /**
@@ -143,9 +141,6 @@ public final class GroupManagerSummaryProducer
                     break;
                 }
                 
-                sendExternal(dataTransporter);
-                
-
                 synchronized (lockObject_)
                 {
                     lockObject_.wait(monitoringInterval_);
@@ -160,23 +155,7 @@ public final class GroupManagerSummaryProducer
         log_.debug("Group manager summary information producer is stopped!");
     }
     
-    private void sendExternal(GroupManagerDataTransporter dataTransporter)
-    {
-        if (externalSender_ != null)
-        {
-            try
-            {
-                externalSender_.send(dataTransporter, dataTransporter.getId());
-            }
-            catch(Exception exception)
-            {
-                log_.debug(String.format("I/O error during external data sending (%s)! Did the group manager close " +
-                        "its connection unexpectedly?", exception.getMessage()));   
-            }
-        }
-
-        
-    }
+    
 
     /** 
      * Terminating the thread.

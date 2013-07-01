@@ -41,6 +41,7 @@ import org.inria.myriads.snoozenode.groupmanager.virtualmachinemanager.listener.
 import org.inria.myriads.snoozenode.message.ManagementMessage;
 import org.inria.myriads.snoozenode.message.ManagementMessageType;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
+import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
@@ -138,7 +139,8 @@ public final class VirtualMachineSubmissionWorker
             }
         }
         
-        externalNotifier_.send(
+        ExternalNotifierUtils.send(
+                externalNotifier_,
                 ExternalNotificationType.MANAGEMENT,
                 new ManagementMessage(ManagementMessageType.PROCESSED, virtualMachine),
                 repository_.getGroupManagerId() + "." +
