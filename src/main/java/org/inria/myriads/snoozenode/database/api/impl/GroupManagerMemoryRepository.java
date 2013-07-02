@@ -19,11 +19,16 @@
  */
 package org.inria.myriads.snoozenode.database.api.impl;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
@@ -34,6 +39,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozecommon.metric.Metric;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.slf4j.Logger;
@@ -894,5 +900,35 @@ public final class GroupManagerMemoryRepository
 
         return true;   
       
+    }
+
+    @Override
+    public synchronized void addMetricData(String localControllerId, Map<String, LRUCache<Long, Metric>> metricData)
+    {
+        Guard.check(localControllerId, metricData);
+        log_.debug("Add metric data to the repository");
+        LocalControllerDescription localControllerDescription = localControllerDescriptions_.get(localControllerId);
+        if (localControllerDescription == null)
+        {
+            log_.warn("No matching localcontroller found");
+        }
+        Map<String, LRUCache<Long, Metric>> localControllerMetrics = localControllerDescription.getMetricData();
+        
+        for (Map.Entry<String, LRUCache<Long, Metric>> datas : metricData.entrySet()) 
+        {
+            String metricName = datas.getKey();
+            LRUCache<Long, Metric> metricList = datas.getValue();
+            if (!(localControllerMetrics.containsKey(metricName)))
+            {
+                log_.debug("metric not found in the repository ... create a new one");
+                localControllerMetrics.put(metricName, new LRUCache<Long, Metric>(maxCapacity_));
+            }
+            
+            for (Metric metric : metricList.values())
+            {
+                localControllerMetrics.get(metricName).put(metric.getTimestamp(), metric);
+            }
+        }
+        log_.debug("All metrics added to the repository");
     }
 }

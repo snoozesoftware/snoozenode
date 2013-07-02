@@ -80,7 +80,16 @@ public final class LocalControllerSummaryConsumer
             {                            
                 LocalControllerDataTransporter monitoringData = dataQueue_.take();   
                 String localControllerId = monitoringData.getLocalControllerId();
-                repository_.addAggregatedMonitoringData(localControllerId, monitoringData.getData());
+                if (monitoringData.getData()!=null)
+                {
+                    repository_.addAggregatedMonitoringData(localControllerId, monitoringData.getData());
+                }
+                
+                if (monitoringData.getMetricData()!=null)
+                {
+                    repository_.addMetricData(localControllerId, monitoringData.getMetricData());
+                }
+                
                 boolean isStable = monitoringData.getState().equals(LocalControllerState.STABLE);                
                 if (!isStable)
                 {

@@ -32,9 +32,11 @@ import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozecommon.metric.Metric;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.consumer.VirtualMachineMonitorDataConsumer;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.host.api.MetricsProducer;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.listener.VirtualMachineMonitoringListener;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.producer.VirtualMachineHeartbeatDataProducer;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.producer.VirtualMachineMonitorDataProducer;
@@ -59,6 +61,9 @@ public final class VirtualMachineMonitoringService
     
     /** Data queue. */
     private BlockingQueue<AggregatedVirtualMachineData> dataQueue_;
+    
+    /** Metric queue. */
+    private BlockingQueue<Metric> metricQueue_;
     
     /** Virtual machine heartbeat producer. */
     private VirtualMachineHeartbeatDataProducer heartbeatProducer_;
@@ -93,6 +98,7 @@ public final class VirtualMachineMonitoringService
         repository_ = repository;
         monitoring_ = monitoring;
         dataQueue_ = new LinkedBlockingQueue<AggregatedVirtualMachineData>();
+        metricQueue_ = new LinkedBlockingQueue<Metric>();
         producerThreads_ = Collections.synchronizedMap(new HashMap<String, VirtualMachineMonitorDataProducer>());
     }
 
@@ -108,7 +114,16 @@ public final class VirtualMachineMonitoringService
         log_.debug("Starting the virtual machine monitoring service");
         Guard.check(groupManagerAddress);
         startVirtualMachineMonitorDataConsumer(groupManagerAddress);
+        startMetricsProducer();
         startHeartbeatProducer();
+    }
+
+    private void startMetricsProducer() throws Exception
+    {
+        log_.debug("Starting the virtual machine heartbeat producer");
+        MetricsProducer metricsProducer_ = new MetricsProducer(monitoring_.getMonitoringSettings().getInterval(), 
+                            metricQueue_);
+        new Thread(metricsProducer_).start();
     }
 
     /**
@@ -127,6 +142,7 @@ public final class VirtualMachineMonitoringService
         monitorDataConsumer_ = new VirtualMachineMonitorDataConsumer(localController_,
                                                                      groupManagerAddress, 
                                                                      dataQueue_,
+                                                                     metricQueue_,
                                                                      thresholds,
                                                                      this);
         new Thread(monitorDataConsumer_).start(); 

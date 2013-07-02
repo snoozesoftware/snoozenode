@@ -21,6 +21,7 @@ package org.inria.myriads.snoozenode.database.api;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
@@ -29,6 +30,8 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
+import org.inria.myriads.snoozecommon.datastructure.LRUCache;
+import org.inria.myriads.snoozecommon.metric.Metric;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 
 /**
@@ -219,4 +222,15 @@ public interface GroupManagerRepository
      * @return                      true if everything ok
      */
     boolean updateVirtualMachineMetaData(VirtualMachineMetaData virtualMachine);
+
+    
+    /**
+     * 
+     * Add metric data.
+     * 
+     * 
+     * @param localControllerId         localcontroller id
+     * @param metricData                metric data
+     */
+    void addMetricData(String localControllerId, Map<String, LRUCache<Long, Metric>> metricData);
 }

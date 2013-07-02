@@ -139,10 +139,9 @@ public final class LocalControllerSummaryReceiver extends TCPDataReceiver
             localControllerIds_.put(workerThreadId, localControllerId);     
         }
              
-        if (monitoringData.getData() == null)
+        if (monitoringData.getData() == null & monitoringData.getMetricData() == null)
         {
-            log_.debug(String.format("Ignoring received heartbeat data from %s!", workerThreadId));
-            return;
+            log_.debug(String.format("Received heartbeat data from %s!", workerThreadId));
         } 
     
         log_.debug(String.format("Worker thread: %s received local controller summary information from: %s",
@@ -154,9 +153,10 @@ public final class LocalControllerSummaryReceiver extends TCPDataReceiver
             log_.debug("System is BUSY! Skipping overloaded/underloaded local controller monitoring data!");
             return;
         }
-        
+
         log_.debug(String.format("Adding local controller %s summary information for to the queue", 
                                  localControllerId));
+        
         dataQueue_.add(monitoringData);     
     }
 }

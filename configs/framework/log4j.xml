@@ -102,8 +102,7 @@
 		<appender-ref ref="FA"/>
 	</logger> 
 	
-	<logger name="org.inria.myriads.snoozenode.groupmanager.monitoring.receiver.LocalControllerSummaryReceiver">
-		<level value="WARN"/>
+	<logger name="org.inria.myriads.snoozenode.groupmanager.monitoring.receiver.LocalControllerSummaryReceiver">		
 		<appender-ref ref="FA"/>
 	</logger> 
 
@@ -113,12 +112,11 @@
 	</logger>
 	
 	<logger name="org.inria.myriads.snoozenode.database">
-		<level value="WARN"/>
+		
 		<appender-ref ref="FA"/>
 	</logger>
 
 	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring.consumer">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger> 
 
@@ -134,6 +132,10 @@
 
 	<logger name="org.inria.myriads.snoozenode.groupmanager.virtualclusterparser">
 		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger>
+	
+	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring.host.api.impl">
 		<appender-ref ref="FA"/>
 	</logger>
 	

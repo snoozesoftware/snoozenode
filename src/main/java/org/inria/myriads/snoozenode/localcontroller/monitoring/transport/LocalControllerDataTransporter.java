@@ -20,8 +20,12 @@
 package org.inria.myriads.snoozenode.localcontroller.monitoring.transport;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.inria.myriads.snoozecommon.datastructure.LRUCache;
+import org.inria.myriads.snoozecommon.metric.Metric;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 
 /**
@@ -44,19 +48,26 @@ public final class LocalControllerDataTransporter
     /** Virtual machine monitoring data. */
     private List<AggregatedVirtualMachineData> aggregatedData_;
     
+    /** Metrics .*/
+    private Map<String, LRUCache<Long, Metric>> metricData_;
+    
+    
     /**
+     * 
      * Constructor.
      * 
-     * @param localControllerId     The local controller identifier
-     * @param aggregatedData        The aggregated data
+     * @param localControllerId     local controller id.
+     * @param aggregatedData        aggregated data.
+     * @param metricData            metric data
      */
-    public LocalControllerDataTransporter(String localControllerId,
-                                          List<AggregatedVirtualMachineData> aggregatedData)
+    public LocalControllerDataTransporter(String localControllerId, List<AggregatedVirtualMachineData> aggregatedData,
+            Map<String, LRUCache<Long, Metric>> metricData)
     {
         localControllerId_ = localControllerId;
         aggregatedData_ = aggregatedData;
+        metricData_ = metricData;
     }
-    
+
     /**
      * Returns the aggregated data map.
      * 
@@ -95,5 +106,21 @@ public final class LocalControllerDataTransporter
     public void setState(LocalControllerState state)
     {
         state_ = state;
+    }
+
+    /**
+     * @return the metricData
+     */
+    public Map<String, LRUCache<Long, Metric>> getMetricData()
+    {
+        return metricData_;
+    }
+
+    /**
+     * @param metricData the metricData to set
+     */
+    public void setMetricData(Map<String, LRUCache<Long, Metric>> metricData)
+    {
+        metricData_ = metricData;
     }
 }
