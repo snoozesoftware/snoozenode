@@ -202,7 +202,9 @@ public final class LocalControllerBackend
         {
             virtualMachineMonitoringService_ = new VirtualMachineMonitoringService(localControllerDescription_,  
                                                                                    localControllerRepository_, 
-                                                                                   resourceMonitoring_);
+                                                                                   resourceMonitoring_,
+                                                                                   nodeConfiguration_.getLocalControllerMetricsSettings()
+                                                                                    );
         }
         
         virtualMachineMonitoringService_.startService(groupManager.getListenSettings().getMonitoringDataAddress());

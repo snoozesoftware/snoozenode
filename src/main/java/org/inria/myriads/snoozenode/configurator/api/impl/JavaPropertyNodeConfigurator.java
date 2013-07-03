@@ -46,6 +46,7 @@ import org.inria.myriads.snoozenode.configurator.energymanagement.enums.SuspendD
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.faulttolerance.FaultToleranceSettings;
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
+import org.inria.myriads.snoozenode.configurator.localcontrollermetrics.LocalControllerMetricsSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
 import org.inria.myriads.snoozenode.configurator.networking.NetworkingSettings;
@@ -62,6 +63,7 @@ import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Placement
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfiguration;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Relocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.host.MetricsType;
 
 /**
  * Node configurator.
@@ -106,10 +108,35 @@ public final class JavaPropertyNodeConfigurator
         setGroupManagerSchedulerSettings();
         setSubmissionSettings();
         setEnergyManagementSettings();
+        setLocalControllerMetricsSettings();
         
         fileInput.close();
     }
     
+    private void setLocalControllerMetricsSettings() throws NodeConfiguratorException
+    {
+        LocalControllerMetricsSettings localControllerMetricSettings = nodeConfiguration_.getLocalControllerMetricsSettings();
+
+        String metricsType = getProperty("localController.metrics.type");
+        localControllerMetricSettings.setMetricType(MetricsType.valueOf(metricsType));
+        
+        String hostname = getProperty("localController.metrics.hostname");
+        localControllerMetricSettings.setHostname(hostname);
+        
+        String portString = getProperty("localController.metrics.port");
+        int port = Integer.valueOf(portString);
+        localControllerMetricSettings.setPort(port);
+        
+        int interval = Integer.valueOf(getProperty("localController.metrics.interval"));
+        localControllerMetricSettings.setInterval(interval);
+               
+        String metricsString = getProperty("localController.metrics.published");
+        metricsString = metricsString.replace(" ", "");
+        String[] metrics = metricsString.split(",");
+        localControllerMetricSettings.setMetrics(metrics);
+
+    }
+
     /**
      * Sets the general settings.
      * 

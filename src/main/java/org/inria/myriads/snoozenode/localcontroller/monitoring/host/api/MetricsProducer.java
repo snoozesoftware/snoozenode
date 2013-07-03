@@ -1,13 +1,13 @@
 package org.inria.myriads.snoozenode.localcontroller.monitoring.host.api;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import org.inria.myriads.snoozecommon.metric.Metric;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.host.api.impl.CpuTempProducer;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.host.api.impl.Test;
-
+import org.inria.myriads.snoozenode.configurator.localcontrollermetrics.LocalControllerMetricsSettings;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.host.MetricProducerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,8 +26,11 @@ public class MetricsProducer extends Thread
     private static final Logger log_ = LoggerFactory.getLogger(MetricsProducer.class);
 
     /** Producer list. */
-    private List<MetricProducer> producers_;
-     
+    //private List<MetricProducer> producers_;
+    
+    /** Metric producer. */ 
+    private MetricProducer producer_ ;
+    
      /** Blocking queue*/
     private BlockingQueue<Metric> metricQueue_ ;
 
@@ -37,30 +40,33 @@ public class MetricsProducer extends Thread
     /** Monitoring intervale. */
     private long monitoringInterval_ ;
 
-        /**
-     * @param producers
-     * @param metricQueue
-     */
-    public MetricsProducer(BlockingQueue<Metric> metricQueue)
+    /** Settings. */
+    private LocalControllerMetricsSettings localControllerMetricsSettings_;
+
+   
+    public MetricsProducer(LocalControllerMetricsSettings localControllerMetricsSettings, BlockingQueue<Metric> metricQueue)
     {
         metricQueue_ = metricQueue;
-        producers_.add(new CpuTempProducer());
-        monitoringInterval_ = 5000 ; //switch to default initialization;
+        localControllerMetricsSettings_ = localControllerMetricsSettings;
+        monitoringInterval_ = localControllerMetricsSettings.getInterval();
+        initializeProducer();
         log_.debug("Metrics producer initialized");
     }
 
-
-    public MetricsProducer(int interval, BlockingQueue<Metric> metricQueue)
+    private void initializeProducer()
     {
-        metricQueue_ = metricQueue;
-        producers_ = new ArrayList<MetricProducer>();
-        producers_.add(new CpuTempProducer());
-        producers_.add(new Test());
-        monitoringInterval_ = interval ; //switch to default initialization;
-        log_.debug("Metrics producer initialized");
+        try{
+            producer_ = MetricProducerFactory.createMetricProducer(localControllerMetricsSettings_);
+            this.start();
+        }
+        catch(Exception exception)
+        {
+            log_.warn("Unable to create the metrics producer ... check your config file");
+            exception.printStackTrace();
+        }
+        
     }
-
-
+    
     public void run()
     {
         
@@ -75,19 +81,22 @@ public class MetricsProducer extends Thread
                     break;
                 }
                 log_.debug("Starting metrics collection");
-                for (MetricProducer producer : producers_)
+                
+                List<Metric> metrics = producer_.getMetric();
+                for ( Metric metric : metrics )
                 {
-                    log_.debug(String.format("Getting %s metric", producer.getName()));
-                    metricQueue_.put(producer.getMetric());
-                    
+                    metricQueue_.put(metric);
                 }
+                
+                
                 log_.debug("metrics collection finished");
                 Thread.sleep(monitoringInterval_);
             }
         }
         catch(Exception exception)
         {
-            log_.warn("Failed to produce metrics");
+            log_.warn("Failed to produce metrics " + exception.getMessage() );
+            exception.printStackTrace();
             
         }
     } 

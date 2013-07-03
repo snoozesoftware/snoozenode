@@ -112,7 +112,6 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
                                                    null,
                                                    null
                 );
-        // collect metrics
         localControllerData.setMetricData(collectMetrics());
         log_.debug("Sending local controller heartbeat information to group manager");
         send(localControllerData);  

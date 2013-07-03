@@ -27,6 +27,7 @@ import org.inria.myriads.snoozenode.configurator.energymanagement.EnergyManageme
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.faulttolerance.FaultToleranceSettings;
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
+import org.inria.myriads.snoozenode.configurator.localcontrollermetrics.LocalControllerMetricsSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.networking.NetworkingSettings;
 import org.inria.myriads.snoozenode.configurator.node.NodeSettings;
@@ -81,6 +82,9 @@ public final class NodeConfiguration
     /** Networking settings. */
     private NetworkingSettings networking_;
     
+    /** LocalController metrics settings. */
+    private LocalControllerMetricsSettings localControllerMetricsSettings_;
+    
     /** Empty constructor. */
     public NodeConfiguration()
     {
@@ -96,6 +100,7 @@ public final class NodeConfiguration
         monitoring_ = new MonitoringSettings();
         energyManagement_ = new EnergyManagementSettings();
         networking_ = new NetworkingSettings();
+        localControllerMetricsSettings_ = new LocalControllerMetricsSettings();
     }
 
     /**
@@ -217,4 +222,14 @@ public final class NodeConfiguration
     {
         return submission_;
     }
+
+    /**
+     * @return the localControllerMetricsSettings
+     */
+    public LocalControllerMetricsSettings getLocalControllerMetricsSettings()
+    {
+        return localControllerMetricsSettings_;
+    }
+
+
 }

@@ -38,7 +38,7 @@ public final class InfrastructureMonitoring
     
     /** Monitoring settings. */
     private MonitoringSettings monitoringSettings_;
-   
+    
     /**
      * Constructor.
      * 

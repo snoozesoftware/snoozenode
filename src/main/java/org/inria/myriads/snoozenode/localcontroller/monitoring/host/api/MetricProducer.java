@@ -1,12 +1,17 @@
 package org.inria.myriads.snoozenode.localcontroller.monitoring.host.api;
 
+import java.io.IOException;
+import java.util.List;
+
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.inria.myriads.snoozecommon.metric.Metric;
 
 public interface MetricProducer
 {
 
-    public Metric getMetric();
+    public List<Metric> getMetric() throws Exception;
 
-    public String getName();
+    public String getType();
     
 }

@@ -33,6 +33,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.metric.Metric;
+import org.inria.myriads.snoozenode.configurator.localcontrollermetrics.LocalControllerMetricsSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.consumer.VirtualMachineMonitorDataConsumer;
@@ -79,6 +80,8 @@ public final class VirtualMachineMonitoringService
     
     /** Local controller description. */
     private LocalControllerDescription localController_;
+
+    private LocalControllerMetricsSettings localControllerMetricsSettings_;
     
     /**
      * Constructor.
@@ -89,7 +92,9 @@ public final class VirtualMachineMonitoringService
      */
     public VirtualMachineMonitoringService(LocalControllerDescription localController,
                                            LocalControllerRepository repository,
-                                           InfrastructureMonitoring monitoring)
+                                           InfrastructureMonitoring monitoring,
+                                           LocalControllerMetricsSettings metricSettings 
+                                            )
     {
         Guard.check(localController, repository, monitoring);
         log_.debug("Initializing virtual machine monitoring service");
@@ -99,6 +104,7 @@ public final class VirtualMachineMonitoringService
         monitoring_ = monitoring;
         dataQueue_ = new LinkedBlockingQueue<AggregatedVirtualMachineData>();
         metricQueue_ = new LinkedBlockingQueue<Metric>();
+        localControllerMetricsSettings_ = metricSettings;
         producerThreads_ = Collections.synchronizedMap(new HashMap<String, VirtualMachineMonitorDataProducer>());
     }
 
@@ -114,14 +120,15 @@ public final class VirtualMachineMonitoringService
         log_.debug("Starting the virtual machine monitoring service");
         Guard.check(groupManagerAddress);
         startVirtualMachineMonitorDataConsumer(groupManagerAddress);
-        startMetricsProducer();
+        startMetricsProducer(localControllerMetricsSettings_);
         startHeartbeatProducer();
     }
 
-    private void startMetricsProducer() throws Exception
+    private void startMetricsProducer(
+            LocalControllerMetricsSettings localControllerMetricsSettings) throws Exception
     {
         log_.debug("Starting the virtual machine heartbeat producer");
-        MetricsProducer metricsProducer_ = new MetricsProducer(monitoring_.getMonitoringSettings().getInterval(), 
+        MetricsProducer metricsProducer_ = new MetricsProducer(localControllerMetricsSettings_,
                             metricQueue_);
         new Thread(metricsProducer_).start();
     }
