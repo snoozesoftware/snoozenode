@@ -32,6 +32,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.metric.Metric;
+import org.inria.myriads.snoozenode.localcontroller.metrics.transport.AggregatedMetricData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 
 /**
@@ -232,5 +233,5 @@ public interface GroupManagerRepository
      * @param localControllerId         localcontroller id
      * @param metricData                metric data
      */
-    void addMetricData(String localControllerId, Map<String, LRUCache<Long, Metric>> metricData);
+    void addMetricData(String localControllerId, AggregatedMetricData metricData);
 }

@@ -31,6 +31,7 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.metric.Metric;
+import org.inria.myriads.snoozenode.configurator.localcontrollermetrics.LocalControllerMetricsSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.listener.VirtualMachineMonitoringListener;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.threshold.ThresholdCrossingDetector;
@@ -45,7 +46,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Eugen Feller
  */
-public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
+public final class VirtualMachineMonitorDataConsumer 
     implements Runnable
 {
     /** Define the logger. */
@@ -54,10 +55,6 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
     /** Data queue. */
     private BlockingQueue<AggregatedVirtualMachineData> dataQueue_;
     
-    
-    /** Host Metrics Queue .*/
-    private BlockingQueue<Metric> metricQueue_;
-
     /** Virtual machine monitoring callback. */
     private VirtualMachineMonitoringListener callback_;
     
@@ -69,6 +66,8 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
     
     /** Signals termination. */
     private boolean isTerminated_;
+
+    private BlockingQueue<LocalControllerDataTransporter> globalQueue_;
     
     /**
      * Constructor.
@@ -83,39 +82,41 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
     public VirtualMachineMonitorDataConsumer(LocalControllerDescription localController,
                                              NetworkAddress groupManagerAddress, 
                                              BlockingQueue<AggregatedVirtualMachineData> dataQueue,
-                                             BlockingQueue<Metric> metricQueue,
+                                             BlockingQueue<LocalControllerDataTransporter> globalQueue,
                                              MonitoringThresholds monitoringThresholds,
+                                             LocalControllerMetricsSettings localControllerMetricsSettings,
                                              VirtualMachineMonitoringListener callback) 
         throws Exception
     {
-        super(groupManagerAddress);
+        //super(groupManagerAddress);
         log_.debug("Initializing the virtual machine monitoring data consumer"); 
         localControllerId_ = localController.getId();
         dataQueue_ = dataQueue;
-        metricQueue_ = metricQueue;
+        globalQueue_ = globalQueue;
         callback_ = callback; 
-        crossingDetector_ = new ThresholdCrossingDetector(monitoringThresholds, localController.getTotalCapacity());
+        crossingDetector_ = new ThresholdCrossingDetector(monitoringThresholds, localController.getTotalCapacity(), localControllerMetricsSettings);
     }
    
-    /**
-     * Sends heartbeat data.
-     * 
-     * @param localControllerId     The local controller identifier
-     * @throws IOException          The exception
-     */
-    private void sendHeartbeatData(String localControllerId) 
-        throws IOException
-    {
-        Guard.check(localControllerId);
-        LocalControllerDataTransporter localControllerData = 
-                new LocalControllerDataTransporter(localControllerId, 
-                                                   null,
-                                                   null
-                );
-        localControllerData.setMetricData(collectMetrics());
-        log_.debug("Sending local controller heartbeat information to group manager");
-        send(localControllerData);  
-    }
+//    /**
+//     * Sends heartbeat data.
+//     * 
+//     * @param localControllerId     The local controller identifier
+//     * @throws IOException          The exception
+//     */
+//    private void sendHeartbeatData(String localControllerId) 
+//        throws IOException
+//    {
+//        Guard.check(localControllerId);
+//        LocalControllerDataTransporter localControllerData = 
+//                new LocalControllerDataTransporter(localControllerId, 
+//                                                   null,
+//                                                   null
+//                );
+//        localControllerData.setMetricData(collectMetrics());
+//        log_.debug("Sending local controller heartbeat information to group manager");
+//        //send(localControllerData);
+//        globalQueue_.add(localControllerData);
+//    }
     
     
     /**
@@ -124,25 +125,25 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
      * 
      * @return
      */
-    private Map<String, LRUCache<Long, Metric>> collectMetrics()
-    {
-        List<Metric> metrics = new ArrayList<Metric>();
-        metricQueue_.drainTo(metrics);
-        Map<String, LRUCache<Long, Metric>> metricData = new HashMap<String, LRUCache<Long,Metric>>();
-        log_.debug("Metric collection started");
-        for (Metric metric : metrics)
-        {
-            String metricName = metric.getName();
-            if (! metricData.containsKey(metricName))
-            {
-                log_.debug(String.format("Metric %s found",metric.getName()));
-                metricData.put(metricName, new LRUCache<Long,Metric>());
-                
-            }
-            metricData.get(metricName).put(metric.getTimestamp(), metric);
-        }
-        return metricData;
-    }
+//    private Map<String, LRUCache<Long, Metric>> collectMetrics()
+//    {
+//        List<Metric> metrics = new ArrayList<Metric>();
+//        metricQueue_.drainTo(metrics);
+//        Map<String, LRUCache<Long, Metric>> metricData = new HashMap<String, LRUCache<Long,Metric>>();
+//        log_.debug("Metric collection started");
+//        for (Metric metric : metrics)
+//        {
+//            String metricName = metric.getName();
+//            if (! metricData.containsKey(metricName))
+//            {
+//                log_.debug(String.format("Metric %s found",metric.getName()));
+//                metricData.put(metricName, new LRUCache<Long,Metric>());
+//                
+//            }
+//            metricData.get(metricName).put(metric.getTimestamp(), metric);
+//        }
+//        return metricData;
+//    }
 
     
     /**
@@ -171,7 +172,8 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
         }
         
         log_.debug("Sending aggregated local controller summary information to group maanger");
-        send(localControllerData);  
+        //send(localControllerData); 
+        globalQueue_.add(localControllerData);
     }
     
     /** Run method. */
@@ -187,12 +189,12 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
                 log_.debug(String.format("Received virtual machine %s data", 
                                          virtualMachineData.getVirtualMachineId()));
                 
-                if (virtualMachineData.getVirtualMachineId().equals("heartbeat"))
-                {
-                    sendHeartbeatData(localControllerId_);
-                    continue;
-                }
-                                
+//                if (virtualMachineData.getVirtualMachineId().equals("heartbeat"))
+//                {
+//                    sendHeartbeatData(localControllerId_);
+//                    continue;
+//                }
+//                                
                 aggregatedData.add(virtualMachineData);
                 
                 log_.debug(String.format("Current state of aggregated virtual machine data: %d / %d",
@@ -213,7 +215,7 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
             {
                 log_.debug(String.format("I/O error during data sending (%s)! Did the group manager close " +
                                          "its connection unexpectedly?", exception.getMessage()));
-                close();
+                //close();
             }
         } 
         catch (InterruptedException exception)
@@ -232,6 +234,6 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
     {
         log_.debug("Terminating the virtual machine monitoring data consumer");
         isTerminated_ = true;
-        close();
+        //aclose();
     }
 }

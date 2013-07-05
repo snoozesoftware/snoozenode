@@ -53,6 +53,7 @@ public final class InfrastructureMonitoring
         virtualMachineMonitor_ = virtualMachineMonitor;
         hostMonitor_ = hostMonitor;
         monitoringSettings_ = monitoringSettings;
+        
     }
 
     /**

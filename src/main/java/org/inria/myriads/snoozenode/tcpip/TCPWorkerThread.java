@@ -94,6 +94,7 @@ public final class TCPWorkerThread
             {
                 log_.debug("I/O exception during read! Treating it as failure!");
                 dataHandler_.onFailure(id_);
+                exception.printStackTrace();
             }      
         }
         catch (ClassNotFoundException exception) 

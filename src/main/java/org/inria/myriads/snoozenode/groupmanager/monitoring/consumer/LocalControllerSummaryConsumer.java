@@ -85,7 +85,7 @@ public final class LocalControllerSummaryConsumer
                     repository_.addAggregatedMonitoringData(localControllerId, monitoringData.getData());
                 }
                 
-                if (monitoringData.getMetricData()!=null)
+                if (monitoringData.getMetricData()!=null && monitoringData.getMetricData().getMetricData().size()>0)
                 {
                     repository_.addMetricData(localControllerId, monitoringData.getMetricData());
                 }

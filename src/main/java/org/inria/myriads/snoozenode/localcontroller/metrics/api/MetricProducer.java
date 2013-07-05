@@ -1,4 +1,4 @@
-package org.inria.myriads.snoozenode.localcontroller.monitoring.host.api;
+package org.inria.myriads.snoozenode.localcontroller.metrics.api;
 
 import java.io.IOException;
 import java.util.List;

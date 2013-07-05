@@ -36,12 +36,16 @@ import org.inria.myriads.snoozecommon.metric.Metric;
 import org.inria.myriads.snoozenode.configurator.localcontrollermetrics.LocalControllerMetricsSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
+import org.inria.myriads.snoozenode.localcontroller.metrics.consumer.LocalControllerMetricConsumer;
+import org.inria.myriads.snoozenode.localcontroller.metrics.producer.LocalControllerMetricProducer;
+import org.inria.myriads.snoozenode.localcontroller.metrics.transport.AggregatedMetricData;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.consumer.LocalControllerMonitoringConsumer;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.consumer.VirtualMachineMonitorDataConsumer;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.host.api.MetricsProducer;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.listener.VirtualMachineMonitoringListener;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.producer.VirtualMachineHeartbeatDataProducer;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.producer.VirtualMachineMonitorDataProducer;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +68,7 @@ public final class VirtualMachineMonitoringService
     private BlockingQueue<AggregatedVirtualMachineData> dataQueue_;
     
     /** Metric queue. */
-    private BlockingQueue<Metric> metricQueue_;
+    private BlockingQueue<AggregatedMetricData> metricQueue_;
     
     /** Virtual machine heartbeat producer. */
     private VirtualMachineHeartbeatDataProducer heartbeatProducer_;
@@ -82,6 +86,12 @@ public final class VirtualMachineMonitoringService
     private LocalControllerDescription localController_;
 
     private LocalControllerMetricsSettings localControllerMetricsSettings_;
+
+    private LinkedBlockingQueue<LocalControllerDataTransporter> globalQueue_;
+
+    private LocalControllerMetricProducer metricsProducer_;
+
+    private LocalControllerMetricConsumer metricConsumer_;
     
     /**
      * Constructor.
@@ -103,7 +113,8 @@ public final class VirtualMachineMonitoringService
         repository_ = repository;
         monitoring_ = monitoring;
         dataQueue_ = new LinkedBlockingQueue<AggregatedVirtualMachineData>();
-        metricQueue_ = new LinkedBlockingQueue<Metric>();
+        metricQueue_ = new LinkedBlockingQueue<AggregatedMetricData>();
+        globalQueue_ = new LinkedBlockingQueue<LocalControllerDataTransporter>();
         localControllerMetricsSettings_ = metricSettings;
         producerThreads_ = Collections.synchronizedMap(new HashMap<String, VirtualMachineMonitorDataProducer>());
     }
@@ -120,17 +131,44 @@ public final class VirtualMachineMonitoringService
         log_.debug("Starting the virtual machine monitoring service");
         Guard.check(groupManagerAddress);
         startVirtualMachineMonitorDataConsumer(groupManagerAddress);
-        startMetricsProducer(localControllerMetricsSettings_);
+        startMetricsService(localControllerMetricsSettings_);
         startHeartbeatProducer();
+        startGlobalService(groupManagerAddress);
     }
 
-    private void startMetricsProducer(
+    private void startGlobalService(NetworkAddress groupManagerAddress)
+    {
+        try
+        {
+            MonitoringThresholds thresholds = monitoring_.getMonitoringSettings().getThresholds();
+            LocalControllerMonitoringConsumer globalConsumer = 
+                    new LocalControllerMonitoringConsumer(localController_, groupManagerAddress, globalQueue_, thresholds, this);
+            new Thread(globalConsumer).start();
+            log_.debug("GLOBAL STARTED");
+        }
+        catch (Exception e)
+        {
+             e.printStackTrace();
+        }
+    }
+
+    private void startMetricsService(
             LocalControllerMetricsSettings localControllerMetricsSettings) throws Exception
     {
+        MonitoringThresholds thresholds = monitoring_.getMonitoringSettings().getThresholds();
         log_.debug("Starting the virtual machine heartbeat producer");
-        MetricsProducer metricsProducer_ = new MetricsProducer(localControllerMetricsSettings_,
+        metricsProducer_ = 
+                new LocalControllerMetricProducer(localControllerMetricsSettings_,
                             metricQueue_);
+        metricConsumer_ = 
+                new LocalControllerMetricConsumer(localController_,
+                        metricQueue_,
+                        globalQueue_,
+                        localControllerMetricsSettings,
+                        thresholds
+                        );
         new Thread(metricsProducer_).start();
+        new Thread(metricConsumer_).start();
     }
 
     /**
@@ -149,9 +187,11 @@ public final class VirtualMachineMonitoringService
         monitorDataConsumer_ = new VirtualMachineMonitorDataConsumer(localController_,
                                                                      groupManagerAddress, 
                                                                      dataQueue_,
-                                                                     metricQueue_,
+                                                                     globalQueue_,
                                                                      thresholds,
-                                                                     this);
+                                                                     localControllerMetricsSettings_,
+                                                                     this                                                     
+                );
         new Thread(monitorDataConsumer_).start(); 
     }
 
@@ -164,7 +204,7 @@ public final class VirtualMachineMonitoringService
         heartbeatProducer_ = 
             new VirtualMachineHeartbeatDataProducer(localController_.getId(), 
                                                     monitoring_.getMonitoringSettings().getInterval(), 
-                                                    dataQueue_);
+                                                    globalQueue_);
         new Thread(heartbeatProducer_).start();
     }
 

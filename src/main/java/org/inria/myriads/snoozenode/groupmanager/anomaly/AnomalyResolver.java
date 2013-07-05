@@ -59,6 +59,9 @@ public final class AnomalyResolver
     /** Underload relocation policy. */
     private VirtualMachineRelocation underloadRelocationPolicy_;
     
+    /** Unstable relocation policy (extra metrics). */
+    private VirtualMachineRelocation unstableRelocationPolicy_;
+    
     /** The group manager repository. */
     private GroupManagerRepository groupManagerRepository_;
 
@@ -70,7 +73,7 @@ public final class AnomalyResolver
     
     /** Number of monitoring entries. */
     private int numberOfMonitoringEntries_;
-    
+
     /**
      * Constructor.
      * 
@@ -92,7 +95,11 @@ public final class AnomalyResolver
                                                                   resourceDemandEstimator);
         underloadRelocationPolicy_ = 
             GroupManagerPolicyFactory.newVirtualMachineRelocation(relocationPolicies.getUnderloadPolicy(),
-                                                                  resourceDemandEstimator);      
+                                                                  resourceDemandEstimator);
+        unstableRelocationPolicy_ = 
+                GroupManagerPolicyFactory.newVirtualMachineRelocation(relocationPolicies.getUnderloadPolicy(),
+                        resourceDemandEstimator);
+        
         numberOfMonitoringEntries_ = resourceDemandEstimator.getNumberOfMonitoringEntries();
         groupManagerRepository_ = groupManagerRepository;
         stateMachine_ = stateMachine;
@@ -124,6 +131,10 @@ public final class AnomalyResolver
             case UNDERLOADED:
                 relocationPlan = underloadRelocationPolicy_.relocateVirtualMachines(anomalyLocalController,
                                                                                     destinationLocalControllers);
+                break;
+            case UNSTABLE: 
+                relocationPlan = unstableRelocationPolicy_.relocateVirtualMachines(anomalyLocalController,
+                        destinationLocalControllers);
                 break;
             default:
                 log_.error(String.format("Unsupported state: %s", localControllerState));

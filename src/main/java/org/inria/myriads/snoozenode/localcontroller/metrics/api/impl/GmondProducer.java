@@ -1,4 +1,4 @@
-package org.inria.myriads.snoozenode.localcontroller.monitoring.host.api.impl;
+package org.inria.myriads.snoozenode.localcontroller.metrics.api.impl;
 
 
 import java.io.ByteArrayInputStream;
@@ -13,7 +13,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.apache.commons.io.IOUtils;
 import org.inria.myriads.snoozecommon.metric.Metric;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.host.api.MetricProducer;
+import org.inria.myriads.snoozenode.localcontroller.metrics.api.MetricProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -116,6 +116,8 @@ public class GmondProducer implements MetricProducer
                 }
             }
         }
+        
+        //add agregated metricList to queue here
         catch(Exception exception)
         {
             log_.warn("Unable to parse the gmond xml");

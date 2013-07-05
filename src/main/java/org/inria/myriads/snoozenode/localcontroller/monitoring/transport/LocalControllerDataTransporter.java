@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.metric.Metric;
+import org.inria.myriads.snoozenode.localcontroller.metrics.transport.AggregatedMetricData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 
 /**
@@ -49,7 +50,7 @@ public final class LocalControllerDataTransporter
     private List<AggregatedVirtualMachineData> aggregatedData_;
     
     /** Metrics .*/
-    private Map<String, LRUCache<Long, Metric>> metricData_;
+    private AggregatedMetricData metricData_;
     
     
     /**
@@ -60,12 +61,14 @@ public final class LocalControllerDataTransporter
      * @param aggregatedData        aggregated data.
      * @param metricData            metric data
      */
+    
     public LocalControllerDataTransporter(String localControllerId, List<AggregatedVirtualMachineData> aggregatedData,
-            Map<String, LRUCache<Long, Metric>> metricData)
+            AggregatedMetricData metricData)
     {
         localControllerId_ = localControllerId;
         aggregatedData_ = aggregatedData;
         metricData_ = metricData;
+        
     }
 
     /**
@@ -111,7 +114,7 @@ public final class LocalControllerDataTransporter
     /**
      * @return the metricData
      */
-    public Map<String, LRUCache<Long, Metric>> getMetricData()
+    public AggregatedMetricData getMetricData()
     {
         return metricData_;
     }
@@ -119,7 +122,7 @@ public final class LocalControllerDataTransporter
     /**
      * @param metricData the metricData to set
      */
-    public void setMetricData(Map<String, LRUCache<Long, Metric>> metricData)
+    public void setMetricData(AggregatedMetricData metricData)
     {
         metricData_ = metricData;
     }

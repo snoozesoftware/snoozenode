@@ -20,12 +20,19 @@
 package org.inria.myriads.snoozenode.localcontroller.monitoring.threshold;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
+import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozecommon.metric.Metric;
 import org.inria.myriads.snoozecommon.util.MathUtils;
+import org.inria.myriads.snoozenode.configurator.localcontrollermetrics.LocalControllerMetricsSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
+import org.inria.myriads.snoozenode.localcontroller.metrics.transport.AggregatedMetricData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
@@ -47,6 +54,9 @@ public final class ThresholdCrossingDetector
     /** Node parameters. */
     private MonitoringThresholds monitoringThresholds_;
 
+    /** Metric settings. */
+    private LocalControllerMetricsSettings localControllerMetricsSettings_ ; 
+    
     /** Total capacity. */
     private List<Double> totalCapacity_;
     
@@ -57,13 +67,16 @@ public final class ThresholdCrossingDetector
      * @param totalCapacity         The total local controller capacity
      */
     public ThresholdCrossingDetector(MonitoringThresholds monitoringThresholds, 
-                                     List<Double> totalCapacity)
+                                     List<Double> totalCapacity, 
+                                     LocalControllerMetricsSettings localControllerMetricsSettings
+                                    )
     {
         Guard.check(monitoringThresholds, totalCapacity);
         log_.debug("Initializing the threshold crossing detector");
         
         monitoringThresholds_ = monitoringThresholds;
         totalCapacity_ = totalCapacity;
+        localControllerMetricsSettings_ = localControllerMetricsSettings; 
     }
     
     /**
@@ -266,5 +279,42 @@ public final class ThresholdCrossingDetector
         
         virtualMachineUtilization = MathUtils.divideVector(virtualMachineUtilization, monitoringData.size());        
         return virtualMachineUtilization;
+    }
+
+
+    public boolean detectMetricThresholdCrossing(LocalControllerDataTransporter localControllerData)
+    {
+        //compute avg metrics utilization 
+        Map<String, Double> averageMetricMap = computeAverageMetricsUtilization(localControllerData.getMetricData());
+        // compare with threshold
+        Map<String, List<Double>> thresholds = localControllerMetricsSettings_.getThresholds();
+        
+        for (Entry<String, List<Double>> threshold : thresholds.entrySet())
+        {
+            String thresholdMetricName = threshold.getKey();
+            List<Double> thresholdMetricValue = threshold.getValue();
+            if (averageMetricMap.get(thresholdMetricName) > ThresholdUtils.getMaxThreshold(thresholdMetricValue))
+            {
+             localControllerData.setState(LocalControllerState.UNSTABLE);
+             return true;   
+            }
+        }
+        return false;
+    }
+    
+    private Map<String,Double> computeAverageMetricsUtilization(AggregatedMetricData metricData)
+    {
+        Map<String, Double> averageMetricMap = new HashMap<String, Double>();
+        for (Entry<String, LRUCache<Long, Metric>> entry : metricData.getMetricData().entrySet())
+        {
+            String metricName = entry.getKey();
+            Double metricAverage = 0d;
+            for (Metric metric : entry.getValue().values())
+            {
+                metricAverage = Double.valueOf(metricAverage + metric.getValue() / entry.getValue().size());
+            }
+            averageMetricMap.put(metricName, metricAverage);
+        }
+        return averageMetricMap;
     }
 }

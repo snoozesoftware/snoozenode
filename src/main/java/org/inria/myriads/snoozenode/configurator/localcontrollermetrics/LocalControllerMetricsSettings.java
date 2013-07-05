@@ -1,6 +1,10 @@
 package org.inria.myriads.snoozenode.configurator.localcontrollermetrics;
 
-import org.inria.myriads.snoozenode.localcontroller.monitoring.host.MetricsType;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.inria.myriads.snoozenode.localcontroller.metrics.MetricsType;
 
 /**
  * @author msimonin
@@ -23,12 +27,46 @@ public class LocalControllerMetricsSettings
     /** Probing interval .*/
     private int interval;
     
+    /** Thresholds.*/
+    private Map<String, List<Double> > thresholds_;
+    
+    /** Number of metrics entries to collect. */
+    private int numberOfMetricsEntries_;
+    
+    
+    
+    
+    public LocalControllerMetricsSettings()
+    {
+        thresholds_ = new HashMap<String, List<Double>>();
+    }
+
+    public int getNumberOfMetricsEntries()
+    {
+        return numberOfMetricsEntries_;
+    }
+
+    public void setNumberOfMetricsEntries(int numberOfMetricsEntries)
+    {
+        numberOfMetricsEntries_ = numberOfMetricsEntries;
+    }
+
     /**
      * @return the metricType
      */
     public MetricsType getMetricType()
     {
         return metricType_;
+    }
+
+    public Map<String, List<Double>> getThresholds()
+    {
+        return thresholds_;
+    }
+
+    public void setThresholds(Map<String, List<Double>> thresholds)
+    {
+        thresholds_ = thresholds;
     }
 
     /**
@@ -102,8 +140,11 @@ public class LocalControllerMetricsSettings
     {
         this.interval = interval;
     }
-    
-    
-    
 
+    public void setThreshold(String metric, List<Double> currentThresholds)
+    {
+        this.thresholds_.put(metric, currentThresholds);
+        
+    }
+    
 }

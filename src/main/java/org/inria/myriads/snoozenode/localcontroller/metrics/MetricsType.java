@@ -1,4 +1,4 @@
-package org.inria.myriads.snoozenode.localcontroller.monitoring.host;
+package org.inria.myriads.snoozenode.localcontroller.metrics;
 
 public enum MetricsType
 {

@@ -1,11 +1,11 @@
-package org.inria.myriads.snoozenode.localcontroller.monitoring.host;
+package org.inria.myriads.snoozenode.localcontroller.metrics;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
 
 import org.inria.myriads.snoozenode.configurator.localcontrollermetrics.LocalControllerMetricsSettings;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.host.api.MetricProducer;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.host.api.impl.GmondProducer;
+import org.inria.myriads.snoozenode.localcontroller.metrics.api.MetricProducer;
+import org.inria.myriads.snoozenode.localcontroller.metrics.api.impl.GmondProducer;
 
 public class MetricProducerFactory
 {

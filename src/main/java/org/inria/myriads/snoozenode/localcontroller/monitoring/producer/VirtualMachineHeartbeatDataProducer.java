@@ -23,6 +23,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,13 +39,13 @@ public final class VirtualMachineHeartbeatDataProducer
     private static final Logger log_ = LoggerFactory.getLogger(VirtualMachineHeartbeatDataProducer.class);
     
     /** Data queue reference. */
-    private BlockingQueue<AggregatedVirtualMachineData> dataQueue_;
+    private BlockingQueue<LocalControllerDataTransporter> globalQueue_;
 
     /** Monitoring interval. */
     private int monitoringInterval_;
 
     /** Virtual machine heartbeat data. */
-    private AggregatedVirtualMachineData heartbeatMessage_;
+    private LocalControllerDataTransporter heartbeatMessage_;
     
     /** Lock object. */
     private Object lockObject_;
@@ -61,13 +62,13 @@ public final class VirtualMachineHeartbeatDataProducer
      */
     public VirtualMachineHeartbeatDataProducer(String localControllerId, 
                                                int monitoringInterval,
-                                               BlockingQueue<AggregatedVirtualMachineData> dataQueue)
+                                               BlockingQueue<LocalControllerDataTransporter> globalQueue)
     {
-        Guard.check(localControllerId, dataQueue);
+        Guard.check(localControllerId, globalQueue);
         log_.debug("Initializing the virtual machine heartbeat producer");
         monitoringInterval_ = monitoringInterval;
-        dataQueue_ = dataQueue;
-        heartbeatMessage_ = new AggregatedVirtualMachineData("heartbeat", null);
+        globalQueue_ = globalQueue;
+        heartbeatMessage_ = new LocalControllerDataTransporter(localControllerId, null, null);
         lockObject_ = new Object();
     }
     
@@ -79,7 +80,7 @@ public final class VirtualMachineHeartbeatDataProducer
             while (!isTerminated_)
             {                    
                 log_.debug("Adding virtual machine heartbeat data to the queue");
-                dataQueue_.add(heartbeatMessage_);
+                globalQueue_.add(heartbeatMessage_);
                 
                 synchronized (lockObject_)
                 {

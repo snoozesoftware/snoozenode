@@ -1,4 +1,4 @@
-package org.inria.myriads.snoozenode.localcontroller.monitoring.host.api;
+package org.inria.myriads.snoozenode.localcontroller.metrics.producer;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -7,7 +7,9 @@ import java.util.concurrent.BlockingQueue;
 
 import org.inria.myriads.snoozecommon.metric.Metric;
 import org.inria.myriads.snoozenode.configurator.localcontrollermetrics.LocalControllerMetricsSettings;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.host.MetricProducerFactory;
+import org.inria.myriads.snoozenode.localcontroller.metrics.MetricProducerFactory;
+import org.inria.myriads.snoozenode.localcontroller.metrics.api.MetricProducer;
+import org.inria.myriads.snoozenode.localcontroller.metrics.transport.AggregatedMetricData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,11 +21,11 @@ import org.slf4j.LoggerFactory;
  * @author msimonin
  *
  */
-public class MetricsProducer extends Thread
+public class LocalControllerMetricProducer extends Thread
 {
     
     /** Define the logger. */
-    private static final Logger log_ = LoggerFactory.getLogger(MetricsProducer.class);
+    private static final Logger log_ = LoggerFactory.getLogger(LocalControllerMetricProducer.class);
 
     /** Producer list. */
     //private List<MetricProducer> producers_;
@@ -32,7 +34,7 @@ public class MetricsProducer extends Thread
     private MetricProducer producer_ ;
     
      /** Blocking queue*/
-    private BlockingQueue<Metric> metricQueue_ ;
+    private BlockingQueue<AggregatedMetricData> metricQueue_ ;
 
     /** Indicates whether the thread sould terminate.*/
     private boolean isTerminated_;
@@ -44,32 +46,18 @@ public class MetricsProducer extends Thread
     private LocalControllerMetricsSettings localControllerMetricsSettings_;
 
    
-    public MetricsProducer(LocalControllerMetricsSettings localControllerMetricsSettings, BlockingQueue<Metric> metricQueue)
+    public LocalControllerMetricProducer(LocalControllerMetricsSettings localControllerMetricsSettings, BlockingQueue<AggregatedMetricData> metricQueue)
     {
         metricQueue_ = metricQueue;
         localControllerMetricsSettings_ = localControllerMetricsSettings;
         monitoringInterval_ = localControllerMetricsSettings.getInterval();
-        initializeProducer();
-        log_.debug("Metrics producer initialized");
-    }
-
-    private void initializeProducer()
-    {
-        try{
-            producer_ = MetricProducerFactory.createMetricProducer(localControllerMetricsSettings_);
-            this.start();
-        }
-        catch(Exception exception)
-        {
-            log_.warn("Unable to create the metrics producer ... check your config file");
-            exception.printStackTrace();
-        }
-        
+        producer_ = MetricProducerFactory.createMetricProducer(localControllerMetricsSettings);
+        log_.debug("Metrics producer initialized ");
     }
     
     public void run()
     {
-        
+        AggregatedMetricData aggregatedMetricData = new AggregatedMetricData();
         log_.debug(String.format("Starting metrics producer"));
         try
         {
@@ -85,10 +73,12 @@ public class MetricsProducer extends Thread
                 List<Metric> metrics = producer_.getMetric();
                 for ( Metric metric : metrics )
                 {
-                    metricQueue_.put(metric);
+                    aggregatedMetricData.add(metric);
+                    
                 }
                 
-                
+                metricQueue_.put((AggregatedMetricData) aggregatedMetricData.clone());
+                aggregatedMetricData.clear();
                 log_.debug("metrics collection finished");
                 Thread.sleep(monitoringInterval_);
             }

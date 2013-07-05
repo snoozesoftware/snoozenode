@@ -42,6 +42,7 @@ import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.metric.Metric;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
+import org.inria.myriads.snoozenode.localcontroller.metrics.transport.AggregatedMetricData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -904,10 +905,10 @@ public final class GroupManagerMemoryRepository
     }
 
     @Override
-    public synchronized void addMetricData(String localControllerId, Map<String, LRUCache<Long, Metric>> metricData)
+    public synchronized void addMetricData(String localControllerId, AggregatedMetricData metricData)
     {
         Guard.check(localControllerId, metricData);
-        log_.debug("Add metric data to the repository");
+        log_.debug("Add metric data to the repository = " + metricData.getMetricData().size());
         LocalControllerDescription localControllerDescription = localControllerDescriptions_.get(localControllerId);
         if (localControllerDescription == null)
         {
@@ -915,7 +916,7 @@ public final class GroupManagerMemoryRepository
         }
         Map<String, LRUCache<Long, Metric>> localControllerMetrics = localControllerDescription.getMetricData();
         
-        for (Map.Entry<String, LRUCache<Long, Metric>> datas : metricData.entrySet()) 
+        for (Map.Entry<String, LRUCache<Long, Metric>> datas : metricData.getMetricData().entrySet()) 
         {
             String metricName = datas.getKey();
             LRUCache<Long, Metric> metricList = datas.getValue();
@@ -930,6 +931,30 @@ public final class GroupManagerMemoryRepository
                 localControllerMetrics.get(metricName).put(metric.getTimestamp(), metric);
             }
         }
+        ObjectMapper mapper = new ObjectMapper();
+        StringWriter stringWriter = new StringWriter();
+        
+        try
+        {
+            mapper.writeValue(stringWriter, localControllerDescription);
+            log_.debug(stringWriter.toString());
+        }
+        catch (JsonGenerationException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (JsonMappingException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (IOException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
         log_.debug("All metrics added to the repository");
     }
 }

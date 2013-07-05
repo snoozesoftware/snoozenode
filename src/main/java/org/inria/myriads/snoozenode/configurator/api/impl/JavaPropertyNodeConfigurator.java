@@ -63,7 +63,7 @@ import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Placement
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfiguration;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Relocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.host.MetricsType;
+import org.inria.myriads.snoozenode.localcontroller.metrics.MetricsType;
 
 /**
  * Node configurator.
@@ -115,6 +115,8 @@ public final class JavaPropertyNodeConfigurator
     
     private void setLocalControllerMetricsSettings() throws NodeConfiguratorException
     {
+        String separator = ",";
+        
         LocalControllerMetricsSettings localControllerMetricSettings = nodeConfiguration_.getLocalControllerMetricsSettings();
 
         String metricsType = getProperty("localController.metrics.type");
@@ -132,9 +134,19 @@ public final class JavaPropertyNodeConfigurator
                
         String metricsString = getProperty("localController.metrics.published");
         metricsString = metricsString.replace(" ", "");
-        String[] metrics = metricsString.split(",");
+        String[] metrics = metricsString.split(separator);
         localControllerMetricSettings.setMetrics(metrics);
-
+        
+        String numberOfMetricsEntries = getProperty("localController.metrics.numberOfMetricsEntries");
+        localControllerMetricSettings.setNumberOfMetricsEntries(Integer.valueOf(numberOfMetricsEntries));
+        
+        //gets the thresholds
+        for (String metric : metrics)
+        {
+            String tmpThresholds = getProperty("localController.metrics.thresholds."+metric); 
+            List<Double> currentThresholds = StringUtils.convertStringToDoubleArray(tmpThresholds, separator);
+            localControllerMetricSettings.setThreshold(metric, currentThresholds);
+        }
     }
 
     /**
