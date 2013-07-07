@@ -29,5 +29,7 @@ public enum Relocation
     /** Overload relocation. */
     GreedyOverloadRelocation,
     /** Underload relocation. */
-    GreedyUnderloadRelocation
+    GreedyUnderloadRelocation, 
+    /** TestUnstable. */
+    TestUnstable
 }

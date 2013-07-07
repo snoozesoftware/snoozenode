@@ -97,7 +97,7 @@ public final class AnomalyResolver
             GroupManagerPolicyFactory.newVirtualMachineRelocation(relocationPolicies.getUnderloadPolicy(),
                                                                   resourceDemandEstimator);
         unstableRelocationPolicy_ = 
-                GroupManagerPolicyFactory.newVirtualMachineRelocation(relocationPolicies.getUnderloadPolicy(),
+                GroupManagerPolicyFactory.newVirtualMachineRelocation(relocationPolicies.getUnstablePolicy(),
                         resourceDemandEstimator);
         
         numberOfMonitoringEntries_ = resourceDemandEstimator.getNumberOfMonitoringEntries();
@@ -132,6 +132,7 @@ public final class AnomalyResolver
                 relocationPlan = underloadRelocationPolicy_.relocateVirtualMachines(anomalyLocalController,
                                                                                     destinationLocalControllers);
                 break;
+                
             case UNSTABLE: 
                 relocationPlan = unstableRelocationPolicy_.relocateVirtualMachines(anomalyLocalController,
                         destinationLocalControllers);

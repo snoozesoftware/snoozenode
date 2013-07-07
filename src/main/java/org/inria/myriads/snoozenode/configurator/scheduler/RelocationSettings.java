@@ -33,6 +33,9 @@ public class RelocationSettings
     
     /** Underload relocation policy. */
     private Relocation underloadPolicy_;
+
+    /** Unstable policy. */
+    private Relocation unstablePolicy_;
     
     /**
      * Sets the overload relocation policy.
@@ -42,6 +45,11 @@ public class RelocationSettings
     public void setOverloadPolicy(Relocation overloadPolicy) 
     {
         overloadPolicy_ = overloadPolicy;
+    }
+
+    public void setUnstablePolicy(Relocation unstablePolicy)
+    {
+        unstablePolicy_ = unstablePolicy;
     }
 
     /**
@@ -72,5 +80,10 @@ public class RelocationSettings
     public Relocation getUnderloadPolicy() 
     {
         return underloadPolicy_;
+    }
+
+    public Relocation getUnstablePolicy()
+    {
+        return unstablePolicy_;
     }
 }

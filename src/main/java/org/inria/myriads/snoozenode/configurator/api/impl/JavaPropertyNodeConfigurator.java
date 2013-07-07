@@ -446,6 +446,10 @@ public final class JavaPropertyNodeConfigurator
         String underloadPolicy = getProperty("groupManagerScheduler.relocation.underloadPolicy");   
         groupManager.getRelocationSettings().setUnderloadPolicy(Relocation.valueOf(underloadPolicy));
         
+        
+        String unstablePolicy = getProperty("groupManagerScheduler.relocation.unstableOverloadPolicy");   
+        groupManager.getRelocationSettings().setUnstablePolicy(Relocation.valueOf(unstablePolicy));
+        
         String isEnabled = getProperty("groupManagerScheduler.reconfiguration.enabled"); 
         groupManager.getReconfigurationSettings().setEnabled(Boolean.valueOf(isEnabled));
         

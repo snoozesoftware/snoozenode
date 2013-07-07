@@ -293,7 +293,8 @@ public final class ThresholdCrossingDetector
         {
             String thresholdMetricName = threshold.getKey();
             List<Double> thresholdMetricValue = threshold.getValue();
-            if (averageMetricMap.get(thresholdMetricName) > ThresholdUtils.getMaxThreshold(thresholdMetricValue))
+            if (averageMetricMap.get(thresholdMetricName) != null && 
+                    averageMetricMap.get(thresholdMetricName) > ThresholdUtils.getMaxThreshold(thresholdMetricValue))
             {
              localControllerData.setState(LocalControllerState.UNSTABLE);
              return true;   
