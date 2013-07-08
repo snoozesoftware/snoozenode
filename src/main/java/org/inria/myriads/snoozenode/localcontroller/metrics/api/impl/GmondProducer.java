@@ -96,20 +96,23 @@ public class GmondProducer implements MetricProducer
                 if (nNode.getNodeType() == Node.ELEMENT_NODE) 
                 {
                     Element eElement = (Element) nNode;
-                    NodeList xmlMetrics = eElement.getElementsByTagName("METRIC");
-                    for (int tempMetric= 0; tempMetric < xmlMetrics.getLength(); tempMetric++) 
+                    if (eElement.getAttribute("NAME").contains(hostname_))
                     {
-                        Node nMetric = xmlMetrics.item(tempMetric);     
-                        
-                        if (nMetric.getNodeType() == Node.ELEMENT_NODE) 
+                        NodeList xmlMetrics = eElement.getElementsByTagName("METRIC");
+                        for (int tempMetric= 0; tempMetric < xmlMetrics.getLength(); tempMetric++) 
                         {
-                            Element eMetric = (Element) nMetric;
-                            String metricName = eMetric.getAttribute("NAME") ;
-                            if (metrics_.contains(metricName))
+                            Node nMetric = xmlMetrics.item(tempMetric);     
+                            
+                            if (nMetric.getNodeType() == Node.ELEMENT_NODE) 
                             {
-                                //add metric here
-                                double metricValue = Double.valueOf(eMetric.getAttribute("VAL")); 
-                                metrics.add(new Metric(metricName, metricValue));
+                                Element eMetric = (Element) nMetric;
+                                String metricName = eMetric.getAttribute("NAME") ;
+                                if (metrics_.contains(metricName))
+                                {
+                                    //add metric here
+                                    double metricValue = Double.valueOf(eMetric.getAttribute("VAL")); 
+                                    metrics.add(new Metric(metricName, metricValue));
+                                }
                             }
                         }
                     }
