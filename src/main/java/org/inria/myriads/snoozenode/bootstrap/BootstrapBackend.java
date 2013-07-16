@@ -143,13 +143,17 @@ public final class BootstrapBackend
             GroupManagerRepositoryInformation information = getGroupManagerRepositoryInformations(address, 10);
             HashMap<String, LocalControllerDescription> localControllers =
                     new HashMap<String, LocalControllerDescription>();
-            for (LocalControllerDescription localController : information.getLocalControllerDescriptions())
+            if (information != null)
             {
-                localControllers.put(localController.getId(), localController);
+                for (LocalControllerDescription localController : information.getLocalControllerDescriptions())
+                {
+                    localControllers.put(localController.getId(), localController);
+                }
+                hierarchy.getGroupManagerDescriptions().get(i).setLocalControllers(localControllers);  
             }
-            hierarchy.getGroupManagerDescriptions().get(i).setLocalControllers(localControllers);  
             i++;
         }   
+        log_.debug(String.format("Returning the hierarchy with %d groupmanagers", i));
         return hierarchy;
     }
     
@@ -193,6 +197,7 @@ public final class BootstrapBackend
                 CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress); 
         GroupManagerRepositoryInformation information = 
                 groupManagerCommunicator.getGroupManagerRepositoryInformation(numberOfBacklogEntries);
+//        log_.debug(String.format("Returning groupManager Information with %d local controllers", information.getLocalControllerDescriptions().size()));
         return information;        
     }
 }

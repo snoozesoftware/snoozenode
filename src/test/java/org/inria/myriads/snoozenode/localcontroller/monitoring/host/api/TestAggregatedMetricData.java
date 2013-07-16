@@ -1,7 +1,7 @@
 package org.inria.myriads.snoozenode.localcontroller.monitoring.host.api;
 
+import org.inria.myriads.snoozecommon.metric.AggregatedMetricData;
 import org.inria.myriads.snoozecommon.metric.Metric;
-import org.inria.myriads.snoozenode.localcontroller.metrics.transport.AggregatedMetricData;
 
 import junit.framework.TestCase;
 

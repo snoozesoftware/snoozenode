@@ -40,9 +40,9 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozecommon.metric.AggregatedMetricData;
 import org.inria.myriads.snoozecommon.metric.Metric;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
-import org.inria.myriads.snoozenode.localcontroller.metrics.transport.AggregatedMetricData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -914,21 +914,22 @@ public final class GroupManagerMemoryRepository
         {
             log_.warn("No matching localcontroller found");
         }
-        Map<String, LRUCache<Long, Metric>> localControllerMetrics = localControllerDescription.getMetricData();
+        AggregatedMetricData localControllerMetrics = localControllerDescription.getCustomMetricCapacity();
+        
         
         for (Map.Entry<String, LRUCache<Long, Metric>> datas : metricData.getMetricData().entrySet()) 
         {
             String metricName = datas.getKey();
             LRUCache<Long, Metric> metricList = datas.getValue();
-            if (!(localControllerMetrics.containsKey(metricName)))
+            if (!(localControllerMetrics.getMetricData().containsKey(metricName)))
             {
                 log_.debug("metric not found in the repository ... create a new one");
-                localControllerMetrics.put(metricName, new LRUCache<Long, Metric>(maxCapacity_));
+                localControllerMetrics.getMetricData().put(metricName, new LRUCache<Long, Metric>(maxCapacity_));
             }
             
             for (Metric metric : metricList.values())
             {
-                localControllerMetrics.get(metricName).put(metric.getTimestamp(), metric);
+                localControllerMetrics.getMetricData().get(metricName).put(metric.getTimestamp(), metric);
             }
         }
         ObjectMapper mapper = new ObjectMapper();

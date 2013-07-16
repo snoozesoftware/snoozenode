@@ -5,11 +5,11 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
+import org.inria.myriads.snoozecommon.metric.AggregatedMetricData;
 import org.inria.myriads.snoozecommon.metric.Metric;
 import org.inria.myriads.snoozenode.configurator.localcontrollermetrics.LocalControllerMetricsSettings;
 import org.inria.myriads.snoozenode.localcontroller.metrics.MetricProducerFactory;
 import org.inria.myriads.snoozenode.localcontroller.metrics.api.MetricProducer;
-import org.inria.myriads.snoozenode.localcontroller.metrics.transport.AggregatedMetricData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

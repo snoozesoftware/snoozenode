@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
+import org.inria.myriads.snoozecommon.metric.AggregatedMetricData;
 import org.inria.myriads.snoozecommon.metric.Metric;
-import org.inria.myriads.snoozenode.localcontroller.metrics.transport.AggregatedMetricData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 
 /**

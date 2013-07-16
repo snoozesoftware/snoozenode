@@ -111,6 +111,7 @@ public class GmondProducer implements MetricProducer
                                 {
                                     //add metric here
                                     double metricValue = Double.valueOf(eMetric.getAttribute("VAL")); 
+
                                     metrics.add(new Metric(metricName, metricValue));
                                 }
                             }
@@ -123,7 +124,7 @@ public class GmondProducer implements MetricProducer
         //add agregated metricList to queue here
         catch(Exception exception)
         {
-            log_.warn("Unable to parse the gmond xml");
+            log_.warn("Unable to parse the gmond xml" + exception.getMessage());
         }
                 
         clientSocket_.close();
