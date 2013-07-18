@@ -5,6 +5,14 @@ import junit.framework.TestCase;
 public class TestGroupLeaderMemoryRepository extends TestCase
 {
 
+    public void testGenerateAddressPoolNoSubnet()
+    {
+        String[] virtualMachineSubnets = {""};
+        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(virtualMachineSubnets,0);
+        repository.generateAddressPool(virtualMachineSubnets);
+        assertEquals(0,repository.getNumberOfFreeIpAddresses());
+    }
+    
     public void testGenerateAddressPoolOneSubnet()
     {
         String[] virtualMachineSubnets = {"192.168.122.0/30"};
@@ -20,4 +28,6 @@ public class TestGroupLeaderMemoryRepository extends TestCase
         repository.generateAddressPool(virtualMachineSubnets);
         assertEquals(2044,repository.getNumberOfFreeIpAddresses());
     }
+    
+    
 }
