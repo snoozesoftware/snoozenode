@@ -137,11 +137,11 @@ public class GroupLeaderWrapperRepository implements GroupLeaderRepository
         return repository_.getFreeIpAddress();
     }
 
-    @Override
-    public int getNumberOfFreeIpAddresses()
-    {
-        return repository_.getNumberOfFreeIpAddresses();
-    }
+//    @Override
+//    public int getNumberOfFreeIpAddresses()
+//    {
+//        return repository_.getNumberOfFreeIpAddresses();
+//    }
 
     @Override
     public ArrayList<LocalControllerDescription> getLocalControllerList()

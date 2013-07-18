@@ -396,22 +396,6 @@ public final class GroupLeaderMemoryRepository
         log_.debug("No such group manager in the database!");
         return false;
     }
-
-    /**
-     * Returns the number of free IP addresses.
-     * 
-     * @return  The number of IP addresses
-     */
-    @Override
-    public int getNumberOfFreeIpAddresses() 
-    {
-        if (ipAddressPool_.size() > 1)
-        {
-            return ipAddressPool_.size();
-        }
-        
-        return 0;
-    }
     
     /**
      * 

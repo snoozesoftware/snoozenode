@@ -99,12 +99,6 @@ public interface GroupLeaderRepository
      */
     String getFreeIpAddress();
 
-    /**
-     * Returns the number of free IP addresses.
-     * 
-     * @return  The number of free IP addresses
-     */
-    int getNumberOfFreeIpAddresses();
 
     /**
      * 

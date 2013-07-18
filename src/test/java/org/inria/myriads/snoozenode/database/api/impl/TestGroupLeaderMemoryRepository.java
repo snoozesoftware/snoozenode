@@ -1,6 +1,8 @@
 package org.inria.myriads.snoozenode.database.api.impl;
 
 
+import java.util.List;
+
 import org.easymock.EasyMock;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
@@ -111,8 +113,8 @@ public class TestGroupLeaderMemoryRepository extends TestCase
         GroupManagerDescription groupLeader = new GroupManagerDescription();
 
         GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0);
-        repository.generateAddressPool(virtualMachineSubnets);
-        assertEquals(2,repository.getNumberOfFreeIpAddresses());
+        List<String> ips = repository.generateAddressPool(virtualMachineSubnets);
+        assertEquals(2,ips.size());
     }
     
     public void testGenerateAddressPoolTwoSubnets()
@@ -120,8 +122,8 @@ public class TestGroupLeaderMemoryRepository extends TestCase
         String[] virtualMachineSubnets = {"192.168.122.0/22", "10.0.0.1/22"};
         GroupManagerDescription groupLeader = new GroupManagerDescription();
         GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0);
-        repository.generateAddressPool(virtualMachineSubnets);
-        assertEquals(2044,repository.getNumberOfFreeIpAddresses());
+        List<String> ips = repository.generateAddressPool(virtualMachineSubnets);
+        assertEquals(2044,ips.size());
 
     }
 }
