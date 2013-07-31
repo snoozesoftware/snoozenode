@@ -280,6 +280,7 @@ public final class JavaPropertyNodeConfigurator
     private void setDatabaseSettings()
         throws NodeConfiguratorException 
     {
+        String separator = ",";
         DatabaseSettings databaseSettings = nodeConfiguration_.getDatabase();
         
         String databaseType = getProperty("database.type");
@@ -289,7 +290,10 @@ public final class JavaPropertyNodeConfigurator
         databaseSettings.setNumberOfEntriesPerGroupManager(Integer.valueOf(numberOfGroupManagerEntries));
         
         String numberOfVirtualMachineEntries = getProperty("database.numberOfEntriesPerVirtualMachine");
-        databaseSettings.setNumberOfEntriesPerVirtualMachine(Integer.valueOf(numberOfVirtualMachineEntries));        
+        databaseSettings.setNumberOfEntriesPerVirtualMachine(Integer.valueOf(numberOfVirtualMachineEntries));
+        
+        String cassandraHosts = getProperty("database.cassandra.hosts");        
+        databaseSettings.getCassandraSettings().setHosts(cassandraHosts);
     }
 
     /**

@@ -305,5 +305,6 @@ public final class GroupManagerBackend
     {
         log_.debug("Failed to receive group leader heartbeat message!");        
         isAssigned_ = false;
+                
     }
 }

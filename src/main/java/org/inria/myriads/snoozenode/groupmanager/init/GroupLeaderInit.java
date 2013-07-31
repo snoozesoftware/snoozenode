@@ -30,6 +30,7 @@ import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
+import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.database.enums.DatabaseType;
@@ -118,6 +119,7 @@ public final class GroupLeaderInit
         initializeVirtualClusterManager();
         initializeVirtualMachineDiscovery();
         startGroupManagerMonitoringDataReceiver(); 
+        //everyting is setup we can send heartbeat.
         startHeartbeatSender(groupLeaderDescription);       
     }
         
@@ -150,15 +152,13 @@ public final class GroupLeaderInit
     {
         String[] virtualMachineSubnets = nodeConfiguration_.getNetworking().getVirtualMachineSubnets();
         int maxCapacity = nodeConfiguration_.getDatabase().getNumberOfEntriesPerGroupManager();
-        DatabaseType type = nodeConfiguration_.getDatabase().getType();
+        DatabaseSettings settings = nodeConfiguration_.getDatabase();
         groupLeaderRepository_ = 
-                
-                
                 DatabaseFactory.newGroupLeaderRepository(
                                 groupLeaderDescription,
                                 virtualMachineSubnets, 
                                 maxCapacity,
-                                type,
+                                settings,
                                 externalNotifier_);
     }
     

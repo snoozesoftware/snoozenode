@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.database.api.impl;
+package org.inria.myriads.snoozenode.database.api.impl.memory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +26,7 @@ import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
@@ -158,7 +159,9 @@ public final class LocalControllerMemoryRepository
         for (VirtualMachineMetaData metaData : virtualMachineMetaData_.values())
         {
             NetworkAddress controlAddress = groupManagerDescription.getListenSettings().getControlDataAddress();
-            metaData.setGroupManagerControlDataAddress(controlAddress);
+            VirtualMachineLocation location = metaData.getVirtualMachineLocation();
+            location.setGroupManagerId(groupManagerDescription.getId());
+            location.setGroupManagerControlDataAddress(controlAddress);
         }
         
         return virtualMachineMetaData_;

@@ -42,6 +42,17 @@
 		<appender-ref ref="FA"/>   
 	</category> 
 
+	<category name="me.prettyprint.cassandra">  
+		<priority value="WARN" />  
+		<appender-ref ref="FA"/>   
+	</category> 
+
+	<category name="HColumnFamilyLogger">  
+		<priority value="WARN" />  
+		<appender-ref ref="FA"/>   
+	</category> 
+
+
 	<logger name="org.apache.commons.httpclient">
 		<appender-ref ref="FA"/>	
 	</logger>

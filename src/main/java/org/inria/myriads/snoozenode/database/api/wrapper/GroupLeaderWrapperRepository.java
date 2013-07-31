@@ -9,6 +9,7 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupMa
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
+import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.database.enums.DatabaseType;
@@ -37,13 +38,13 @@ public class GroupLeaderWrapperRepository implements GroupLeaderRepository
      */
     public GroupLeaderWrapperRepository(GroupManagerDescription groupLeaderDescription,
             String[] virtualMachineSubnets,
-            DatabaseType type,
+            DatabaseSettings settings,
             int maxCapacity,
             ExternalNotifier externalNotifier)
     {
         log_.debug("Initializing the group leader memory repository");
         //call to factory
-        repository_ = DatabaseFactory.newGroupLeaderRepository(groupLeaderDescription, virtualMachineSubnets, maxCapacity, type);
+        repository_ = DatabaseFactory.newGroupLeaderRepository(groupLeaderDescription, virtualMachineSubnets, maxCapacity, settings);
         externalNotifier_ = externalNotifier;
         
         ExternalNotifierUtils.send(
@@ -90,6 +91,7 @@ public class GroupLeaderWrapperRepository implements GroupLeaderRepository
         repository_.addGroupManagerSummaryInformation(groupManagerId, summary);
         
         //send to external (scalability issue here...)
+        /*
         GroupLeaderRepositoryInformation hierarchy = new GroupLeaderRepositoryInformation();
         hierarchy.setGroupManagerDescriptions(getGroupManagerDescriptions(0));
         
@@ -98,6 +100,7 @@ public class GroupLeaderWrapperRepository implements GroupLeaderRepository
                 ExternalNotificationType.SYSTEM, 
                 new SystemMessage(SystemMessageType.GL_SUMMARY, hierarchy), 
                 "groupleader");
+                */
 
     }
 

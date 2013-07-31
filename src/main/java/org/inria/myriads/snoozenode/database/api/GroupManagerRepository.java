@@ -194,13 +194,6 @@ public interface GroupManagerRepository
                                          VirtualMachineLocation newVirtualMachineLocation);
 
     /**
-     * Returns the number of local controllers.
-     * 
-     * @return  The number of local controllers
-     */
-    int getNumberOfLocalControllers();
-    
-    /**
      * Changes the local controller status.
      * 
      * @param localControllerId     The local controller identifier

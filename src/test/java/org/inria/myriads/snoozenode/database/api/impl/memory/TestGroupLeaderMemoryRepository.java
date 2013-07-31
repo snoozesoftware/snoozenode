@@ -1,4 +1,4 @@
-package org.inria.myriads.snoozenode.database.api.impl;
+package org.inria.myriads.snoozenode.database.api.impl.memory;
 
 
 import java.util.List;
@@ -11,6 +11,7 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
+import org.inria.myriads.snoozenode.database.api.impl.memory.GroupLeaderMemoryRepository;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.monitoring.TransportProtocol;
 import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;

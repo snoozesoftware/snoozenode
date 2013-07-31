@@ -10,6 +10,7 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
+import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
@@ -35,16 +36,16 @@ public class GroupManagerWrapperRepository implements GroupManagerRepository
     /**External notifier*/
     private ExternalNotifier externalNotifier_; 
     
-    public GroupManagerWrapperRepository(String groupManagerId, 
+    public GroupManagerWrapperRepository(GroupManagerDescription groupManager, 
             int maxCapacity, 
-            DatabaseType type,
+            DatabaseSettings settings,
             ExternalNotifierSettings externalNotifierSettings,
             ExternalNotifier externalNotifier
             ) 
     {
         log_.debug("Initializing the group manager  wrapper repository");
         externalNotifier_ = externalNotifier;
-        repository_ = DatabaseFactory.newGroupManagerRepository(groupManagerId, maxCapacity, type);
+        repository_ = DatabaseFactory.newGroupManagerRepository(groupManager, maxCapacity, settings);
     }
 
             
@@ -180,12 +181,6 @@ public class GroupManagerWrapperRepository implements GroupManagerRepository
             VirtualMachineLocation newVirtualMachineLocation)
     {
         return repository_.updateVirtualMachineLocation(oldVirtualMachineLocation, newVirtualMachineLocation);
-    }
-
-    @Override
-    public int getNumberOfLocalControllers()
-    {
-        return repository_.getNumberOfLocalControllers();
     }
 
     @Override

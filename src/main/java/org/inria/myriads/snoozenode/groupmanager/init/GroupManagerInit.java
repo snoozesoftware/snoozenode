@@ -28,6 +28,7 @@ import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
+import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.ReconfigurationSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
@@ -175,13 +176,12 @@ public final class GroupManagerInit
      * Initializes the repository.
      */
     private void initializeRepository()
-    {
-        String groupManagerId = description_.getId();
+    {        
         int maxCapacity = nodeConfiguration_.getDatabase().getNumberOfEntriesPerVirtualMachine();
-        DatabaseType databaseType = nodeConfiguration_.getDatabase().getType();
-        repository_ = DatabaseFactory.newGroupManagerRepository(groupManagerId, 
+        DatabaseSettings settings = nodeConfiguration_.getDatabase();
+        repository_ = DatabaseFactory.newGroupManagerRepository(description_, 
                                                                 maxCapacity, 
-                                                                databaseType,
+                                                                settings,
                                                                 nodeConfiguration_.getExternalNotifier(),
                                                                 externalNotifier_
                                                                 );

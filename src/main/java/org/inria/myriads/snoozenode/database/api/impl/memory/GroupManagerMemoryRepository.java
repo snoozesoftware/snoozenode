@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.database.api.impl;
+package org.inria.myriads.snoozenode.database.api.impl.memory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -841,17 +841,6 @@ public final class GroupManagerMemoryRepository
     }
 
     /**
-     * Returns the number of local controllers.
-     * 
-     * @return  The number of local controllers
-     */
-    @Override
-    public synchronized int getNumberOfLocalControllers() 
-    {
-        return localControllerDescriptions_.size();
-    }
-
-    /**
      * Returns local controller description.
      * 
      * @param networkAddress    The network address
@@ -927,5 +916,21 @@ public final class GroupManagerMemoryRepository
 
         return true;   
       
+    }
+
+    /**
+     * @return the localControllerDescriptions
+     */
+    public HashMap<String, LocalControllerDescription> getLocalControllerDescriptions()
+    {
+        return localControllerDescriptions_;
+    }
+
+    /**
+     * @param localControllerDescriptions the localControllerDescriptions to set
+     */
+    public void setLocalControllerDescriptions(HashMap<String, LocalControllerDescription> localControllerDescriptions)
+    {
+        localControllerDescriptions_ = localControllerDescriptions;
     }
 }

@@ -19,6 +19,7 @@
  */
 package org.inria.myriads.snoozenode.configurator.database;
 
+import org.inria.myriads.snoozenode.configurator.database.cassandra.CassandraSettings;
 import org.inria.myriads.snoozenode.database.enums.DatabaseType;
 
 /**
@@ -36,7 +37,20 @@ public final class DatabaseSettings
     
     /** Maximum number of entries per virtual machine. */
     private int numberOfMonitoringEntriesPerVirtualMachine_;
+    
+    /** Cassandra specific settings. */
+    private CassandraSettings cassandraSettings_;
+    
 
+    /**
+     * Constructor. 
+     */
+    public DatabaseSettings()
+    {
+        cassandraSettings_ = new CassandraSettings(); 
+    }
+    
+    
     /**
      * Sets the number of monitoring entries per group manager.
      * 
@@ -46,6 +60,8 @@ public final class DatabaseSettings
     {
         numberOfMonitoringEntriesPerGroupManager_ = numberOfMonitoringEntriesPerGroupManager;
     }
+
+    
 
     /**
      * Returns the number of monitoring entries per group manager.
@@ -95,5 +111,21 @@ public final class DatabaseSettings
     public DatabaseType getType() 
     {
         return type_;
+    }
+
+    /**
+     * @return the cassandraSettings
+     */
+    public CassandraSettings getCassandraSettings()
+    {
+        return cassandraSettings_;
+    }
+
+    /**
+     * @param cassandraSettings the cassandraSettings to set
+     */
+    public void setCassandraSettings(CassandraSettings cassandraSettings)
+    {
+        cassandraSettings_ = cassandraSettings;
     }
 }

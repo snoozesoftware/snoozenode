@@ -20,13 +20,17 @@
 package org.inria.myriads.snoozenode.database;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
-import org.inria.myriads.snoozenode.database.api.impl.GroupLeaderMemoryRepository;
-import org.inria.myriads.snoozenode.database.api.impl.GroupManagerMemoryRepository;
-import org.inria.myriads.snoozenode.database.api.impl.LocalControllerMemoryRepository;
+
+import org.inria.myriads.snoozenode.database.api.impl.cassandra.GroupLeaderCassandraRepository;
+import org.inria.myriads.snoozenode.database.api.impl.cassandra.GroupManagerCassandraRepository;
+import org.inria.myriads.snoozenode.database.api.impl.memory.GroupLeaderMemoryRepository;
+import org.inria.myriads.snoozenode.database.api.impl.memory.GroupManagerMemoryRepository;
+import org.inria.myriads.snoozenode.database.api.impl.memory.LocalControllerMemoryRepository;
 import org.inria.myriads.snoozenode.database.api.wrapper.GroupLeaderWrapperRepository;
 import org.inria.myriads.snoozenode.database.api.wrapper.GroupManagerWrapperRepository;
 import org.inria.myriads.snoozenode.database.enums.DatabaseType;
@@ -62,12 +66,12 @@ public final class DatabaseFactory
      */
     public static GroupLeaderRepository newGroupLeaderRepository(GroupManagerDescription groupLeaderDescription, String[] virtualMachineSubnets,   
                                                                  int maxCapacity,
-                                                                 DatabaseType type,
+                                                                 DatabaseSettings settings,
                                                                  ExternalNotifier externalNotifier
                                                                  ) 
     {
         
-        return new GroupLeaderWrapperRepository(groupLeaderDescription, virtualMachineSubnets, type, maxCapacity, externalNotifier);
+        return new GroupLeaderWrapperRepository(groupLeaderDescription, virtualMachineSubnets, settings, maxCapacity, externalNotifier);
     }
     
     
@@ -80,18 +84,24 @@ public final class DatabaseFactory
      * @param type                    The database type
      * @return                        The group leader repository
      */
-    public static GroupLeaderRepository newGroupLeaderRepository(GroupManagerDescription groupLeaderDescription, String[] virtualMachineSubnets,   
+    public static GroupLeaderRepository newGroupLeaderRepository(GroupManagerDescription groupLeaderDescription, 
+                                                                 String[] virtualMachineSubnets,   
                                                                  int maxCapacity,
-                                                                 DatabaseType type)
+                                                                 DatabaseSettings settings)
     {
         
         GroupLeaderRepository repository = null;
+        DatabaseType type = settings.getType();
         switch (type) 
         {
             case memory :       
                 repository = new GroupLeaderMemoryRepository(groupLeaderDescription, virtualMachineSubnets, maxCapacity);        
                 break;
-                       
+                
+            case cassandra : 
+                String hosts = settings.getCassandraSettings().getHosts();
+                repository = new GroupLeaderCassandraRepository(groupLeaderDescription, virtualMachineSubnets, maxCapacity,hosts);
+                break;
             default:
                 log_.error("Unknown group leader database type selected");
         }
@@ -107,27 +117,31 @@ public final class DatabaseFactory
      * @param type              The database type
      * @return                  The group manager repository
      */
-    public static GroupManagerRepository newGroupManagerRepository(String groupManagerId, 
+    public static GroupManagerRepository newGroupManagerRepository(GroupManagerDescription groupManager, 
                                                                    int maxCapacity,
-                                                                   DatabaseType type,
+                                                                   DatabaseSettings settings,
                                                                    ExternalNotifierSettings externalNotifierSettings,
                                                                    ExternalNotifier externalNotifier
                                                                     ) 
     {
-        return new GroupManagerWrapperRepository(groupManagerId, maxCapacity, type, externalNotifierSettings, externalNotifier);
+        return new GroupManagerWrapperRepository(groupManager, maxCapacity, settings, externalNotifierSettings, externalNotifier);
     }
     
-    public static GroupManagerRepository newGroupManagerRepository(String groupManagerId, 
+    public static GroupManagerRepository newGroupManagerRepository(GroupManagerDescription groupManager, 
             int maxCapacity,
-            DatabaseType type)
+            DatabaseSettings settings)
     {
         GroupManagerRepository repository = null;
+        DatabaseType type = settings.getType();
         switch (type) 
         {
             case memory :       
-                repository = new GroupManagerMemoryRepository(groupManagerId, maxCapacity);
+                repository = new GroupManagerMemoryRepository(groupManager.getId(), maxCapacity);
                 break;
-                       
+            case cassandra:
+                String hosts = settings.getCassandraSettings().getHosts();
+                repository = new GroupManagerCassandraRepository(groupManager, maxCapacity, hosts);
+                break;
             default:
                 log_.error("Unknown group manager database type selected");
         }
@@ -149,8 +163,9 @@ public final class DatabaseFactory
             case memory :       
                 repository = new LocalControllerMemoryRepository(externalNotifier);
                 break;
-                       
+                   
             default:
+                repository = new LocalControllerMemoryRepository(externalNotifier);
                 log_.error("Unknown local controller database type selected");
         }
         return repository;
