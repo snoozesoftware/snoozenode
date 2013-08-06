@@ -44,12 +44,6 @@ public class TestGroupLeaderCassandraRepository extends TestCase
     /** Logger. */
     private static final Logger log_ = LoggerFactory.getLogger(TestGroupManagerCassandraRepository.class);
     
-    private static final String GROUPMANAGERS_CF = "groupmanagers";
-    private static final String GROUPMANAGERS_MONITORING_CF = "groupmanagers_monitoring";
-    private static final String LOCALCONTROLLERS_CF = "localcontrollers";
-    private static final String LOCALCONTROLLERS_MAPPING_CF = "localcontrollers_mapping";
-    private static final String IPSPOOL_CF = "ipspool";
-    
     private GroupLeaderCassandraRepository repository_;
     private Cluster cluster_;
     private Keyspace keyspace_; 
@@ -80,7 +74,7 @@ public class TestGroupLeaderCassandraRepository extends TestCase
 
     @Override
     protected void tearDown() throws Exception {
-        repository_.clear();
+        //repository_.clear();
     }
     
     /**
@@ -321,7 +315,7 @@ public class TestGroupLeaderCassandraRepository extends TestCase
         
         SliceQuery<String, Long, Object> query = HFactory.createSliceQuery(keyspace_, StringSerializer.get(),
                 LongSerializer.get(), new JsonSerializer(GroupManagerSummaryInformation.class)).
-                setKey("12345").setColumnFamily(GROUPMANAGERS_MONITORING_CF).setRange(null, null , true, 5);
+                setKey("12345").setColumnFamily(CassandraUtils.GROUPMANAGERS_MONITORING_CF).setRange(null, null , true, 5);
         
         QueryResult<ColumnSlice<Long, Object>> columns = query.execute();
         
@@ -362,7 +356,7 @@ public class TestGroupLeaderCassandraRepository extends TestCase
     
     public void testGetFreeIpAddressEmpty() 
     {
-        cluster_.truncate("snooze", IPSPOOL_CF);
+        cluster_.truncate("snooze", CassandraUtils.IPSPOOL_CF);
         String ip = repository_.getFreeIpAddress();
         assertNull(ip);
     }
@@ -384,11 +378,11 @@ public class TestGroupLeaderCassandraRepository extends TestCase
         contactInformation.setPort(5000);
         // Add some LCs
         Mutator<String> mutator = HFactory.createMutator(keyspace_, StringSerializer.get());
-        mutator.addInsertion("098", LOCALCONTROLLERS_CF, HFactory.createColumn("isAssigned", true, StringSerializer.get(), new BooleanSerializer())) 
-               .addInsertion("098", LOCALCONTROLLERS_CF, HFactory.createStringColumn("groupmanager", "123"));
+        mutator.addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("isAssigned", true, StringSerializer.get(), new BooleanSerializer())) 
+               .addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("groupmanager", "123"));
        
         
-        mutator.insert(contactInformation.toString(), LOCALCONTROLLERS_MAPPING_CF, HFactory.createStringColumn("id", "098"));
+        mutator.insert(contactInformation.toString(), CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, HFactory.createStringColumn("id", "098"));
         mutator.execute();
         
         // Add Gm
@@ -424,11 +418,11 @@ public class TestGroupLeaderCassandraRepository extends TestCase
         contactInformation.setPort(5000);
         // Add some LCs
         Mutator<String> mutator = HFactory.createMutator(keyspace_, StringSerializer.get());
-        mutator.addInsertion(contactInformation.toString(), LOCALCONTROLLERS_CF, HFactory.createStringColumn("id", "098"))
-        .addInsertion("098", LOCALCONTROLLERS_CF, HFactory.createColumn("isAssigned", false, StringSerializer.get(), new BooleanSerializer()))
-        .addInsertion("098", LOCALCONTROLLERS_CF, HFactory.createStringColumn("groupmanager", "1234"));
+        mutator.addInsertion(contactInformation.toString(), CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("id", "098"))
+        .addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("isAssigned", false, StringSerializer.get(), new BooleanSerializer()))
+        .addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("groupmanager", "1234"));
         
-        mutator.insert(contactInformation.toString(), LOCALCONTROLLERS_MAPPING_CF, HFactory.createStringColumn("id", "098"));
+        mutator.insert(contactInformation.toString(), CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, HFactory.createStringColumn("id", "098"));
         mutator.execute();
         // Add Gm
         GroupManagerDescription groupManagerDescription = new GroupManagerDescription();
@@ -461,11 +455,11 @@ public class TestGroupLeaderCassandraRepository extends TestCase
         contactInformation.setPort(5000);
         // Add some LCs
         Mutator<String> mutator = HFactory.createMutator(keyspace_, StringSerializer.get());
-        mutator.addInsertion(contactInformation.toString(), LOCALCONTROLLERS_CF, HFactory.createStringColumn("id", "098"))
-            .addInsertion("098", LOCALCONTROLLERS_CF, HFactory.createColumn("isAssigned", true, StringSerializer.get(), new BooleanSerializer()))
-            .addInsertion("098", LOCALCONTROLLERS_CF, HFactory.createStringColumn("groupmanager", "1234"));
+        mutator.addInsertion(contactInformation.toString(), CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("id", "098"))
+            .addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("isAssigned", true, StringSerializer.get(), new BooleanSerializer()))
+            .addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("groupmanager", "1234"));
 
-        mutator.insert(contactInformation.toString(), LOCALCONTROLLERS_MAPPING_CF, HFactory.createStringColumn("id", "098"));
+        mutator.insert(contactInformation.toString(), CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, HFactory.createStringColumn("id", "098"));
         mutator.execute();
         // Add Gm
         GroupManagerDescription groupManagerDescription = new GroupManagerDescription();
@@ -499,12 +493,12 @@ public class TestGroupLeaderCassandraRepository extends TestCase
         contactInformation.setPort(5000);
         // Add some LCs
         Mutator<String> mutator = HFactory.createMutator(keyspace_, StringSerializer.get());
-        mutator.addInsertion(contactInformation.toString(), LOCALCONTROLLERS_CF, HFactory.createStringColumn("id", "098"))
-        .addInsertion("098", LOCALCONTROLLERS_CF, HFactory.createColumn("isAssigned", false, StringSerializer.get(), new BooleanSerializer()))
-        .addInsertion("098", LOCALCONTROLLERS_CF, HFactory.createStringColumn("groupmanager", "123"));
+        mutator.addInsertion(contactInformation.toString(), CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("id", "098"))
+        .addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("isAssigned", false, StringSerializer.get(), new BooleanSerializer()))
+        .addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("groupmanager", "123"));
 //        .addInsertion(contactInformation.toString(), LOCALCONTROLLERS_MAPPING_CF, HFactory.createStringColumn("id", "098"));
         
-        mutator.insert(contactInformation.toString(), LOCALCONTROLLERS_MAPPING_CF, HFactory.createStringColumn("id", "098"));
+        mutator.insert(contactInformation.toString(), CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, HFactory.createStringColumn("id", "098"));
         mutator.execute();
         // Add Gm
         GroupManagerDescription groupManagerDescription = new GroupManagerDescription();
@@ -555,7 +549,7 @@ public class TestGroupLeaderCassandraRepository extends TestCase
    
     public void testPopulateAddressPool()
     {
-        cluster_.truncate("snooze", IPSPOOL_CF);
+        cluster_.truncate("snooze", CassandraUtils.IPSPOOL_CF);
         
         List<String> ips = new ArrayList<String>();
         ips.add("192.168.1.1");
@@ -565,5 +559,89 @@ public class TestGroupLeaderCassandraRepository extends TestCase
         assertNotNull(ip);
     }
 
-
+    public void testPopulateAddressPoolAlreadyPopulated()
+    {
+        cluster_.truncate("snooze", CassandraUtils.IPSPOOL_CF);
+        
+        List<String> ips = new ArrayList<String>();
+        ips.add("192.168.1.1");
+        repository_.populateAddressPool(ips);
+        
+        ips = new ArrayList<String>();
+        ips.add("192.168.1.2");
+        repository_.populateAddressPool(ips);
+        String ip = repository_.getFreeIpAddress();
+        repository_.removeIpAddress(ip);
+        ip = repository_.getFreeIpAddress();
+        assertNull(ip);
+    }
+    
+    
+    /**
+     * 
+     * 2 GM descriptions with 10 monitoring values are inserted.
+     * We retrieved these descriptions with 2 monitoring values (timestamp 9l and 8l)
+     * 
+     * 
+     */
+    public void testGetGroupManagerDescriptionUnassigned() 
+    {
+        
+        for (int i=0; i<10; i++)
+        {
+            GroupManagerDescription groupManagerDescription = new GroupManagerDescription();
+            groupManagerDescription.setId(String.valueOf(i));
+            groupManagerDescription.setHostname("mafalda" + String.valueOf(i));
+            groupManagerDescription.getHeartbeatAddress().setAddress("127.0.0.1");
+            groupManagerDescription.getHeartbeatAddress().setPort(9000);
+            groupManagerDescription.getListenSettings().getControlDataAddress().setAddress("127.0.0.1");
+            groupManagerDescription.getListenSettings().getControlDataAddress().setPort(5000);
+            groupManagerDescription.getListenSettings().getMonitoringDataAddress().setAddress("127.0.0.1");
+            groupManagerDescription.getListenSettings().getMonitoringDataAddress().setPort(6000);
+            repository_.addGroupManagerDescription(groupManagerDescription);
+        }
+        
+        CassandraUtils.unassignNodes(keyspace_, CassandraUtils.GROUPMANAGERS_CF);
+        
+        ArrayList<GroupManagerDescription> groupManagers = repository_.getGroupManagerDescriptions(0);
+        
+        assertEquals(0, groupManagers.size());
+        
+        
+    }
+    
+    
+    /**
+     * 
+     * 2 GM descriptions with 10 monitoring values are inserted.
+     * We retrieved these descriptions with 2 monitoring values (timestamp 9l and 8l)
+     * 
+     * 
+     */
+    public void testGetGroupManagerDescriptionsWithoutMonitoring() 
+    {
+        
+        for (int i=0; i<100; i++)
+        {
+            GroupManagerDescription groupManagerDescription = new GroupManagerDescription();
+            groupManagerDescription.setId(String.valueOf(i));
+            groupManagerDescription.setHostname("mafalda" + String.valueOf(i));
+            groupManagerDescription.getHeartbeatAddress().setAddress("127.0.0.1");
+            groupManagerDescription.getHeartbeatAddress().setPort(9000);
+            groupManagerDescription.getListenSettings().getControlDataAddress().setAddress("127.0.0.1");
+            groupManagerDescription.getListenSettings().getControlDataAddress().setPort(5000);
+            groupManagerDescription.getListenSettings().getMonitoringDataAddress().setAddress("127.0.0.1");
+            groupManagerDescription.getListenSettings().getMonitoringDataAddress().setPort(6000);
+            repository_.addGroupManagerDescription(groupManagerDescription);
+        }
+        
+     
+        
+//        ArrayList<GroupManagerDescription> groupManagers = repository_.getGroupManagerDescriptions(0);
+//        
+//        assertEquals(100, groupManagers.size());
+        
+        
+    }
+    
 }

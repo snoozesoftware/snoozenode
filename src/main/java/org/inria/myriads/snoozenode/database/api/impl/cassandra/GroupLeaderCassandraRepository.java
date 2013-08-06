@@ -1,5 +1,6 @@
 package org.inria.myriads.snoozenode.database.api.impl.cassandra;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -7,6 +8,7 @@ import java.util.List;
 
 
 
+import me.prettyprint.cassandra.model.CqlQuery;
 import me.prettyprint.cassandra.serializers.BooleanSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
@@ -63,7 +65,7 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
     /** TTL. */
     private int ttl_;
 
-
+    /** Leader Description.*/
     private GroupManagerDescription groupLeader_;
     
     /**
@@ -80,16 +82,32 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
             ) 
     {        
         super(hosts);
-        clear();
+        // Truncate all column family
+        // Another solution would be to unassign every entry.
+        unassignNodes();
+        //clear();
         ipAddress_ = generateAddressPool(virtualMachineSubnets);
         populateAddressPool(ipAddress_);
         maxCapacity_ = maxCapacity;
-        // arbitrary ttl.
         ttl_ = 60 ;
         groupLeader_ = groupLeaderDescription;
         addGroupManagerDescription(groupLeaderDescription, true, true);
         log_.debug("Connected to cassandra");
     }
+
+    /**
+     * Unassign all nodes.
+     */
+    protected void unassignNodes()
+    {
+        CassandraUtils.unassignNodes(keyspace_, CassandraUtils.GROUPMANAGERS_CF);
+        CassandraUtils.unassignNodes(keyspace_, CassandraUtils.LOCALCONTROLLERS_CF);
+        CassandraUtils.unassignNodes(keyspace_, CassandraUtils.VIRTUALMACHINES_CF);
+    }
+    
+   
+        
+  
 
     /**
      * 
@@ -155,6 +173,7 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
 
         String last_key = null;
 
+        //retrieve only assigned one an not gl...
         while (true) {
             RowQueryIterator rowQueryIterator = new RowQueryIterator(
                     keyspace_, CassandraUtils.GROUPMANAGERS_CF,
@@ -174,9 +193,11 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
               if (row.getColumnSlice().getColumns().isEmpty()) {
                 continue;
               }
+              
               GroupManagerDescription groupManager = getGroupManagerDescription(row);
               if (groupManager == null || groupManager.getId().equals(groupLeader_.getId()))
               {
+                  //skip the group leader.
                   continue;
               }
               
@@ -207,6 +228,16 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
             GroupManagerSummaryInformation summary) 
     {
         log_.debug(String.format("Adding summary information for groupmanager %s in the database",groupManagerId));
+        
+        // check if the gm exist ? 
+        //        GroupManagerDescription groupManager = getGroupManagerDescription(groupManagerId,0);
+        //        if (groupManager == null)
+        //        {
+        //            log_.error("No groupmanager stored with this id ... dropping summary");
+        //            return;
+        //        }
+        
+        
         StringSerializer stringSerializer = new StringSerializer();
         Mutator<String> mutator = HFactory.createMutator(keyspace_, stringSerializer);
         try{            
@@ -224,6 +255,7 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         catch(Exception exception)
         {
             log_.error("Unable to add groupmanager summary to the repository : " + exception.getMessage());
+            exception.printStackTrace();
             
         }
     }
@@ -245,18 +277,8 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
 
     public boolean addIpAddress(String ipAddress) 
     {
-        
-        try{
-            Mutator<String> mutator = HFactory.createMutator(keyspace_, StringSerializer.get());
-            mutator.addInsertion("0", CassandraUtils.IPSPOOL_CF, HFactory.createStringColumn(ipAddress, ""));
-            mutator.execute();
-        }
-        catch (Exception e)
-        {
-            log_.error(String.format("Unable to add ip %s to the pool %s", ipAddress, e.getMessage()));
-            e.printStackTrace();
-        }
-        return true;
+        boolean isAdded = CassandraUtils.addStringColumn(keyspace_,CassandraUtils.IPS_ROW_KEY, CassandraUtils.IPSPOOL_CF,ipAddress,""); 
+        return isAdded;
     }
 
     public boolean removeIpAddress(String ipAddress) 
@@ -415,8 +437,25 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         return addressPool;
     }
     
+    /**
+     * 
+     * Populates all the ips. 
+     * 
+     * TODO : batch this.
+     * 
+     * @param ipAddress
+     */
     protected void populateAddressPool(List<String> ipAddress) 
     {
+        // check if 
+        boolean isAlreadyPopulated = CassandraUtils.checkForRow(keyspace_, CassandraUtils.IPSPOOL_CF,CassandraUtils.IPS_ROW_KEY);
+        if (isAlreadyPopulated)
+        {
+            log_.debug("Ips pool has been already populated...nothing to do");
+            return;
+        }
+        log_.debug("Generating Ips");
+        
         for (String address : ipAddress)
         {
             addIpAddress(address);

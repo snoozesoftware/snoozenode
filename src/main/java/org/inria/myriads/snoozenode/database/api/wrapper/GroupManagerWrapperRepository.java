@@ -36,7 +36,8 @@ public class GroupManagerWrapperRepository implements GroupManagerRepository
     /**External notifier*/
     private ExternalNotifier externalNotifier_; 
     
-    public GroupManagerWrapperRepository(GroupManagerDescription groupManager, 
+    public GroupManagerWrapperRepository(
+            GroupManagerDescription groupManager, 
             int maxCapacity, 
             DatabaseSettings settings,
             ExternalNotifierSettings externalNotifierSettings,
@@ -45,7 +46,7 @@ public class GroupManagerWrapperRepository implements GroupManagerRepository
     {
         log_.debug("Initializing the group manager  wrapper repository");
         externalNotifier_ = externalNotifier;
-        repository_ = DatabaseFactory.newGroupManagerRepository(groupManager, maxCapacity, settings);
+        repository_ = DatabaseFactory.newGroupManagerRepository( groupManager, maxCapacity, settings);
     }
 
             

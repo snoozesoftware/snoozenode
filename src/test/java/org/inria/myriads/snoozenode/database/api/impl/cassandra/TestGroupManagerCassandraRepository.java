@@ -96,11 +96,11 @@ public class TestGroupManagerCassandraRepository extends TestCase
     @Override
     protected void tearDown() throws Exception 
     {
-//        cluster_.truncate("snooze", CassandraUtils.GROUPMANAGERS_CF);
-//        cluster_.truncate("snooze", CassandraUtils.GROUPMANAGERS_MONITORING_CF);
-//        cluster_.truncate("snooze", CassandraUtils.LOCALCONTROLLERS_CF);
-//        cluster_.truncate("snooze", CassandraUtils.LOCALCONTROLLERS_MAPPING_CF);
-//        cluster_.truncate("snooze", CassandraUtils.VIRTUALMACHINES_CF);        
+        cluster_.truncate("snooze", CassandraUtils.GROUPMANAGERS_CF);
+        cluster_.truncate("snooze", CassandraUtils.GROUPMANAGERS_MONITORING_CF);
+        cluster_.truncate("snooze", CassandraUtils.LOCALCONTROLLERS_CF);
+        cluster_.truncate("snooze", CassandraUtils.LOCALCONTROLLERS_MAPPING_CF);
+        cluster_.truncate("snooze", CassandraUtils.VIRTUALMACHINES_CF);        
     }
     
     /**
@@ -232,8 +232,7 @@ public class TestGroupManagerCassandraRepository extends TestCase
             repository_.addLocalControllerDescription(localControllerDescription);
         }
         
-        ArrayList<LocalControllerDescription> localControllers = repository_.getLocalControllerDescriptions(0, false, false);
-        
+        ArrayList<LocalControllerDescription> localControllers = repository_.getLocalControllerDescriptions(0, false, false);        
         assertEquals(10,localControllers.size());
     }
     
@@ -287,10 +286,10 @@ public class TestGroupManagerCassandraRepository extends TestCase
                 virtualMachines.put(virtualMachineId, virtualMachine);
             }
             // add monitoring ;
-            repository_.addAggregatedMonitoringData(localControllerId, aggregatedDatas);
             localControllerDescription.setVirtualMachineMetaData(virtualMachines);
             
             repository_.addLocalControllerDescription(localControllerDescription);
+            repository_.addAggregatedMonitoringData(localControllerId, aggregatedDatas);
         }
         
         ArrayList<LocalControllerDescription> localControllers = repository_.getLocalControllerDescriptions(5, false, true);
@@ -816,6 +815,30 @@ public class TestGroupManagerCassandraRepository extends TestCase
         {
             assertTrue(retrievedDescription.getUsedCapacity().containsKey(Long.valueOf(i)));
         }
+    }
+    
+    /**
+     * Gets Local controller descriptions.
+     * 
+     * test : 
+     *       all (active + passive + ...)
+     *       10 localcontrollers unassigned
+     */
+    public void testGetLocalControllerDescriptionsUnassigned()
+    {
+        for(int i=0; i<10; i++)
+        {
+            
+            LocalControllerDescription localControllerDescription = new LocalControllerDescription();
+            localControllerDescription.setId(String.valueOf(i));
+            localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);
+            repository_.addLocalControllerDescription(localControllerDescription);
+        }
+        
+        CassandraUtils.unassignNodes(keyspace_, CassandraUtils.LOCALCONTROLLERS_CF);
+        ArrayList<LocalControllerDescription> localControllers = repository_.getLocalControllerDescriptions(0, false, false);
+        
+        assertEquals(0,localControllers.size());
     }
     
 }

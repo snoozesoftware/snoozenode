@@ -179,12 +179,13 @@ public final class GroupManagerInit
     {        
         int maxCapacity = nodeConfiguration_.getDatabase().getNumberOfEntriesPerVirtualMachine();
         DatabaseSettings settings = nodeConfiguration_.getDatabase();
-        repository_ = DatabaseFactory.newGroupManagerRepository(description_, 
-                                                                maxCapacity, 
-                                                                settings,
-                                                                nodeConfiguration_.getExternalNotifier(),
-                                                                externalNotifier_
-                                                                );
+        repository_ = DatabaseFactory.newGroupManagerRepository(
+                description_, 
+                maxCapacity, 
+                settings,
+                nodeConfiguration_.getExternalNotifier(),
+                externalNotifier_
+                );
     }
     
     /**

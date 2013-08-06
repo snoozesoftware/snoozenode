@@ -117,17 +117,19 @@ public final class DatabaseFactory
      * @param type              The database type
      * @return                  The group manager repository
      */
-    public static GroupManagerRepository newGroupManagerRepository(GroupManagerDescription groupManager, 
-                                                                   int maxCapacity,
-                                                                   DatabaseSettings settings,
-                                                                   ExternalNotifierSettings externalNotifierSettings,
-                                                                   ExternalNotifier externalNotifier
+    public static GroupManagerRepository newGroupManagerRepository(
+            GroupManagerDescription groupManager, 
+            int maxCapacity,
+            DatabaseSettings settings,
+            ExternalNotifierSettings externalNotifierSettings,
+            ExternalNotifier externalNotifier
                                                                     ) 
     {
         return new GroupManagerWrapperRepository(groupManager, maxCapacity, settings, externalNotifierSettings, externalNotifier);
     }
     
-    public static GroupManagerRepository newGroupManagerRepository(GroupManagerDescription groupManager, 
+    public static GroupManagerRepository newGroupManagerRepository(
+            GroupManagerDescription groupManager, 
             int maxCapacity,
             DatabaseSettings settings)
     {

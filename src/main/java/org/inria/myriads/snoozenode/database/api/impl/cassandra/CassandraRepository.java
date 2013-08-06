@@ -18,9 +18,11 @@ import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.OrderedRows;
 import me.prettyprint.hector.api.beans.Row;
+import me.prettyprint.hector.api.beans.Rows;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.MutationResult;
 import me.prettyprint.hector.api.mutation.Mutator;
+import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceQuery;
 
@@ -203,7 +205,6 @@ public class CassandraRepository
         return localControllerDescription;
         
     }
-    
     /**
      * 
      * Gets the groupManager description.
@@ -294,11 +295,15 @@ public class CassandraRepository
      */
     protected GroupManagerDescription getGroupManagerDescription(Row<String, String, String> row) 
     {
-        log_.debug("Deserialize row from cassandra cluster from rwo id" + row.getKey());
+        log_.debug("Deserialize row from cassandra cluster from row id" + row.getKey());
         GroupManagerDescription groupManagerDescription = new GroupManagerDescription();
         ColumnSlice<String, String> columns = row.getColumnSlice();
         
-  
+        String isAssigned = columns.getColumnByName("isAssigned").getValue();
+        if (isAssigned.equals(CassandraUtils.stringFalse))
+        {
+            return null;
+        }
         String hostname = columns.getColumnByName("hostname").getValue();
         
         JsonSerializer heartbeatAddressSerializer = new JsonSerializer(NetworkAddress.class);
@@ -448,6 +453,8 @@ public class CassandraRepository
         indexedSlicesQuery.setColumnFamily(CassandraUtils.LOCALCONTROLLERS_CF);
         indexedSlicesQuery.setRange(null, null, false, 100);
         indexedSlicesQuery.addEqualsExpression("groupManager", groupManagerId);
+        indexedSlicesQuery.addEqualsExpression("isAssigned", CassandraUtils.stringTrue);
+        
         if (isActiveOnly)
         {
             indexedSlicesQuery.addEqualsExpression("status", String.valueOf(LocalControllerStatus.ACTIVE));
@@ -586,48 +593,9 @@ public class CassandraRepository
         return virtualMachineMetaData;
     }
     
-    protected boolean dropLocalController(String localControllerId, boolean forceDelete, boolean withVirtualMachines)
-    {
-        LocalControllerDescription localController = getLocalControllerDescriptionCassandra(localControllerId,0,true,0);
-        
-        if (localController==null)
-        {
-            log_.debug("unable to find the local controller " + localControllerId);
-            return false;
-        }
-        
-        if (localController.getStatus()==LocalControllerStatus.PASSIVE && !forceDelete)
-        {
-            log_.debug("This local controller is in PASSIVE mode! Will not delete!");
-            return false;
-        }
-
-        
-        boolean isLocalControllerDropped = drop(Arrays.asList(localController.getId()), CassandraUtils.LOCALCONTROLLERS_CF);
-        if (! isLocalControllerDropped)
-        {
-            log_.error("unable to remove the local controller " + localController.getId());
-            return false;
-        }
-        
-        boolean isMappingDropped = drop(Arrays.asList(localController.getControlDataAddress().toString()), CassandraUtils.LOCALCONTROLLERS_MAPPING_CF);
-        if (!isMappingDropped)
-        {
-            log_.error("Unable to remove the mapping for the assigned localcontroller");
-            return false;
-        }
-        
-        ArrayList<String> virtualMachineToRemove = new ArrayList<String>();
-        virtualMachineToRemove.addAll(localController.getVirtualMachineMetaData().keySet());
-        boolean isVirtualMachineDropped = drop(virtualMachineToRemove, CassandraUtils.VIRTUALMACHINES_CF);
-        if (!isVirtualMachineDropped )
-        {
-            log_.error("Unable to remove the virtual machines");
-            return false;
-        }
-        
-        return true;
-    }
+    
+    
+    
     
     /**
      * 
@@ -653,12 +621,13 @@ public class CassandraRepository
             log_.debug("Unable to find the group manager " + groupManagerId);
             return false;
         }
-        boolean isGroupManagerDropped = drop(Arrays.asList(groupManager.getId()), CassandraUtils.GROUPMANAGERS_CF);
+        boolean isGroupManagerDropped = CassandraUtils.drop(keyspace_, Arrays.asList(groupManager.getId()), CassandraUtils.GROUPMANAGERS_CF);
         if (! isGroupManagerDropped)
         {
             log_.error("Unable to remove the groupmanager " + groupManagerId);
             return false;
         }
+        
         if (withLocalControllers)
         {
             List<String> localControllerToRemove = new ArrayList<String>();
@@ -675,21 +644,24 @@ public class CassandraRepository
                 }
 
             }
-          boolean isLocalControllerDropped = drop(localControllerToRemove, CassandraUtils.LOCALCONTROLLERS_CF);
+          //boolean isLocalControllerDropped = drop(localControllerToRemove, CassandraUtils.LOCALCONTROLLERS_CF);
+          boolean isLocalControllerDropped = CassandraUtils.unassignNodes(keyspace_, localControllerToRemove, CassandraUtils.LOCALCONTROLLERS_CF);
           if (! isLocalControllerDropped)
           {
               log_.error("Unable to remove the assigned localcontrollers");
               return false;
           }
           
-          boolean isMappingDropped = drop(mappingToRemove, CassandraUtils.LOCALCONTROLLERS_MAPPING_CF);
-          if (!isMappingDropped)
-          {
-              log_.error("Unable to remove the mapping for the assigned localcontroller");
-              return false;
-          }
+          // should we remove the mapping  ?
+//          boolean isMappingDropped = drop(mappingToRemove, CassandraUtils.LOCALCONTROLLERS_MAPPING_CF);
+//          if (!isMappingDropped)
+//          {
+//              log_.error("Unable to remove the mapping for the assigned localcontroller");
+//              return false;
+//          }
           
-          boolean isVirtualMachineDropped = drop(virtualMachineToRemove, CassandraUtils.VIRTUALMACHINES_CF);
+          //boolean isVirtualMachineDropped = drop(virtualMachineToRemove, CassandraUtils.VIRTUALMACHINES_CF);
+          boolean isVirtualMachineDropped = CassandraUtils.unassignNodes(keyspace_, virtualMachineToRemove, CassandraUtils.VIRTUALMACHINES_CF);
           if (!isVirtualMachineDropped )
           {
               log_.error("Unable to remove the virtual machines");
@@ -701,34 +673,7 @@ public class CassandraRepository
         return true;
     }
                     
-    /**
-     * 
-     * Drop list of keys from a column family.
-     * 
-     * @param list                  List of keys
-     * @param columnFamily          Column family to remove from
-     */
-    protected boolean drop(List<String> list, String columnFamily)
-    {
-        
-        log_.debug(String.format("Removing %d keys from %s", list.size(), columnFamily));
-        try
-        {
-            Mutator<String> mutator = HFactory.createMutator(keyspace_, StringSerializer.get());
-            for(String rowId : list)
-            {
-                mutator.addDeletion(rowId, columnFamily);
-            }
-            mutator.execute();
-        }
-        catch(Exception exception)
-        {
-            log_.error(String.format("Unable to remove the keys from %s", columnFamily));
-            return false;
-        }
-        
-        return true;
-    }             
+     
     
     protected boolean addVirtualMachineCassandra(VirtualMachineMetaData virtualMachineMetaData)
     {
@@ -766,6 +711,8 @@ public class CassandraRepository
     
     protected boolean addLocalControllerDescriptionCassandra(String groupManagerId, LocalControllerDescription description)
     {
+        int ttl = 600000000 ;
+        
         try{
             String id = description.getId();
             String hostname = description.getHostname();
@@ -776,16 +723,16 @@ public class CassandraRepository
             NetworkAddress controlDataAddress = description.getControlDataAddress();
             
             Mutator<String> mutator = HFactory.createMutator(keyspace_, StringSerializer.get());
-            mutator.addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("hostname", hostname))
-                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("controlDataAddress", controlDataAddress, StringSerializer.get(), new JsonSerializer(NetworkAddress.class)))
-                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("hypervisorSettings", hypervisorSettings, StringSerializer.get(), new JsonSerializer(HypervisorSettings.class)))
-                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("totalCapacity", totalCapacity, StringSerializer.get(), new JsonSerializer(ArrayList.class)))
-                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("wakeupSettings", wakeupSettings, StringSerializer.get(), new JsonSerializer(WakeupSettings.class)))
-                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("isAssigned", true, StringSerializer.get(), BooleanSerializer.get()))
-                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("groupManager", groupManagerId))
-                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("status", String.valueOf(status)))
+            mutator.addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("hostname", hostname, ttl, StringSerializer.get(), StringSerializer.get()))
+                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("controlDataAddress", controlDataAddress, ttl, StringSerializer.get(), new JsonSerializer(NetworkAddress.class)))
+                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("hypervisorSettings", hypervisorSettings, ttl, StringSerializer.get(), new JsonSerializer(HypervisorSettings.class)))
+                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("totalCapacity", totalCapacity, ttl, StringSerializer.get(), new JsonSerializer(ArrayList.class)))
+                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("wakeupSettings", wakeupSettings, ttl, StringSerializer.get(), new JsonSerializer(WakeupSettings.class)))
+                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("isAssigned", true, ttl, StringSerializer.get(), BooleanSerializer.get()))
+                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("groupManager",  groupManagerId, ttl, StringSerializer.get(), StringSerializer.get()))
+                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("status", String.valueOf(status), ttl, StringSerializer.get(), StringSerializer.get()))
             //mapping add
-                    .addInsertion(controlDataAddress.toString(), CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, HFactory.createStringColumn("id", id));
+                    .addInsertion(controlDataAddress.toString(), CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, HFactory.createColumn("id", id, ttl, StringSerializer.get(), StringSerializer.get()));
             log_.debug("executing mutation");         
             MutationResult result = mutator.execute();
             log_.debug(String.format("Insertion done in %d", result.getExecutionTimeMicro()));
@@ -802,8 +749,9 @@ public class CassandraRepository
     
     protected boolean addGroupManagerDescriptionCassandra(GroupManagerDescription description, boolean isGroupLeader, boolean isAssigned)
     {
-        StringSerializer stringSerializer = new StringSerializer();
-        Mutator<String> mutator = HFactory.createMutator(keyspace_, stringSerializer);
+        int ttl = 600000000 ;         
+        
+        Mutator<String> mutator = HFactory.createMutator(keyspace_, StringSerializer.get());
         try{
             
             
@@ -812,11 +760,11 @@ public class CassandraRepository
             ListenSettings listenSettings = description.getListenSettings();
             NetworkAddress heartbeatAddress = description.getHeartbeatAddress();
             
-            mutator.addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("hostname", hostname, StringSerializer.get(), stringSerializer.get()))
-                   .addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("listenSettings", listenSettings,  StringSerializer.get(), new JsonSerializer(ListenSettings.class)))
-                   .addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("heartbeatAddress", heartbeatAddress, StringSerializer.get(), new JsonSerializer(NetworkAddress.class)))
-                   .addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("isAssigned", isAssigned, StringSerializer.get(),   new BooleanSerializer()))
-                   .addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("isGroupLeader", isGroupLeader, StringSerializer.get(),  new BooleanSerializer()));
+            mutator.addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("hostname", hostname, ttl, StringSerializer.get(), StringSerializer.get()))
+                   .addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("listenSettings", listenSettings, ttl,  StringSerializer.get(), new JsonSerializer(ListenSettings.class)))
+                   .addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("heartbeatAddress", heartbeatAddress, ttl,  StringSerializer.get(), new JsonSerializer(NetworkAddress.class)))
+                   .addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("isAssigned", isAssigned, ttl, StringSerializer.get(),   new BooleanSerializer()))
+                   .addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("isGroupLeader", isGroupLeader, ttl, StringSerializer.get(),  new BooleanSerializer()))
             ;
             
             MutationResult result = mutator.execute();
@@ -832,4 +780,12 @@ public class CassandraRepository
         return true;
     }
     
+    
+   
+    
+    
+    
+    
+    
+   
 }
