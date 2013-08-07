@@ -74,7 +74,7 @@ public class TestGroupLeaderCassandraRepository extends TestCase
 
     @Override
     protected void tearDown() throws Exception {
-        //repository_.clear();
+        repository_.clear();
     }
     
     /**

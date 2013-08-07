@@ -1,6 +1,4 @@
 package org.inria.myriads.snoozenode.database.api.impl.cassandra;
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -8,41 +6,30 @@ import java.util.List;
 
 
 
-import me.prettyprint.cassandra.model.CqlQuery;
 import me.prettyprint.cassandra.serializers.BooleanSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.service.CassandraHostConfigurator;
 import me.prettyprint.cassandra.service.ColumnSliceIterator;
 import me.prettyprint.cassandra.service.HColumnFamilyImpl;
-import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.HColumnFamily;
-import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
-import me.prettyprint.hector.api.beans.OrderedRows;
 import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.MutationResult;
 import me.prettyprint.hector.api.mutation.Mutator;
-import me.prettyprint.hector.api.query.QueryResult;
-import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import me.prettyprint.hector.api.query.SliceQuery;
 
 
 import org.apache.commons.net.util.SubnetUtils;
 import org.apache.commons.net.util.SubnetUtils.SubnetInfo;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
+
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
-import org.inria.myriads.snoozecommon.communication.groupmanager.ListenSettings;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
-import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +37,13 @@ import org.slf4j.LoggerFactory;
 
 
 
+/**
+ * 
+ * GroupLeader cassandra repository.
+ * 
+ * @author msimonin
+ *
+ */
 public class GroupLeaderCassandraRepository extends CassandraRepository implements GroupLeaderRepository
 {
     /** Logger. */
@@ -68,11 +62,28 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
     /** Leader Description.*/
     private GroupManagerDescription groupLeader_;
     
+     
+    
     /**
-     * @throws IOException 
-     * @throws JsonMappingException 
-     * @throws JsonParseException 
      * 
+     * Empty Construtor.
+     * 
+     */
+    public GroupLeaderCassandraRepository()
+    {
+        super("localhost:9160");
+        groupLeader_ = new GroupManagerDescription();
+        ttl_ = 600;
+    }
+    
+    /**
+     * 
+     * Constructor.
+     * 
+     * @param groupLeaderDescription    The group manager description.
+     * @param virtualMachineSubnets     The virtual machine subnets.
+     * @param maxCapacity               The max capacity.
+     * @param hosts                     The cassandra hosts to connect to.
      */
     public GroupLeaderCassandraRepository(
             GroupManagerDescription groupLeaderDescription,
@@ -82,14 +93,11 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
             ) 
     {        
         super(hosts);
-        // Truncate all column family
-        // Another solution would be to unassign every entry.
         unassignNodes();
-        //clear();
         ipAddress_ = generateAddressPool(virtualMachineSubnets);
         populateAddressPool(ipAddress_);
         maxCapacity_ = maxCapacity;
-        ttl_ = 60 ;
+        ttl_ = 60;
         groupLeader_ = groupLeaderDescription;
         addGroupManagerDescription(groupLeaderDescription, true, true);
         log_.debug("Connected to cassandra");
@@ -105,23 +113,18 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         CassandraUtils.unassignNodes(keyspace_, CassandraUtils.VIRTUALMACHINES_CF);
     }
     
-   
-        
-  
-
+    
+    
+    
     /**
      * 
-     * Empty Construtor.
-     * 
+     * Add group manager/leader description.
+     *  
+     * @param description       The description.
+     * @param isGroupLeader     True if it is the groupLeader.
+     * @param isAssigned        True if is assigned.
+     * @return                  True iff everything is ok.             
      */
-    public GroupLeaderCassandraRepository()
-    {
-        super("localhost:9160");
-        groupLeader_ = new GroupManagerDescription();
-        ttl_ = 600;
-    }
-    
-    
     private boolean addGroupManagerDescription(GroupManagerDescription description, 
                                                boolean isGroupLeader, 
                                                boolean isAssigned
@@ -132,9 +135,8 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         if (!isGroupManagerAdded)
         {
             log_.error("Unable to add the groupmanager %s to the repository");
-        }
-        
-        // TODO : batch this.
+        }        
+        // T ODO : batch this.
         // add associated local controller
         log_.debug("Adding associated localController for groupManager " + description.getId());
         for (LocalControllerDescription localController : description.getLocalControllers().values())
@@ -151,17 +153,23 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         return true;
     }
      
-    /**
+    /** 
+     * Adds a group manager description. 
      * 
-     * Adds the groupmanager to the repository.
-     * 
-     * 
+     * @param description   The group manager description
+     * @return              true if added, false otherwise
      */
     public boolean addGroupManagerDescription(GroupManagerDescription description)
     {
        return addGroupManagerDescription(description, false, true);
     }
 
+    /**
+     * Returns the group manager descriptions.
+     * 
+     * @param numberOfBacklogEntries    The number of backlog entries
+     * @return                          The group manager descriptions
+     */
     public ArrayList<GroupManagerDescription> getGroupManagerDescriptions(
             int numberOfBacklogEntries) 
     {
@@ -169,28 +177,31 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         
         ArrayList<GroupManagerDescription> groupManagers = new ArrayList<GroupManagerDescription>();
         
-        int row_count = 100;
+        int rowCount = 100;
 
-        String last_key = null;
+        String lastKey = null;
 
         //retrieve only assigned one an not gl...
-        while (true) {
+        while (true) 
+        {
             RowQueryIterator rowQueryIterator = new RowQueryIterator(
                     keyspace_, CassandraUtils.GROUPMANAGERS_CF,
-                    null, // start
-                    null, // end
-                    row_count); // rows to fetch 
+                    null,
+                    null,
+                    rowCount); 
 
             @SuppressWarnings("unchecked")
             Iterator<Row<String, String, String>> rowsIterator = rowQueryIterator.iterator();
             
-            if (last_key != null && rowsIterator != null) rowsIterator.next();   
+            if (lastKey != null && rowsIterator != null) rowsIterator.next();   
 
-            while (rowsIterator.hasNext()) {
+            while (rowsIterator.hasNext()) 
+            {
               Row<String, String, String> row = rowsIterator.next();
-              last_key = row.getKey();
+              lastKey = row.getKey();
               
-              if (row.getColumnSlice().getColumns().isEmpty()) {
+              if (row.getColumnSlice().getColumns().isEmpty()) 
+              {
                 continue;
               }
               
@@ -208,51 +219,53 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
               groupManagers.add(groupManager);
             }
 
-            if (rowQueryIterator.getCount() < row_count)
+            if (rowQueryIterator.getCount() < rowCount)
                 break;
         }
         return groupManagers;
     }
 
     
-    
-
+    /**
+     * Returns the group manager description.
+     * 
+     * @param groupManagerId            The group manager id
+     * @param numberOfBacklogEntries    The number of backlog entries
+     * @return                          The group manager description
+     */
     public GroupManagerDescription getGroupManagerDescription(String groupManagerId, int numberOfBacklogEntries) 
     {
-        return getGroupManagerDescriptionCassandra(groupManagerId, numberOfBacklogEntries,false,false,false,0);
+        return getGroupManagerDescriptionCassandra(groupManagerId, numberOfBacklogEntries, false, false, false, 0);
     }
 
     
-
+    /** 
+     * Adds group manager data.
+     * 
+     * @param groupManagerId            The group manager identifier
+     * @param summary                   The group manager summary information
+     */
     public void addGroupManagerSummaryInformation(String groupManagerId,
             GroupManagerSummaryInformation summary) 
     {
-        log_.debug(String.format("Adding summary information for groupmanager %s in the database",groupManagerId));
-        
-        // check if the gm exist ? 
-        //        GroupManagerDescription groupManager = getGroupManagerDescription(groupManagerId,0);
-        //        if (groupManager == null)
-        //        {
-        //            log_.error("No groupmanager stored with this id ... dropping summary");
-        //            return;
-        //        }
-        
+        log_.debug(String.format("Adding summary information for groupmanager %s in the database", groupManagerId));
         
         StringSerializer stringSerializer = new StringSerializer();
         Mutator<String> mutator = HFactory.createMutator(keyspace_, stringSerializer);
-        try{            
-           
-            
+        
+
+        try
+        {            
             mutator.addInsertion(groupManagerId, CassandraUtils.GROUPMANAGERS_MONITORING_CF, HFactory.createColumn(
                     summary.getTimeStamp(), 
                     summary,
                     ttl_,
                     new LongSerializer(), 
-                    new JsonSerializer(GroupManagerSummaryInformation.class))) ;
+                    new JsonSerializer(GroupManagerSummaryInformation.class)));
             MutationResult result = mutator.execute();
             log_.debug(String.format("Insertion done in %d", result.getExecutionTimeMicro()));
         }
-        catch(Exception exception)
+        catch (Exception exception)
         {
             log_.error("Unable to add groupmanager summary to the repository : " + exception.getMessage());
             exception.printStackTrace();
@@ -260,14 +273,20 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         }
     }
 
+    /** 
+     * Drops a group manager. 
+     * 
+     * @param groupManagerId       The group manager identifier
+     * @return                     true if everything ok, false otherwise
+     */
     public boolean dropGroupManager(String groupManagerId) 
     {
         log_.debug(String.format("Remove group manager %s from the cassandra cluster", groupManagerId));
         try
         {            
-            dropGroupManager(groupManagerId,true,true);
+            dropGroupManager(groupManagerId, true, true);
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             log_.error(String.format("Unable to remove group manager %s from the cassandra cluster", groupManagerId));
             return false;
@@ -275,12 +294,30 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         return true;
     }
 
+    
+    /**
+     * Adds the IP address.
+     * 
+     * @param ipAddress     The ip address
+     * @return              true if everything ok, false otherwise
+     */
     public boolean addIpAddress(String ipAddress) 
     {
-        boolean isAdded = CassandraUtils.addStringColumn(keyspace_,CassandraUtils.IPS_ROW_KEY, CassandraUtils.IPSPOOL_CF,ipAddress,""); 
+        boolean isAdded = CassandraUtils.addStringColumn(
+                keyspace_,
+                CassandraUtils.IPS_ROW_KEY, 
+                CassandraUtils.IPSPOOL_CF,
+                ipAddress,
+                ""); 
         return isAdded;
     }
 
+    /**
+     * Removes IP address from the pool.
+     * 
+     * @param ipAddress     The ip address
+     * @return              true if everything ok, false otherwise
+     */
     public boolean removeIpAddress(String ipAddress) 
     {
         log_.debug(String.format("Remove ip %s from ips pool", ipAddress));
@@ -291,7 +328,7 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
             mutator.delete("0", CassandraUtils.IPSPOOL_CF, ipAddress, StringSerializer.get());
             mutator.execute();
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             log_.error(String.format("Unable to remove ip  %s from the ips pool", ipAddress));
             return false;
@@ -299,14 +336,18 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         return true;
     }
 
+    /**
+     * Get the next free IP address.
+     * 
+     * @return     The next free ip address
+     */
     public String getFreeIpAddress() 
     {
         SliceQuery<String, String, String> query = HFactory.createSliceQuery(keyspace_, StringSerializer.get(),
                 StringSerializer.get(), StringSerializer.get()).
                 setColumnFamily(CassandraUtils.IPSPOOL_CF).
                 setKey("0").
-                setRange("", "", false, 1)
-                ;
+                setRange("", "", false, 1);
         
         ColumnSliceIterator<String, String, String> iterator = 
                 new ColumnSliceIterator<String, String, String>(query, null, "\uFFFF", false);       
@@ -319,6 +360,13 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         return null;
     }
 
+    
+    /**
+     * 
+     * Returns the local controllers list.
+     * 
+     * @return  The local controllers list (unused).
+     */
     public ArrayList<LocalControllerDescription> getLocalControllerList() 
     {
         
@@ -326,7 +374,11 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
     }
 
     /**
-     * Lookup
+     * 
+     * Gets the group manager assigned to the localcontroller identified by its contact information.
+     * 
+     * @param contactInformation        the contact address/port of the local controller.
+     * @return                          The assigned group manager or null if none is found.
      */
     public AssignedGroupManager getAssignedGroupManager(
             NetworkAddress contactInformation) 
@@ -335,15 +387,17 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         //look in the localcontroller column family (key is the uuid)
         try
         {
-
-            StringSerializer stringSerializer = new StringSerializer();
-            
             HColumnFamily<String, String> mappingColumnFamily =
-                    new HColumnFamilyImpl<String, String>(keyspace_, CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, stringSerializer, stringSerializer);
+                    new HColumnFamilyImpl<String, String>(
+                            keyspace_,
+                            CassandraUtils.LOCALCONTROLLERS_MAPPING_CF,
+                            StringSerializer.get(),
+                            StringSerializer.get());
+            
             mappingColumnFamily.addKey(contactInformation.toString());
             mappingColumnFamily.addColumnName("id");
             
-            String localControllerId = mappingColumnFamily.getValue("id", stringSerializer);
+            String localControllerId = mappingColumnFamily.getValue("id", StringSerializer.get());
             if (localControllerId == null)
             {
                 log_.warn("no id - address mapping exists for this local Controller");
@@ -351,8 +405,11 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
             }
             // we got the corresponding lc id.
             
-            HColumnFamily<String, String> localControllerColumnFamily =
-                    new HColumnFamilyImpl<String, String>(keyspace_, CassandraUtils.LOCALCONTROLLERS_CF, stringSerializer, stringSerializer);
+            HColumnFamily<String, String> localControllerColumnFamily = new HColumnFamilyImpl<String, String>(
+                            keyspace_, 
+                            CassandraUtils.LOCALCONTROLLERS_CF, 
+                            StringSerializer.get(), 
+                            StringSerializer.get());
                 localControllerColumnFamily.addKey(localControllerId);
                 localControllerColumnFamily.addColumnName("groupmanager")
                 .addColumnName("isAssigned")
@@ -361,10 +418,11 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
                 String groupManagerId  = localControllerColumnFamily.getValue("groupmanager", StringSerializer.get());
                 boolean isAssigned = localControllerColumnFamily.getValue("isAssigned", BooleanSerializer.get());
                
-                AssignedGroupManager assignedGroupManager = null ;
+                AssignedGroupManager assignedGroupManager = null;
                 if (isAssigned && groupManagerId != null)
                 {
-                    GroupManagerDescription assignedGroupManagerDescription = getGroupManagerDescription(groupManagerId, 0);
+                    GroupManagerDescription assignedGroupManagerDescription = 
+                            getGroupManagerDescription(groupManagerId, 0);
                     if (assignedGroupManagerDescription != null)
                     {
                         log_.debug("Found a previous assigned group manager");
@@ -386,7 +444,13 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         }
     }
 
-    public boolean updateLocation(VirtualMachineLocation location) 
+    
+    /**
+     * Given a local controller location updates the location with the proper groupmanager.
+     * @param location          The location.
+     * @return                  True if everything is ok.
+     */
+    public boolean updateLocation(VirtualMachineLocation location)
     {
         String localControllerId = location.getLocalControllerId();
         AssignedGroupManager lookup = getAssignedGroupManager(localControllerId);
@@ -396,10 +460,18 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         }
         
         location.setGroupManagerId(lookup.getGroupManager().getId());
-        location.setGroupManagerControlDataAddress(lookup.getGroupManager().getListenSettings().getControlDataAddress());
+        location.setGroupManagerControlDataAddress(
+                lookup.getGroupManager().getListenSettings().getControlDataAddress());
         return true;
     }
 
+    /**
+     * 
+     * Gets the group manager assigned to the localcontroller identified by its contact information.
+     * 
+     * @param localControllerId         The local controller id.
+     * @return                          The assigned group manager or null if none is found.
+     */
     private AssignedGroupManager getAssignedGroupManager(
             String localControllerId) 
     {
@@ -409,8 +481,10 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
     
     /**
      * 
-     * Should be nice if localControllerId = controlDataAddress.toString (fast lookup on column family)..
+     * Gets the localController description.
      * 
+     * @param localControllerId     The local controller id.
+     * @return                      The local controller description.
      */
     public LocalControllerDescription getLocalControllerDescription(String localControllerId) 
     {
@@ -441,14 +515,15 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
      * 
      * Populates all the ips. 
      * 
-     * TODO : batch this.
-     * 
-     * @param ipAddress
+     * @param ipAddress     The ip Address to populate.
      */
-    protected void populateAddressPool(List<String> ipAddress) 
+    protected void populateAddressPool(List<String> ipAddress)
     {
         // check if 
-        boolean isAlreadyPopulated = CassandraUtils.checkForRow(keyspace_, CassandraUtils.IPSPOOL_CF,CassandraUtils.IPS_ROW_KEY);
+        boolean isAlreadyPopulated = CassandraUtils.checkForRow(
+                keyspace_, 
+                CassandraUtils.IPSPOOL_CF,
+                CassandraUtils.IPS_ROW_KEY);
         if (isAlreadyPopulated)
         {
             log_.debug("Ips pool has been already populated...nothing to do");
@@ -462,17 +537,6 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         }
     }
     
-    /**
-     *
-     * Clear to repository.
-     * 
-     */
-    protected void clear()
-    {
-        cluster_.truncate("snooze", CassandraUtils.GROUPMANAGERS_CF);
-        cluster_.truncate("snooze", CassandraUtils.LOCALCONTROLLERS_CF);
-        cluster_.truncate("snooze", CassandraUtils.LOCALCONTROLLERS_MAPPING_CF);
-        cluster_.truncate("snooze", CassandraUtils.VIRTUALMACHINES_CF);
-    }
+
 
 }

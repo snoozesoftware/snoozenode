@@ -104,7 +104,7 @@ public interface GroupLeaderRepository
      * 
      * Returns the local controllers list.
      * 
-     * @return  The local controllers list
+     * @return  The local controllers list (unused).
      */
     ArrayList<LocalControllerDescription> getLocalControllerList();
 
@@ -120,8 +120,8 @@ public interface GroupLeaderRepository
 
     /**
      * Given a local controller location updates the location with the proper groupmanager.
-     * @param location
-     * @return
+     * @param                   location.
+     * @return                  True if everything is ok.
      */
     boolean updateLocation(VirtualMachineLocation location);
 

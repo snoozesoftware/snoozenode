@@ -96,11 +96,7 @@ public class TestGroupManagerCassandraRepository extends TestCase
     @Override
     protected void tearDown() throws Exception 
     {
-        cluster_.truncate("snooze", CassandraUtils.GROUPMANAGERS_CF);
-        cluster_.truncate("snooze", CassandraUtils.GROUPMANAGERS_MONITORING_CF);
-        cluster_.truncate("snooze", CassandraUtils.LOCALCONTROLLERS_CF);
-        cluster_.truncate("snooze", CassandraUtils.LOCALCONTROLLERS_MAPPING_CF);
-        cluster_.truncate("snooze", CassandraUtils.VIRTUALMACHINES_CF);        
+        repository_.clear();
     }
     
     /**
@@ -497,6 +493,7 @@ public class TestGroupManagerCassandraRepository extends TestCase
         virtualMachine.getVirtualMachineLocation().setVirtualMachineId("test-vm");
         virtualMachine.getVirtualMachineLocation().setGroupManagerId("gm1");
         virtualMachine.getVirtualMachineLocation().setLocalControllerId("lc1");
+        virtualMachine.setIpAddress("10.0.0.1");
         
         log_.debug("Adding test-vm assigned to lc1");
         repository_.addVirtualMachine(virtualMachine);
@@ -505,6 +502,8 @@ public class TestGroupManagerCassandraRepository extends TestCase
         virtualMachine.getVirtualMachineLocation().setVirtualMachineId("test-vm2");
         virtualMachine.getVirtualMachineLocation().setGroupManagerId("gm1");
         virtualMachine.getVirtualMachineLocation().setLocalControllerId("lc1");
+        virtualMachine.setIpAddress("10.0.0.2");
+        
         log_.debug("XML: "+virtualMachine.getXmlRepresentation());
         
         repository_.addVirtualMachine(virtualMachine);

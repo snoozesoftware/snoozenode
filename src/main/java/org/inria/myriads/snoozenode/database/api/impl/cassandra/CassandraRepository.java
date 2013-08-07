@@ -780,12 +780,17 @@ public class CassandraRepository
         return true;
     }
     
-    
-   
-    
-    
-    
-    
-    
-   
+    /**
+    *
+    * Clear to repository.
+    * 
+    */
+   protected void clear()
+   {
+       cluster_.truncate(keyspace_.getKeyspaceName(), CassandraUtils.GROUPMANAGERS_CF);
+       cluster_.truncate(keyspace_.getKeyspaceName(), CassandraUtils.LOCALCONTROLLERS_CF);
+       cluster_.truncate(keyspace_.getKeyspaceName(), CassandraUtils.LOCALCONTROLLERS_MAPPING_CF);
+       cluster_.truncate(keyspace_.getKeyspaceName(), CassandraUtils.VIRTUALMACHINES_CF);
+       cluster_.truncate(keyspace_.getKeyspaceName(), CassandraUtils.IPSPOOL_CF);
+   }
 }

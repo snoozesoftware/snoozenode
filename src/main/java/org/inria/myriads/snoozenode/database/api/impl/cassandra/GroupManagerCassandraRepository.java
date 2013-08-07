@@ -27,9 +27,13 @@ import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.Aggrega
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-
-
+/**
+ * 
+ * Group Manager Cassandra repository.
+ * 
+ * @author msimonin
+ *
+ */
 public class GroupManagerCassandraRepository extends CassandraRepository implements GroupManagerRepository
 {
     /** Logger. */
@@ -44,8 +48,14 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
    /** Time to live (monitoring info).*/
    private int ttl_;
    
+
     /**
-     * @param groupManagerId
+     * 
+     * Constructor.
+     * 
+     * @param groupManager  The group manager description.
+     * @param maxCapacity   The max capacity.
+     * @param hosts         The cassandra hosts to connect to.
      */
     public GroupManagerCassandraRepository(GroupManagerDescription groupManager, int maxCapacity, String hosts)
     {
@@ -53,7 +63,7 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         log_.debug("Initializing the group manager memory repository");
         legacyIpAddresses_ = new ArrayList<String>();
         groupManagerCache_ = new GroupManagerMemoryRepository(groupManager.getId(), 0);
-        ttl_ = 60 ;
+        ttl_ = 60;
     }
 
 
@@ -72,29 +82,28 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         log_.debug("Gets all localcontrollers");    
 
         ArrayList<LocalControllerDescription> localControllers = new ArrayList<LocalControllerDescription>();
-        //localControllers = groupManagerCache_.getLocalControllerDescriptions(numberOfMonitoringEntries, isActiveOnly, withVirtualMachines);
         // fetch from cassandra since we only need associated ones. (should be the same)
-        localControllers = getLocalControllerDescriptionsCassandra(getGroupManagerId(), numberOfMonitoringEntries, isActiveOnly,withVirtualMachines);
+        localControllers = getLocalControllerDescriptionsCassandra(
+                getGroupManagerId(), 
+                numberOfMonitoringEntries, 
+                isActiveOnly,
+                withVirtualMachines);
+        
         if (numberOfMonitoringEntries > 0)
         {
             for (LocalControllerDescription localController : localControllers)
             {
-                for(VirtualMachineMetaData virtualMachine : localController.getVirtualMachineMetaData().values())
+                for (VirtualMachineMetaData virtualMachine : localController.getVirtualMachineMetaData().values())
                 {
                     fillVirtualMachineMonitoringData(virtualMachine, numberOfMonitoringEntries);
                 }
             }
         }
-        return localControllers;
-        // fill with monitoring.
-        //return getLocalControllerDescriptionsCassandra(getGroupManagerId(), numberOfMonitoringEntries, isActiveOnly,withVirtualMachines);
-
+        return localControllers;   
     }
     
 
 
-
-    //
     @Override
     public boolean addLocalControllerDescription(LocalControllerDescription description)
     {   
@@ -170,7 +179,7 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         log_.debug(String.format("Removing local controller: %s, force: %s", localControllerId, forceDelete));
         
         // drop local controller and its associated virtualMachines.
-        boolean isDropped = dropLocalController(localControllerId,forceDelete,true);
+        boolean isDropped = dropLocalController(localControllerId, forceDelete, true);
         if (!isDropped)
         {
             log_.error("Unable to drop the local controller");
@@ -183,24 +192,25 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
     
     /**
      * 
-     * Drop a local controller with or without its virtualmachines.
+     * Drops a local controller with or without its virtualmachines.
      * 
-     * @param localControllerId
-     * @param forceDelete
-     * @param withVirtualMachines
-     * @return
+     * @param localControllerId         The local controller id.
+     * @param forceDelete               For delete (passive local controller).
+     * @param withVirtualMachines       True if associated virtual machines must be deleted.
+     * @return                          True if everything is ok.
      */
     private boolean dropLocalController(String localControllerId, boolean forceDelete, boolean withVirtualMachines)
     {
-        LocalControllerDescription localController = getLocalControllerDescriptionCassandra(localControllerId,0,true,0);
+        LocalControllerDescription localController = 
+                getLocalControllerDescriptionCassandra(localControllerId, 0, true, 0);
         
-        if (localController==null)
-        {
+        if (localController == null)
+        { 
             log_.debug("unable to find the local controller " + localControllerId);
             return false;
         }
         
-        if (localController.getStatus()==LocalControllerStatus.PASSIVE && !forceDelete)
+        if (localController.getStatus() == LocalControllerStatus.PASSIVE && !forceDelete)
         {
             log_.debug("This local controller is in PASSIVE mode! Will not delete!");
             return false;
@@ -213,14 +223,24 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
             return false;
         }
         
-        boolean isLocalControllerDropped = CassandraUtils.drop(keyspace_, Arrays.asList(localController.getId()), CassandraUtils.LOCALCONTROLLERS_CF);
-        if (! isLocalControllerDropped)
+        boolean isLocalControllerDropped = 
+                CassandraUtils.drop(
+                        keyspace_, 
+                        Arrays.asList(localController.getId()), 
+                        CassandraUtils.LOCALCONTROLLERS_CF);
+        
+        if (!isLocalControllerDropped)
         {
             log_.error("unable to remove the local controller " + localController.getId());
             return false;
         }
         
-        boolean isMappingDropped = CassandraUtils.drop(keyspace_, Arrays.asList(localController.getControlDataAddress().toString()), CassandraUtils.LOCALCONTROLLERS_MAPPING_CF);
+        boolean isMappingDropped = 
+                CassandraUtils.drop(
+                        keyspace_, 
+                        Arrays.asList(localController.getControlDataAddress().toString()), 
+                        CassandraUtils.LOCALCONTROLLERS_MAPPING_CF);
+        
         if (!isMappingDropped)
         {
             log_.error("Unable to remove the mapping for the assigned localcontroller");
@@ -229,9 +249,13 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         
         ArrayList<String> virtualMachineToRemove = new ArrayList<String>();
         virtualMachineToRemove.addAll(localController.getVirtualMachineMetaData().keySet());
-        //boolean isVirtualMachineDropped = drop(virtualMachineToRemove, CassandraUtils.VIRTUALMACHINES_CF);
-        boolean isVirtualMachineDropped = CassandraUtils.unassignNodes(keyspace_, virtualMachineToRemove, CassandraUtils.VIRTUALMACHINES_CF);
-        if (!isVirtualMachineDropped )
+        boolean isVirtualMachineDropped = 
+                CassandraUtils.drop(
+                        keyspace_, 
+                        virtualMachineToRemove,
+                        CassandraUtils.VIRTUALMACHINES_CF);
+
+        if (!isVirtualMachineDropped)
         {
             log_.error("Unable to remove the virtual machines");
             return false;
@@ -257,14 +281,13 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         log_.debug(String.format("Adding aggregated virtual machine monitoring data to the database for %d VMs", 
                                  aggregatedData.size()));
         
-        LocalControllerDescription description = groupManagerCache_.getLocalControllerDescription(localControllerId, 0, false);
+        LocalControllerDescription description = 
+                groupManagerCache_.getLocalControllerDescription(localControllerId, 0, false);
         if (description == null)
         {
             log_.error("Description not found in the cache");
             return;
         }
-        // reactivate ttls.
-        // addLocalControllerDescription(description);
         
         for (AggregatedVirtualMachineData aggregatedVirtualMachineData : aggregatedData) 
         {
@@ -273,10 +296,7 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
             VirtualMachineLocation location = new VirtualMachineLocation();
             location.setLocalControllerId(localControllerId);
             location.setVirtualMachineId(virtualMachineId);
-            VirtualMachineMetaData virtualMachine = groupManagerCache_.getVirtualMachineMetaData(location, 0);
-            // reactivate ttls.
-            //addVirtualMachine(virtualMachine);
-            
+         
             List<VirtualMachineMonitoringData> dataList = aggregatedVirtualMachineData.getMonitoringData();
             if (dataList.isEmpty())
             {
@@ -328,7 +348,8 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
     @Override
     public boolean dropVirtualMachineData(VirtualMachineLocation location)
     {
-        log_.debug(String.format("Remove virtual machine %s from the cassandra cluster", location.getVirtualMachineId()));
+        log_.debug(String.format("Remove virtual machine %s from the cassandra cluster",
+                        location.getVirtualMachineId()));
         
         
         VirtualMachineMetaData virtualMachine = getVirtualMachineMetaData(location, 0);
@@ -403,9 +424,9 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
             String virtualMachineId = location.getVirtualMachineId();
             RowQueryIterator rowQueryIterator = new RowQueryIterator(
                     keyspace_, CassandraUtils.VIRTUALMACHINES_CF,
-                    virtualMachineId, // start
-                    virtualMachineId, // end
-                    1); // rows to fecth 
+                    virtualMachineId, 
+                    virtualMachineId, 
+                    1);  
             @SuppressWarnings("unchecked")
             Iterator<Row<String, String, String>> rowsIterator = rowQueryIterator.iterator();
             if (!rowsIterator.hasNext())
@@ -417,9 +438,9 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
             log_.debug("found matching row with id" + row.getKey());
             
             
-            VirtualMachineMetaData retrievedVirtualMachine ;
+            VirtualMachineMetaData retrievedVirtualMachine;
          
-            if ( ! row.getKey().equals(virtualMachineId))
+            if (!row.getKey().equals(virtualMachineId))
             {
                 return null;
             }
@@ -514,7 +535,6 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
     @Override
     public String searchVirtualMachine(String virtualMachineId)
     {
-        // TODO Auto-generated method stub
         return null;
     }
     @Override
@@ -550,7 +570,8 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         Guard.check(localControllerId, status);
         log_.debug(String.format("Changing local controller %s status to %s", localControllerId, status));
         
-        LocalControllerDescription localControllerDescription = getLocalControllerDescription(localControllerId, 0, false);
+        LocalControllerDescription localControllerDescription = 
+                getLocalControllerDescription(localControllerId, 0, false);
         if (localControllerDescription == null)
         {
             log_.debug("No local controller description exists");
@@ -573,7 +594,6 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
     @Override
     public String hasLocalController(NetworkAddress localControllerAddress)
     {
-        // TODO Auto-generated method stub
         //unused if gl knows lc (e.g with permanent db)
         return null;
     }
@@ -583,7 +603,6 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
     public boolean updateVirtualMachineMetaData(VirtualMachineMetaData virtualMachine)
     {
         return true;
-        
         //update_cache(inc)
     }
 
@@ -597,8 +616,8 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         String localControllerId = location.getLocalControllerId();
         log_.debug(String.format("Getting local controller description for virtual machine: %s", virtualMachineId));
         
-        LocalControllerDescription localController = getLocalControllerDescription(localControllerId,0,false);
-        if (localController==null)
+        LocalControllerDescription localController = getLocalControllerDescription(localControllerId, 0, false);
+        if (localController == null)
         {
             log_.debug("The local controller description is NULL");
             return null;
@@ -614,7 +633,8 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
             int numberOfMonitoringEntries, boolean withVirtualMachines)
     {
 
-        LocalControllerDescription localController = groupManagerCache_.getLocalControllerDescription(localControllerId, 0, withVirtualMachines);
+        LocalControllerDescription localController = 
+                groupManagerCache_.getLocalControllerDescription(localControllerId, 0, withVirtualMachines);
         
         
         // cassandra request.
@@ -626,13 +646,6 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
             }
         }
         
-//        LocalControllerDescription localController = getLocalControllerDescriptionCassandra(
-//                localControllerId,
-//                numberOfMonitoringEntries,
-//                withVirtualMachines,
-//                numberOfMonitoringEntries
-//                );
-//        
         return localController;
     }
     
@@ -640,8 +653,8 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
      * 
      * Release networking information.
      * 
-     * @param localController
-     * @return
+     * @param localController       The local controller description.
+     * @return                      True if everything is ok.
      */
     protected boolean releaseLocalControllerNetworkingInformation(LocalControllerDescription localController)
     {

@@ -7,14 +7,13 @@ import java.nio.charset.Charset;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import me.prettyprint.cassandra.serializers.AbstractSerializer;
+import me.prettyprint.cassandra.serializers.LongSerializer;
 
 public class JsonSerializer extends AbstractSerializer<Object> 
 {
     private static final String UTF_8 = "UTF-8";
     private static final Charset charset = Charset.forName(UTF_8);
     private Class<?> class_;
-    
-    
     
     public JsonSerializer(Class<?> clazz) 
     {
@@ -65,6 +64,27 @@ public class JsonSerializer extends AbstractSerializer<Object>
         }
     }
 
+        public String toString(Object obj)
+        {
+            if (obj == null)
+            {
+                return null;
+            }
+            
+            ObjectMapper mapper = new ObjectMapper();
+            Writer strWriter = new StringWriter();
+            
+            try {
+                mapper.writeValue(strWriter, obj);
+                String json = strWriter.toString();
+                return json;
+            }
+            catch(Exception exception)
+            {
+                return null;
+            }
+        }
+    
         public Object fromString(String string)
         {
             if (string == null)

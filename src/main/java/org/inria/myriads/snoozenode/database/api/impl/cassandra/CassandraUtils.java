@@ -31,10 +31,10 @@ public final class CassandraUtils
     public static  String KEYSPACE = "snooze";
     
     /** virtual Machines column family. */
-    public static  String VIRTUALMACHINES_CF = "Virtualmachines";
+    public static  String VIRTUALMACHINES_CF = "virtualmachines";
     
     /** virtual Machines column family. */
-    public static  String VIRTUALMACHINES_MONITORING_CF = "Virtualmachines_monitoring";
+    public static  String VIRTUALMACHINES_MONITORING_CF = "virtualmachines_monitorings";
     
     /** Groupmanagers column family. */
     public static  String GROUPMANAGERS_CF = "groupmanagers";
@@ -42,13 +42,13 @@ public final class CassandraUtils
     public static  String LOCALCONTROLLERS_CF = "localcontrollers";
     
     /** localcontrollers monitoring column family. */
-    public static  String LOCALCONTROLLERS_MAPPING_CF = "localcontrollers_mapping";
+    public static  String LOCALCONTROLLERS_MAPPING_CF = "localcontrollers_mappings";
     
     /** groupmanagers column family. */
     public static  String GROUPMANAGERS_MONITORING_CF = "groupmanagers_monitorings";
     
     /** ippools column family. */
-    public static  String IPSPOOL_CF = "ipspool";
+    public static  String IPSPOOL_CF = "ipspools";
     
     /** Ips row key in IPSPOOL_CF*/
     public static final String IPS_ROW_KEY = "0";
