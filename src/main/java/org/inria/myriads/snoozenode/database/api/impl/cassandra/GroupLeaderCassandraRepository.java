@@ -31,6 +31,9 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
+import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraUtils;
+import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.JsonSerializer;
+import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.RowQueryIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

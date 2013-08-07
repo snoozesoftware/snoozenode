@@ -1,9 +1,10 @@
-package org.inria.myriads.snoozenode.database.api.impl.cassandra;
+package org.inria.myriads.snoozenode.database.api.impl.cassandra.utils;
 
 import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 
+import org.inria.myriads.snoozenode.database.api.impl.cassandra.CassandraRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +83,7 @@ public final class CassandraUtils
      * @param columnFamily
      * @return
      */
-    protected static boolean addStringColumn(Keyspace keyspace, String rowKey, String columnFamily, String name, String value)
+    public static boolean addStringColumn(Keyspace keyspace, String rowKey, String columnFamily, String name, String value)
     {
         try{
             Mutator<String> mutator = HFactory.createMutator(keyspace, StringSerializer.get());
@@ -106,7 +107,7 @@ public final class CassandraUtils
      * @param rowKey
      * @return
      */
-    protected static boolean checkForRow(Keyspace keyspace, String columnFamily, String rowKey)
+    public static boolean checkForRow(Keyspace keyspace, String columnFamily, String rowKey)
     {
         RowQueryIterator rowQueryIterator = new RowQueryIterator(
                 keyspace, CassandraUtils.IPSPOOL_CF,
@@ -132,7 +133,7 @@ public final class CassandraUtils
      * @param list                  List of keys
      * @param columnFamily          Column family to remove from
      */
-    protected static boolean drop(Keyspace keyspace, List<String> list, String columnFamily)
+    public static boolean drop(Keyspace keyspace, List<String> list, String columnFamily)
     {
         
         log_.debug(String.format("Removing %d keys from %s", list.size(), columnFamily));
@@ -159,7 +160,7 @@ public final class CassandraUtils
      * @param keys
      * @param columnFamily
      */
-    protected static boolean unassignNodes(Keyspace keyspace, List<String> keys, String columnFamily)
+    public static boolean unassignNodes(Keyspace keyspace, List<String> keys, String columnFamily)
     {
         try
         {
@@ -201,7 +202,7 @@ public final class CassandraUtils
     }
 
     
-    protected static void unassignNodes(Keyspace keyspace, String columnFamily)
+    public static void unassignNodes(Keyspace keyspace, String columnFamily)
     {
         log_.debug("Unassign all the group managers");
 

@@ -29,7 +29,8 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDes
 import org.inria.myriads.snoozecommon.communication.groupmanager.ListenSettings;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
-import org.inria.myriads.snoozenode.database.api.impl.cassandra.JsonSerializer;
+import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraUtils;
+import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.JsonSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,4 +1,4 @@
-package org.inria.myriads.snoozenode.database.api.impl.cassandra;
+package org.inria.myriads.snoozenode.database.api.impl.cassandra.utils;
 
 import java.io.StringWriter;
 import java.io.Writer;

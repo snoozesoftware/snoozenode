@@ -40,7 +40,8 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.globals.Globals;
-import org.inria.myriads.snoozenode.database.api.impl.cassandra.JsonSerializer;
+import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraUtils;
+import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.JsonSerializer;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,4 +1,4 @@
-package org.inria.myriads.snoozenode.database.api.impl.cassandra;
+package org.inria.myriads.snoozenode.database.api.impl.cassandra.utils;
 
 import java.util.Iterator;
 
@@ -10,7 +10,7 @@ import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 
-public class IndexedRowQueryIterator implements Iterable<Row<String,String,String>>
+public class RowQueryIterator implements Iterable<Row<String,String,String>>
 {
     private final Keyspace keyspace_;
     
@@ -34,12 +34,12 @@ public class IndexedRowQueryIterator implements Iterable<Row<String,String,Strin
     
     private String columnEnd_;
     
-    IndexedRowQueryIterator(Keyspace keyspace, String columnFamily, String start, String end, int rowCount)
+    public RowQueryIterator(Keyspace keyspace, String columnFamily, String start, String end, int rowCount)
     {
         this(keyspace, columnFamily, start, end, rowCount, null, null, false, 100);
     }
     
-    IndexedRowQueryIterator(Keyspace keyspace, 
+    RowQueryIterator(Keyspace keyspace, 
                      String columnFamily, 
                      String start, 
                      String end,
