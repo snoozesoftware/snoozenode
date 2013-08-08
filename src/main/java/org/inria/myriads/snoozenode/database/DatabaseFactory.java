@@ -22,12 +22,15 @@ package org.inria.myriads.snoozenode.database;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
+import org.inria.myriads.snoozenode.database.api.BootstrapRepository;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 
+import org.inria.myriads.snoozenode.database.api.impl.cassandra.BootstrapCassandraRepository;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.GroupLeaderCassandraRepository;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.GroupManagerCassandraRepository;
+import org.inria.myriads.snoozenode.database.api.impl.memory.BootstrapMemoryRepository;
 import org.inria.myriads.snoozenode.database.api.impl.memory.GroupLeaderMemoryRepository;
 import org.inria.myriads.snoozenode.database.api.impl.memory.GroupManagerMemoryRepository;
 import org.inria.myriads.snoozenode.database.api.impl.memory.LocalControllerMemoryRepository;
@@ -150,6 +153,25 @@ public final class DatabaseFactory
         return repository;
     }
 
+    public static BootstrapRepository newBootstrapRepository(DatabaseSettings settings)
+    {
+        BootstrapRepository repository = null;
+        DatabaseType type = settings.getType();
+        switch (type) 
+        {
+            case memory :       
+                repository = new BootstrapMemoryRepository();
+                break;
+            case cassandra:
+                String hosts = settings.getCassandraSettings().getHosts();
+                repository = new BootstrapCassandraRepository(hosts);
+                break;
+            default:
+                log_.error("Unknown bootstrap database type selected");
+        }
+        return repository;
+    }
+    
     /**
      * Returns the local controller repository.
      * 

@@ -70,12 +70,13 @@ public class TestGroupLeaderCassandraRepository extends TestCase
         keyspace_ = HFactory.createKeyspace("snooze", cluster_);   
         
         repository_ = new GroupLeaderCassandraRepository();
+        repository_.clear();
     }
     
 
     @Override
     protected void tearDown() throws Exception {
-        repository_.clear();
+
     }
     
     /**

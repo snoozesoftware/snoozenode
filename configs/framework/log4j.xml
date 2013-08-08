@@ -58,7 +58,6 @@
 	</logger>
 
 	<logger name="httpclient.wire">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>	
 	</logger>
 

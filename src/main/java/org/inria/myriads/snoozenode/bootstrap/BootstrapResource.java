@@ -19,9 +19,25 @@
  */
 package org.inria.myriads.snoozenode.bootstrap;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerList;
+import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.BootstrapAPI;
+import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
+import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozecommon.request.HostListRequest;
+import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
+import org.restlet.resource.Get;
+import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,6 +115,137 @@ public final class BootstrapResource extends ServerResource
         return hierarchy;
     }
     
+   
+
+    private synchronized boolean commandVirtualMachine(VirtualMachineCommand command, String virtualMachineId)
+    {
+        if (!isBackendActive())
+        {
+            log_.debug("Backend is not initialized yet!");
+            return false;
+        }
+        VirtualMachineMetaData virtualMachine = 
+                backend_.getRepository().getVirtualMachineMetaData(virtualMachineId, 0);
+        
+        if (virtualMachine == null)
+        {
+            log_.debug(String.format("Virtual Machine %s not found in the system", virtualMachineId));
+            return false;
+        }
+        
+        VirtualMachineLocation location = virtualMachine.getVirtualMachineLocation();
+        NetworkAddress groupManagerAddress = location.getGroupManagerControlDataAddress();
+        GroupManagerAPI groupManagerCommunicator = CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress);
+        boolean isProcessed = false;
+        switch(command)
+        {
+            case DESTROY:
+                isProcessed = groupManagerCommunicator.destroyVirtualMachine(location);
+                break;
+            case REBOOT :
+                isProcessed = groupManagerCommunicator.rebootVirtualMachine(location);
+                break;
+            case SUSPEND :
+                isProcessed = groupManagerCommunicator.suspendVirtualMachine(location);
+                break;
+            case RESUME :
+                isProcessed = groupManagerCommunicator.resumeVirtualMachine(location);
+                break;
+            case SHUTDOWN : 
+                isProcessed = groupManagerCommunicator.shutdownVirtualMachine(location);
+                break;
+            default : 
+                log_.debug("Unknown command provided");
+        }
+        
+        return isProcessed;
+        
+    }
+    public synchronized boolean destroyVirtualMachine(String virtualMachineId)
+    {
+        log_.debug("Processing destroy for virtual machine " + virtualMachineId);
+        return commandVirtualMachine(VirtualMachineCommand.DESTROY, virtualMachineId);
+    }
+    
+    
+    @Override
+    public boolean suspendVirtualMachine(String virtualMachineId)
+    {
+        log_.debug("Processing suspend for virtual machine " + virtualMachineId);
+        return commandVirtualMachine(VirtualMachineCommand.SUSPEND, virtualMachineId);
+    }
+    
+
+    @Override
+    public boolean rebootVirtualMachine(String virtualMachineId)
+    {
+        log_.debug("Processing reboot for virtual machine " + virtualMachineId);
+        return commandVirtualMachine(VirtualMachineCommand.REBOOT, virtualMachineId);
+    }
+
+    @Override
+    public boolean shutdownVirtualMachine(String virtualMachineId)
+    {
+        log_.debug("Processing reboot for virtual machine " + virtualMachineId);
+        return commandVirtualMachine(VirtualMachineCommand.SHUTDOWN, virtualMachineId);
+    }
+
+    @Override
+    public boolean resumeVirtualMachine(String virtualMachineId)
+    {
+        log_.debug("Processing reboot for virtual machine " + virtualMachineId);
+        return commandVirtualMachine(VirtualMachineCommand.RESUME, virtualMachineId);
+    }
+
+    @Override
+    public boolean migrateVirtualMachine(String virtualMachineId, String LocalControllerId)
+    {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+  
+    
+    /**
+     * Dispatches the virtual cluster submission request.
+     * (called by the client)
+     * 
+     * @param  virtualClusterDescription  The virtual cluster description
+     * @return                            The assigned task identifier
+     */
+    @Override
+    public String startVirtualCluster(VirtualClusterSubmissionRequest virtualClusterDescription) 
+    {
+        Guard.check(virtualClusterDescription);
+        log_.debug("Received virtual cluster start request");
+        
+        GroupManagerDescription groupLeader = getGroupLeaderDescription();
+        NetworkAddress groupLeaderAddress = groupLeader.getListenSettings().getControlDataAddress();
+        
+        GroupManagerAPI groupLeaderCommunicator = CommunicatorFactory.newGroupManagerCommunicator(groupLeaderAddress);
+        String taskIdentifier = groupLeaderCommunicator.startVirtualCluster(virtualClusterDescription);  
+        log_.debug(String.format("Returning task identifier: %s", taskIdentifier));
+        
+        return taskIdentifier;  
+    }
+
+    @Override
+    public List<GroupManagerDescription> getGroupManagerDescriptions(HostListRequest hostListRequest)
+    {
+        
+        if (!isBackendActive())
+        {
+            log_.debug("Backend is not initialized yet!");
+            return null;
+        }
+        String firstGroupManagerId = hostListRequest.getStart();
+        int limit = hostListRequest.getLimit();
+        List<GroupManagerDescription> groupManagerDescriptions = new ArrayList<GroupManagerDescription>();
+        groupManagerDescriptions = backend_.getRepository().getGroupManagerDescriptions(firstGroupManagerId, limit);
+        return groupManagerDescriptions;
+    }
+
+
     /** 
      * Check backend activity.
      * 
@@ -106,11 +253,24 @@ public final class BootstrapResource extends ServerResource
      */
     private boolean isBackendActive()
     {
-        if (backend_ == null) 
+        if (backend_ == null && backend_.isActive()) 
         {
             return false;
         }
         
         return true;
+    }
+
+    @Override
+    public LocalControllerList geLocalControllerList()
+    {
+        if (!isBackendActive())
+        {
+            log_.debug("Backend is not initialized yet!");
+            return null;
+        }
+        LocalControllerList localControllerList = backend_.getRepository().getLocalControllerList();
+                 
+        return localControllerList;
     }
 }

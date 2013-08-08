@@ -91,13 +91,15 @@ public class TestGroupManagerCassandraRepository extends TestCase
         repository_ = new GroupManagerCassandraRepository(groupManager, 10, "localhost:9160");
         //add the gm to the repo (cache management)
         repository_.addGroupManagerDescriptionCassandra(groupManager, false, true);
+        
+        repository_.clear();
     }
     
 
     @Override
     protected void tearDown() throws Exception 
     {
-        repository_.clear();
+//        repository_.clear();
     }
     
     /**

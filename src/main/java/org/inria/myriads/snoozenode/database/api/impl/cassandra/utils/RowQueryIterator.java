@@ -67,8 +67,6 @@ public class RowQueryIterator implements Iterable<Row<String,String,String>>
                 .setRowCount(rowCount_)
                 .setRange(columnFirst_, columnEnd_, reversed_, count_);
                 
-        
-        rangeSlicesQuery.execute();
         QueryResult<OrderedRows<String, String, String>> result = rangeSlicesQuery.execute();
         OrderedRows<String, String, String> rows = result.get();
         getCount_ = rows.getCount();

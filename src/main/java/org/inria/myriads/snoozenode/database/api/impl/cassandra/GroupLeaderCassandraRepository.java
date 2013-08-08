@@ -179,53 +179,55 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         log_.debug("Gets all the group managers");
         
         ArrayList<GroupManagerDescription> groupManagers = new ArrayList<GroupManagerDescription>();
+        groupManagers = getGroupManagerDescriptionsOnly(null, -1, true, numberOfBacklogEntries);
         
-        int rowCount = 100;
-
-        String lastKey = null;
-
-        //retrieve only assigned one an not gl...
-        while (true) 
-        {
-            RowQueryIterator rowQueryIterator = new RowQueryIterator(
-                    keyspace_, CassandraUtils.GROUPMANAGERS_CF,
-                    null,
-                    null,
-                    rowCount); 
-
-            @SuppressWarnings("unchecked")
-            Iterator<Row<String, String, String>> rowsIterator = rowQueryIterator.iterator();
-            
-            if (lastKey != null && rowsIterator != null) rowsIterator.next();   
-
-            while (rowsIterator.hasNext()) 
-            {
-              Row<String, String, String> row = rowsIterator.next();
-              lastKey = row.getKey();
-              
-              if (row.getColumnSlice().getColumns().isEmpty()) 
-              {
-                continue;
-              }
-              
-              GroupManagerDescription groupManager = getGroupManagerDescription(row);
-              if (groupManager == null || groupManager.getId().equals(groupLeader_.getId()))
-              {
-                  //skip the group leader.
-                  continue;
-              }
-              
-              if (numberOfBacklogEntries > 0)
-              {
-                  fillGroupManagerSummaryInformation(groupManager, numberOfBacklogEntries);
-              }
-              groupManagers.add(groupManager);
-            }
-
-            if (rowQueryIterator.getCount() < rowCount)
-                break;
-        }
         return groupManagers;
+//        int rowCount = 100;
+//
+//        String lastKey = null;
+//
+//        //retrieve only assigned one an not gl...
+//        while (true) 
+//        {
+//            RowQueryIterator rowQueryIterator = new RowQueryIterator(
+//                    keyspace_, CassandraUtils.GROUPMANAGERS_CF,
+//                    null,
+//                    null,
+//                    rowCount); 
+//
+//            @SuppressWarnings("unchecked")
+//            Iterator<Row<String, String, String>> rowsIterator = rowQueryIterator.iterator();
+//            
+//            if (lastKey != null && rowsIterator != null) rowsIterator.next();   
+//
+//            while (rowsIterator.hasNext()) 
+//            {
+//              Row<String, String, String> row = rowsIterator.next();
+//              lastKey = row.getKey();
+//              
+//              if (row.getColumnSlice().getColumns().isEmpty()) 
+//              {
+//                continue;
+//              }
+//              
+//              GroupManagerDescription groupManager = getGroupManagerDescription(row);
+//              if (groupManager == null || groupManager.getId().equals(groupLeader_.getId()))
+//              {
+//                  //skip the group leader.
+//                  continue;
+//              }
+//              
+//              if (numberOfBacklogEntries > 0)
+//              {
+//                  fillGroupManagerSummaryInformation(groupManager, numberOfBacklogEntries);
+//              }
+//              groupManagers.add(groupManager);
+//            }
+//
+//            if (rowQueryIterator.getCount() < rowCount)
+//                break;
+//        }
+//        return groupManagers;
     }
 
     

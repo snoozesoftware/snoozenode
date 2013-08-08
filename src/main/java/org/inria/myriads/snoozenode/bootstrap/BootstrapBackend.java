@@ -31,6 +31,9 @@ import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
+import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
+import org.inria.myriads.snoozenode.database.DatabaseFactory;
+import org.inria.myriads.snoozenode.database.api.BootstrapRepository;
 import org.inria.myriads.snoozenode.heartbeat.HeartbeatFactory;
 import org.inria.myriads.snoozenode.heartbeat.listener.HeartbeatListener;
 import org.inria.myriads.snoozenode.heartbeat.message.HeartbeatMessage;
@@ -52,6 +55,15 @@ public final class BootstrapBackend
     /** The group leader description. */
     private GroupManagerDescription groupLeaderDescription_;
     
+    
+    private NodeConfiguration nodeConfiguration_;
+    
+    /** The repository.*/
+    private BootstrapRepository repository_;
+    
+    /** Track backend activity.*/
+    private boolean isActive_ = false;
+    
     /**
      * Bootstrap backend constructor.
      * 
@@ -63,13 +75,22 @@ public final class BootstrapBackend
     {
         Guard.check(nodeParameters);
         log_.debug("Starting bootstrap backend");
+        nodeConfiguration_ = nodeParameters;
         NetworkAddress address = nodeParameters.getNetworking().getMulticast().getGroupLeaderHeartbeatAddress();
         int heartbeatTimeout = nodeParameters.getFaultTolerance().getHeartbeat().getTimeout();
         new Thread(HeartbeatFactory.newHeartbeatMulticastListener(address, 
                                                                   heartbeatTimeout,
                                                                   this)).start();
+        initializeRepository();
+        isActive_ = true;
     }
     
+    private void initializeRepository()
+    {
+        DatabaseSettings settings = nodeConfiguration_.getDatabase();
+        repository_ = DatabaseFactory.newBootstrapRepository(settings);
+    }
+
     /** 
      * Return current group leader.
      *  
@@ -194,5 +215,21 @@ public final class BootstrapBackend
         GroupManagerRepositoryInformation information = 
                 groupManagerCommunicator.getGroupManagerRepositoryInformation(numberOfBacklogEntries);
         return information;        
+    }
+
+    /**
+     * 
+     * Gets the bootstrap repository.
+     * 
+     * @return      The repository.
+     */
+    public BootstrapRepository getRepository()
+    {
+        return repository_;
+    }
+
+    public boolean isActive()
+    {
+        return isActive_;
     }
 }

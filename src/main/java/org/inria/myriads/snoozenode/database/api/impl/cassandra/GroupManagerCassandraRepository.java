@@ -421,48 +421,8 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
             int numberOfMonitoringEntries)
     {
         Guard.check(location, numberOfMonitoringEntries);
-        log_.debug("Getting virtual machine meta data for " + location.getVirtualMachineId());
-        try
-        {
-            String virtualMachineId = location.getVirtualMachineId();
-            RowQueryIterator rowQueryIterator = new RowQueryIterator(
-                    keyspace_, CassandraUtils.VIRTUALMACHINES_CF,
-                    virtualMachineId, 
-                    virtualMachineId, 
-                    1);  
-            @SuppressWarnings("unchecked")
-            Iterator<Row<String, String, String>> rowsIterator = rowQueryIterator.iterator();
-            if (!rowsIterator.hasNext())
-            {
-                log_.debug("NOT FOUND");
-                return null;
-            }
-            Row<String, String, String> row = (Row<String, String, String>) rowsIterator.next();
-            log_.debug("found matching row with id" + row.getKey());
-            
-            
-            VirtualMachineMetaData retrievedVirtualMachine;
-         
-            if (!row.getKey().equals(virtualMachineId))
-            {
-                return null;
-            }
-            
-            retrievedVirtualMachine = getVirtualMachineMetaData(row);
-            
-            if (numberOfMonitoringEntries > 0)
-            {
-                fillVirtualMachineMonitoringData(retrievedVirtualMachine, numberOfMonitoringEntries);
-            }
-            log_.debug("Returning the virtual machine meta data for " + virtualMachineId);
-            return retrievedVirtualMachine;
-        }
-        catch (Exception exception)
-        {
-            log_.error("unable to get the virtual machine meta data for " + location.getVirtualMachineId());
-        }
-        
-        return null;
+        String virtualMachineId = location.getVirtualMachineId();
+        return getVirtualMachineMetaDataCassandra(virtualMachineId, numberOfMonitoringEntries);
     }
     
     
