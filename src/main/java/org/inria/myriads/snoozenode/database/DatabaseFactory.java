@@ -141,7 +141,7 @@ public final class DatabaseFactory
         switch (type) 
         {
             case memory :       
-                repository = new GroupManagerMemoryRepository(groupManager.getId(), maxCapacity);
+                repository = new GroupManagerMemoryRepository(groupManager, maxCapacity);
                 break;
             case cassandra:
                 String hosts = settings.getCassandraSettings().getHosts();

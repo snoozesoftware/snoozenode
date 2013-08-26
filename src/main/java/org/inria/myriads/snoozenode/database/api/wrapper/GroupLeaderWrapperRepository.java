@@ -91,6 +91,7 @@ public class GroupLeaderWrapperRepository implements GroupLeaderRepository
         repository_.addGroupManagerSummaryInformation(groupManagerId, summary);
         
         //send to external (scalability issue here...)
+        
         /*
         GroupLeaderRepositoryInformation hierarchy = new GroupLeaderRepositoryInformation();
         hierarchy.setGroupManagerDescriptions(getGroupManagerDescriptions(0));
@@ -99,8 +100,8 @@ public class GroupLeaderWrapperRepository implements GroupLeaderRepository
                 externalNotifier_,
                 ExternalNotificationType.SYSTEM, 
                 new SystemMessage(SystemMessageType.GL_SUMMARY, hierarchy), 
-                "groupleader");
-                */
+                "summary");
+          */      
 
     }
 

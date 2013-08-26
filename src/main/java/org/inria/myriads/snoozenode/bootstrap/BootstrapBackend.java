@@ -152,7 +152,7 @@ public final class BootstrapBackend
         NetworkAddress groupLeaderAddress = groupLeaderDescription_.getListenSettings().getControlDataAddress();
         
         GroupLeaderRepositoryInformation groupLeaderInformation = 
-                getGroupLeaderRepositoryInformation(groupLeaderAddress, 10);
+                getGroupLeaderRepositoryInformation(groupLeaderAddress, 0);
 
         GroupLeaderRepositoryInformation hierarchy = new GroupLeaderRepositoryInformation();
         ArrayList<GroupManagerDescription> groupManagers = groupLeaderInformation.getGroupManagerDescriptions();
@@ -161,7 +161,7 @@ public final class BootstrapBackend
         for (GroupManagerDescription groupManager : groupManagers) 
         {
             NetworkAddress address = groupManager.getListenSettings().getControlDataAddress();
-            GroupManagerRepositoryInformation information = getGroupManagerRepositoryInformations(address, 10);
+            GroupManagerRepositoryInformation information = getGroupManagerRepositoryInformations(address, 0);
             HashMap<String, LocalControllerDescription> localControllers =
                     new HashMap<String, LocalControllerDescription>();
             for (LocalControllerDescription localController : information.getLocalControllerDescriptions())

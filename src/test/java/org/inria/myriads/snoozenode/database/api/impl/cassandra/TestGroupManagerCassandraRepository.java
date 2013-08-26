@@ -158,22 +158,23 @@ public class TestGroupManagerCassandraRepository extends TestCase
      */
     public void testGetLocalControllerDescriptionFound()
     {
-        LocalControllerDescription localControllerDescription = new LocalControllerDescription();
         
-        localControllerDescription.setId("9876");
-        localControllerDescription.setHostname("mafalda");
-        localControllerDescription.getControlDataAddress().setAddress("127.0.0.1");
-        localControllerDescription.getControlDataAddress().setPort(5000);
-        localControllerDescription.getTotalCapacity().add(1d);
-        localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);
+        for (int i=0; i<10; i++)
+        {
+            LocalControllerDescription localControllerDescription = new LocalControllerDescription();
+            localControllerDescription.setId("lc" + String.valueOf(i));
+            localControllerDescription.setHostname("mafalda");
+            localControllerDescription.getControlDataAddress().setAddress("127.0.0.1");
+            localControllerDescription.getControlDataAddress().setPort(5000);
+            localControllerDescription.getTotalCapacity().add(1d);
+            localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);
+            repository_.addLocalControllerDescription(localControllerDescription);
+        }
         
-        repository_.addLocalControllerDescription(localControllerDescription);
-        
-        LocalControllerDescription retrievedDescription = repository_.getLocalControllerDescription("9876", 0, false);
-        
-        assertEquals("9876", retrievedDescription.getId());
-        assertEquals(localControllerDescription.getHostname(), retrievedDescription.getHostname());
-        assertEquals(localControllerDescription.getTotalCapacity(),retrievedDescription.getTotalCapacity());
+        // not found
+        LocalControllerDescription retrievedDescription = repository_.getLocalControllerDescription("lc5", 0, false);
+        assertNotNull(retrievedDescription);
+        assertEquals("lc5", retrievedDescription.getId());
         
     }
     
@@ -185,20 +186,20 @@ public class TestGroupManagerCassandraRepository extends TestCase
     public void testGetLocalControllerDescriptionNotFound()
     {
         LocalControllerDescription localControllerDescription = new LocalControllerDescription();
+        for (int i=0; i<10; i++)
+        {
+            localControllerDescription.setId("lc" + String.valueOf(i));
+            localControllerDescription.setHostname("mafalda");
+            localControllerDescription.getControlDataAddress().setAddress("127.0.0.1");
+            localControllerDescription.getControlDataAddress().setPort(5000);
+            localControllerDescription.getTotalCapacity().add(1d);
+            localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);
+            repository_.addLocalControllerDescription(localControllerDescription);
+        }
         
-        localControllerDescription.setId("98765");
-        localControllerDescription.setHostname("mafalda");
-        localControllerDescription.getControlDataAddress().setAddress("127.0.0.1");
-        localControllerDescription.getControlDataAddress().setPort(5000);
-        localControllerDescription.getTotalCapacity().add(1d);
-        localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);
-        
-        repository_.addLocalControllerDescription(localControllerDescription);
-        
-        LocalControllerDescription retrievedDescription = repository_.getLocalControllerDescription("9876", 0, false);
-        
-        assertNull(retrievedDescription);
-        
+        // not found
+        LocalControllerDescription retrievedDescription = repository_.getLocalControllerDescription("lc10", 0, false);
+        assertNull(retrievedDescription);        
     }
     
     /**
@@ -233,6 +234,10 @@ public class TestGroupManagerCassandraRepository extends TestCase
         
         ArrayList<LocalControllerDescription> localControllers = repository_.getLocalControllerDescriptions(0, false, false);        
         assertEquals(10,localControllers.size());
+        for (LocalControllerDescription localController : localControllers)
+        {
+            assertTrue(localController.getIsAssigned());
+        }
     }
     
     /**
@@ -333,7 +338,7 @@ public class TestGroupManagerCassandraRepository extends TestCase
         }
         
         ArrayList<LocalControllerDescription> localControllers = repository_.getLocalControllerDescriptions(0, true, false);
-        
+       
         assertEquals(5,localControllers.size());
     }
     

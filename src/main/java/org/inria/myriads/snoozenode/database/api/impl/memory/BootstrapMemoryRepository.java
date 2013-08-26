@@ -23,8 +23,11 @@ package org.inria.myriads.snoozenode.database.api.impl.memory;
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerList;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.ClientMigrationRequestSimple;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
 import org.inria.myriads.snoozenode.database.api.BootstrapRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,13 +51,36 @@ public final class BootstrapMemoryRepository
     }
 
     @Override
-    public List<GroupManagerDescription> getGroupManagerDescriptions(String firstGroupManagerId, int limit)
+    public List<GroupManagerDescription> getGroupManagerDescriptions(String firstGroupManagerId, int limit, int numberOfMonitoringEntries, String groupManagerId)
     {
         return null;
     }
 
     @Override
     public LocalControllerList getLocalControllerList()
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public List<LocalControllerDescription> getLocalControllerDescriptions(String groupManagerId,
+            String firstLocalControllerId, int limit, int numberOfMonitoringEntries)
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public List<VirtualMachineMetaData> getVirtualMachineDescriptions(String groupManagerId, String localControllerId,
+            String startVirtualMachine, int limit, int numberOfMonitoringEntries)
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public MigrationRequest createMigrationRequest(ClientMigrationRequestSimple migrationRequest)
     {
         // TODO Auto-generated method stub
         return null;

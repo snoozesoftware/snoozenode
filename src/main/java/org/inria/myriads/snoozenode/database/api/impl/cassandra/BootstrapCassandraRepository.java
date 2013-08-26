@@ -1,37 +1,25 @@
 package org.inria.myriads.snoozenode.database.api.impl.cassandra;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
+import com.google.common.collect.Lists;
 
-
-import me.prettyprint.cassandra.serializers.LongSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.hector.api.beans.Row;
-import me.prettyprint.hector.api.factory.HFactory;
-import me.prettyprint.hector.api.mutation.Mutator;
-import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerList;
-import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.ClientMigrationRequestSimple;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
-import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.BootstrapRepository;
-import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
-import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraUtils;
-import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.JsonSerializer;
-import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.RowQueryIterator;
-import org.inria.myriads.snoozenode.database.api.impl.memory.GroupManagerMemoryRepository;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+
 
 /**
  * 
@@ -59,24 +47,91 @@ public class BootstrapCassandraRepository extends CassandraRepository implements
     }
 
 
+    @Override
     public VirtualMachineMetaData getVirtualMachineMetaData(String virtualMachineId, int numberOfMonitoringEntries)
     {
-        VirtualMachineMetaData virtualMachine = getVirtualMachineMetaDataCassandra(virtualMachineId, numberOfMonitoringEntries);
+        VirtualMachineMetaData virtualMachine = 
+                getVirtualMachineMetaDataCassandra(virtualMachineId, numberOfMonitoringEntries);
         return virtualMachine;
     }
-
-    public  List<GroupManagerDescription> getGroupManagerDescriptions(String firstGroupManagerId, int limit)
+    
+    @Override
+    public  List<GroupManagerDescription> getGroupManagerDescriptions(String firstGroupManagerId, int limit, int numberOfBacklogEntries, String groupLeaderId)
     {
-        return getGroupManagerDescriptionsOnly(firstGroupManagerId, limit, false, 0);
+        return getGroupManagerDescriptionsOnly(firstGroupManagerId, limit, false, numberOfBacklogEntries, Arrays.asList(groupLeaderId));
     }
 
 
     @Override
     public LocalControllerList getLocalControllerList()
     {   
-        HashMap<String, LocalControllerDescription> localControllers = getLocalControllerDescriptionsOnly(null,null,-1, 0, true, false);
+        ArrayList<LocalControllerDescription> localControllers= 
+                getLocalControllerDescriptionsOnly(null, null, -1, 0, false, false);
+        
+        //
         LocalControllerList localControllerList = new LocalControllerList(localControllers);
         return localControllerList;
+    }
+
+
+    @Override
+    public List<LocalControllerDescription> getLocalControllerDescriptions(
+            String groupManagerId, String firstLocalControllerId, int limit, int numberOfBacklogEntries)
+    {
+        
+        //HashMap<String, LocalControllerDescription> localControllers =
+        ArrayList<LocalControllerDescription> localControllers = 
+                getLocalControllerDescriptionsOnly(groupManagerId, firstLocalControllerId, limit, numberOfBacklogEntries, false, false);
+        //return Lists.newArrayList(localControllers.values());
+        return localControllers;
+    }
+
+
+    @Override
+    public List<VirtualMachineMetaData> getVirtualMachineDescriptions(String groupManagerId, String localControllerId,
+            String startVirtualMachine, int limit, int numberOfBacklogEntries)
+    {
+        //HashMap<String, VirtualMachineMetaData> virtualMachines =
+        ArrayList<VirtualMachineMetaData> virtualMachines =
+                getVirtualMachineDescriptionsOnly(
+                        groupManagerId, 
+                        localControllerId, 
+                        startVirtualMachine, 
+                        limit, 
+                        numberOfBacklogEntries, 
+                        false);
+        //return Lists.newArrayList(virtualMachines.values());
+        return virtualMachines;
+        
+    }
+
+
+    @Override
+    public MigrationRequest createMigrationRequest(ClientMigrationRequestSimple migrationRequest)
+    {
+        String virtualMachineId = migrationRequest.getVirtualMachineId();
+        String localControllerId = migrationRequest.getLocalControllerId();
+        
+        MigrationRequest internalMigrationRequest = new MigrationRequest();
+        // get source
+        VirtualMachineMetaData virtualMachine = getVirtualMachineDescriptionOnly(virtualMachineId, 0);
+        VirtualMachineLocation sourceLocation =  virtualMachine.getVirtualMachineLocation();
+        internalMigrationRequest.setSourceVirtualMachineLocation(sourceLocation);
+        // get destination
+        LocalControllerDescription localController = this.getLocalControllerDescriptionOnly(localControllerId, 0);
+        LocalControllerLocation location = localController.getLocation();
+        VirtualMachineLocation destinationLocation = new VirtualMachineLocation();
+        destinationLocation.setVirtualMachineId(virtualMachineId);
+        destinationLocation.setLocalControllerId(localControllerId);
+        destinationLocation.setLocalControllerControlDataAddress(localController.getControlDataAddress());
+        destinationLocation.setGroupManagerId(location.getGroupManagerId());
+        destinationLocation.setGroupManagerControlDataAddress(location.getGroupManagerControlDataAddress());
+        
+        internalMigrationRequest.setDestinationVirtualMachineLocation(destinationLocation);
+        internalMigrationRequest.setDestinationHypervisorSettings(localController.getHypervisorSettings());
+        
+        return internalMigrationRequest;
+        
     }
    
 

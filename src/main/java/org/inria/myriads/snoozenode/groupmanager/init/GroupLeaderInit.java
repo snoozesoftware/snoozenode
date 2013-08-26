@@ -86,20 +86,21 @@ public final class GroupLeaderInit
      * @param groupLeaderDescription    The group leader description
      * @throws Exception 
      */
-    public GroupLeaderInit(NodeConfiguration nodeConfiguration, GroupManagerDescription groupLeaderDescription) 
+    public GroupLeaderInit(NodeConfiguration nodeConfiguration, 
+            GroupManagerDescription groupLeaderDescription,
+            ExternalNotifier externalNotifier
+            ) 
         throws Exception 
     {
         Guard.check(nodeConfiguration);
         log_.debug("Initializing the group leader logic");
         nodeConfiguration_ = nodeConfiguration;    
+        externalNotifier_ = externalNotifier;
         startInitialization(groupLeaderDescription);
     }
 
     
-    private void initializeExternalNotifier()
-    {
-        externalNotifier_ = new ExternalNotifier(nodeConfiguration_); 
-    }
+    
     /**
      * Starts the initialization.
      * 
@@ -112,7 +113,7 @@ public final class GroupLeaderInit
         Guard.check(groupLeaderDescription);
         log_.debug("Starting the group leader components initialization!");
         
-        initializeExternalNotifier();
+    
         initializeLocalControllerAssignmentPolicy();
         initializeRepository(groupLeaderDescription);
         initializeResourceDemandEstimator();

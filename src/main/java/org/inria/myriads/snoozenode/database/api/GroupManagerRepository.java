@@ -36,6 +36,18 @@ import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.Aggrega
  * 
  * @author Eugen Feller
  */
+/**
+ * @author msimonin
+ *
+ */
+/**
+ * @author msimonin
+ *
+ */
+/**
+ * @author msimonin
+ *
+ */
 public interface GroupManagerRepository 
 {      
     /** 
@@ -218,4 +230,13 @@ public interface GroupManagerRepository
      * @return                      true if everything ok
      */
     boolean updateVirtualMachineMetaData(VirtualMachineMetaData virtualMachine);
+
+    
+    /**
+     * 
+     * Return the group manager description.
+     * 
+     * @return      GroupManager description
+     */
+    GroupManagerDescription  getGroupManager();
 }

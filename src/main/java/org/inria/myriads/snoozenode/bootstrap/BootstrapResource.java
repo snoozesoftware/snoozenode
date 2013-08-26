@@ -31,6 +31,8 @@ import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.BootstrapAPI;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.ClientMigrationRequestSimple;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
@@ -66,8 +68,8 @@ public final class BootstrapResource extends ServerResource
     }
 
     /** 
-     * Assign local controller to a group manager.
-     * (called by the local controller)
+     * Gets the current Group Leader Description
+     * 
      *  
      * @return   The group leader description
      */
@@ -198,10 +200,15 @@ public final class BootstrapResource extends ServerResource
     }
 
     @Override
-    public boolean migrateVirtualMachine(String virtualMachineId, String LocalControllerId)
-    {
-        // TODO Auto-generated method stub
-        return false;
+    public boolean migrateVirtualMachine(ClientMigrationRequestSimple migrationRequest)
+    {   
+        MigrationRequest internalMigrationRequest = 
+                backend_.getRepository().createMigrationRequest(migrationRequest);
+        VirtualMachineLocation oldLocation = internalMigrationRequest.getSourceVirtualMachineLocation();
+        NetworkAddress groupManagerSource = oldLocation.getGroupManagerControlDataAddress();
+        GroupManagerAPI communicator = CommunicatorFactory.newGroupManagerCommunicator(groupManagerSource);
+        boolean isMigrating = communicator.migrateVirtualMachine(internalMigrationRequest);
+        return isMigrating;
     }
 
   
@@ -229,6 +236,21 @@ public final class BootstrapResource extends ServerResource
         return taskIdentifier;  
     }
 
+    
+    @Override
+    public LocalControllerList geLocalControllerList()
+    {
+        if (!isBackendActive())
+        {
+            log_.debug("Backend is not initialized yet!");
+            return null;
+        }
+        LocalControllerList localControllerList = backend_.getRepository().getLocalControllerList();
+                 
+        return localControllerList;
+    }
+    
+    // admin zone
     @Override
     public List<GroupManagerDescription> getGroupManagerDescriptions(HostListRequest hostListRequest)
     {
@@ -239,13 +261,59 @@ public final class BootstrapResource extends ServerResource
             return null;
         }
         String firstGroupManagerId = hostListRequest.getStart();
+        int numberOfMonitoringEntries = hostListRequest.getNumberOfMonitoringEntries();
         int limit = hostListRequest.getLimit();
         List<GroupManagerDescription> groupManagerDescriptions = new ArrayList<GroupManagerDescription>();
-        groupManagerDescriptions = backend_.getRepository().getGroupManagerDescriptions(firstGroupManagerId, limit);
+        groupManagerDescriptions = backend_.getRepository().getGroupManagerDescriptions(
+                firstGroupManagerId, 
+                limit, 
+                numberOfMonitoringEntries,
+                backend_.getGroupLeaderDescription().getId()
+                );
         return groupManagerDescriptions;
     }
 
 
+    @Override
+    public List<LocalControllerDescription> getLocalControllerDescriptions(HostListRequest hostListRequest)
+    {
+        if (!isBackendActive())
+        {
+            log_.debug("Backend is not initialized yet!");
+            return null;
+        }
+        String groupManagerId = hostListRequest.getGroupManagerId();
+        String startLocalController = hostListRequest.getStart();
+        int numberOfMonitoringEntries = hostListRequest.getNumberOfMonitoringEntries();
+        int limit = hostListRequest.getLimit();
+        
+        List<LocalControllerDescription> localControllers = backend_.getRepository().getLocalControllerDescriptions(groupManagerId, startLocalController, limit, numberOfMonitoringEntries);
+        return localControllers;
+    }
+    
+
+    @Override
+    public List<VirtualMachineMetaData> getVirtualMachineDescriptions(HostListRequest hostListRequest)
+    {
+        if (!isBackendActive())
+        {
+            log_.debug("Backend is not initialized yet!");
+            return null;
+        }
+        String groupManagerId = hostListRequest.getGroupManagerId();
+        String localControllerId = hostListRequest.getLocalControllerId();
+        String startVirtualMachine = hostListRequest.getStart();
+        int numberOfMonitoringEntries = hostListRequest.getNumberOfMonitoringEntries();
+        int limit = hostListRequest.getLimit();
+        
+        List<VirtualMachineMetaData> virtualMachines = backend_.getRepository().getVirtualMachineDescriptions(
+                groupManagerId, 
+                localControllerId,
+                startVirtualMachine, 
+                limit, 
+                numberOfMonitoringEntries);
+        return virtualMachines;
+    }
     /** 
      * Check backend activity.
      * 
@@ -261,16 +329,6 @@ public final class BootstrapResource extends ServerResource
         return true;
     }
 
-    @Override
-    public LocalControllerList geLocalControllerList()
-    {
-        if (!isBackendActive())
-        {
-            log_.debug("Backend is not initialized yet!");
-            return null;
-        }
-        LocalControllerList localControllerList = backend_.getRepository().getLocalControllerList();
-                 
-        return localControllerList;
-    }
+    
+
 }

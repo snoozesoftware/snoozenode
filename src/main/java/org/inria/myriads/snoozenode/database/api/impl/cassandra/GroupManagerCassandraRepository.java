@@ -1,7 +1,6 @@
 package org.inria.myriads.snoozenode.database.api.impl.cassandra;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -9,7 +8,6 @@ import java.util.Map;
 
 import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
@@ -24,7 +22,6 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraUtils;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.JsonSerializer;
-import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.RowQueryIterator;
 import org.inria.myriads.snoozenode.database.api.impl.memory.GroupManagerMemoryRepository;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.slf4j.Logger;
@@ -65,7 +62,7 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         super(hosts);
         log_.debug("Initializing the group manager memory repository");
         legacyIpAddresses_ = new ArrayList<String>();
-        groupManagerCache_ = new GroupManagerMemoryRepository(groupManager.getId(), 0);
+        groupManagerCache_ = new GroupManagerMemoryRepository(groupManager, 0);
         ttl_ = 60;
     }
 
@@ -186,11 +183,12 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         if (!isDropped)
         {
             log_.error("Unable to drop the local controller");
+            return false;
         }
         
         //update_cache();
-        groupManagerCache_.dropLocalController(localControllerId, forceDelete);
-        return false;
+        isDropped = groupManagerCache_.dropLocalController(localControllerId, forceDelete);
+        return isDropped;
     }
     
     /**
@@ -228,7 +226,7 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         
         boolean isLocalControllerDropped = 
                 CassandraUtils.drop(
-                        keyspace_, 
+                        getKeyspace(), 
                         Arrays.asList(localController.getId()), 
                         CassandraUtils.LOCALCONTROLLERS_CF);
         
@@ -240,7 +238,7 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         
         boolean isMappingDropped = 
                 CassandraUtils.drop(
-                        keyspace_, 
+                        getKeyspace(), 
                         Arrays.asList(localController.getControlDataAddress().toString()), 
                         CassandraUtils.LOCALCONTROLLERS_MAPPING_CF);
         
@@ -254,7 +252,7 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         virtualMachineToRemove.addAll(localController.getVirtualMachineMetaData().keySet());
         boolean isVirtualMachineDropped = 
                 CassandraUtils.drop(
-                        keyspace_, 
+                        getKeyspace(), 
                         virtualMachineToRemove,
                         CassandraUtils.VIRTUALMACHINES_CF);
 
@@ -307,7 +305,7 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
                 continue;
             }
            
-            Mutator<String> mutator = HFactory.createMutator(keyspace_, StringSerializer.get());
+            Mutator<String> mutator = HFactory.createMutator(getKeyspace(), StringSerializer.get());
             try
             {
                 for (VirtualMachineMonitoringData virtualMachineData : dataList) 
@@ -359,7 +357,7 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         if (virtualMachine == null)
         {
             log_.debug("No meta information exists for this virtual machine!");
-            return false;
+            return true;
         }
         
         String ipAddress = virtualMachine.getIpAddress();
@@ -379,7 +377,7 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         try
         {
             String virtualMachineId = virtualMachine.getVirtualMachineLocation().getVirtualMachineId();
-            CassandraUtils.drop(keyspace_, Arrays.asList(virtualMachineId), CassandraUtils.VIRTUALMACHINES_CF);
+            CassandraUtils.drop(getKeyspace(), Arrays.asList(virtualMachineId), CassandraUtils.VIRTUALMACHINES_CF);
             
         }
         catch (Exception exception)
@@ -391,7 +389,7 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         //update cache.
         groupManagerCache_.dropVirtualMachineData(location);
         
-       return false;
+       return true;
     }
     
     
@@ -647,6 +645,13 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         
     
         return true;
+    }
+
+
+    @Override
+    public GroupManagerDescription getGroupManager()
+    {
+        return groupManagerCache_.getGroupManager();
     }
 
 

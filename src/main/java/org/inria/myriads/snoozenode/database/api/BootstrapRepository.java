@@ -26,6 +26,8 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDes
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerList;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.ClientMigrationRequestSimple;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
 
 /**
  * Bootstrap repository interfaces
@@ -45,7 +47,51 @@ public interface BootstrapRepository
      */
     public VirtualMachineMetaData getVirtualMachineMetaData(String virtualMachineId, int numberOfMonitoringEntries);
 
-    public List<GroupManagerDescription> getGroupManagerDescriptions(String firstGroupManagerId, int limit);
-
+    /**
+     * 
+     * Gets all the local controllers (passive included, unassigned excluded)
+     * 
+     * @return LocalControllerList
+     */
     public LocalControllerList getLocalControllerList();
+    
+    //admin zone
+    /**
+     * 
+     * Gets all the group managers (unassigned included) 
+     * 
+     * @param firstGroupManagerId
+     * @param limit
+     * @return GroupManagers
+     */
+    public List<GroupManagerDescription> getGroupManagerDescriptions(String firstGroupManagerId, int limit, int numberOfMonitoringEntries, String groupManagerId);
+    
+    /**
+     * 
+     * Gets all the local controllers (passive included, unassigned included)
+     * 
+     * @return LocalControllers
+     */
+    public List<LocalControllerDescription> getLocalControllerDescriptions(String groupManagerId, String firstLocalControllerId, int limit, int numberOfMonitoringEntries);
+
+    
+    /**
+     * 
+     * Gets all the virtual machines (passive included, unassigned included)
+     * 
+     * @return virtualMachines
+     */
+    public List<VirtualMachineMetaData> getVirtualMachineDescriptions(String groupManagerId, String localControllerId,
+            String startVirtualMachine, int limit, int numberOfMonitoringEntries);
+
+    
+    /**
+     * 
+     * Creates the migration request.
+     * 
+     * @param migrationRequest
+     * @return
+     */
+    public MigrationRequest createMigrationRequest(ClientMigrationRequestSimple migrationRequest);
+    
 }

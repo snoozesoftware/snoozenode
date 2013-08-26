@@ -202,4 +202,11 @@ public class GroupManagerWrapperRepository implements GroupManagerRepository
         return repository_.updateVirtualMachineMetaData(virtualMachine);
     }
 
+
+    @Override
+    public GroupManagerDescription getGroupManager()
+    {
+        return repository_.getGroupManager();
+    }
+
 }

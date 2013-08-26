@@ -109,15 +109,19 @@ public final class CassandraUtils
      */
     public static boolean checkForRow(Keyspace keyspace, String columnFamily, String rowKey)
     {
-        RowQueryIterator rowQueryIterator = new RowQueryIterator(
-                keyspace, CassandraUtils.IPSPOOL_CF,
-                CassandraUtils.IPS_ROW_KEY, // start
-                CassandraUtils.IPS_ROW_KEY, // end
-                1); // rows to fecth 
+//        RowIterator rowQueryIterator = new RowIterator(
+//                keyspace, CassandraUtils.IPSPOOL_CF,
+//                CassandraUtils.IPS_ROW_KEY, // start
+//                CassandraUtils.IPS_ROW_KEY, // end
+//                1); // rows to fecth 
+        RowIterator rowIterator = new RowIterator();
+        rowIterator.setKeyspace(keyspace)
+                   .setColumnFamily(columnFamily)
+                   .setKeys(rowKey, rowKey);
+        rowIterator.execute();
         
-        @SuppressWarnings("unchecked")
-        Iterator<Row<String, String, String>> rowsIterator = rowQueryIterator.iterator();
-        if (!rowsIterator.hasNext())
+        Iterator<Row<String, String, String>> rowsIterator = rowIterator.iterator();
+        if (!rowsIterator.hasNext() || !rowsIterator.next().getKey().equals(rowKey))
         {
             log_.debug(String.format("Row key %s doesn't exist in %s ", rowKey, columnFamily));
             return false;
@@ -206,56 +210,86 @@ public final class CassandraUtils
     {
         log_.debug("Unassign all the group managers");
 
-        int row_count = 100;
-
-        String last_key = null;
-        Mutator<String> mutator = HFactory.createMutator(keyspace, StringSerializer.get());
-        while (true) {
-            RowQueryIterator rowQueryIterator = new RowQueryIterator(
-                    keyspace, columnFamily,
-                    null, // start
-                    null, // end
-                    row_count); // rows to fetch 
-            
-            @SuppressWarnings("unchecked")
-            Iterator<Row<String, String, String>> rowsIterator = rowQueryIterator.iterator();
-            
-            if (last_key != null && rowsIterator != null) rowsIterator.next();   
-
-            while (rowsIterator.hasNext()) {
-              Row<String, String, String> row = rowsIterator.next();
-              last_key = row.getKey();
-              
-              ColumnSlice<String, String> columnSlice = row.getColumnSlice() ; 
-              if (columnSlice.getColumns().isEmpty()) 
-              {
-                //tombstone
-                continue;
-              }
-              
-              HColumn<String, String> isGroupLeaderColumn = columnSlice.getColumnByName("isGroupLeader");
-              if (isGroupLeaderColumn != null && isGroupLeaderColumn.getValue().equals(CassandraUtils.stringTrue))
-              {
-                  log_.debug("DELETION of previous GL");
-                  mutator.addDeletion(row.getKey(), columnFamily);
-                  continue;
-              }
-              for (HColumn<String, String>  column : row.getColumnSlice().getColumns())
-              {
-                  mutator.addInsertion(
-                          row.getKey(), 
-                          columnFamily, 
-                          HFactory.createColumn(column.getName(), column.getValue(), 67, column.getNameSerializer(), column.getValueSerializer()));
-              }
-              mutator.addInsertion(row.getKey(), columnFamily, HFactory.createColumn("isAssigned", false, 67, StringSerializer.get(), BooleanSerializer.get()));
-            }
-            mutator.execute();
-
-            if (rowQueryIterator.getCount() < row_count)
-                break;
-        }
+        RowIterator rowIterator = new RowIterator();
+        rowIterator
+            .setKeyspace(keyspace)
+            .setColumnFamily(columnFamily);
+        rowIterator.execute();
         
+        Mutator<String> mutator = HFactory.createMutator(keyspace, StringSerializer.get());
+        for (Row<String,String,String> row : rowIterator)
+        {
+          ColumnSlice<String, String> columnSlice = row.getColumnSlice();
+          HColumn<String, String> isGroupLeaderColumn = columnSlice.getColumnByName("isGroupLeader");
+          if (isGroupLeaderColumn != null && isGroupLeaderColumn.getValue().equals(CassandraUtils.stringTrue))
+          {
+              log_.debug("DELETION of previous GL");
+              mutator.addDeletion(row.getKey(), columnFamily);
+              continue;
+          }
+          for (HColumn<String, String>  column : row.getColumnSlice().getColumns())
+          {
+              mutator.addInsertion(
+                      row.getKey(), 
+                      columnFamily, 
+                      HFactory.createColumn(column.getName(), column.getValue(), 67, column.getNameSerializer(), column.getValueSerializer()));
+          }
+          mutator.addInsertion(row.getKey(), columnFamily, HFactory.createColumn("isAssigned", false, 67, StringSerializer.get(), BooleanSerializer.get()));
+        }
+        mutator.execute();
     }
+     
+        
+//        int row_count = 100;
+//
+//        String lastKey = null;
+//        Mutator<String> mutator = HFactory.createMutator(keyspace, StringSerializer.get());
+//        while (true) {
+//            RowIterator rowQueryIterator = new RowIterator(
+//                    keyspace, columnFamily,
+//                    lastKey, // start
+//                    null, // end
+//                    row_count); // rows to fetch 
+//            
+//            @SuppressWarnings("unchecked")
+//            Iterator<Row<String, String, String>> rowsIterator = rowQueryIterator.iterator();
+//            
+//            if (lastKey != null && rowsIterator != null) rowsIterator.next();   
+//
+//            while (rowsIterator.hasNext()) {
+//              Row<String, String, String> row = rowsIterator.next();
+//              lastKey = row.getKey();
+//              
+//              ColumnSlice<String, String> columnSlice = row.getColumnSlice() ; 
+//              if (columnSlice.getColumns().isEmpty()) 
+//              {
+//                //tombstone
+//                continue;
+//              }
+//              
+//              HColumn<String, String> isGroupLeaderColumn = columnSlice.getColumnByName("isGroupLeader");
+//              if (isGroupLeaderColumn != null && isGroupLeaderColumn.getValue().equals(CassandraUtils.stringTrue))
+//              {
+//                  log_.debug("DELETION of previous GL");
+//                  mutator.addDeletion(row.getKey(), columnFamily);
+//                  continue;
+//              }
+//              for (HColumn<String, String>  column : row.getColumnSlice().getColumns())
+//              {
+//                  mutator.addInsertion(
+//                          row.getKey(), 
+//                          columnFamily, 
+//                          HFactory.createColumn(column.getName(), column.getValue(), 67, column.getNameSerializer(), column.getValueSerializer()));
+//              }
+//              mutator.addInsertion(row.getKey(), columnFamily, HFactory.createColumn("isAssigned", false, 67, StringSerializer.get(), BooleanSerializer.get()));
+//            }
+//            mutator.execute();
+//
+//            if (rowQueryIterator.getCount() < row_count)
+//                break;
+//        }
+//        
+//    }
     
 }
 

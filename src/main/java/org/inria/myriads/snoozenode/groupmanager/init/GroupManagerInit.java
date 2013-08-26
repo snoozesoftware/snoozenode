@@ -92,7 +92,6 @@ public final class GroupManagerInit
     /** State machine. */
     private StateMachine stateMachine_;
     
-    
     /** External Notifier. */
     private ExternalNotifier externalNotifier_;
     
@@ -106,7 +105,9 @@ public final class GroupManagerInit
      * @throws Exception                The exception
      */
     public GroupManagerInit(NodeConfiguration nodeConfiguration,
-                            GroupManagerDescription groupManagerDescription) 
+                            GroupManagerDescription groupManagerDescription,
+                            ExternalNotifier externalNotifier
+            ) 
         throws Exception 
     {
         Guard.check(nodeConfiguration, groupManagerDescription);
@@ -114,7 +115,7 @@ public final class GroupManagerInit
         
         nodeConfiguration_ = nodeConfiguration; 
         description_ = groupManagerDescription;
-        initializeExternalNotifier();
+        externalNotifier_ = externalNotifier;
         initializeRepository();
         initializeResourceDemandEstimator();
         initializeStateMachine();
@@ -125,10 +126,7 @@ public final class GroupManagerInit
 
     }
         
-    private void initializeExternalNotifier()
-    {
-        externalNotifier_ = new ExternalNotifier(nodeConfiguration_); 
-    }
+   
 
     /**
      * Stops the group manager services.
@@ -179,8 +177,9 @@ public final class GroupManagerInit
     {        
         int maxCapacity = nodeConfiguration_.getDatabase().getNumberOfEntriesPerVirtualMachine();
         DatabaseSettings settings = nodeConfiguration_.getDatabase();
+        
         repository_ = DatabaseFactory.newGroupManagerRepository(
-                description_, 
+                new GroupManagerDescription(description_,0), 
                 maxCapacity, 
                 settings,
                 nodeConfiguration_.getExternalNotifier(),

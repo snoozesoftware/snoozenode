@@ -3,6 +3,7 @@ package org.inria.myriads.snoozenode.database.api.impl.cassandra;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -192,20 +193,32 @@ public class TestGroupLeaderCassandraRepository extends TestCase
      */
     public void testGetGroupManagerDescriptionNotFound() 
     {
-        GroupManagerDescription groupManagerDescription = new GroupManagerDescription();
-        groupManagerDescription.setId("123456");
-        groupManagerDescription.setHostname("mafalda");
-        groupManagerDescription.getHeartbeatAddress().setAddress("127.0.0.1");
-        groupManagerDescription.getHeartbeatAddress().setPort(9000);
+        for (int i=0; i<10; i++)
+        {
+            GroupManagerDescription groupManagerDescription = new GroupManagerDescription();
+            groupManagerDescription.setId("gm"+String.valueOf(i));
+            groupManagerDescription.setHostname("mafalda");
+            groupManagerDescription.getHeartbeatAddress().setAddress("127.0.0.1");
+            groupManagerDescription.getHeartbeatAddress().setPort(9000);
+            
+            groupManagerDescription.getListenSettings().getControlDataAddress().setAddress("127.0.0.1");
+            groupManagerDescription.getListenSettings().getControlDataAddress().setPort(5000);
+            groupManagerDescription.getListenSettings().getMonitoringDataAddress().setAddress("127.0.0.1");
+            groupManagerDescription.getListenSettings().getMonitoringDataAddress().setPort(6000);
+            
+            repository_.addGroupManagerDescription(groupManagerDescription);
+        }
         
-        groupManagerDescription.getListenSettings().getControlDataAddress().setAddress("127.0.0.1");
-        groupManagerDescription.getListenSettings().getControlDataAddress().setPort(5000);
-        groupManagerDescription.getListenSettings().getMonitoringDataAddress().setAddress("127.0.0.1");
-        groupManagerDescription.getListenSettings().getMonitoringDataAddress().setPort(6000);
+        GroupManagerDescription retrievedDescription = repository_.getGroupManagerDescription("gm10", 0);
+        assertNull(retrievedDescription);
         
-        repository_.addGroupManagerDescription(groupManagerDescription);
+        CassandraUtils.drop(keyspace_, Arrays.asList("gm0"), CassandraUtils.GROUPMANAGERS_CF);
+        retrievedDescription = repository_.getGroupManagerDescription("gm0", 0);
+        assertNull(retrievedDescription);
         
-        GroupManagerDescription retrievedDescription = repository_.getGroupManagerDescription("123456789", 0);
+        
+        CassandraUtils.unassignNodes(keyspace_,Arrays.asList("gm4"), CassandraUtils.GROUPMANAGERS_CF);
+        retrievedDescription = repository_.getGroupManagerDescription("gm4", 0);
         assertNull(retrievedDescription);
      
     }
@@ -251,6 +264,7 @@ public class TestGroupLeaderCassandraRepository extends TestCase
         assertEquals(5000, retrievedDescription.getListenSettings().getControlDataAddress().getPort());
         assertEquals("127.0.0.1", retrievedDescription.getListenSettings().getMonitoringDataAddress().getAddress());
         assertEquals(6000, retrievedDescription.getListenSettings().getMonitoringDataAddress().getPort());
+        assertTrue(retrievedDescription.getIsAssigned());
         
         // size check
         assertEquals(2, retrievedDescription.getSummaryInformation().size());

@@ -58,8 +58,8 @@ public final class GroupManagerMemoryRepository
     /** Logger.*/
     private static final Logger log_ = LoggerFactory.getLogger(GroupManagerMemoryRepository.class);
     
-    /** Group manager id. */
-    private String groupManagerId_;
+    /** GroupManagerDescription. */
+    private GroupManagerDescription groupManager_;
     
     /**
      * Virtual machine to local controller assignment map.
@@ -84,12 +84,13 @@ public final class GroupManagerMemoryRepository
      * @param maxCapacity       The maximum capacity
      * @param externalNotifierSettings 
      */
-    public GroupManagerMemoryRepository(String groupManagerId, 
+    public GroupManagerMemoryRepository(GroupManagerDescription groupManager, 
             int maxCapacity) 
     {
-        Guard.check(groupManagerId);
+        
         log_.debug("Initializing the group manager memory repository");
-        groupManagerId_ = groupManagerId;
+        
+        groupManager_ = groupManager;
         maxCapacity_ = maxCapacity;
         localControllerDescriptions_ = new HashMap<String, LocalControllerDescription>();
         legacyIpAddresses_ = new ArrayList<String>();
@@ -620,7 +621,7 @@ public final class GroupManagerMemoryRepository
     @Override
     public synchronized String getGroupManagerId() 
     {
-        return groupManagerId_;
+        return groupManager_.getId();
     }
 
     /**
@@ -932,5 +933,11 @@ public final class GroupManagerMemoryRepository
     public void setLocalControllerDescriptions(HashMap<String, LocalControllerDescription> localControllerDescriptions)
     {
         localControllerDescriptions_ = localControllerDescriptions;
+    }
+
+    @Override
+    public GroupManagerDescription getGroupManager()
+    {
+        return groupManager_;
     }
 }

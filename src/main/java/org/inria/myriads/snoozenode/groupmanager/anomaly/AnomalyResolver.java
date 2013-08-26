@@ -192,7 +192,7 @@ public final class AnomalyResolver
                 externalNotifier_,
                 ExternalNotificationType.SYSTEM,
                 new SystemMessage(SystemMessageType.LC_ANOMALY, anomalyLocalController),
-                groupManagerRepository_.getGroupManagerId()
+                "groupmanager."+groupManagerRepository_.getGroupManagerId()
                 );
         
         if (anomalyLocalController == null)

@@ -308,7 +308,7 @@ public final class MigrationPlanEnforcer
         location.setLocalControllerId(localControllerId);
         location.setLocalControllerControlDataAddress(controlDataAddress);
         location.setGroupManagerControlDataAddress(sourceLocation.getGroupManagerControlDataAddress());
-        location.setGroupManagerId(location.getGroupManagerId());
+        location.setGroupManagerId(sourceLocation.getGroupManagerId());
         return location;
     }
 
@@ -325,14 +325,7 @@ public final class MigrationPlanEnforcer
             migrationRequest.getSourceVirtualMachineLocation().getLocalControllerControlDataAddress().getPort(), 
             migrationRequest.getDestinationVirtualMachineLocation().getLocalControllerControlDataAddress().getAddress(),
             migrationRequest.getDestinationVirtualMachineLocation().getLocalControllerControlDataAddress().getPort()));
-                       
-        MigrationWorker migrationThread = new MigrationWorker(migrationRequest);
-        MigrationWatchdog watchdogThread = new MigrationWatchdog(migrationRequest, this);      
-        migrationThread.addMigrationListener(watchdogThread);
-        migrationThread.addMigrationListener(this);
-        new Thread(migrationThread).start();
-        new Thread(watchdogThread).start();
-        
+                
         ExternalNotifierUtils.send(
                 externalNotifier_,
                 ExternalNotificationType.MANAGEMENT,
@@ -342,6 +335,15 @@ public final class MigrationPlanEnforcer
                 migrationRequest.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
                 "MIGRATION"
                 );
+        
+        MigrationWorker migrationThread = new MigrationWorker(migrationRequest);
+        MigrationWatchdog watchdogThread = new MigrationWatchdog(migrationRequest, this);      
+        migrationThread.addMigrationListener(watchdogThread);
+        migrationThread.addMigrationListener(this);
+        new Thread(migrationThread).start();
+        new Thread(watchdogThread).start();
+        
+       
         
     }
         
@@ -377,12 +379,11 @@ public final class MigrationPlanEnforcer
         
         log_.debug(String.format("Number of migrations: %s", numberOfMigrations_));
         
-        
         ExternalNotifierUtils.send(
                 externalNotifier_,
                 ExternalNotificationType.SYSTEM,
                 new SystemMessage(SystemMessageType.RECONFIGURATION, migrationPlan),
-                groupManagerRepository_.getGroupManagerId()
+                "groupmanager."+groupManagerRepository_.getGroupManagerId()
                 );
         
         Map<VirtualMachineMetaData, LocalControllerDescription> mapping = migrationPlan.getMapping();

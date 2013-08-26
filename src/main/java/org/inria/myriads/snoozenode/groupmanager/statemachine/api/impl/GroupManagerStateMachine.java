@@ -59,6 +59,8 @@ import org.inria.myriads.snoozenode.groupmanager.virtualmachinemanager.VirtualMa
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 import org.inria.myriads.snoozenode.message.ManagementMessage;
 import org.inria.myriads.snoozenode.message.ManagementMessageType;
+import org.inria.myriads.snoozenode.message.SystemMessage;
+import org.inria.myriads.snoozenode.message.SystemMessageType;
 import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
@@ -267,6 +269,13 @@ public class GroupManagerStateMachine
         {
             log_.debug(String.format("Changing system state to: %s", state));
             systemState_ = state;
+            // log state change.
+            ExternalNotifierUtils.send(
+                    externalNotifier_,
+                    ExternalNotificationType.SYSTEM,
+                    new SystemMessage(SystemMessageType.GM_BUSY, repository_.getGroupManager()),
+                    "groupmanager."+repository_.getGroupManagerId()
+                    );
             return true;
         }
         
@@ -305,6 +314,12 @@ public class GroupManagerStateMachine
     private synchronized void setIdle()
     {
         log_.debug(String.format("Changing system state from: %s to IDLE", systemState_));
+        ExternalNotifierUtils.send(
+                externalNotifier_,
+                ExternalNotificationType.SYSTEM,
+                new SystemMessage(SystemMessageType.GM_IDLE, repository_.getGroupManager()),
+                "groupmanager."+repository_.getGroupManagerId()
+                );
         systemState_ = SystemState.IDLE;
     }
     

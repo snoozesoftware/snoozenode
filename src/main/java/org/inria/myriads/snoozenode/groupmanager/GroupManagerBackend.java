@@ -38,7 +38,12 @@ import org.inria.myriads.snoozenode.heartbeat.HeartbeatFactory;
 import org.inria.myriads.snoozenode.heartbeat.listener.HeartbeatListener;
 import org.inria.myriads.snoozenode.heartbeat.message.HeartbeatMessage;
 import org.inria.myriads.snoozenode.heartbeat.receiver.HeartbeatMulticastReceiver;
+import org.inria.myriads.snoozenode.message.SystemMessage;
+import org.inria.myriads.snoozenode.message.SystemMessageType;
+import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
+import org.inria.snoozenode.external.notifier.ExternalNotificationType;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,6 +79,9 @@ public final class GroupManagerBackend
     /** Indicates successfull assignement. */
     private boolean isAssigned_;
     
+    /** External Notifier.*/
+    private ExternalNotifier externalNotifier_;
+    
     /**
      * Constructor.
      * 
@@ -85,12 +93,17 @@ public final class GroupManagerBackend
     {
         Guard.check(nodeConfiguration);
         log_.debug("Starting group manager backend");
-    
         nodeConfiguration_ = nodeConfiguration;
+        initializeExternalNotifier();
         createGroupManagerDescription();
         initializeLeaderElection();  
+        
     }
         
+    private void initializeExternalNotifier()
+    {
+        externalNotifier_ = new ExternalNotifier(nodeConfiguration_); 
+    }
     /**
      * Creates group manager description.
      */
@@ -222,7 +235,7 @@ public final class GroupManagerBackend
         
         try 
         {       
-            groupLeaderInit_ = new GroupLeaderInit(nodeConfiguration_, groupManagerDescription_);
+            groupLeaderInit_ = new GroupLeaderInit(nodeConfiguration_, groupManagerDescription_, externalNotifier_);
         }   
         catch (Exception exception) 
         {
@@ -256,7 +269,8 @@ public final class GroupManagerBackend
         {
             log_.debug("Updating global heartbeat information!");
             heartbeat_ = heartbeat;
-        } else if (isAssigned_)
+        }
+        else if (groupManagerDescription_.getIsAssigned())
         {
             log_.debug("Ignoring heartbeat message! Already assigned to working group leader!");
             return;
@@ -267,7 +281,7 @@ public final class GroupManagerBackend
         {
             if (groupManagerInit_ == null)
             {
-                groupManagerInit_ = new GroupManagerInit(nodeConfiguration_, groupManagerDescription_);
+                groupManagerInit_ = new GroupManagerInit(nodeConfiguration_, groupManagerDescription_, externalNotifier_);
             } 
                           
             GroupManagerDescription groupLeader = ManagementUtils.createGroupLeaderDescriptionFromHeartbeat(heartbeat);
@@ -290,7 +304,7 @@ public final class GroupManagerBackend
             if (hasJoined)
             {
                 log_.debug("Group leader joined successfully!");
-                isAssigned_ = true;
+                groupManagerDescription_.setIsAssigned(true);
             } else
             {
                 log_.debug("Failed to join the group leader!");
@@ -304,7 +318,13 @@ public final class GroupManagerBackend
     public void onHeartbeatFailure() 
     {
         log_.debug("Failed to receive group leader heartbeat message!");        
-        isAssigned_ = false;
+        groupManagerDescription_.setIsAssigned(false);
+        
+        ExternalNotifierUtils.send(
+                externalNotifier_,
+                ExternalNotificationType.SYSTEM,
+                new SystemMessage(SystemMessageType.GL_FAILED, groupManagerDescription_),
+                "groupmanager." + groupManagerDescription_.getId());
                 
     }
 }

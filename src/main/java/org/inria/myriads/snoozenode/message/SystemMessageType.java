@@ -19,5 +19,10 @@ public enum SystemMessageType
     /** LC anomaly (overload, underload).*/
     LC_ANOMALY,
     /** Reconfiguration. */
-    RECONFIGURATION,
+    RECONFIGURATION, 
+    /** GM state change to busy*/
+    GM_BUSY, 
+    /** GM state change to idle*/
+    GM_IDLE,
 }
+
