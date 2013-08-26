@@ -255,8 +255,7 @@ public class RabbitMQExternalSender implements DataSender
     @Override
     public void send(Object data, String routingKey) 
     {
-        setRoutingKey(routingKey);
-        threadPool.submit( new SenderTask(data) );
+        threadPool.submit( new SenderTask(data, routingKey) );
     }
 
 
@@ -519,18 +518,31 @@ public class RabbitMQExternalSender implements DataSender
     {
 
         /** Event message to send */
-        Object eventMessage__;
+        private Object eventMessage__;
+        
+        private String routingKey__;
 
+        
+        SenderTask(Object data)
+        {
+            routingKey__ = routingKey_;
+            eventMessage__ = data;
+        }
+        
         /**
          * 
          * Constructor.
          * 
          * @param data
+         * @param routingKey
          */
-        SenderTask(Object data) 
+        SenderTask(Object data, String routingKey) 
         {
+            routingKey__ = routingKey;
             eventMessage__ = data;
         }
+        
+        
 
         /**
          * 
@@ -549,7 +561,7 @@ public class RabbitMQExternalSender implements DataSender
             {                    
                 String message =  SerializationUtils.serializeObjectToJSON(eventMessage__);
                 
-                channel_.basicPublish(exchange_, routingKey_, null, message.getBytes());
+                channel_.basicPublish(exchange_, routingKey__, null, message.getBytes());
             }
 
             return eventMessage__;

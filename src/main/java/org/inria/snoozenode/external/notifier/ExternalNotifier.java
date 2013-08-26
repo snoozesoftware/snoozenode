@@ -42,7 +42,7 @@ public class ExternalNotifier
                 externalNotifierSettings);
     }
     
-    public  void send(ExternalNotificationType notificationType, Object message, String routingKey)
+    public void send(ExternalNotificationType notificationType, Object message, String routingKey)
     {
         try
         {
