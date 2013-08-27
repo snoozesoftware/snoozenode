@@ -115,10 +115,20 @@ public class BootstrapCassandraRepository extends CassandraRepository implements
         MigrationRequest internalMigrationRequest = new MigrationRequest();
         // get source
         VirtualMachineMetaData virtualMachine = getVirtualMachineDescriptionOnly(virtualMachineId, 0);
+        if (virtualMachine == null)
+        {   
+            log_.debug("Unable to create the migration request : virtual machine not found");
+            return null;
+        }
         VirtualMachineLocation sourceLocation =  virtualMachine.getVirtualMachineLocation();
         internalMigrationRequest.setSourceVirtualMachineLocation(sourceLocation);
         // get destination
         LocalControllerDescription localController = this.getLocalControllerDescriptionOnly(localControllerId, 0);
+        if (localController == null)
+        {
+            log_.debug("Unable to create the migration request : localcontroller not found");
+            return null;
+        }
         LocalControllerLocation location = localController.getLocation();
         VirtualMachineLocation destinationLocation = new VirtualMachineLocation();
         destinationLocation.setVirtualMachineId(virtualMachineId);

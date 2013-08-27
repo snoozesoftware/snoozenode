@@ -204,6 +204,10 @@ public final class BootstrapResource extends ServerResource
     {   
         MigrationRequest internalMigrationRequest = 
                 backend_.getRepository().createMigrationRequest(migrationRequest);
+        if (internalMigrationRequest == null)
+        {
+            return false;
+        }
         VirtualMachineLocation oldLocation = internalMigrationRequest.getSourceVirtualMachineLocation();
         NetworkAddress groupManagerSource = oldLocation.getGroupManagerControlDataAddress();
         GroupManagerAPI communicator = CommunicatorFactory.newGroupManagerCommunicator(groupManagerSource);
