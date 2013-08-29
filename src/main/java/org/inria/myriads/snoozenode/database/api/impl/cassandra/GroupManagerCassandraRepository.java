@@ -57,13 +57,13 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
      * @param maxCapacity   The max capacity.
      * @param hosts         The cassandra hosts to connect to.
      */
-    public GroupManagerCassandraRepository(GroupManagerDescription groupManager, int maxCapacity, String hosts)
+    public GroupManagerCassandraRepository(GroupManagerDescription groupManager, int ttl, String hosts)
     {
         super(hosts);
         log_.debug("Initializing the group manager memory repository");
         legacyIpAddresses_ = new ArrayList<String>();
         groupManagerCache_ = new GroupManagerMemoryRepository(groupManager, 0);
-        ttl_ = 60;
+        ttl_ = ttl;
     }
 
 
@@ -126,7 +126,7 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         }
                      
         //update_cache();
-        //update cache
+        description.setIsAssigned(true);
         groupManagerCache_.addLocalControllerDescription(description);
         
         log_.debug("Local controller description added successfully !!");
@@ -653,6 +653,8 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
     {
         return groupManagerCache_.getGroupManager();
     }
+
+
 
 
 }

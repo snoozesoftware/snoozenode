@@ -502,7 +502,20 @@ public final class GroupManagerResource extends ServerResource
         
         return virtualMachine;
     }
-                
+    
+    @Override
+    public GroupManagerDescription getGroupManagerDescription(String groupManagerId)
+    {
+        log_.debug("Received a request to return a group manager description");
+        
+        if (!isGroupLeaderActive())
+        {
+            return null;
+        }
+        
+        return backend_.getGroupLeaderInit().getRepository().getGroupManagerDescription(groupManagerId, 0);
+        
+    }
     /**
      * Return the group leader information.
      * 
@@ -806,6 +819,25 @@ public final class GroupManagerResource extends ServerResource
         
         boolean isUpdated = backend_.getGroupManagerInit().getRepository().addVirtualMachine(virtualMachine);
         return isUpdated;
+    }
+
+    @Override
+    public LocalControllerDescription getLocalControllerDescription(String localControllerId)
+    {
+       log_.debug("Received a request to return a local controller description");
+        
+       if (!isGroupManagerActive())
+       {
+           return null;
+       }
+       
+       LocalControllerDescription localController = backend_
+               .getGroupManagerInit()
+               .getRepository()
+               .getLocalControllerDescription(localControllerId, 0, false);
+               
+       return localController;
+       
     }
 
 

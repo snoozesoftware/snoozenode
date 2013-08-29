@@ -119,62 +119,30 @@ public final class BootstrapResource extends ServerResource
     
    
 
-    private synchronized boolean commandVirtualMachine(VirtualMachineCommand command, String virtualMachineId)
+    
+    public boolean destroyVirtualMachine(String virtualMachineId)
     {
+        log_.debug("Processing destroy for virtual machine " + virtualMachineId);
         if (!isBackendActive())
         {
             log_.debug("Backend is not initialized yet!");
             return false;
         }
-        VirtualMachineMetaData virtualMachine = 
-                backend_.getRepository().getVirtualMachineMetaData(virtualMachineId, 0);
+        return backend_.commandVirtualMachine(VirtualMachineCommand.DESTROY, virtualMachineId);
         
-        if (virtualMachine == null)
-        {
-            log_.debug(String.format("Virtual Machine %s not found in the system", virtualMachineId));
-            return false;
-        }
-        
-        VirtualMachineLocation location = virtualMachine.getVirtualMachineLocation();
-        NetworkAddress groupManagerAddress = location.getGroupManagerControlDataAddress();
-        GroupManagerAPI groupManagerCommunicator = CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress);
-        boolean isProcessed = false;
-        switch(command)
-        {
-            case DESTROY:
-                isProcessed = groupManagerCommunicator.destroyVirtualMachine(location);
-                break;
-            case REBOOT :
-                isProcessed = groupManagerCommunicator.rebootVirtualMachine(location);
-                break;
-            case SUSPEND :
-                isProcessed = groupManagerCommunicator.suspendVirtualMachine(location);
-                break;
-            case RESUME :
-                isProcessed = groupManagerCommunicator.resumeVirtualMachine(location);
-                break;
-            case SHUTDOWN : 
-                isProcessed = groupManagerCommunicator.shutdownVirtualMachine(location);
-                break;
-            default : 
-                log_.debug("Unknown command provided");
-        }
-        
-        return isProcessed;
-        
-    }
-    public synchronized boolean destroyVirtualMachine(String virtualMachineId)
-    {
-        log_.debug("Processing destroy for virtual machine " + virtualMachineId);
-        return commandVirtualMachine(VirtualMachineCommand.DESTROY, virtualMachineId);
     }
     
     
     @Override
-    public boolean suspendVirtualMachine(String virtualMachineId)
+    public boolean suspendVirtualMachine(String  virtualMachineId)
     {
         log_.debug("Processing suspend for virtual machine " + virtualMachineId);
-        return commandVirtualMachine(VirtualMachineCommand.SUSPEND, virtualMachineId);
+        if (!isBackendActive())
+        {
+            log_.debug("Backend is not initialized yet!");
+            return false;
+        }
+        return backend_.commandVirtualMachine(VirtualMachineCommand.SUSPEND, virtualMachineId);
     }
     
 
@@ -182,22 +150,39 @@ public final class BootstrapResource extends ServerResource
     public boolean rebootVirtualMachine(String virtualMachineId)
     {
         log_.debug("Processing reboot for virtual machine " + virtualMachineId);
-        return commandVirtualMachine(VirtualMachineCommand.REBOOT, virtualMachineId);
+        if (!isBackendActive())
+        {
+            log_.debug("Backend is not initialized yet!");
+            return false;
+        }
+        return backend_.commandVirtualMachine(VirtualMachineCommand.REBOOT, virtualMachineId);
     }
 
     @Override
     public boolean shutdownVirtualMachine(String virtualMachineId)
     {
         log_.debug("Processing reboot for virtual machine " + virtualMachineId);
-        return commandVirtualMachine(VirtualMachineCommand.SHUTDOWN, virtualMachineId);
+        if (!isBackendActive())
+        {
+            log_.debug("Backend is not initialized yet!");
+            return false;
+        }
+        return backend_.commandVirtualMachine(VirtualMachineCommand.SHUTDOWN, virtualMachineId);
     }
 
     @Override
     public boolean resumeVirtualMachine(String virtualMachineId)
     {
         log_.debug("Processing reboot for virtual machine " + virtualMachineId);
-        return commandVirtualMachine(VirtualMachineCommand.RESUME, virtualMachineId);
+        if (!isBackendActive())
+        {
+            log_.debug("Backend is not initialized yet!");
+            return false;
+        }
+        return backend_.commandVirtualMachine(VirtualMachineCommand.RESUME, virtualMachineId);
     }
+    
+    
 
     @Override
     public boolean migrateVirtualMachine(ClientMigrationRequestSimple migrationRequest)
@@ -272,7 +257,7 @@ public final class BootstrapResource extends ServerResource
                 firstGroupManagerId, 
                 limit, 
                 numberOfMonitoringEntries,
-                backend_.getGroupLeaderDescription().getId()
+                backend_.getGroupLeaderDescription()
                 );
         return groupManagerDescriptions;
     }
@@ -291,7 +276,14 @@ public final class BootstrapResource extends ServerResource
         int numberOfMonitoringEntries = hostListRequest.getNumberOfMonitoringEntries();
         int limit = hostListRequest.getLimit();
         
-        List<LocalControllerDescription> localControllers = backend_.getRepository().getLocalControllerDescriptions(groupManagerId, startLocalController, limit, numberOfMonitoringEntries);
+        List<LocalControllerDescription> localControllers = 
+                backend_.getRepository().getLocalControllerDescriptions(
+                        groupManagerId, 
+                        startLocalController, 
+                        limit, 
+                        numberOfMonitoringEntries,
+                        backend_.getGroupLeaderDescription()
+                        );
         return localControllers;
     }
     
@@ -315,7 +307,9 @@ public final class BootstrapResource extends ServerResource
                 localControllerId,
                 startVirtualMachine, 
                 limit, 
-                numberOfMonitoringEntries);
+                numberOfMonitoringEntries,
+                backend_.getGroupLeaderDescription()
+                );
         return virtualMachines;
     }
     /** 

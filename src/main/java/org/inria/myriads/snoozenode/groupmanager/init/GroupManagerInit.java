@@ -177,10 +177,11 @@ public final class GroupManagerInit
     {        
         int maxCapacity = nodeConfiguration_.getDatabase().getNumberOfEntriesPerVirtualMachine();
         DatabaseSettings settings = nodeConfiguration_.getDatabase();
-        
+        int interval = nodeConfiguration_.getMonitoring().getInterval();
         repository_ = DatabaseFactory.newGroupManagerRepository(
                 new GroupManagerDescription(description_,0), 
-                maxCapacity, 
+                maxCapacity,
+                interval,
                 settings,
                 nodeConfiguration_.getExternalNotifier(),
                 externalNotifier_
@@ -313,15 +314,16 @@ public final class GroupManagerInit
         NetworkAddress address = groupLeader.getListenSettings().getControlDataAddress();
         log_.debug(String.format("Joining group leader %s with control data port: %s",
                                  address.getAddress(), address.getPort()));
-    
+
         repository_.fillGroupManagerDescription(description_);
+        
         GroupManagerAPI communicator = CommunicatorFactory.newGroupManagerCommunicator(address);
         boolean hasJoined = communicator.joinGroupLeader(description_);
         if (hasJoined)
         {
             startGroupManagerMonitoringService(groupLeader);
         }
-    
+        
         return hasJoined;
     }
  

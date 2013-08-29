@@ -123,16 +123,18 @@ public final class DatabaseFactory
     public static GroupManagerRepository newGroupManagerRepository(
             GroupManagerDescription groupManager, 
             int maxCapacity,
+            int interval,
             DatabaseSettings settings,
             ExternalNotifierSettings externalNotifierSettings,
             ExternalNotifier externalNotifier
                                                                     ) 
     {
-        return new GroupManagerWrapperRepository(groupManager, maxCapacity, settings, externalNotifierSettings, externalNotifier);
+        return new GroupManagerWrapperRepository(groupManager, maxCapacity, interval, settings, externalNotifierSettings, externalNotifier);
     }
     
     public static GroupManagerRepository newGroupManagerRepository(
             GroupManagerDescription groupManager, 
+            int interval,
             int maxCapacity,
             DatabaseSettings settings)
     {
@@ -145,7 +147,8 @@ public final class DatabaseFactory
                 break;
             case cassandra:
                 String hosts = settings.getCassandraSettings().getHosts();
-                repository = new GroupManagerCassandraRepository(groupManager, maxCapacity, hosts);
+                int ttl = maxCapacity * interval;
+                repository = new GroupManagerCassandraRepository(groupManager, ttl, hosts);
                 break;
             default:
                 log_.error("Unknown group manager database type selected");

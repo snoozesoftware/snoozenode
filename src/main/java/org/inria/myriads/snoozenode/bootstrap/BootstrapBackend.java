@@ -29,11 +29,14 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.repository.Grou
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.BootstrapRepository;
+import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
 import org.inria.myriads.snoozenode.heartbeat.HeartbeatFactory;
 import org.inria.myriads.snoozenode.heartbeat.listener.HeartbeatListener;
 import org.inria.myriads.snoozenode.heartbeat.message.HeartbeatMessage;
@@ -217,6 +220,47 @@ public final class BootstrapBackend
         return information;        
     }
 
+    public synchronized boolean commandVirtualMachine(VirtualMachineCommand command, String virtualMachineId)
+    {
+       
+        VirtualMachineMetaData virtualMachine = 
+                getRepository().getVirtualMachineMetaData(virtualMachineId, 0, getGroupLeaderDescription());
+        
+        if (virtualMachine == null)
+        {
+            log_.debug(String.format("Virtual Machine %s not found in the system", virtualMachineId));
+            return false;
+        }
+        
+        VirtualMachineLocation location = virtualMachine.getVirtualMachineLocation();
+        NetworkAddress groupManagerAddress = location.getGroupManagerControlDataAddress();
+        GroupManagerAPI groupManagerCommunicator = CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress);
+        boolean isProcessed = false;
+        switch(command)
+        {
+            case DESTROY:
+                isProcessed = groupManagerCommunicator.destroyVirtualMachine(location);
+                break;
+            case REBOOT :
+                isProcessed = groupManagerCommunicator.rebootVirtualMachine(location);
+                break;
+            case SUSPEND :
+                isProcessed = groupManagerCommunicator.suspendVirtualMachine(location);
+                break;
+            case RESUME :
+                isProcessed = groupManagerCommunicator.resumeVirtualMachine(location);
+                break;
+            case SHUTDOWN : 
+                isProcessed = groupManagerCommunicator.shutdownVirtualMachine(location);
+                break;
+            default : 
+                log_.debug("Unknown command provided");
+        }
+        
+        return isProcessed;
+        
+    }
+    
     /**
      * 
      * Gets the bootstrap repository.
@@ -232,4 +276,6 @@ public final class BootstrapBackend
     {
         return isActive_;
     }
+    
+    
 }

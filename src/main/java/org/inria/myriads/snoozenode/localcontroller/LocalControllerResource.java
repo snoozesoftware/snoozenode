@@ -21,6 +21,7 @@ package org.inria.myriads.snoozenode.localcontroller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.rest.api.LocalControllerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
@@ -557,6 +558,22 @@ public final class LocalControllerResource extends ServerResource
        virtualMachine.setRequestedCapacity(requestedCapacity); 
 
        return virtualMachine;
+    }
+
+    @Override
+    public List<VirtualMachineMetaData> getVirtualMachines(int numberOfMonitoringEntries)
+    {
+        if (!isBackendActive())
+        {
+           log_.warn("Backend is not initialized yet!");
+           return null;
+        }
+      
+        List<VirtualMachineMetaData> virtualMachines = new ArrayList<VirtualMachineMetaData>();
+        
+        virtualMachines = backend_.getRepository().getVirtualMachines(numberOfMonitoringEntries);
+        
+        return virtualMachines;
     }
 
 

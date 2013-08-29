@@ -91,7 +91,6 @@
 	</logger>
 	
 	<logger name="org.inria.myriads.snoozecommon">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger>
 

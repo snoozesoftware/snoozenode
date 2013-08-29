@@ -28,6 +28,7 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.ClientMigrationRequestSimple;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 
 /**
  * Bootstrap repository interfaces
@@ -41,11 +42,12 @@ public interface BootstrapRepository
      * 
      * Gets the virtual machine meta data.
      * 
-     * @param virtualMachineId              The virtual machine id.
+     * @param virtualMachineLocation              The virtual machine id.
      * @param numberOfMonitoringEntries     The number of wanted monitoring entries.
+     * @param groupLeaderDescription 
      * @return                              The virtualMachine metadata.
      */
-    public VirtualMachineMetaData getVirtualMachineMetaData(String virtualMachineId, int numberOfMonitoringEntries);
+    public VirtualMachineMetaData getVirtualMachineMetaData(String virtualMachineId, int numberOfMonitoringEntries, GroupManagerDescription groupLeaderDescription);
 
     /**
      * 
@@ -64,25 +66,37 @@ public interface BootstrapRepository
      * @param limit
      * @return GroupManagers
      */
-    public List<GroupManagerDescription> getGroupManagerDescriptions(String firstGroupManagerId, int limit, int numberOfMonitoringEntries, String groupManagerId);
+    public List<GroupManagerDescription> getGroupManagerDescriptions(String firstGroupManagerId, int limit, int numberOfMonitoringEntries, GroupManagerDescription groupManagerDescription);
     
     /**
      * 
      * Gets all the local controllers (passive included, unassigned included)
+     * @param groupManagerDescription 
      * 
      * @return LocalControllers
      */
-    public List<LocalControllerDescription> getLocalControllerDescriptions(String groupManagerId, String firstLocalControllerId, int limit, int numberOfMonitoringEntries);
+    public List<LocalControllerDescription> getLocalControllerDescriptions(
+            String groupManagerId,
+            String firstLocalControllerId, 
+            int limit, 
+            int numberOfMonitoringEntries, 
+            GroupManagerDescription groupManagerDescription);
 
     
     /**
      * 
      * Gets all the virtual machines (passive included, unassigned included)
+     * @param groupManagerDescription 
      * 
      * @return virtualMachines
      */
-    public List<VirtualMachineMetaData> getVirtualMachineDescriptions(String groupManagerId, String localControllerId,
-            String startVirtualMachine, int limit, int numberOfMonitoringEntries);
+    public List<VirtualMachineMetaData> getVirtualMachineDescriptions(
+            String groupManagerId, 
+            String localControllerId,
+            String startVirtualMachine, 
+            int limit, 
+            int numberOfMonitoringEntries, 
+            GroupManagerDescription groupLeaderDescription);
 
     
     /**

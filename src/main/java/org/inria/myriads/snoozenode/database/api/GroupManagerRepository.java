@@ -239,4 +239,8 @@ public interface GroupManagerRepository
      * @return      GroupManager description
      */
     GroupManagerDescription  getGroupManager();
+
+    
+
+    
 }

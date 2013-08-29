@@ -19,7 +19,9 @@
  */
 package org.inria.myriads.snoozenode.database.api.impl.memory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
@@ -87,7 +89,7 @@ public final class LocalControllerMemoryRepository
             log_.debug("This virtual machine meta data is already in the database!");
             return false;
         }
-        
+        virtualMachineMetaData.setIsAssigned(true);
         virtualMachineMetaData_.put(virtualMachineId, virtualMachineMetaData);
         log_.debug("Virtual machine meta data added!");
         
@@ -192,5 +194,14 @@ public final class LocalControllerMemoryRepository
     public Map<String, VirtualMachineMetaData> getVirtualMachineMetaData() 
     {
         return virtualMachineMetaData_;
+    }
+
+    @Override
+    public List<VirtualMachineMetaData> getVirtualMachines(int numberOfMonitoringEntries)
+    {
+        log_.debug("Getting all virtual machines");
+        List<VirtualMachineMetaData> virtualMachines = new ArrayList<VirtualMachineMetaData>(); 
+        virtualMachines.addAll(virtualMachineMetaData_.values());
+        return virtualMachines;
     }
 }

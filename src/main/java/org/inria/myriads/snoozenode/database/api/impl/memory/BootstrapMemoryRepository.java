@@ -20,14 +20,23 @@
 package org.inria.myriads.snoozenode.database.api.impl.memory;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerList;
+import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
+import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
+import org.inria.myriads.snoozecommon.communication.rest.api.LocalControllerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.discovery.VirtualMachineDiscoveryResponse;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.ClientMigrationRequestSimple;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.requests.MetaDataRequest;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozenode.database.api.BootstrapRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,18 +53,36 @@ public final class BootstrapMemoryRepository
     private static final Logger log_ = LoggerFactory.getLogger(BootstrapMemoryRepository.class);
 
     @Override
-    public VirtualMachineMetaData getVirtualMachineMetaData(String virtualMachineId, int numberOfMonitoringEntries)
+    public VirtualMachineMetaData getVirtualMachineMetaData(
+            String virtualMachineId, 
+            int numberOfMonitoringEntries,
+            GroupManagerDescription groupLeader)
     {
-        log_.error("Not implemented yet");
-        return null;
+        NetworkAddress groupLeaderAddress = groupLeader.getListenSettings().getControlDataAddress();
+        GroupManagerAPI groupLeaderCommunicator = 
+                CommunicatorFactory.newGroupManagerCommunicator(groupLeaderAddress); 
+        VirtualMachineDiscoveryResponse discovery = groupLeaderCommunicator.discoverVirtualMachine(virtualMachineId);
+        if (discovery == null)
+        {
+            return null;
+        }
+        NetworkAddress groupManagerAddress = discovery.getGroupManagerAddress();
+        GroupManagerAPI groupManagerCommunicator = 
+                CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress);
+        MetaDataRequest metaDataRequest = new MetaDataRequest();
+        VirtualMachineLocation location = new VirtualMachineLocation();
+        location.setLocalControllerId(discovery.getLocalControllerId());
+        location.setVirtualMachineId(virtualMachineId);
+        location.setGroupManagerControlDataAddress(discovery.getGroupManagerAddress());
+        metaDataRequest.setVirtualMachineLocation(location);
+        VirtualMachineMetaData virtualMachine = groupManagerCommunicator.getVirtualMachineMetaData(metaDataRequest);
+        return virtualMachine;
     }
 
-    @Override
-    public List<GroupManagerDescription> getGroupManagerDescriptions(String firstGroupManagerId, int limit, int numberOfMonitoringEntries, String groupManagerId)
-    {
-        return null;
-    }
-
+   
+    /* (non-Javadoc)
+     * @see org.inria.myriads.snoozenode.database.api.BootstrapRepository#getLocalControllerList()
+     */
     @Override
     public LocalControllerList getLocalControllerList()
     {
@@ -63,20 +90,133 @@ public final class BootstrapMemoryRepository
         return null;
     }
 
+    /**
+     * Gets the groupamanger descriptions.
+     * @param firstGroupManagerId           (ignored)
+     * @param limit                         (ignored)
+     * @param umberOfMonitoringEntries      number of monitoring entries.
+     * @param groupLeaderId                 (ignored) 
+     * 
+     */
     @Override
-    public List<LocalControllerDescription> getLocalControllerDescriptions(String groupManagerId,
-            String firstLocalControllerId, int limit, int numberOfMonitoringEntries)
+    public List<GroupManagerDescription> getGroupManagerDescriptions(
+            String firstGroupManagerId, 
+            int limit, 
+            int numberOfMonitoringEntries, 
+            GroupManagerDescription groupLeader)
     {
-        // TODO Auto-generated method stub
-        return null;
+        NetworkAddress groupLeaderAddress = groupLeader.getListenSettings().getControlDataAddress();
+        GroupManagerAPI groupLeaderCommunicator = 
+                CommunicatorFactory.newGroupManagerCommunicator(groupLeaderAddress); 
+        GroupLeaderRepositoryInformation information = 
+            groupLeaderCommunicator.getGroupLeaderRepositoryInformation(numberOfMonitoringEntries);
+        
+        return information.getGroupManagerDescriptions();
+    }
+    
+    @Override
+    public List<LocalControllerDescription> getLocalControllerDescriptions(
+            String groupManagerId,
+            String firstLocalControllerId, 
+            int limit, 
+            int numberOfMonitoringEntries,
+            GroupManagerDescription groupLeader
+            )
+    {
+        
+        List<LocalControllerDescription> localControllers = new ArrayList<LocalControllerDescription>();
+        try{
+            NetworkAddress groupLeaderAddress = groupLeader.getListenSettings().getControlDataAddress();
+            GroupManagerAPI groupLeaderCommunicator = 
+                CommunicatorFactory.newGroupManagerCommunicator(groupLeaderAddress);
+            
+            if (groupManagerId == null || groupManagerId.equals(""))
+            {
+                log_.debug("Gets all the local controllers");
+                
+                localControllers = groupLeaderCommunicator.getLocalControllerList().getLocalControllers();
+            }
+            else
+            {
+                log_.debug("Gets the localcontrollers of groupmanager " + groupManagerId);
+                GroupManagerDescription groupManager = groupLeaderCommunicator.getGroupManagerDescription(groupManagerId);
+                
+                if (groupManager == null)
+                {
+                    log_.debug("The group manager doesn't exist");
+                    return localControllers;
+                }
+                NetworkAddress groupManagerAddress = groupManager.getListenSettings().getControlDataAddress();
+                GroupManagerAPI groupManagerCommunicator = 
+                    CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress);
+                localControllers = groupManagerCommunicator
+                                        .getGroupManagerRepositoryInformation(numberOfMonitoringEntries)
+                                        .getLocalControllerDescriptions();
+                
+            }
+        }
+        catch(Exception exception)
+        {
+            log_.error("Unable to get the local controller list");
+        }
+        return localControllers;
     }
 
     @Override
-    public List<VirtualMachineMetaData> getVirtualMachineDescriptions(String groupManagerId, String localControllerId,
-            String startVirtualMachine, int limit, int numberOfMonitoringEntries)
+    public List<VirtualMachineMetaData> getVirtualMachineDescriptions(
+            String groupManagerId, 
+            String localControllerId,
+            String startVirtualMachine, 
+            int limit, 
+            int numberOfMonitoringEntries,
+            GroupManagerDescription groupLeader
+            )
     {
-        // TODO Auto-generated method stub
-        return null;
+        List<VirtualMachineMetaData> virtualMachines = new ArrayList<VirtualMachineMetaData>();
+        
+        if (isNullOrEmpty(groupManagerId))
+        {
+            log_.debug("Unable to get virtualmachines : groupmanager id is missing");
+            return virtualMachines;
+        }
+        if (isNullOrEmpty(localControllerId))
+        {
+            log_.debug("Unable to get virtualmachines : localcontroller id is missing");
+            return virtualMachines;
+        }
+        NetworkAddress groupLeaderAddress = groupLeader.getListenSettings().getControlDataAddress();
+        GroupManagerAPI groupLeaderCommunicator = 
+            CommunicatorFactory.newGroupManagerCommunicator(groupLeaderAddress);
+
+        log_.debug("Gets the localcontrollers of groupmanager " + groupManagerId);
+        GroupManagerDescription groupManager = groupLeaderCommunicator.getGroupManagerDescription(groupManagerId);
+        
+        if (groupManager == null)
+        {
+            log_.debug("The group manager doesn't exist");
+            return virtualMachines;
+        }
+        
+        NetworkAddress groupManagerAddress = groupManager.getListenSettings().getControlDataAddress();
+        GroupManagerAPI groupManagerCommunicator = 
+            CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress);
+        
+        LocalControllerDescription localController = 
+                groupManagerCommunicator.getLocalControllerDescription(localControllerId);
+            
+        if (localController == null)
+        {
+            log_.debug("The local controller doesn't exist");
+            return virtualMachines;
+        }
+        
+        NetworkAddress localControllerAddress = localController.getControlDataAddress();
+        LocalControllerAPI localControllerCommunicator = 
+            CommunicatorFactory.newLocalControllerCommunicator(localControllerAddress);
+        
+        virtualMachines = localControllerCommunicator.getVirtualMachines(numberOfMonitoringEntries);
+                                
+        return virtualMachines;
     }
 
     @Override
@@ -85,5 +225,11 @@ public final class BootstrapMemoryRepository
         // TODO Auto-generated method stub
         return null;
     }
+    
+    private boolean isNullOrEmpty(String s)
+    {
+        return (s==null || s.equals(""));
+    }
+
     
 }

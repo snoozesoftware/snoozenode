@@ -194,7 +194,8 @@ public final class GroupLeaderMemoryRepository
             return false;
         }
             
-        groupManager.setSummaryInformation(new LRUCache<Long, GroupManagerSummaryInformation>(maxCapacity_));    
+        groupManager.setSummaryInformation(new LRUCache<Long, GroupManagerSummaryInformation>(maxCapacity_));
+        groupManager.setIsAssigned(true);
         groupManagerDescriptions_.put(groupManagerId, groupManager);     
         removeIpAddresses(groupManager.getLocalControllers());
         

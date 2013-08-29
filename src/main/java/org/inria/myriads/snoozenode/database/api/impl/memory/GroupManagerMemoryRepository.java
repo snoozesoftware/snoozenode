@@ -198,6 +198,7 @@ public final class GroupManagerMemoryRepository
         String localControllerId = localController.getId();
         log_.debug(String.format("Adding description for local controller: %s", localControllerId));
         
+        localController.setIsAssigned(true);
         localControllerDescriptions_.put(localControllerId, localController);
         boolean isUpdated = updateVirtualMachineAssignmens(localController);
         if (!isUpdated)
@@ -940,4 +941,5 @@ public final class GroupManagerMemoryRepository
     {
         return groupManager_;
     }
+
 }

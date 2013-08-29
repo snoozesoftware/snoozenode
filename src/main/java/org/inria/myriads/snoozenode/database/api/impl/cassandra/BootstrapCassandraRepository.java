@@ -48,7 +48,7 @@ public class BootstrapCassandraRepository extends CassandraRepository implements
 
 
     @Override
-    public VirtualMachineMetaData getVirtualMachineMetaData(String virtualMachineId, int numberOfMonitoringEntries)
+    public VirtualMachineMetaData getVirtualMachineMetaData(String virtualMachineId, int numberOfMonitoringEntries, GroupManagerDescription groupLeader)
     {
         VirtualMachineMetaData virtualMachine = 
                 getVirtualMachineMetaDataCassandra(virtualMachineId, numberOfMonitoringEntries);
@@ -56,8 +56,9 @@ public class BootstrapCassandraRepository extends CassandraRepository implements
     }
     
     @Override
-    public  List<GroupManagerDescription> getGroupManagerDescriptions(String firstGroupManagerId, int limit, int numberOfBacklogEntries, String groupLeaderId)
+    public  List<GroupManagerDescription> getGroupManagerDescriptions(String firstGroupManagerId, int limit, int numberOfBacklogEntries, GroupManagerDescription groupLeader)
     {
+        String groupLeaderId = groupLeader.getId();
         return getGroupManagerDescriptionsOnly(firstGroupManagerId, limit, false, numberOfBacklogEntries, Arrays.asList(groupLeaderId));
     }
 
@@ -76,7 +77,12 @@ public class BootstrapCassandraRepository extends CassandraRepository implements
 
     @Override
     public List<LocalControllerDescription> getLocalControllerDescriptions(
-            String groupManagerId, String firstLocalControllerId, int limit, int numberOfBacklogEntries)
+            String groupManagerId, 
+            String firstLocalControllerId,
+            int limit, 
+            int numberOfBacklogEntries,
+            GroupManagerDescription groupLeader
+            )
     {
         
         //HashMap<String, LocalControllerDescription> localControllers =
@@ -88,8 +94,14 @@ public class BootstrapCassandraRepository extends CassandraRepository implements
 
 
     @Override
-    public List<VirtualMachineMetaData> getVirtualMachineDescriptions(String groupManagerId, String localControllerId,
-            String startVirtualMachine, int limit, int numberOfBacklogEntries)
+    public List<VirtualMachineMetaData> getVirtualMachineDescriptions(
+            String groupManagerId, 
+            String localControllerId,
+            String startVirtualMachine,
+            int limit,
+            int numberOfBacklogEntries,
+            GroupManagerDescription groupLeader
+            )
     {
         //HashMap<String, VirtualMachineMetaData> virtualMachines =
         ArrayList<VirtualMachineMetaData> virtualMachines =

@@ -19,6 +19,7 @@
  */
 package org.inria.myriads.snoozenode.main.applications;
 
+import org.inria.myriads.snoozenode.bootstrap.BootstrapComputeResource;
 import org.inria.myriads.snoozenode.bootstrap.BootstrapResource;
 import org.restlet.Application;
 import org.restlet.Context;
@@ -59,6 +60,8 @@ public final class BootstrapApplication extends Application
     {  
          Router router = new Router(getContext());  
          router.attach("/bootstrap", BootstrapResource.class); 
+         router.attach("/compute/{id}", BootstrapComputeResource.class);
+         router.attach("/compute", BootstrapComputeResource.class);
          return router;  
     }
 }
