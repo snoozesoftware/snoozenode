@@ -2,10 +2,7 @@ package org.inria.myriads.snoozenode.database.api.impl.cassandra;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-
-import com.google.common.collect.Lists;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
@@ -48,7 +45,10 @@ public class BootstrapCassandraRepository extends CassandraRepository implements
 
 
     @Override
-    public VirtualMachineMetaData getVirtualMachineMetaData(String virtualMachineId, int numberOfMonitoringEntries, GroupManagerDescription groupLeader)
+    public VirtualMachineMetaData getVirtualMachineMetaData(
+            String virtualMachineId,
+            int numberOfMonitoringEntries,
+            GroupManagerDescription groupLeader)
     {
         VirtualMachineMetaData virtualMachine = 
                 getVirtualMachineMetaDataCassandra(virtualMachineId, numberOfMonitoringEntries);
@@ -56,17 +56,26 @@ public class BootstrapCassandraRepository extends CassandraRepository implements
     }
     
     @Override
-    public  List<GroupManagerDescription> getGroupManagerDescriptions(String firstGroupManagerId, int limit, int numberOfBacklogEntries, GroupManagerDescription groupLeader)
+    public  List<GroupManagerDescription> getGroupManagerDescriptions(
+            String firstGroupManagerId,
+            int limit,
+            int numberOfBacklogEntries,
+            GroupManagerDescription groupLeader)
     {
         String groupLeaderId = groupLeader.getId();
-        return getGroupManagerDescriptionsOnly(firstGroupManagerId, limit, false, numberOfBacklogEntries, Arrays.asList(groupLeaderId));
+        return getGroupManagerDescriptionsOnly(
+                firstGroupManagerId,
+                limit,
+                false,
+                numberOfBacklogEntries,
+                Arrays.asList(groupLeaderId));
     }
 
 
     @Override
     public LocalControllerList getLocalControllerList()
     {   
-        ArrayList<LocalControllerDescription> localControllers= 
+        ArrayList<LocalControllerDescription> localControllers =
                 getLocalControllerDescriptionsOnly(null, null, -1, 0, false, false);
         
         //
@@ -85,10 +94,15 @@ public class BootstrapCassandraRepository extends CassandraRepository implements
             )
     {
         
-        //HashMap<String, LocalControllerDescription> localControllers =
         ArrayList<LocalControllerDescription> localControllers = 
-                getLocalControllerDescriptionsOnly(groupManagerId, firstLocalControllerId, limit, numberOfBacklogEntries, false, false);
-        //return Lists.newArrayList(localControllers.values());
+                getLocalControllerDescriptionsOnly(
+                        groupManagerId,
+                        firstLocalControllerId,
+                        limit,
+                        numberOfBacklogEntries,
+                        false,
+                        false);
+
         return localControllers;
     }
 
@@ -103,7 +117,7 @@ public class BootstrapCassandraRepository extends CassandraRepository implements
             GroupManagerDescription groupLeader
             )
     {
-        //HashMap<String, VirtualMachineMetaData> virtualMachines =
+
         ArrayList<VirtualMachineMetaData> virtualMachines =
                 getVirtualMachineDescriptionsOnly(
                         groupManagerId, 
@@ -112,7 +126,6 @@ public class BootstrapCassandraRepository extends CassandraRepository implements
                         limit, 
                         numberOfBacklogEntries, 
                         false);
-        //return Lists.newArrayList(virtualMachines.values());
         return virtualMachines;
         
     }

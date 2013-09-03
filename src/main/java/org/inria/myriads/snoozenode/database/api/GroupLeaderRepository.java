@@ -120,7 +120,7 @@ public interface GroupLeaderRepository
 
     /**
      * Given a local controller location updates the location with the proper groupmanager.
-     * @param                   location.
+     * @param location          location.
      * @return                  True if everything is ok.
      */
     boolean updateLocation(VirtualMachineLocation location);
@@ -129,8 +129,8 @@ public interface GroupLeaderRepository
      * 
      * Gets the localController description.
      * 
-     * @param localControllerId
-     * @return
+     * @param localControllerId     Localcontroller Id.
+     * @return  The local controller description.
      */
     LocalControllerDescription getLocalControllerDescription(String localControllerId);
     

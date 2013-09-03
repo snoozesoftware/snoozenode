@@ -297,16 +297,24 @@ public final class GroupLeaderMemoryRepository
         updateHistoryData(groupManagerId, summary);
     }
 
+    /**
+     * 
+     * Update the history data of a given group manager.
+     * 
+     * @param groupManagerId        group manager id.
+     * @param summary               summary.
+     */
     private void updateHistoryData(String groupManagerId,
-			GroupManagerSummaryInformation summary) {
-    	
+            GroupManagerSummaryInformation summary)
+    {
         GroupManagerDescription groupManagerDescription = groupManagerDescriptions_.get(groupManagerId);
         Map<Long, GroupManagerSummaryInformation> historyData = groupManagerDescription.getSummaryInformation();
+        // remove lcs ? 
         summary.setLocalControllers(new ArrayList<LocalControllerDescription>());
         historyData.put(summary.getTimeStamp(), summary);
-	}
+    }
 
-	/**
+    /**
      * 
      * Updates the mapping local controllers - group manager.
      * 
@@ -483,7 +491,8 @@ public final class GroupLeaderMemoryRepository
         }
         
         location.setGroupManagerId(lookup.getGroupManager().getId());
-        location.setGroupManagerControlDataAddress(lookup.getGroupManager().getListenSettings().getControlDataAddress());
+        location.setGroupManagerControlDataAddress(
+                lookup.getGroupManager().getListenSettings().getControlDataAddress());
         return true;
     }
 

@@ -40,7 +40,6 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.Vi
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
-import org.inria.myriads.snoozecommon.communication.virtualmachine.ClientMigrationRequest;
 import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
@@ -49,7 +48,6 @@ import org.inria.myriads.snoozenode.groupmanager.virtualmachinediscovery.Virtual
 import org.inria.myriads.snoozenode.message.ManagementMessage;
 import org.inria.myriads.snoozenode.message.ManagementMessageType;
 import org.inria.snoozenode.external.notifier.ExternalNotificationType;
-import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -740,7 +738,7 @@ public final class GroupManagerResource extends ServerResource
      * Migrate a virtual machine.
      * (call by the client)
      * 
-     * @param clientMigrationRequest     The client migration Request
+     * @param migrationRequest     The client migration Request
      * @return                           true if ok false otherwise
      */
     public boolean migrateVirtualMachine(MigrationRequest migrationRequest) 
@@ -762,8 +760,10 @@ public final class GroupManagerResource extends ServerResource
             {
                 return false;
             }
-            LocalControllerDescription localController = 
-                    backend_.getGroupLeaderInit().getRepository().getLocalControllerDescription(newLocation.getLocalControllerId());
+            LocalControllerDescription localController = backend_
+                    .getGroupLeaderInit()
+                    .getRepository()
+                    .getLocalControllerDescription(newLocation.getLocalControllerId());
             
             migrationRequest.setDestinationHypervisorSettings(localController.getHypervisorSettings());
             // call to the gm source to migrate the vm.
@@ -809,10 +809,11 @@ public final class GroupManagerResource extends ServerResource
     }
 
     
+    @Override
     public boolean addVirtualMachineAfterMigration(VirtualMachineMetaData virtualMachine)
     {
         Guard.check(virtualMachine);
-        if ( !isGroupManagerActive())
+        if (!isGroupManagerActive())
         {
             return false;
         }

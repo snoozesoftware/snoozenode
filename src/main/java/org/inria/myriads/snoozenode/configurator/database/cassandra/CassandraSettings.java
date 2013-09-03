@@ -1,8 +1,16 @@
 package org.inria.myriads.snoozenode.configurator.database.cassandra;
 
+/**
+ * 
+ * Cassandra settings.
+ * 
+ * @author msimonin
+ *
+ */
 public class CassandraSettings
 {
 
+    /** Coma separated list of hosts.*/
     private String hosts_;
 
     /**
@@ -14,7 +22,10 @@ public class CassandraSettings
     }
 
     /**
-     * @param hosts
+     * 
+     * Constructor.
+     * 
+     * @param hosts     The list of hosts (coma separated).
      */
     public CassandraSettings(String hosts)
     {

@@ -19,24 +19,13 @@
  */
 package org.inria.myriads.snoozenode.bootstrap;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
-import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
-import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
-import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerList;
 import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
-import org.inria.myriads.snoozecommon.communication.rest.api.BootstrapAPI;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.ClientMigrationRequestSimple;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozecommon.request.HostListRequest;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
@@ -48,7 +37,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Bootstrap resource.
  * 
- * @author Eugen Feller
+ * @author msimonin
  */
 public final class BootstrapComputeResource extends ServerResource 
 {
@@ -71,14 +60,19 @@ public final class BootstrapComputeResource extends ServerResource
      * 
      * Get Virtual Machine Meta Data.
      * 
-     * @return
+     * @return  the virtual machine meta data.
      */
     @Get
     public VirtualMachineMetaData getVirtualMachine()
     {
         String virtualMachineId = (String) this.getRequestAttributes().get("id");
         VirtualMachineMetaData virtualMachine = 
-                backend_.getRepository().getVirtualMachineMetaData(virtualMachineId, 0, backend_.getGroupLeaderDescription());
+                backend_
+                .getRepository().
+                getVirtualMachineMetaData(
+                        virtualMachineId, 
+                        0, 
+                        backend_.getGroupLeaderDescription());
         return virtualMachine;
     }
     
@@ -86,7 +80,7 @@ public final class BootstrapComputeResource extends ServerResource
      * 
      * Change the status of a virtualmachine.
      * 
-     * @return
+     * @return  true iff the command is processing
      */
     @Put
     public boolean commandVirtualMachine()
@@ -110,11 +104,12 @@ public final class BootstrapComputeResource extends ServerResource
      * 
      * Start virtual cluster.
      * 
-     * @param virtualClusterDescription
-     * @return
+     * @param virtualClusterDescription     The virtual cluster description.
+     * 
+     * @return  the virtual cluster request identifier.
      */
     @Post
-    public String startVirtualCluster(VirtualClusterSubmissionRequest virtualClusterDescription) 
+    public String startVirtualCluster(VirtualClusterSubmissionRequest virtualClusterDescription)
     {
         Guard.check(virtualClusterDescription);
         log_.debug("Received virtual cluster start request");

@@ -100,6 +100,9 @@ public final class GroupManagerBackend
         
     }
         
+    /**
+     * Initializes external notifier.
+     */
     private void initializeExternalNotifier()
     {
         externalNotifier_ = new ExternalNotifier(nodeConfiguration_); 
@@ -205,7 +208,6 @@ public final class GroupManagerBackend
             if (groupManagerInit_ != null)
             {
                 groupManagerInit_.getRepository().fillGroupManagerDescription(groupManagerDescription_);
-                log_.debug("groupManagerDescription filled and local controllers = " + groupManagerDescription_.getLocalControllers().size());
                 groupManagerInit_.stopServices();
             }
         } 
@@ -281,7 +283,8 @@ public final class GroupManagerBackend
         {
             if (groupManagerInit_ == null)
             {
-                groupManagerInit_ = new GroupManagerInit(nodeConfiguration_, groupManagerDescription_, externalNotifier_);
+                groupManagerInit_ = 
+                        new GroupManagerInit(nodeConfiguration_, groupManagerDescription_, externalNotifier_);
             } 
                           
             GroupManagerDescription groupLeader = ManagementUtils.createGroupLeaderDescriptionFromHeartbeat(heartbeat);

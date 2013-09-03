@@ -27,7 +27,6 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.Mig
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
-import org.inria.myriads.snoozecommon.communication.virtualmachine.ClientMigrationRequest;
 import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
@@ -135,7 +134,7 @@ public interface StateMachine
 
     /**
      * 
-     * Resizes a virtual Machine
+     * Resizes a virtual Machine.
      * 
      * @param resizeRequest     The resize request
      * @return                  True if everything is ok, false otherwise.

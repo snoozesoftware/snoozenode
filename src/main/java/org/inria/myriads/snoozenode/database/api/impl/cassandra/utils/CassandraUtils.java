@@ -4,10 +4,6 @@ import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 
-import org.inria.myriads.snoozenode.database.api.impl.cassandra.CassandraRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import me.prettyprint.cassandra.serializers.BooleanSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Keyspace;
@@ -20,38 +16,49 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 
+import org.inria.myriads.snoozenode.database.api.impl.cassandra.CassandraRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+/**
+ * 
+ * Cassandra utils.
+ * 
+ * @author msimonin
+ *
+ */
 public final class CassandraUtils
 {
-    /** Logger. */
-    protected static final Logger log_ = LoggerFactory.getLogger(CassandraRepository.class);
-    
+
     /** Cluster column family. */
-    public static  String CLUSTER = "Test Cluster";
+    public static final String CLUSTER = "Test Cluster";
     
     /** Keyspace column family. */
-    public static  String KEYSPACE = "snooze";
+    public static final String KEYSPACE = "snooze";
     
     /** virtual Machines column family. */
-    public static  String VIRTUALMACHINES_CF = "virtualmachines";
+    public static final String VIRTUALMACHINES_CF = "virtualmachines";
     
     /** virtual Machines column family. */
-    public static  String VIRTUALMACHINES_MONITORING_CF = "virtualmachines_monitorings";
+    public static final String VIRTUALMACHINES_MONITORING_CF = "virtualmachines_monitorings";
     
     /** Groupmanagers column family. */
-    public static  String GROUPMANAGERS_CF = "groupmanagers";
+    public static final String GROUPMANAGERS_CF = "groupmanagers";
+    
     /** localcontrollers column family. */
-    public static  String LOCALCONTROLLERS_CF = "localcontrollers";
+    public static final String LOCALCONTROLLERS_CF = "localcontrollers";
     
     /** localcontrollers monitoring column family. */
-    public static  String LOCALCONTROLLERS_MAPPING_CF = "localcontrollers_mappings";
+    public static  final String LOCALCONTROLLERS_MAPPING_CF = "localcontrollers_mappings";
     
     /** groupmanagers column family. */
-    public static  String GROUPMANAGERS_MONITORING_CF = "groupmanagers_monitorings";
+    public static  final String GROUPMANAGERS_MONITORING_CF = "groupmanagers_monitorings";
     
     /** ippools column family. */
-    public static  String IPSPOOL_CF = "ipspools";
+    public static final String IPSPOOL_CF = "ipspools";
     
-    /** Ips row key in IPSPOOL_CF*/
+    /** Ips row key in IPSPOOL_CF.*/
     public static final String IPS_ROW_KEY = "0";
     
     /** byte[] true.*/
@@ -66,6 +73,9 @@ public final class CassandraUtils
     /** string false.*/
     public static final String stringFalse = new String(byteFalse, Charset.forName("UTF-8"));
     
+    /** Logger. */
+    protected static final Logger log_ = LoggerFactory.getLogger(CassandraRepository.class);
+    
     /**
      * Hide Constructor.
      */
@@ -74,18 +84,26 @@ public final class CassandraUtils
         throw new UnsupportedOperationException();
     }
     
-    
     /**
      * 
-     * Add a column in a specific column family
+     * Add a column in a specific column family.
      * 
-     * @param rowKey
-     * @param columnFamily
-     * @return
+     * @param keyspace          Keyspace.
+     * @param rowKey            RowKey.
+     * @param columnFamily      ColumnFamily.
+     * @param name              Name.
+     * @param value             Value.
+     * @return  true iff everything is ok.
      */
-    public static boolean addStringColumn(Keyspace keyspace, String rowKey, String columnFamily, String name, String value)
+    public static boolean addStringColumn(
+            Keyspace keyspace,
+            String rowKey,
+            String columnFamily,
+            String name,
+            String value)
     {
-        try{
+        try
+        {
             Mutator<String> mutator = HFactory.createMutator(keyspace, StringSerializer.get());
             mutator.addInsertion(rowKey, columnFamily, HFactory.createStringColumn(name, value));
             mutator.execute();
@@ -103,17 +121,13 @@ public final class CassandraUtils
      * 
      * Checks if a specific row exist.
      * 
-     * @param columnFamily
-     * @param rowKey
-     * @return
+     * @param keyspace          Keyspace.
+     * @param columnFamily      ColumnFamily.
+     * @param rowKey            RowKey.
+     * @return true iff everything is ok.
      */
     public static boolean checkForRow(Keyspace keyspace, String columnFamily, String rowKey)
     {
-//        RowIterator rowQueryIterator = new RowIterator(
-//                keyspace, CassandraUtils.IPSPOOL_CF,
-//                CassandraUtils.IPS_ROW_KEY, // start
-//                CassandraUtils.IPS_ROW_KEY, // end
-//                1); // rows to fecth 
         RowIterator rowIterator = new RowIterator();
         rowIterator.setKeyspace(keyspace)
                    .setColumnFamily(columnFamily)
@@ -134,8 +148,10 @@ public final class CassandraUtils
      * 
      * Drop list of keys from a column family.
      * 
-     * @param list                  List of keys
-     * @param columnFamily          Column family to remove from
+     * @param keyspace          Keyspace.
+     * @param list              List.
+     * @param columnFamily      ColumnFamily.
+     * @return true iff everything is ok.
      */
     public static boolean drop(Keyspace keyspace, List<String> list, String columnFamily)
     {
@@ -147,7 +163,7 @@ public final class CassandraUtils
             mutator.addDeletion(list, columnFamily);
             mutator.execute();
         }
-        catch(Exception exception)
+        catch (Exception exception)
         {
             log_.error(String.format("Unable to remove the keys from %s", columnFamily));
             return false;
@@ -159,17 +175,24 @@ public final class CassandraUtils
     /**
      * 
      * Unassign a list of row.
-     * I hope it will handle more than 100 rows ! 
-     * 
-     * @param keys
-     * @param columnFamily
+     * I hope it will handle more than 100 rows !
+     *  
+     * @param keyspace          Keyspace.
+     * @param keys              Keys.
+     * @param columnFamily      ColumnFamily.
+     * @return  true iff everything ok.
      */
     public static boolean unassignNodes(Keyspace keyspace, List<String> keys, String columnFamily)
     {
         try
         {
             MultigetSliceQuery<String, String, String> multigetSliceQuery =
-                    HFactory.createMultigetSliceQuery(keyspace, StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
+                    HFactory.createMultigetSliceQuery(
+                            keyspace, 
+                            StringSerializer.get(), 
+                            StringSerializer.get(), 
+                            StringSerializer.get());
+            
             multigetSliceQuery.setKeys(keys);
             multigetSliceQuery.setColumnFamily(columnFamily);
             multigetSliceQuery.setRange(null, null, false, 100); 
@@ -178,7 +201,7 @@ public final class CassandraUtils
             Mutator<String> mutator = HFactory.createMutator(keyspace, StringSerializer.get());
             for (Row<String, String, String> row  : result.get())
             {
-                ColumnSlice<String, String> columnSlice = row.getColumnSlice() ; 
+                ColumnSlice<String, String> columnSlice = row.getColumnSlice();
                 if (columnSlice.getColumns().isEmpty()) 
                 {
                   //tombstone
@@ -190,13 +213,24 @@ public final class CassandraUtils
                     mutator.addInsertion(
                             row.getKey(), 
                             columnFamily, 
-                            HFactory.createColumn(column.getName(), column.getValue(), 67, column.getNameSerializer(), column.getValueSerializer()));
+                            HFactory.createColumn(
+                                    column.getName(),
+                                    column.getValue(), 
+                                    67, 
+                                    column.getNameSerializer(),
+                                    column.getValueSerializer()));
                 }
-                mutator.addInsertion(row.getKey(), columnFamily, HFactory.createColumn("isAssigned", false, 67, StringSerializer.get(), BooleanSerializer.get()));
+                mutator.addInsertion(
+                        row.getKey(),
+                        columnFamily,
+                        HFactory.createColumn("isAssigned",
+                                false,
+                                67,
+                                StringSerializer.get(), BooleanSerializer.get()));
               }
               mutator.execute();
         }
-        catch(Exception exception)
+        catch (Exception exception)
         {
             log_.error("Unable to unassign the nodes");
             exception.printStackTrace();
@@ -206,9 +240,16 @@ public final class CassandraUtils
     }
 
     
+    /**
+     * 
+     * Unassign nodes from a column family.
+     * 
+     * @param keyspace
+     * @param columnFamily
+     */
     public static void unassignNodes(Keyspace keyspace, String columnFamily)
     {
-        log_.debug("Unassign all the group managers");
+        log_.debug("Unassign all the rows from " + keyspace.getKeyspaceName());
 
         RowIterator rowIterator = new RowIterator();
         rowIterator
@@ -217,7 +258,7 @@ public final class CassandraUtils
         rowIterator.execute();
         
         Mutator<String> mutator = HFactory.createMutator(keyspace, StringSerializer.get());
-        for (Row<String,String,String> row : rowIterator)
+        for (Row<String, String, String> row : rowIterator)
         {
           ColumnSlice<String, String> columnSlice = row.getColumnSlice();
           HColumn<String, String> isGroupLeaderColumn = columnSlice.getColumnByName("isGroupLeader");
@@ -232,64 +273,28 @@ public final class CassandraUtils
               mutator.addInsertion(
                       row.getKey(), 
                       columnFamily, 
-                      HFactory.createColumn(column.getName(), column.getValue(), 67, column.getNameSerializer(), column.getValueSerializer()));
+                      HFactory.createColumn(
+                              column.getName(), 
+                              column.getValue(), 
+                              67, 
+                              column.getNameSerializer(), 
+                              column.getValueSerializer()));
           }
-          mutator.addInsertion(row.getKey(), columnFamily, HFactory.createColumn("isAssigned", false, 67, StringSerializer.get(), BooleanSerializer.get()));
+          mutator.addInsertion(
+                  row.getKey(),
+                  columnFamily,
+                  HFactory.createColumn(
+                          "isAssigned",
+                          false,
+                          67,
+                          StringSerializer.get(),
+                          BooleanSerializer.get()));
         }
         mutator.execute();
     }
      
         
-//        int row_count = 100;
-//
-//        String lastKey = null;
-//        Mutator<String> mutator = HFactory.createMutator(keyspace, StringSerializer.get());
-//        while (true) {
-//            RowIterator rowQueryIterator = new RowIterator(
-//                    keyspace, columnFamily,
-//                    lastKey, // start
-//                    null, // end
-//                    row_count); // rows to fetch 
-//            
-//            @SuppressWarnings("unchecked")
-//            Iterator<Row<String, String, String>> rowsIterator = rowQueryIterator.iterator();
-//            
-//            if (lastKey != null && rowsIterator != null) rowsIterator.next();   
-//
-//            while (rowsIterator.hasNext()) {
-//              Row<String, String, String> row = rowsIterator.next();
-//              lastKey = row.getKey();
-//              
-//              ColumnSlice<String, String> columnSlice = row.getColumnSlice() ; 
-//              if (columnSlice.getColumns().isEmpty()) 
-//              {
-//                //tombstone
-//                continue;
-//              }
-//              
-//              HColumn<String, String> isGroupLeaderColumn = columnSlice.getColumnByName("isGroupLeader");
-//              if (isGroupLeaderColumn != null && isGroupLeaderColumn.getValue().equals(CassandraUtils.stringTrue))
-//              {
-//                  log_.debug("DELETION of previous GL");
-//                  mutator.addDeletion(row.getKey(), columnFamily);
-//                  continue;
-//              }
-//              for (HColumn<String, String>  column : row.getColumnSlice().getColumns())
-//              {
-//                  mutator.addInsertion(
-//                          row.getKey(), 
-//                          columnFamily, 
-//                          HFactory.createColumn(column.getName(), column.getValue(), 67, column.getNameSerializer(), column.getValueSerializer()));
-//              }
-//              mutator.addInsertion(row.getKey(), columnFamily, HFactory.createColumn("isAssigned", false, 67, StringSerializer.get(), BooleanSerializer.get()));
-//            }
-//            mutator.execute();
-//
-//            if (rowQueryIterator.getCount() < row_count)
-//                break;
-//        }
-//        
-//    }
+
     
 }
 

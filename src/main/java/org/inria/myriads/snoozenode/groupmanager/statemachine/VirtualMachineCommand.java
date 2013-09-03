@@ -41,25 +41,35 @@ public enum VirtualMachineCommand
     /** Resize. */
     RESIZE("resize");
 
-    
-    String name_ = "";
+    /** name.*/
+    private String name_ = "";
     
     /**
-     * @param name
+     * @param name  The name.
      */
     VirtualMachineCommand(String name)
     {
         name_ = name;
     }
     
+    @Override
     public String toString()
     {
         return name_;
     }
     
+    
+    /**
+     * 
+     * Convert from string.
+     * 
+     * @param text      The strings text to convert.
+     * @return  VirtualMachineCommand.
+     */
     public static VirtualMachineCommand fromString(String text) 
     {
-        if (text != null) {
+        if (text != null) 
+        {
           for (VirtualMachineCommand v : VirtualMachineCommand.values()) 
           {
             if (text.equalsIgnoreCase(v.toString())) 

@@ -8,35 +8,51 @@ import org.inria.myriads.snoozenode.monitoring.TransportProtocol;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.RabbitMQExternalSender;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.TCPDataSender;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.TestExternalSender;
 import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 
+ * Data sender factory class.
+ * 
  * @author msimonin
  *
  */
-public class DataSenderFactory
+public final class DataSenderFactory
 {
     /** Logging instance. */
     private static final Logger log_ = LoggerFactory.getLogger(DataSenderFactory.class);
     
-    /**
-     * Constructor.
-     */
+    /** Hide constructor. */
     public DataSenderFactory()
     {
         throw new UnsupportedOperationException();
     }
     
     
+    /**
+     * 
+     * Build an internal dataSender.
+     * 
+     * @param nodeAddress   node address
+     * @return  DataSender
+     * @throws IOException  Exception
+     */
     public static DataSender newInternalDataSender(NetworkAddress nodeAddress) throws IOException
     {
         return new TCPDataSender(nodeAddress);
     }
     
     
+    /**
+     * 
+     * Build an external data sender.
+     * 
+     * @param externalNotificationType      Type.
+     * @param externalNotifierSettings      Settings.
+     * @return  dataSender
+     */
     public static DataSender newExternalDataSender(ExternalNotificationType externalNotificationType,
             ExternalNotifierSettings externalNotifierSettings)
     {
@@ -46,9 +62,6 @@ public class DataSenderFactory
             case RABBITMQ :
                 log_.debug("Initializing the RabbitMQ external sender");
                 return new RabbitMQExternalSender(externalNotificationType.toString(), externalNotifierSettings);
-            case TEST:
-                log_.debug("Initializing the TEST external sender");
-                return new TestExternalSender();
             default : 
                 return null;
         }

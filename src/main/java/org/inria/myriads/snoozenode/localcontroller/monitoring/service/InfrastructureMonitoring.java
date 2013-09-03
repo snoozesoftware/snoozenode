@@ -46,9 +46,10 @@ public final class InfrastructureMonitoring
     /**
      * Constructor.
      * 
-     * @param virtualMachineMonitor     The virtual machine monitor
-     * @param hostMonitor               The host monitor
-     * @param monitoringSettings        The monitoring settings
+     * @param virtualMachineMonitor         The virtual machine monitor
+     * @param hostMonitor                   The host monitor
+     * @param monitoringSettings            The monitoring settings
+     * @param monitoringExternalSettings    The monitoring external notifier.
      */
     public InfrastructureMonitoring(VirtualMachineMonitor virtualMachineMonitor, 
                                     HostMonitor hostMonitor, 

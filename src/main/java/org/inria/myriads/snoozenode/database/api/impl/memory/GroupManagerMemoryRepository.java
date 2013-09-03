@@ -34,16 +34,8 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
-import org.inria.myriads.snoozenode.message.ManagementMessage;
-import org.inria.myriads.snoozenode.message.SystemMessage;
-import org.inria.myriads.snoozenode.message.SystemMessageType;
-import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
-import org.inria.snoozenode.external.notifier.ExternalNotificationType;
-import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,14 +69,15 @@ public final class GroupManagerMemoryRepository
             
 
     
-    /** 
+    
+    /**
+     * 
      * Constructor.
      * 
-     * @param groupManagerId    The group manager identifier
-     * @param maxCapacity       The maximum capacity
-     * @param externalNotifierSettings 
+     * @param groupManager  group manager.
+     * @param maxCapacity   max capacity.
      */
-    public GroupManagerMemoryRepository(GroupManagerDescription groupManager, 
+    public GroupManagerMemoryRepository(GroupManagerDescription groupManager,
             int maxCapacity) 
     {
         
@@ -182,7 +175,8 @@ public final class GroupManagerMemoryRepository
         Guard.check(groupManager);
         log_.debug("Adding possible virtual machine meta data to group manager description");
         //it should be a copy ?  
-        groupManager.setLocalControllers((HashMap<String, LocalControllerDescription>) localControllerDescriptions_.clone());   
+        groupManager.setLocalControllers(
+                (HashMap<String, LocalControllerDescription>) localControllerDescriptions_.clone());   
     }
     
     /**

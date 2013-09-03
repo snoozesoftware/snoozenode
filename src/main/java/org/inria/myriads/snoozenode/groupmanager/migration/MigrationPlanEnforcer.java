@@ -33,7 +33,6 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.exception.MigrationPlanEnforcerException;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
@@ -45,7 +44,6 @@ import org.inria.myriads.snoozenode.message.ManagementMessage;
 import org.inria.myriads.snoozenode.message.ManagementMessageType;
 import org.inria.myriads.snoozenode.message.SystemMessage;
 import org.inria.myriads.snoozenode.message.SystemMessageType;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
 import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
@@ -85,8 +83,9 @@ public final class MigrationPlanEnforcer
     /**
      * Constructor.
      * 
-     * @param groupManagerRepository     The group manager repository
-     * @param listener                   Migration plan listener
+     * @param groupManagerRepository     The group manager repository.
+     * @param listener                   Migration plan listener.
+     * @param externalNotifier           External notifier.
      */
     public MigrationPlanEnforcer(
                                 GroupManagerRepository groupManagerRepository, 
@@ -294,9 +293,9 @@ public final class MigrationPlanEnforcer
     /**
      * Creates new virtual machine location from local controller description.
      * 
-     * @param virtualMachineId    The virtual machine identifier
-     * @param localControllerId   The local controller identifier
-     * @param controlDataAddress  The control data address
+     * @param sourceLocation        The virtual machine location
+     * @param localControllerId     The local controller identifier
+     * @param controlDataAddress    The control data address
      * @return                    The virtual machine location
      */
     private VirtualMachineLocation createNewVirtualMachineLocation(VirtualMachineLocation sourceLocation,
@@ -383,7 +382,7 @@ public final class MigrationPlanEnforcer
                 externalNotifier_,
                 ExternalNotificationType.SYSTEM,
                 new SystemMessage(SystemMessageType.RECONFIGURATION, migrationPlan),
-                "groupmanager."+groupManagerRepository_.getGroupManagerId()
+                "groupmanager." + groupManagerRepository_.getGroupManagerId()
                 );
         
         Map<VirtualMachineMetaData, LocalControllerDescription> mapping = migrationPlan.getMapping();
@@ -410,7 +409,7 @@ public final class MigrationPlanEnforcer
      * Start a migration.
      * Call by the client.
      * 
-     * @param migrationRequest
+     * @param migrationRequest      The migration request.
      */
     public void startManualMigration(MigrationRequest migrationRequest)
     {

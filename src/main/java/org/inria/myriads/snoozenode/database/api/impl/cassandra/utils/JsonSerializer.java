@@ -5,17 +5,35 @@ import java.io.Writer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import me.prettyprint.cassandra.serializers.AbstractSerializer;
-import me.prettyprint.cassandra.serializers.LongSerializer;
 
+import org.codehaus.jackson.map.ObjectMapper;
+
+/**
+ * 
+ * Json serializer.
+ * 
+ * @author msimonin
+ *
+ */
 public class JsonSerializer extends AbstractSerializer<Object> 
 {
+    /** UTF8.*/
     private static final String UTF_8 = "UTF-8";
+    
+    /** Charset.*/
     private static final Charset charset = Charset.forName(UTF_8);
+    
+    /** class. */
     private Class<?> class_;
     
-    public JsonSerializer(Class<?> clazz) 
+    /**
+     * 
+     * Constructeur.
+     * 
+     * @param clazz     the class.
+     */
+    public JsonSerializer(Class<?> clazz)
     {
         class_ = clazz;
     }
@@ -31,7 +49,8 @@ public class JsonSerializer extends AbstractSerializer<Object>
         ObjectMapper mapper = new ObjectMapper();
         Writer strWriter = new StringWriter();
         
-        try {
+        try 
+        {
             mapper.writeValue(strWriter, obj);
             String json = strWriter.toString();
             return ByteBuffer.wrap(json.getBytes(charset));
@@ -64,45 +83,60 @@ public class JsonSerializer extends AbstractSerializer<Object>
         }
     }
 
-        public String toString(Object obj)
+    /**
+     * 
+     * To String.
+     * 
+     * @param obj   object to dump.
+     * @return String
+     */
+    public String toString(Object obj)
+    {
+        if (obj == null)
         {
-            if (obj == null)
-            {
-                return null;
-            }
-            
-            ObjectMapper mapper = new ObjectMapper();
-            Writer strWriter = new StringWriter();
-            
-            try {
-                mapper.writeValue(strWriter, obj);
-                String json = strWriter.toString();
-                return json;
-            }
-            catch(Exception exception)
-            {
-                return null;
-            }
+            return null;
         }
-    
-        public Object fromString(String string)
+        
+        ObjectMapper mapper = new ObjectMapper();
+        Writer strWriter = new StringWriter();
+        
+        try 
         {
-            if (string == null)
-            {
-                return null;
-            }
-            
-            ObjectMapper mapper = new ObjectMapper();
-            try
-            {
-                Object o = mapper.readValue(string, class_);
-                return o;
-            }
-            catch (Exception exception)
-            {
-                return null;
-            }
+            mapper.writeValue(strWriter, obj);
+            String json = strWriter.toString();
+            return json;
         }
+        catch (Exception exception)
+        {
+            return null;
+        }
+    }
+
+    /**
+     * 
+     * from String.
+     * 
+     * @param string  String to deserialize.  
+     * @return  object
+     */
+    public Object fromString(String string)
+    {
+        if (string == null)
+        {
+            return null;
+        }
+        
+        ObjectMapper mapper = new ObjectMapper();
+        try
+        {
+            Object o = mapper.readValue(string, class_);
+            return o;
+        }
+        catch (Exception exception)
+        {
+            return null;
+        }
+    }
 
 
 

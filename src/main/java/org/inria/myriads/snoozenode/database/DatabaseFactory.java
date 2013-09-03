@@ -60,37 +60,45 @@ public final class DatabaseFactory
     
     /**
      * Returns the group leader repository wrapper.
-     * @param groupLeaderDescription 
      * 
-     * @param virtualMachineSubnets    The virtual machine subnets
-     * @param maxCapacity             The maximum capacity
-     * @param type                    The database type
-     * @return                        The group leader repository
+     * @param groupLeaderDescription    The group Leader description.
+     * @param virtualMachineSubnets     The virtual machines subnets.
+     * @param maxCapacity               The max Capacity.
+     * @param settings                  The database settings.
+     * @param externalNotifier          The external notifier to use.
+     * @return          The group leader repository.
      */
-    public static GroupLeaderRepository newGroupLeaderRepository(GroupManagerDescription groupLeaderDescription, String[] virtualMachineSubnets,   
-                                                                 int maxCapacity,
-                                                                 DatabaseSettings settings,
-                                                                 ExternalNotifier externalNotifier
-                                                                 ) 
+    public static GroupLeaderRepository newGroupLeaderRepository(
+            GroupManagerDescription groupLeaderDescription, 
+            String[] virtualMachineSubnets,   
+            int maxCapacity,
+            DatabaseSettings settings,
+            ExternalNotifier externalNotifier) 
     {
         
-        return new GroupLeaderWrapperRepository(groupLeaderDescription, virtualMachineSubnets, settings, maxCapacity, externalNotifier);
+        return new GroupLeaderWrapperRepository(
+                groupLeaderDescription, 
+                virtualMachineSubnets, 
+                settings, 
+                maxCapacity, 
+                externalNotifier);
     }
     
     
     /**
      * Returns the group leader repository wrapper.
-     * @param groupLeaderDescription 
      * 
-     * @param virtualMachineSubnets    The virtual machine subnets
+     * @param groupLeaderDescription  The Group leader Description. 
+     * @param virtualMachineSubnets   The virtual machine subnets
      * @param maxCapacity             The maximum capacity
-     * @param type                    The database type
+     * @param settings                The database settings.
      * @return                        The group leader repository
      */
-    public static GroupLeaderRepository newGroupLeaderRepository(GroupManagerDescription groupLeaderDescription, 
-                                                                 String[] virtualMachineSubnets,   
-                                                                 int maxCapacity,
-                                                                 DatabaseSettings settings)
+    public static GroupLeaderRepository newGroupLeaderRepository(
+            GroupManagerDescription groupLeaderDescription, 
+            String[] virtualMachineSubnets,   
+            int maxCapacity,
+            DatabaseSettings settings)
     {
         
         GroupLeaderRepository repository = null;
@@ -98,12 +106,19 @@ public final class DatabaseFactory
         switch (type) 
         {
             case memory :       
-                repository = new GroupLeaderMemoryRepository(groupLeaderDescription, virtualMachineSubnets, maxCapacity);        
+                repository = new GroupLeaderMemoryRepository(
+                        groupLeaderDescription, 
+                        virtualMachineSubnets, 
+                        maxCapacity);        
                 break;
                 
             case cassandra : 
                 String hosts = settings.getCassandraSettings().getHosts();
-                repository = new GroupLeaderCassandraRepository(groupLeaderDescription, virtualMachineSubnets, maxCapacity,hosts);
+                repository = new GroupLeaderCassandraRepository(
+                        groupLeaderDescription, 
+                        virtualMachineSubnets, 
+                        maxCapacity,
+                        hosts);
                 break;
             default:
                 log_.error("Unknown group leader database type selected");
@@ -112,16 +127,21 @@ public final class DatabaseFactory
         return repository;
     }
 
+    
     /**
-     * Returns the group manager repository.
      * 
-     * @param groupManagerId    The group manager identifier
-     * @param maxCapacity       The maximum capacity
-     * @param type              The database type
-     * @return                  The group manager repository
+     * Return the groupmanager wrapper repository.
+     * 
+     * @param groupManager              the group manager description.
+     * @param maxCapacity               the max capacity
+     * @param interval                  the interval of monitoring 
+     * @param settings                  the database settings
+     * @param externalNotifierSettings  the external notifier settings
+     * @param externalNotifier          the external notifier
+     * @return  the group manager wrapper repository.
      */
     public static GroupManagerRepository newGroupManagerRepository(
-            GroupManagerDescription groupManager, 
+            GroupManagerDescription groupManager,
             int maxCapacity,
             int interval,
             DatabaseSettings settings,
@@ -129,9 +149,25 @@ public final class DatabaseFactory
             ExternalNotifier externalNotifier
                                                                     ) 
     {
-        return new GroupManagerWrapperRepository(groupManager, maxCapacity, interval, settings, externalNotifierSettings, externalNotifier);
+        return new GroupManagerWrapperRepository(
+                groupManager,
+                maxCapacity,
+                interval,
+                settings,
+                externalNotifierSettings,
+                externalNotifier);
     }
     
+    /**
+     * 
+     * Returns the group manager repository.
+     * 
+     * @param groupManager      The group manager description
+     * @param interval          The monitoring interval
+     * @param maxCapacity       The max Capacity
+     * @param settings          The database settings.
+     * @return             The group manager repository.
+     */
     public static GroupManagerRepository newGroupManagerRepository(
             GroupManagerDescription groupManager, 
             int interval,
@@ -156,6 +192,13 @@ public final class DatabaseFactory
         return repository;
     }
 
+    /**
+     * 
+     * Returns the bootstrap repository (read only).
+     * 
+     * @param settings      database settings.
+     * @return  The bootstrap repository.
+     */
     public static BootstrapRepository newBootstrapRepository(DatabaseSettings settings)
     {
         BootstrapRepository repository = null;
@@ -178,11 +221,12 @@ public final class DatabaseFactory
     /**
      * Returns the local controller repository.
      * 
-     * @param type       The database type
-     * @return           The local controller repository
+     * @param type              The database type.
+     * @param externalNotifier  The external notifier.
+     * @return                  The local controller repository.
      */
     public static LocalControllerRepository newLocalControllerRepository(DatabaseType type, 
-            ExternalNotifier externalNotifier) 
+            ExternalNotifier externalNotifier)
     {
         LocalControllerRepository repository = null;
         switch (type) 

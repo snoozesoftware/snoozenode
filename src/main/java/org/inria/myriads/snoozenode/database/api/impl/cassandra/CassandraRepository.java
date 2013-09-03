@@ -3,12 +3,8 @@ package org.inria.myriads.snoozenode.database.api.impl.cassandra;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
-import me.prettyprint.cassandra.model.IndexedSlicesQuery;
 import me.prettyprint.cassandra.serializers.BooleanSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
@@ -17,13 +13,11 @@ import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
-import me.prettyprint.hector.api.beans.OrderedRows;
 import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.MutationResult;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.QueryResult;
-import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import me.prettyprint.hector.api.query.SliceQuery;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
@@ -60,7 +54,7 @@ public class CassandraRepository
     protected static final Logger log_ = LoggerFactory.getLogger(CassandraRepository.class);
     
     /** Cassandra Keyspace.*/
-    private static Keyspace keyspace_;
+    private Keyspace keyspace_;
     
     /** Cassandra Cluster. */
     private Cluster cluster_;
@@ -92,7 +86,13 @@ public class CassandraRepository
         Guard.check(groupManagerId, numberOfBacklogEntries);
         
         ArrayList<GroupManagerDescription> groupManagers = 
-                getGroupManagerDescriptionsOnly(groupManagerId, 1, true, numberOfBacklogEntries, new ArrayList<String>());
+                getGroupManagerDescriptionsOnly(
+                        groupManagerId,
+                        1,
+                        true,
+                        numberOfBacklogEntries,
+                        new ArrayList<String>());
+        
         if ((groupManagers == null) || groupManagers.size() != 1)
         {
             log_.error("Return value is not correct");
@@ -150,6 +150,16 @@ public class CassandraRepository
         return groupManagerDescription;
     }
     
+    /**
+     * 
+     * Gets local controller description.
+     * 
+     * @param localControllerId                 The local controller description.
+     * @param numberOfHostMonitoringEntries     number of monitoring entries (host).
+     * @param withVirtualMachines               with virtualmachines.
+     * @param numberOfMonitoringEntries         number of monitoring entries (vms)
+     * @return  The local controller description.
+     */
     protected LocalControllerDescription getLocalControllerDescriptionCassandra(
             String localControllerId,
             int numberOfHostMonitoringEntries,
@@ -157,7 +167,9 @@ public class CassandraRepository
             int numberOfMonitoringEntries
             )
     {
-        LocalControllerDescription localController = getLocalControllerDescriptionOnly(localControllerId, numberOfMonitoringEntries);
+        LocalControllerDescription localController = 
+                getLocalControllerDescriptionOnly(localControllerId, numberOfMonitoringEntries);
+        
         if (localController == null || !localController.getId().equals(localControllerId))
         {
             return null;
@@ -168,23 +180,27 @@ public class CassandraRepository
             fillWithVirtualMachines(localController, numberOfMonitoringEntries);
         }
         
-        return localController ; 
+        return localController;
     }
     
     /**
-     * TODO call to getLocalControllerDescriptionSonly
      * 
-     * @param localControllerId
-     * @param numberOfMonitoringEntries
-     * @return
+     * Gets the localcontroller only (without virtual machines).
+     * 
+     * @param localControllerId             The local controller Id.
+     * @param numberOfMonitoringEntries     Number of monitoring entries.
+     * @return  The local controller description.
      */
-    protected LocalControllerDescription getLocalControllerDescriptionOnly(String localControllerId, int numberOfMonitoringEntries)
+    protected LocalControllerDescription getLocalControllerDescriptionOnly(
+            String localControllerId, int numberOfMonitoringEntries)
     {
         Guard.check(localControllerId, numberOfMonitoringEntries);       
         
-        //HashMap<String, LocalControllerDescription> localControllers = getLocalControllerDescriptionsOnly(null, localControllerId, 1, numberOfMonitoringEntries, false, true);
-        ArrayList<LocalControllerDescription> localControllers = getLocalControllerDescriptionsOnly(null, localControllerId, 1, numberOfMonitoringEntries, false, true);
-        if ((localControllers == null) || localControllers.size()!=1 ) // || localControllers.get(localControllerId) == null)
+       
+        ArrayList<LocalControllerDescription> localControllers = 
+                getLocalControllerDescriptionsOnly(null, localControllerId, 1, numberOfMonitoringEntries, false, true);
+        
+        if ((localControllers == null) || localControllers.size() != 1)
         {
             log_.error("Return value is not correct");
             return null;
@@ -201,11 +217,8 @@ public class CassandraRepository
      * 
      * Gets local controller from a cassandra row.
      * 
-     * @param row
-     * @param numberOfMonitoringEntries
-     * @param isActiveOnly
-     * @param withVirtualMachines
-     * @return
+     * @param row                           the cassandra row
+     * @return  the deserialized local controller description.
      */
     protected LocalControllerDescription getLocalControllerDescription(Row<String, String, String> row)
     {
@@ -215,31 +228,33 @@ public class CassandraRepository
         ColumnSlice<String, String> columns = row.getColumnSlice();
  
         LocalControllerStatus status = LocalControllerStatus.valueOf(columns.getColumnByName("status").getValue());
-//        if (status != LocalControllerStatus.ACTIVE && isActiveOnly)
-//        {
-//            return null;
-//        }
+
         String hostname = columns.getColumnByName("hostname").getValue();
-        boolean isAssigned =columns.getColumnByName("isAssigned").getValue().equals(CassandraUtils.stringTrue)?true:false;
+        boolean isAssigned = 
+                columns.getColumnByName("isAssigned").getValue().equals(CassandraUtils.stringTrue) ? true : false;
         
         
         JsonSerializer localControllerLocationSerializer = new JsonSerializer(LocalControllerLocation.class);
         
-        LocalControllerLocation location = 
-                (LocalControllerLocation) localControllerLocationSerializer.fromString(columns.getColumnByName("localControllerLocation").getValue());
+        LocalControllerLocation location = (LocalControllerLocation) localControllerLocationSerializer
+                .fromString(columns.getColumnByName("localControllerLocation").getValue());
         
         JsonSerializer hypervisorSettingsSerializer = new JsonSerializer(HypervisorSettings.class);
-        HypervisorSettings hypervisorSettings = (HypervisorSettings) hypervisorSettingsSerializer.fromString(columns.getColumnByName("hypervisorSettings").getValue());
+        HypervisorSettings hypervisorSettings = (HypervisorSettings) hypervisorSettingsSerializer
+                .fromString(columns.getColumnByName("hypervisorSettings").getValue());
         
         JsonSerializer totalCapacitySerializer = new JsonSerializer(ArrayList.class);
         @SuppressWarnings("unchecked")
-        ArrayList<Double> totalCapacity = (ArrayList<Double>) totalCapacitySerializer.fromString(columns.getColumnByName("totalCapacity").getValue());
+        ArrayList<Double> totalCapacity = (ArrayList<Double>) totalCapacitySerializer
+        .fromString(columns.getColumnByName("totalCapacity").getValue());
         
         JsonSerializer controlDataAddressSerializer = new JsonSerializer(NetworkAddress.class);
-        NetworkAddress controlDataAddress = (NetworkAddress) controlDataAddressSerializer.fromString(columns.getColumnByName("controlDataAddress").getValue());
+        NetworkAddress controlDataAddress = (NetworkAddress) controlDataAddressSerializer
+                .fromString(columns.getColumnByName("controlDataAddress").getValue());
         
         JsonSerializer wakeupSettingsSerializer = new JsonSerializer(WakeupSettings.class);
-        WakeupSettings wakeupSettings = (WakeupSettings) wakeupSettingsSerializer.fromString(columns.getColumnByName("wakeupSettings").getValue());
+        WakeupSettings wakeupSettings = (WakeupSettings) wakeupSettingsSerializer
+                .fromString(columns.getColumnByName("wakeupSettings").getValue());
         
         
         
@@ -264,10 +279,11 @@ public class CassandraRepository
      * 
      * Fills group manager description with summary information.
      * 
-     * @param groupManagerDescription
-     * @param numberOfBacklogEntries
+     * @param groupManagerDescription       The group manager description to fill.
+     * @param numberOfBacklogEntries        The number of monitoring entries to use.    
      */
-    protected void fillGroupManagerSummaryInformation(GroupManagerDescription groupManagerDescription, int numberOfBacklogEntries) 
+    protected void fillGroupManagerSummaryInformation(
+            GroupManagerDescription groupManagerDescription, int numberOfBacklogEntries)
     {
         log_.debug("Gets the monitoring datas from the cassandra cluster");
         SliceQuery<String, Long, Object> query = HFactory.createSliceQuery(keyspace_, StringSerializer.get(),
@@ -279,7 +295,7 @@ public class CassandraRepository
         
         for (HColumn<Long, Object> col : columns.get().getColumns())
         {
-            GroupManagerSummaryInformation summary = (GroupManagerSummaryInformation) col.getValue() ;
+            GroupManagerSummaryInformation summary = (GroupManagerSummaryInformation) col.getValue();
             groupManagerDescription.getSummaryInformation().put(summary.getTimeStamp(), summary);
             log_.debug("gets monitoring data for timestamp" + summary.getTimeStamp());
         }
@@ -289,25 +305,26 @@ public class CassandraRepository
      * 
      * Gets the groupManagerDescription from a row.
      * 
-     * @param row
-     * @return
+     * @param row       The cassandra row.
+     * @return  The deserialized groupmanager. 
      */
     protected GroupManagerDescription getGroupManagerDescription(Row<String, String, String> row) 
     {
         log_.debug("Deserialize row from cassandra cluster from row id" + row.getKey());
         GroupManagerDescription groupManagerDescription = new GroupManagerDescription();
         ColumnSlice<String, String> columns = row.getColumnSlice();
-        
-//        boolean isLeader =columns.getColumnByName("isGroupLeader").getValue().equals(CassandraUtils.stringTrue)?true:false;
-        
+           
         String hostname = columns.getColumnByName("hostname").getValue();
-        boolean isAssigned =columns.getColumnByName("isAssigned").getValue().equals(CassandraUtils.stringTrue)?true:false;
+        boolean isAssigned = 
+                columns.getColumnByName("isAssigned").getValue().equals(CassandraUtils.stringTrue) ? true : false;
         
         JsonSerializer heartbeatAddressSerializer = new JsonSerializer(NetworkAddress.class);
-        NetworkAddress heartbeatAddress = (NetworkAddress) heartbeatAddressSerializer.fromString(columns.getColumnByName("heartbeatAddress").getValue());
+        NetworkAddress heartbeatAddress = (NetworkAddress) heartbeatAddressSerializer
+                .fromString(columns.getColumnByName("heartbeatAddress").getValue());
         
         JsonSerializer listenSettingsSerializer = new JsonSerializer(ListenSettings.class);
-        ListenSettings listenSettings = (ListenSettings) listenSettingsSerializer.fromString(columns.getColumnByName("listenSettings").getValue());
+        ListenSettings listenSettings = (ListenSettings) listenSettingsSerializer
+                .fromString(columns.getColumnByName("listenSettings").getValue());
         
         groupManagerDescription.setId(row.getKey());
         groupManagerDescription.setHostname(hostname);
@@ -323,14 +340,22 @@ public class CassandraRepository
      * Fill the group manager description with the associated localcontrollers.
      * 
      * @param groupManager                  The group manager description to fill
+     * @param isActiveOnly                  True if only active requested.
      * @param numberOfMonitoringEntries     The number of monitoring entries
      */
-    protected void fillWithLocalControllers(GroupManagerDescription groupManager, boolean isActiveOnly, int numberOfMonitoringEntries)
+    protected void fillWithLocalControllers(
+            GroupManagerDescription groupManager, 
+            boolean isActiveOnly,
+            int numberOfMonitoringEntries)
     {
-        // Gets All Local Controllers
-        //HashMap<String, LocalControllerDescription> localControllers =
         ArrayList<LocalControllerDescription> localControllers = 
-                getLocalControllerDescriptionsOnly(groupManager.getId(),  null ,-1, numberOfMonitoringEntries, isActiveOnly, true);
+                getLocalControllerDescriptionsOnly(
+                        groupManager.getId(),
+                        null ,
+                        -1,
+                        numberOfMonitoringEntries,
+                        isActiveOnly,
+                        true);
         
         groupManager.setLocalControllersFromArray(localControllers);
         
@@ -340,87 +365,107 @@ public class CassandraRepository
      * 
      * Fills the hashmap with virtualmachines.
      * 
-     * @param groupManagerId
-     * @param localControllers
-     * @param numberOfMonitoringEntries
+     * @param groupManagerId                The group manager id.
+     * @param localControllers              The localcontrollers.
+     * @param numberOfMonitoringEntries     The number of monitoring entries.
      */
-    protected void fillWithVirtualMachines(String groupManagerId, ArrayList<LocalControllerDescription> localControllers, int numberOfMonitoringEntries)
+    protected void fillWithVirtualMachines(
+            String groupManagerId,
+            ArrayList<LocalControllerDescription> localControllers,
+            int numberOfMonitoringEntries)
     {
-        if (localControllers.size()==0)
+        if (localControllers.size() == 0)
         {
             log_.debug("No Local controllers assigned to this group manager");
             return;
         }
         // arraylist to hashmap
-        HashMap<String, LocalControllerDescription> localControllersMap = new HashMap<String, LocalControllerDescription>();
+        HashMap<String, LocalControllerDescription> localControllersMap =
+                new HashMap<String, LocalControllerDescription>();
         for (LocalControllerDescription localController : localControllers)
         {
             localControllersMap.put(localController.getId(), localController);
         }
         
-
-        //HashMap<String, VirtualMachineMetaData> virtualMachines = getVirtualMachineDescriptionsOnly(groupManagerId, null, null, -1, numberOfMonitoringEntries, true);
-        ArrayList<VirtualMachineMetaData> virtualMachines = getVirtualMachineDescriptionsOnly(groupManagerId, null, null, -1, numberOfMonitoringEntries, true);
+        ArrayList<VirtualMachineMetaData> virtualMachines = 
+                getVirtualMachineDescriptionsOnly(groupManagerId, null, null, -1, numberOfMonitoringEntries, true);
         for (VirtualMachineMetaData virtualMachine : virtualMachines)
         {
             String localControllerId = virtualMachine.getVirtualMachineLocation().getLocalControllerId();
             String virtualMachineId = virtualMachine.getVirtualMachineLocation().getVirtualMachineId();
             if (!localControllersMap.containsKey(localControllerId))
             {
-                log_.error(String.format("virtual machine %s is assigned to groupmanager %s which doesn't manage localcontroller %s", 
-                        virtualMachineId,
-                        groupManagerId,
-                        localControllerId
-                        ));
+                log_.error(
+                        String.format("groupmanager %s and doesn't manage localcontroller %s",
+                                groupManagerId,
+                                localControllerId
+                                ));
                 continue;
             }
-            log_.debug(String.format("Add virtual machine %s to group manager %s description", virtualMachineId, groupManagerId));
-            localControllersMap.get(localControllerId).getVirtualMachineMetaData().put(virtualMachineId, virtualMachine);
+            log_.debug(
+                    String.format("Add virtual machine %s to group manager %s description",
+                            virtualMachineId,
+                            groupManagerId));
+            localControllersMap.get(localControllerId)
+                .getVirtualMachineMetaData()
+                .put(virtualMachineId, virtualMachine);
         }
     }
-    ;
     
     /**
      * 
      * Fills the group manager description with the associated virtual machines.
      * 
      * 
-     * @param groupManager
-     * @param numberOfMonitoringEntries
+     * @param groupManager                  GroupManager description to fill.
+     * @param numberOfMonitoringEntries     Number of Monitoring entries.
      */
     protected void fillWithVirtualMachines(GroupManagerDescription groupManager, int numberOfMonitoringEntries)
     {
        fillWithVirtualMachines(groupManager.getId(), groupManager.getLocalControllers(), numberOfMonitoringEntries);
     }
     
-    private void fillWithVirtualMachines(String groupManagerId, HashMap<String, LocalControllerDescription> localControllers,
+    
+    /**
+     * Fill the localcontroller assigned to a groupmanager with virtual machines.
+     * 
+     * @param groupManagerId                The groupManagerId.
+     * @param localControllers              The localcontrollers to fill.
+     * @param numberOfMonitoringEntries     The number of monitoring entries.
+     */
+    private void fillWithVirtualMachines(
+            String groupManagerId,
+            HashMap<String, LocalControllerDescription> localControllers,
             int numberOfMonitoringEntries)
     {
-        if (localControllers.size()==0)
+        if (localControllers.size() == 0)
         {
             log_.debug("No Local controllers assigned to this group manager");
             return;
         }
  
+        ArrayList<VirtualMachineMetaData> virtualMachines = 
+                getVirtualMachineDescriptionsOnly(groupManagerId, null, null, -1, numberOfMonitoringEntries, true);
         
-        
-
-        //HashMap<String, VirtualMachineMetaData> virtualMachines = getVirtualMachineDescriptionsOnly(groupManagerId, null, null, -1, numberOfMonitoringEntries, true);
-        ArrayList<VirtualMachineMetaData> virtualMachines = getVirtualMachineDescriptionsOnly(groupManagerId, null, null, -1, numberOfMonitoringEntries, true);
         for (VirtualMachineMetaData virtualMachine : virtualMachines)
         {
             String localControllerId = virtualMachine.getVirtualMachineLocation().getLocalControllerId();
             String virtualMachineId = virtualMachine.getVirtualMachineLocation().getVirtualMachineId();
             if (!localControllers.containsKey(localControllerId))
             {
-                log_.error(String.format("virtual machine %s is assigned to groupmanager %s which doesn't manage localcontroller %s", 
-                        virtualMachineId,
+                log_.error(String.format("Groupmanager %s which doesn't manage localcontroller %s", 
                         groupManagerId,
                         localControllerId
                         ));
                 continue;
             }
-            log_.debug(String.format("Add virtual machine %s to group manager %s description", virtualMachineId, groupManagerId));
+            
+            log_.debug(
+                    String.format(
+                            "Add virtual machine %s to group manager %s description",
+                            virtualMachineId,
+                            groupManagerId));
+            
             localControllers.get(localControllerId).getVirtualMachineMetaData().put(virtualMachineId, virtualMachine);
         }
     }
@@ -428,33 +473,45 @@ public class CassandraRepository
 
     /**
      * 
-     * Fills the group manager description with the associated virtual machines.
+     * Fills the localcontroller with its virtual machines.
      * 
-     * 
-     * @param groupManager
-     * @param numberOfMonitoringEntries
+     * @param localController               The localcontroller description.
+     * @param numberOfMonitoringEntries     Number of monitoring entries.
      */
     protected void fillWithVirtualMachines(LocalControllerDescription localController, int numberOfMonitoringEntries)
     {
-       
-       
        String localControllerId = localController.getId();
-       
-//       HashMap<String, VirtualMachineMetaData> virtualMachines = getVirtualMachines("localController", localControllerId, numberOfMonitoringEntries);
-       //HashMap<String, VirtualMachineMetaData> virtualMachines = getVirtualMachineDescriptionsOnly(null, localControllerId, null, -1, numberOfMonitoringEntries, true);
-       ArrayList<VirtualMachineMetaData> virtualMachines = getVirtualMachineDescriptionsOnly(null, localControllerId, null, -1, numberOfMonitoringEntries, true);
+       ArrayList<VirtualMachineMetaData> virtualMachines =
+               getVirtualMachineDescriptionsOnly(null, localControllerId, null, -1, numberOfMonitoringEntries, true);
        for (VirtualMachineMetaData virtualMachine: virtualMachines)
        {
            String virtualMachineId = virtualMachine.getVirtualMachineLocation().getVirtualMachineId();
-           log_.debug(String.format("Add virtual machine %s to localController %s description", virtualMachineId, localControllerId));
+           log_.debug(
+                   String.format(
+                           "Add virtual machine %s to localController %s description",
+                           virtualMachineId,
+                           localControllerId));
+           
            localController.getVirtualMachineMetaData().put(virtualMachineId, virtualMachine);
        }
     }
     
-    protected ArrayList<LocalControllerDescription> getLocalControllerDescriptionsCassandra(String groupManagerId,
-            int numberOfMonitoringEntries, boolean isActiveOnly, boolean withVirtualMachines)
+    /**
+     * 
+     * Gets the localcontroller descriptions from the cassandra cluster.
+     * 
+     * @param groupManagerId                The groupmanager id.
+     * @param numberOfMonitoringEntries     The number of monitoring entries.
+     * @param isActiveOnly                  True if only active requested.  
+     * @param withVirtualMachines           True if localcontrollers should be filled with its virtualmachines
+     * @return  the list of localcontrollers.
+     */
+    protected ArrayList<LocalControllerDescription> getLocalControllerDescriptionsCassandra(
+            String groupManagerId,
+            int numberOfMonitoringEntries,
+            boolean isActiveOnly,
+            boolean withVirtualMachines)
     {
-        //HashMap<String, LocalControllerDescription> localControllerDescriptions = 
         
         ArrayList<LocalControllerDescription> localControllersDescriptions = getLocalControllerDescriptionsOnly(
                 groupManagerId,
@@ -469,9 +526,6 @@ public class CassandraRepository
         {
             fillWithVirtualMachines(groupManagerId, localControllersDescriptions, numberOfMonitoringEntries);
         }
-        
-       //ArrayList<LocalControllerDescription> localControllers = new ArrayList<LocalControllerDescription>();
-       //localControllers.addAll(localControllerDescriptions.values());
        
        return localControllersDescriptions;
     }
@@ -486,7 +540,7 @@ public class CassandraRepository
      * @param numberOfMonitoringEntries     Number of monitoring entries to fecth
      * @param isActiveOnly                  Only gets ACTIVE localController
      * @param onlyAssigned                  Only gets Assigned localcontroller
-     * @return
+     * @return  The list of localcontroller description.
      */
     protected ArrayList<LocalControllerDescription> getLocalControllerDescriptionsOnly(
             String groupManagerId, 
@@ -497,23 +551,6 @@ public class CassandraRepository
             boolean onlyAssigned
             )
     {
-        
-        
-        
-//        String lastKey = localControllerStart;        
-//        boolean unlimited = false;
-//        int rowCount = 2*limit;
-//        int toLimit = limit;
-//        if (limit<=0)
-//        {
-//            log_.debug("Gets All the localControllers") ;
-//            unlimited = true;
-//            rowCount = 100;
-//        }
-//       
-//        boolean terminated = false;
-//        int iteration = 0; 
-//        //HashMap<String, LocalControllerDescription> localControllers = new HashMap<String, LocalControllerDescription>();
         ArrayList<LocalControllerDescription> localControllers = new ArrayList<LocalControllerDescription>();
         
         log_.debug("Getting all localcontrollers with new method");
@@ -535,7 +572,7 @@ public class CassandraRepository
             log_.debug("adding indexes is active");
             rowIterator.addEqualsExpression("status", String.valueOf(LocalControllerStatus.ACTIVE));
         }
-        if (groupManagerId != null && !groupManagerId.equals("") )
+        if (groupManagerId != null && !groupManagerId.equals(""))
         {
             log_.debug("adding indexes groupmanager");
             rowIterator.addEqualsExpression("groupManager", groupManagerId);
@@ -552,112 +589,9 @@ public class CassandraRepository
                 continue;
             }
             
-//              if (numberOfMonitoringEntries > 0)
-//            {
-//                fillGroupManagerSummaryInformation(groupManager, numberOfBacklogEntries);
-//            }            
             localControllers.add(localController);
         }
-//        while(true)
-//        {
-//            
-//            QueryResult<OrderedRows<String, String, String>> result = null;
-//            if ((groupManagerId == null || groupManagerId.equals("")) && !isActiveOnly && !onlyAssigned)
-//            {
-//
-//                log_.debug("Ranged query to fetch the localcontrollers");
-//                RangeSlicesQuery<String, String, String> rangeSlicesQuery = HFactory
-//                        .createRangeSlicesQuery(keyspace_, StringSerializer.get(), StringSerializer.get(), StringSerializer.get())
-//                        .setColumnFamily(CassandraUtils.LOCALCONTROLLERS_CF)
-//                        .setKeys(lastKey, null)
-//                        .setRange(null, null, false, 100)
-//                        .setRowCount(rowCount);
-//                
-//                 result = rangeSlicesQuery.execute();
-//            }
-//            else
-//            {
-//                log_.debug("Indexed query to fecth the localcontrollers");
-//                IndexedSlicesQuery<String, String, String> indexedSlicesQuery =  HFactory.createIndexedSlicesQuery(keyspace_, StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
-//                indexedSlicesQuery.setColumnFamily(CassandraUtils.LOCALCONTROLLERS_CF);
-//                indexedSlicesQuery.setStartKey(lastKey);
-//                indexedSlicesQuery.setRange(null, null, false, 100);
-//                
-//                if (groupManagerId != null && !groupManagerId.equals(""))
-//                {
-//                    indexedSlicesQuery.addEqualsExpression("groupManager", groupManagerId);
-//                }
-//                if (onlyAssigned)
-//                {
-//                    indexedSlicesQuery.addEqualsExpression("isAssigned", CassandraUtils.stringTrue);
-//                }
-//                
-//                if (isActiveOnly)
-//                {
-//                    indexedSlicesQuery.addEqualsExpression("status", String.valueOf(LocalControllerStatus.ACTIVE));
-//                }
-//                
-//                result = indexedSlicesQuery.execute();
-//                
-//            }
-//            
-//            OrderedRows<String, String, String> rows = result.get() ;
-//            
-//            Iterator<Row<String, String, String>> rowsIterator = rows.iterator();
-//            
-//
-//            if (!rowsIterator.hasNext())
-//            {
-//                log_.debug(String.format("Group manager %s has no local controller", groupManagerId));
-//                
-//                return localControllers;
-//            }
-//            
-//            //go one step further (lastKey has been already fetched in the previous iteration)
-//            if (iteration > 0 && rowsIterator != null) rowsIterator.next();
-//            
-//            while(rowsIterator.hasNext() & !terminated)
-//            {
-//                
-//                Row<String, String, String> row = rowsIterator.next();
-//                lastKey = row.getKey();
-//                log_.debug("LastKey = " + lastKey);
-//                
-//                if (row.getColumnSlice().getColumns().isEmpty()) 
-//                {
-//                    //skip tombstone
-//                    continue;
-//                }
-//                
-//                LocalControllerDescription retrievedDescription;
-//                retrievedDescription = getLocalControllerDescription(row, isActiveOnly);
-//                if (retrievedDescription != null)
-//                {
-//                    //localControllers.put(row.getKey(), retrievedDescription);
-//                    localControllers.add(retrievedDescription);
-//                    toLimit -- ;
-//                    if (!unlimited &&  toLimit <=0)
-//                    {
-//                        terminated = true;
-//                    }
-//                }
-//            }
-//            // no more local controller to fetch
-//            if (terminated)
-//            {
-//                log_.debug("Got all the localcontrollers");
-//                break;
-//            }
-//            
-//            // we cannot fetch more
-//            if (rows.getCount() < rowCount  )
-//            {
-//                log_.debug("No more groupmanager to fetch");
-//                break;
-//            }
-//            
-//            iteration++;
-//        }
+
         return localControllers;  
     }
    
@@ -665,10 +599,11 @@ public class CassandraRepository
      * 
      * Fills the virtual machine meta data with monitoring datas.
      * 
-     * @param virtualMachine
-     * @param numberOfMonitoringEntries
+     * @param virtualMachine                The virtual machine meta data to fill
+     * @param numberOfMonitoringEntries     the number of monitoring entries to fecth.
      */
-    protected void fillVirtualMachineMonitoringData(VirtualMachineMetaData virtualMachine,
+    protected void fillVirtualMachineMonitoringData(
+            VirtualMachineMetaData virtualMachine,
             int numberOfMonitoringEntries)
     {
         log_.debug("Gets the monitoring datas from the cassandra cluster");
@@ -682,7 +617,7 @@ public class CassandraRepository
         
         for (HColumn<Long, Object> col : columns.get().getColumns())
         {
-            VirtualMachineMonitoringData monitoring = (VirtualMachineMonitoringData) col.getValue() ;
+            VirtualMachineMonitoringData monitoring = (VirtualMachineMonitoringData) col.getValue();
             virtualMachine.getUsedCapacity().put(monitoring.getTimeStamp(), monitoring);
             log_.debug("gets monitoring data for timestamp " + monitoring.getTimeStamp());
         }
@@ -691,8 +626,8 @@ public class CassandraRepository
      * 
      * Gets the virtual machine meta data from a cassandra row.
      * 
-     * @param row
-     * @return
+     * @param row       cassandra row.
+     * @return  the deserialized virtual machine meta data.
      */
     protected VirtualMachineMetaData getVirtualMachineDescriptionOnly(Row<String, String, String> row)
     {
@@ -700,16 +635,20 @@ public class CassandraRepository
         VirtualMachineMetaData virtualMachineMetaData = new VirtualMachineMetaData();
         ColumnSlice<String, String> columns = row.getColumnSlice();
         
-        boolean isAssigned =columns.getColumnByName("isAssigned").getValue().equals(CassandraUtils.stringTrue)?true:false;
+        boolean isAssigned = 
+                columns.getColumnByName("isAssigned").getValue().equals(CassandraUtils.stringTrue) ? true : false;
         String ipAddress = columns.getColumnByName("ipAddress").getValue();
         String xmlRepresentation = columns.getColumnByName("xmlRepresentation").getValue();
         VirtualMachineStatus status = VirtualMachineStatus.valueOf(columns.getColumnByName("status").getValue());
-        VirtualMachineErrorCode errorCode = VirtualMachineErrorCode.valueOf(columns.getColumnByName("errorCode").getValue());
+        VirtualMachineErrorCode errorCode = 
+                VirtualMachineErrorCode.valueOf(columns.getColumnByName("errorCode").getValue());
         JsonSerializer locationSerializer = new JsonSerializer(VirtualMachineLocation.class);
-        VirtualMachineLocation location = (VirtualMachineLocation) locationSerializer.fromString((columns.getColumnByName("location").getValue()));
+        VirtualMachineLocation location = (VirtualMachineLocation) locationSerializer
+                .fromString(columns.getColumnByName("location").getValue());
         JsonSerializer requestedCapacitySerializer = new JsonSerializer(ArrayList.class);
         @SuppressWarnings("unchecked")
-        ArrayList<Double> requestedCapacity = (ArrayList<Double>) requestedCapacitySerializer.fromString(columns.getColumnByName("requestedCapacity").getValue());
+        ArrayList<Double> requestedCapacity = (ArrayList<Double>) requestedCapacitySerializer
+        .fromString(columns.getColumnByName("requestedCapacity").getValue());
         
         virtualMachineMetaData.setIpAddress(ipAddress);
         virtualMachineMetaData.setXmlRepresentation(xmlRepresentation);
@@ -734,16 +673,16 @@ public class CassandraRepository
      * @param groupManagerId            The group manager id to drop
      * @param withLocalControllers      True if assigned LocalController must be dropped
      * @param withVirtualMachines       True if assigned virtualMachines must be dropped
-     * @return
+     * @return  true iff the group manager has been dropped.
      */
     protected boolean dropGroupManager(String groupManagerId, boolean withLocalControllers, boolean withVirtualMachines)
     {
         GroupManagerDescription groupManager = getGroupManagerDescriptionCassandra(
                 groupManagerId,
                 0,
-                true, // with lc
-                true, // active only (passive local controller must be reassigned)
-                true, // with vms
+                true,
+                true,
+                true,
                 0);
         
         if (groupManager == null)
@@ -751,8 +690,9 @@ public class CassandraRepository
             log_.debug("Unable to find the group manager " + groupManagerId);
             return false;
         }
-        boolean isGroupManagerDropped = CassandraUtils.drop(keyspace_, Arrays.asList(groupManager.getId()), CassandraUtils.GROUPMANAGERS_CF);
-        if (! isGroupManagerDropped)
+        boolean isGroupManagerDropped = 
+                CassandraUtils.drop(keyspace_, Arrays.asList(groupManager.getId()), CassandraUtils.GROUPMANAGERS_CF);
+        if (!isGroupManagerDropped)
         {
             log_.error("Unable to remove the groupmanager " + groupManagerId);
             return false;
@@ -764,7 +704,7 @@ public class CassandraRepository
             List<String> virtualMachineToRemove = new ArrayList<String>();
             List<String> mappingToRemove = new ArrayList<String>();
             HashMap<String, LocalControllerDescription> localControllers = groupManager.getLocalControllers();
-            for(LocalControllerDescription localController : localControllers.values())
+            for (LocalControllerDescription localController : localControllers.values())
             {
                 localControllerToRemove.add(localController.getId());
                 mappingToRemove.add(localController.getControlDataAddress().toString());
@@ -774,25 +714,19 @@ public class CassandraRepository
                 }
 
             }
-          //boolean isLocalControllerDropped = drop(localControllerToRemove, CassandraUtils.LOCALCONTROLLERS_CF);
-          boolean isLocalControllerDropped = CassandraUtils.unassignNodes(keyspace_, localControllerToRemove, CassandraUtils.LOCALCONTROLLERS_CF);
-          if (! isLocalControllerDropped)
+          // don't drop but unassign
+          boolean isLocalControllerDropped = 
+                  CassandraUtils.unassignNodes(keyspace_, localControllerToRemove, CassandraUtils.LOCALCONTROLLERS_CF);
+          if (!isLocalControllerDropped)
           {
               log_.error("Unable to remove the assigned localcontrollers");
               return false;
           }
           
-          // should we remove the mapping  ?
-//          boolean isMappingDropped = drop(mappingToRemove, CassandraUtils.LOCALCONTROLLERS_MAPPING_CF);
-//          if (!isMappingDropped)
-//          {
-//              log_.error("Unable to remove the mapping for the assigned localcontroller");
-//              return false;
-//          }
-          
-          //boolean isVirtualMachineDropped = drop(virtualMachineToRemove, CassandraUtils.VIRTUALMACHINES_CF);
-          boolean isVirtualMachineDropped = CassandraUtils.unassignNodes(keyspace_, virtualMachineToRemove, CassandraUtils.VIRTUALMACHINES_CF);
-          if (!isVirtualMachineDropped )
+          // don't drop but unassign
+          boolean isVirtualMachineDropped = 
+                  CassandraUtils.unassignNodes(keyspace_, virtualMachineToRemove, CassandraUtils.VIRTUALMACHINES_CF);
+          if (!isVirtualMachineDropped)
           {
               log_.error("Unable to remove the virtual machines");
               return false;
@@ -804,10 +738,17 @@ public class CassandraRepository
     }
                     
      
-    
+    /**
+     * 
+     *  Add (serialize) virtual machine to cassandra. 
+     * 
+     * @param virtualMachineMetaData    The virtual machine meta data to serialize.
+     * @return   True iff everything is ok.
+     */
     protected boolean addVirtualMachineCassandra(VirtualMachineMetaData virtualMachineMetaData)
     {
-        try{
+        try
+        {
             String ipAddress = virtualMachineMetaData.getIpAddress();
             String xmlRepresentation = virtualMachineMetaData.getXmlRepresentation();
             String status = String.valueOf(virtualMachineMetaData.getStatus());
@@ -832,7 +773,7 @@ public class CassandraRepository
             log_.debug(String.format("Insertion done in %d", result.getExecutionTimeMicro()));
             
         }
-        catch(Exception exception)
+        catch (Exception exception)
         {
             log_.error("Unable to add to the repository : " + exception.getMessage());
             exception.printStackTrace();
@@ -841,15 +782,25 @@ public class CassandraRepository
         return true;
     }
     
-    protected boolean addLocalControllerDescriptionCassandra(String groupManagerId, LocalControllerDescription description)
+    /**
+     * 
+     * Add (serialize) a local controller to cassandra.
+     * 
+     * @param groupManagerId    The group manager Id.
+     * @param description       The local controller description.  
+     * @return  true iff everything is ok.
+     */
+    protected boolean addLocalControllerDescriptionCassandra(
+            String groupManagerId, LocalControllerDescription description)
     {
-        int ttl = 600000000 ;
+        int ttl = 600000000;
         
-        try{
+        try
+        {
             String id = description.getId();
             String hostname = description.getHostname();
             HypervisorSettings hypervisorSettings = description.getHypervisorSettings();
-            ArrayList<Double> totalCapacity = description.getTotalCapacity() ;
+            ArrayList<Double> totalCapacity = description.getTotalCapacity();
             WakeupSettings wakeupSettings = description.getWakeupSettings();
             LocalControllerStatus status = description.getStatus();
             NetworkAddress controlDataAddress = description.getControlDataAddress();
@@ -872,7 +823,7 @@ public class CassandraRepository
             log_.debug(String.format("Insertion done in %d", result.getExecutionTimeMicro()));
             
         }
-        catch(Exception exception)
+        catch (Exception exception)
         {
             log_.error("Unable to add to the repository : " + exception.getMessage());
             return false;
@@ -881,14 +832,23 @@ public class CassandraRepository
     }
     
     
-    protected boolean addGroupManagerDescriptionCassandra(GroupManagerDescription description, boolean isGroupLeader, boolean isAssigned)
+    /**
+     * 
+     * Add (serialize) a group manager to cassandra.
+     * 
+     * @param description       The group manager description.
+     * @param isGroupLeader     True iff it is the group leader.
+     * @param isAssigned        True iff it is assigned
+     * @return  True iff is ok.
+     */
+    protected boolean addGroupManagerDescriptionCassandra(
+            GroupManagerDescription description, boolean isGroupLeader, boolean isAssigned)
     {
-        int ttl = 600000000 ;         
+        int ttl = 600000000;
         
         Mutator<String> mutator = HFactory.createMutator(keyspace_, StringSerializer.get());
-        try{
-            
-            
+        try
+        {
             String id = description.getId();
             String hostname = description.getHostname();
             ListenSettings listenSettings = description.getListenSettings();
@@ -898,15 +858,14 @@ public class CassandraRepository
                    .addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("listenSettings", listenSettings, ttl,  StringSerializer.get(), new JsonSerializer(ListenSettings.class)))
                    .addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("heartbeatAddress", heartbeatAddress, ttl,  StringSerializer.get(), new JsonSerializer(NetworkAddress.class)))
                    .addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("isAssigned", isAssigned, ttl, StringSerializer.get(),   new BooleanSerializer()))
-                   .addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("isGroupLeader", isGroupLeader, ttl, StringSerializer.get(),  new BooleanSerializer()))
-            ;
+                   .addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("isGroupLeader", isGroupLeader, ttl, StringSerializer.get(),  new BooleanSerializer()));
             
             MutationResult result = mutator.execute();
             log_.debug(String.format("Insertion done in %d", result.getExecutionTimeMicro()));
             
             
         }
-        catch(Exception exception)
+        catch (Exception exception)
         {
             log_.error("Unable to add to the repository : " + exception.getMessage());
             return false;    
@@ -915,14 +874,33 @@ public class CassandraRepository
     }
     
     
-    protected VirtualMachineMetaData getVirtualMachineMetaDataCassandra(String virtualMachineId, int numberOfMonitoringEntries)
+    /**
+     * 
+     * Get a virtual machine.
+     * 
+     * @param virtualMachineId              The virtual machine id.
+     * @param numberOfMonitoringEntries     The number of monitoring entries to fetch.
+     * @return  The virtual machine meta data.
+     */
+    protected VirtualMachineMetaData getVirtualMachineMetaDataCassandra(
+            String virtualMachineId, int numberOfMonitoringEntries)
     {
         return getVirtualMachineDescriptionOnly(virtualMachineId, numberOfMonitoringEntries);
-        
-        // no children to fecth
+        // no children to fecth.
     }
     
 
+    /**
+     * 
+     * Gets the groupmanager descriptions.
+     * 
+     * @param firstGroupManagerId       First groupmanager to fetch.
+     * @param limit                     Limit.  
+     * @param assignedOnly              True will return assigned group manager only.
+     * @param numberOfBacklogEntries    Number of Back log entries to fetch.
+     * @param toExclude                 id to exclude.
+     * @return  List of group manager description.
+     */
     protected ArrayList<GroupManagerDescription> getGroupManagerDescriptionsOnly(
             String firstGroupManagerId, 
             int limit, 
@@ -967,133 +945,28 @@ public class CassandraRepository
             groupManagers.add(groupManager);
         }
 
-          
-//        boolean unlimited = false;
-//        int rowCount = 2*limit;
-//        int toLimit = limit;
-//        String lastKey = firstGroupManagerId;
-//        boolean terminated = false;
-//        if (limit<=0)
-//        {
-//            log_.debug("Gets All the groupmanagers") ;
-//            unlimited = true;
-//            rowCount = 100;
-//        }
-//        int iteration = 0 ;
-//        while(true)
-//        {
-//            
-//            QueryResult<OrderedRows<String, String, String>> result = null;
-//            if(!assignedOnly)
-//            {
-//                log_.debug(String.format("Getting groupmanagers with options : " +
-//                		"start : %s" +
-//                		"limit : %d", 
-//                		lastKey,
-//                		limit
-//                        ));
-//                
-//                RangeSlicesQuery<String, String, String> rangeSlicesQuery = HFactory
-//                        .createRangeSlicesQuery(keyspace_, StringSerializer.get(), StringSerializer.get(), StringSerializer.get())
-//                        .setColumnFamily(CassandraUtils.GROUPMANAGERS_CF)
-//                        .setKeys(lastKey, null)
-//                        .setRange(null, null, false, 100)
-//                        .setRowCount(rowCount);
-//                
-//                result = rangeSlicesQuery.execute();
-//                
-//            }
-//            else
-//            {
-//                log_.debug(String.format("Getting indexed groupmanagers with options : " +
-//                        "start : %s" +
-//                        "limit : %d", 
-//                        lastKey,
-//                        limit
-//                        ));
-//                IndexedSlicesQuery<String, String, String> indexedSlicesQuery = HFactory
-//                        .createIndexedSlicesQuery(keyspace_, StringSerializer.get(), StringSerializer.get(), StringSerializer.get())
-//                        .setColumnFamily(CassandraUtils.GROUPMANAGERS_CF)
-//                        .setRange(null, null, false, 100)
-//                        .setStartKey(lastKey)
-//                        .addEqualsExpression("isAssigned", CassandraUtils.stringTrue);
-//                
-//                result = indexedSlicesQuery.execute();
-//                
-//            }
-//            
-//            OrderedRows<String, String, String> rows = result.get();
-//            Iterator<Row<String, String, String>> rowsIterator = rows.iterator();    
-//            
-//            // go one step further (lastKey has been already fetched in the previous iteration)
-//            if (iteration > 0 && rowsIterator != null) rowsIterator.next();
-//            
-//            while (rowsIterator.hasNext() && !terminated) 
-//            {
-//              Row<String, String, String> row = rowsIterator.next();
-//              lastKey = row.getKey();
-//              
-//              if (row.getColumnSlice().getColumns().isEmpty()) 
-//              {
-//                  continue;
-//              }
-//              
-//              GroupManagerDescription groupManager = getGroupManagerDescription(row, withLeader);
-//              if (groupManager == null)
-//              {
-//                  continue;
-//              }
-//              
-//              if (numberOfBacklogEntries > 0)
-//              {
-//                  fillGroupManagerSummaryInformation(groupManager, numberOfBacklogEntries);
-//              }
-//              log_.debug("Found a new GroupManager" + toLimit);
-//              groupManagers.add(groupManager);
-//              
-//              toLimit --; 
-//              if (!unlimited && toLimit <= 0)
-//              {
-//                  terminated = true;
-//              }    
-//            }
-//            
-//            // we have all the lines (if not unlimited)
-//            if (!unlimited && toLimit <= 0)
-//            {
-//                log_.debug(String.format("All the %d groupmanagers have been fetch", limit));
-//                break;
-//            }
-//            // we cannot fetch more
-//            if (rows.getCount() < rowCount  )
-//            {
-//                log_.debug("No more groupmanager to fetch");
-//                break;
-//            }
-//            
-//            iteration ++;
-//        }
         log_.debug(String.format("Returning %d groupmanagers", groupManagers.size()));
         return groupManagers;
     }
     
     /**
-     * TODO call to getLocalControllerDescriptionSonly
      * 
-     * @param localControllerId
-     * @param numberOfMonitoringEntries
-     * @return
+     * Gets the virtual machine descriptions.
+     * 
+     * @param virtualMachineId              The virtualMachine Id.
+     * @param numberOfMonitoringEntries     The number of monitoring entries to fecth.
+     * @return  The virtual machine meta data.
      */
-    protected VirtualMachineMetaData getVirtualMachineDescriptionOnly(String virtualMachineId, int numberOfMonitoringEntries)
+    protected VirtualMachineMetaData getVirtualMachineDescriptionOnly(
+            String virtualMachineId, int numberOfMonitoringEntries)
     {
         Guard.check(virtualMachineId, numberOfMonitoringEntries);       
         
-        //HashMap<String, VirtualMachineMetaData> virtualMachines =
         ArrayList<VirtualMachineMetaData> virtualMachines = 
                 getVirtualMachineDescriptionsOnly(null, null, virtualMachineId, 1, numberOfMonitoringEntries, true);
         
         
-        if ((virtualMachines == null) || virtualMachines.size()!=1 ) //|| virtualMachines.get(virtualMachineId) == null)
+        if ((virtualMachines == null) || virtualMachines.size() != 1)
         {
             log_.error("Return value is not correct");
             return null;
@@ -1112,6 +985,18 @@ public class CassandraRepository
         return virtualMachine;
     }
     
+    /**
+     * 
+     * Gets virtual machine metadatas from cassandra cluster. 
+     * 
+     * @param groupManagerId                The groupmanager id.
+     * @param localControllerId             The localcontroller id.
+     * @param virtualMachineStart           The first virtual machine to fecth        
+     * @param limit                         Limit.
+     * @param numberOfMonitoringEntries     Number Of monitoring entries to fetch.
+     * @param onlyAssigned                  True if only assigned requested.
+     * @return  The virtual machine meta datas list.
+     */
     protected ArrayList<VirtualMachineMetaData> getVirtualMachineDescriptionsOnly(
             String groupManagerId, 
             String localControllerId,
@@ -1121,20 +1006,6 @@ public class CassandraRepository
             boolean onlyAssigned
             )
     {
-//        String lastKey = virtualMachineStart;        
-//        boolean unlimited = false;
-//        int rowCount = 2*limit;
-//        int toLimit = limit;
-//        if (limit<=0)
-//        {
-//            log_.debug("Gets All the virtualMachines") ;
-//            unlimited = true;
-//            rowCount = 100;
-//        }
-//       
-//        boolean terminated = false;
-//        int iteration = 0; 
-        //HashMap<String, VirtualMachineMetaData> virtualMachines = new HashMap<String, VirtualMachineMetaData>();
         ArrayList<VirtualMachineMetaData> virtualMachines = new ArrayList<VirtualMachineMetaData>();
         
         log_.debug("Getting all localcontrollers with new method");
@@ -1182,109 +1053,7 @@ public class CassandraRepository
             virtualMachines.add(virtualMachine);
             
         }
-//        while(true)
-//        {
-//            
-//            QueryResult<OrderedRows<String, String, String>> result = null;
-//            if ((groupManagerId == null || groupManagerId.equals("")) &&
-//               (localControllerId == null || localControllerId.equals(""))&&
-//               !onlyAssigned)
-//            {
-//
-//                log_.debug("Ranged query to fetch the virtual machines");
-//                RangeSlicesQuery<String, String, String> rangeSlicesQuery = HFactory
-//                        .createRangeSlicesQuery(keyspace_, StringSerializer.get(), StringSerializer.get(), StringSerializer.get())
-//                        .setColumnFamily(CassandraUtils.VIRTUALMACHINES_CF)
-//                        .setKeys(lastKey, null)
-//                        .setRange(null, null, false, 100)
-//                        .setRowCount(rowCount);
-//                
-//                 result = rangeSlicesQuery.execute();
-//            }
-//            else
-//            {
-//                log_.debug("Indexed query to fecth the virtual machines");
-//                IndexedSlicesQuery<String, String, String> indexedSlicesQuery =  HFactory.createIndexedSlicesQuery(keyspace_, StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
-//                indexedSlicesQuery.setColumnFamily(CassandraUtils.VIRTUALMACHINES_CF);
-//                indexedSlicesQuery.setStartKey(lastKey);
-//                indexedSlicesQuery.setRange(null, null, false, 100);
-//                
-//                if (localControllerId != null && !localControllerId.equals(""))
-//                {
-//                    indexedSlicesQuery.addEqualsExpression("localController", localControllerId);
-//                }
-//                
-//                if (groupManagerId != null && !groupManagerId.equals(""))
-//                {
-//                    indexedSlicesQuery.addEqualsExpression("groupManager", groupManagerId);
-//                }
-//                if (onlyAssigned)
-//                {
-//                    indexedSlicesQuery.addEqualsExpression("isAssigned", CassandraUtils.stringTrue);
-//                }
-//                
-//                result = indexedSlicesQuery.execute();
-//                
-//            }
-//            
-//            OrderedRows<String, String, String> rows = result.get() ;
-//            
-//            Iterator<Row<String, String, String>> rowsIterator = rows.iterator();
-//            
-//
-//            if (!rowsIterator.hasNext())
-//            {
-//                log_.debug("no virtual machine found");
-//                
-//                return virtualMachines;
-//            }
-//            
-//            //go one step further (lastKey has been already fetched in the previous iteration)
-//            if (iteration > 0 && rowsIterator != null) rowsIterator.next();
-//            
-//            while(rowsIterator.hasNext() & !terminated)
-//            {
-//                
-//                Row<String, String, String> row = rowsIterator.next();
-//                lastKey = row.getKey();
-//                log_.debug("LastKey = " + lastKey);
-//                
-//                if (row.getColumnSlice().getColumns().isEmpty()) 
-//                {
-//                    //skip tombstone
-//                    continue;
-//                }
-//                
-//                VirtualMachineMetaData retrievedDescription;
-//                retrievedDescription = getVirtualMachineDescriptionOnly(row);
-//                
-//                if (retrievedDescription != null)
-//                {
-//                    //virtualMachines.put(row.getKey(), retrievedDescription);
-//                    virtualMachines.add(retrievedDescription);
-//                    toLimit -- ;
-//                    if (!unlimited &&  toLimit <=0)
-//                    {
-//                        terminated = true;
-//                    }
-//                }
-//            }
-//            // no more local controller to fetch
-//            if (terminated)
-//            {
-//                log_.debug("Got all the localcontrollers");
-//                break;
-//            }
-//            
-//            // we cannot fetch more
-//            if (rows.getCount() < rowCount )
-//            {
-//                log_.debug("No more groupmanager to fetch");
-//                break;
-//            }
-//            
-//            iteration++;
-//        }
+
         return virtualMachines;  
     }
     
@@ -1307,7 +1076,7 @@ public class CassandraRepository
     /**
      * @return the keyspace_
      */
-    public static Keyspace getKeyspace()
+    public Keyspace getKeyspace()
     {
         return keyspace_;
     }

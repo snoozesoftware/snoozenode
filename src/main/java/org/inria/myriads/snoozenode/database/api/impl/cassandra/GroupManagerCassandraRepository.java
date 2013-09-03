@@ -54,7 +54,7 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
      * Constructor.
      * 
      * @param groupManager  The group manager description.
-     * @param maxCapacity   The max capacity.
+     * @param ttl           The ttl of column (for monitoring)
      * @param hosts         The cassandra hosts to connect to.
      */
     public GroupManagerCassandraRepository(GroupManagerDescription groupManager, int ttl, String hosts)

@@ -21,7 +21,6 @@ package org.inria.myriads.snoozenode.groupmanager.monitoring.consumer;
 
 import java.util.concurrent.BlockingQueue;
 
-import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
@@ -83,10 +82,7 @@ public final class LocalControllerSummaryConsumer
                 if (monitoringData.getData() == null)
                 {
                     log_.debug("Received heartbeat from localController");
-                    // reactivate ttl.
-                    // TODO add method to repository
-//                    LocalControllerDescription description = repository_.getLocalControllerDescription(monitoringData.getLocalControllerId(), 0, false);
-//                    repository_.addLocalControllerDescription(description);
+
                     continue;
                 }
                 String localControllerId = monitoringData.getLocalControllerId();

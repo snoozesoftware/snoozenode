@@ -1,10 +1,17 @@
 package org.inria.myriads.snoozenode.message;
 
+/**
+ * 
+ * System message type.
+ * 
+ * @author msimonin
+ *
+ */
 public enum SystemMessageType
 {
-    /**GL join*/
+    /**GL join.*/
     GL_JOIN,
-    /**GL FAILED*/
+    /**GL FAILED.*/
     GL_FAILED,
     /** GM join. */
     GM_JOIN, 
@@ -20,9 +27,9 @@ public enum SystemMessageType
     LC_ANOMALY,
     /** Reconfiguration. */
     RECONFIGURATION, 
-    /** GM state change to busy*/
+    /** GM state change to busy.*/
     GM_BUSY, 
-    /** GM state change to idle*/
+    /** GM state change to idle.*/
     GM_IDLE,
 }
 

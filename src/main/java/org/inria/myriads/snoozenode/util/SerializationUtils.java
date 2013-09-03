@@ -27,11 +27,7 @@ import java.io.ObjectOutputStream;
 import java.io.StringWriter;
 import java.io.Writer;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.ObjectNode;
 import org.inria.myriads.snoozecommon.guard.Guard;
 
 /**
@@ -90,19 +86,22 @@ public final class SerializationUtils
         return object;
     }
 
-    public static String serializeObjectToJSON(Object data) throws JsonGenerationException, JsonMappingException, IOException
+    /**
+     * 
+     * Serializes object to json.
+     * 
+     * @param data  The data
+     * @return  String (serialiazed)
+     * @throws IOException              Exception
+     */
+    public static String serializeObjectToJSON(Object data) 
+            throws  IOException
     {
         
         ObjectMapper mapper = new ObjectMapper();
         Writer strWriter = new StringWriter();
         mapper.writeValue(strWriter, data);
         String json = strWriter.toString();
-        /** Example for wrapping message
-        JsonNode rootNode = mapper.readTree(json);
-        ((ObjectNode) rootNode).put("success", data.getClass().getName());
-        mapper.writeValue(strWriter,rootNode);
-        json = strWriter.toString();
-        */
         return json;
     }
 }

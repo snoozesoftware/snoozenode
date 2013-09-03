@@ -52,7 +52,6 @@ public class TestGroupLeaderCassandraRepository extends TestCase
 
     @Override
     protected void setUp() throws Exception {
-        // TODO Auto-generated method stub
         System.getProperties().put("org.restlet.engine.loggerFacadeClass", 
                 "org.restlet.ext.slf4j.Slf4jLoggerFacade");
         String logFile = "./configs/log4j.xml";
@@ -70,7 +69,12 @@ public class TestGroupLeaderCassandraRepository extends TestCase
         cluster_ = HFactory.getOrCreateCluster("Test Cluster",new CassandraHostConfigurator("localhost:9160"));
         keyspace_ = HFactory.createKeyspace("snooze", cluster_);   
         
-        repository_ = new GroupLeaderCassandraRepository();
+        GroupManagerDescription groupLeader = new GroupManagerDescription();
+        groupLeader.setId("groupleader");
+        String[] subnets = new String[1];
+        subnets[0] = "192.168.2.1/31";
+        repository_ = new GroupLeaderCassandraRepository(groupLeader, subnets, 60, "localhost:9160");
+        //repository_ = new GroupLeaderCassandraRepository();
         repository_.clear();
     }
     

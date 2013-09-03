@@ -1,21 +1,28 @@
 package org.inria.myriads.snoozenode.message;
 
+/**
+ * 
+ * Management message class.
+ * 
+ * @author msimonin
+ *
+ */
 public class ManagementMessage
 {
     /** event type.*/
     private ManagementMessageType managementMessageType_;
     
     /** message. */
-    private Object message;
+    private Object message_;
 
     /**
-     * @param success
-     * @param message
+     * @param messageType       The message type
+     * @param message           The message.
      */
     public ManagementMessage(ManagementMessageType messageType, Object message)
     {
         managementMessageType_ = messageType;
-        this.message = message;
+        this.message_ = message;
     }
 
     /**
@@ -27,7 +34,7 @@ public class ManagementMessage
     }
 
     /**
-     * @param success the success to set
+     * @param messageType   The message type.
      */
     public void setStatus(ManagementMessageType messageType)
     {
@@ -39,7 +46,7 @@ public class ManagementMessage
      */
     public Object getMessage()
     {
-        return message;
+        return message_;
     }
 
     /**
@@ -47,7 +54,7 @@ public class ManagementMessage
      */
     public void setMessage(Object message)
     {
-        this.message = message;
+        this.message_ = message;
     }
     
     

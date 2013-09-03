@@ -32,8 +32,6 @@ import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimat
 import org.inria.myriads.snoozenode.groupmanager.monitoring.transport.GroupManagerDataTransporter;
 import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.RabbitMQExternalSender;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.TCPDataSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,17 +63,18 @@ public final class GroupManagerSummaryProducer
     private boolean isTerminated_;
     
     /** internal sender.*/
-    DataSender internalSender_;
+    private DataSender internalSender_;
     
     
     
     /**
      * Constructor.
      * 
-     * @param repository            The group manager repository
-     * @param groupLeaderAddress    The group leader address
-     * @param estimator             The estimator
-     * @param monitoringInterval    The monitoring interval
+     * @param repository                    The group manager repository
+     * @param groupLeaderAddress            The group leader address
+     * @param estimator                     The estimator
+     * @param monitoringSettings            The monitoring settings
+     * @param monitoringExternalSettings    The external settings
      * @throws IOException          The I/O exception
      */
     public GroupManagerSummaryProducer(GroupManagerRepository repository, 
@@ -131,10 +130,11 @@ public final class GroupManagerSummaryProducer
                                          summary.getLocalControllers().size()
                                          ));
                 
-                try{
+                try
+                {
                     internalSender_.send(dataTransporter);
                 }
-                catch(IOException exception)
+                catch (IOException exception)
                 {
                     log_.debug(String.format("I/O error during summary sending (%s). Did the group leader fail?", 
                             exception.getMessage()));
@@ -149,7 +149,7 @@ public final class GroupManagerSummaryProducer
         } 
         catch (InterruptedException exception)
         {
-            
+            log_.debug(exception.getMessage());
         }
         terminate();
         log_.debug("Group manager summary information producer is stopped!");

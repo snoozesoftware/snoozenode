@@ -40,7 +40,6 @@ import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinemanager.listener.VirtualMachineManagerListener;
 import org.inria.myriads.snoozenode.message.ManagementMessage;
 import org.inria.myriads.snoozenode.message.ManagementMessageType;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.inria.snoozenode.external.notifier.ExternalNotificationType;
@@ -97,6 +96,7 @@ public final class VirtualMachineSubmissionWorker
      * @param stateMachine               The state machine
      * @param estimator                  The resource estimator
      * @param managerListener            The manager listener
+     * @param externalNotifier           The external Notifier
      */
     public VirtualMachineSubmissionWorker(String taskIdentifier,
                                           int numberOfMonitoringEntries,

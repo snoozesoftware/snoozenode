@@ -70,12 +70,12 @@ public final class VirtualMachineMonitorDataConsumer
     /**
      * Constructor.
      * 
-     * @param localController       The local controller description
-     * @param groupManagerAddress   The group manager address
-     * @param dataQueue             The data queue
-     * @param monitoringThresholds  The monitoring thresholds
-     * @param callback              The monitoring service callback
-     * @throws Exception            The exception
+     * @param localController           The local controller description
+     * @param groupManagerAddress       The group manager address
+     * @param dataQueue                 The data queue
+     * @param infrastructureMonitoring  The infrastructure monitoring
+     * @param callback                  The monitoring service callback
+     * @throws Exception                The exception
      */
     public VirtualMachineMonitorDataConsumer(LocalControllerDescription localController,
                                              NetworkAddress groupManagerAddress, 
@@ -97,9 +97,9 @@ public final class VirtualMachineMonitorDataConsumer
     /**
      * Sends heartbeat data.
      * 
-     * @param localControllerId     The local controller identifier
+     * @param localControllerId         The local controller identifier
      * @throws InterruptedException 
-     * @throws IOException          The exception
+     * @throws InterruptedException          The exception
      */
     private void sendHeartbeatData(String localControllerId) throws InterruptedException 
     {
@@ -107,10 +107,11 @@ public final class VirtualMachineMonitorDataConsumer
         LocalControllerDataTransporter localControllerData = new LocalControllerDataTransporter(localControllerId, 
                                                                                                 null);
         log_.debug("Sending local controller heartbeat information to group manager");        
-        try{
+        try
+        {
             internalSender_.send(localControllerData);
         }
-        catch(IOException exception)
+        catch (IOException exception)
         {
             log_.debug(String.format("I/O error during data sending heartbeat (%s)! Did the group manager close " +
                     "its connection unexpectedly?", exception.getMessage()));
@@ -124,10 +125,11 @@ public final class VirtualMachineMonitorDataConsumer
      * @param localControllerId     The local controller identifier
      * @param aggregatedData        The aggregated data
      * @throws InterruptedException 
-     * @throws IOException          The I/O exception
+     * @throws InterruptedException          The I/O exception
      */
     @SuppressWarnings("unchecked")
-    private void sendRegularData(String localControllerId, ArrayList<AggregatedVirtualMachineData> aggregatedData) throws InterruptedException 
+    private void sendRegularData(String localControllerId, ArrayList<AggregatedVirtualMachineData> aggregatedData)
+                    throws InterruptedException 
     {
         Guard.check(localControllerId, aggregatedData);
         
@@ -144,10 +146,11 @@ public final class VirtualMachineMonitorDataConsumer
         }
         
         log_.debug("Sending aggregated local controller summary information to group maanger");
-        try{
+        try
+        {
             internalSender_.send(localControllerData);
         }
-        catch(IOException exception)
+        catch (IOException exception)
         {
             log_.debug(String.format("I/O error during data sending (%s)! Did the group manager close " +
                     "its connection unexpectedly?", exception.getMessage()));
@@ -159,7 +162,8 @@ public final class VirtualMachineMonitorDataConsumer
     public void run() 
     {
         ArrayList<AggregatedVirtualMachineData> aggregatedData = new ArrayList<AggregatedVirtualMachineData>();
-        try{
+        try
+        {
             while (!isTerminated_)
             {                               
                 log_.debug("Waiting for virtual machine monitoring data to arrive...");

@@ -317,6 +317,14 @@ public final class JavaPropertyNodeConfigurator
         String heartbeatTimeout = getProperty("faultTolerance.heartbeat.timeout"); 
         faultToleranceSettings.getHeartbeat().setTimeout(Integer.valueOf(heartbeatTimeout));
     }
+    
+    
+    /**
+     * 
+     * Set the monitoring settings.
+     * 
+     * @throws NodeConfiguratorException    The configuration exception
+     */
     private void setMonitoringSettings() 
             throws NodeConfiguratorException 
         {     
@@ -339,7 +347,8 @@ public final class JavaPropertyNodeConfigurator
             List<Double> memoryUtilizationThresholds = StringUtils.convertStringToDoubleArray(tmpUtilizationThresholds,
                                                                                               separator);        
             tmpUtilizationThresholds = getProperty("monitoring.thresholds.network");
-            List<Double> networkUtilizationThresholds = StringUtils.convertStringToDoubleArray(tmpUtilizationThresholds, 
+            List<Double> networkUtilizationThresholds = 
+                    StringUtils.convertStringToDoubleArray(tmpUtilizationThresholds, 
                                                                                                separator);        
             MonitoringThresholds monitoringThresholds = new MonitoringThresholds(cpuThresholds,
                                                                                  memoryUtilizationThresholds,

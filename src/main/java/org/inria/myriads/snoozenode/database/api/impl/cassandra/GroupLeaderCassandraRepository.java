@@ -56,19 +56,9 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
     /** TTL. */
     private int ttl_;
 
-
+    /** Group leader description.*/
     private GroupManagerDescription groupLeaderDescription_;
-    
-    /**
-     * 
-     * Empty Construtor.
-     * 
-     */
-    public GroupLeaderCassandraRepository()
-    {
-        super("localhost:9160");
-        ttl_ = 600;
-    }
+
     
     /**
      * 
@@ -169,7 +159,13 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         log_.debug("Gets all the group managers");
         
         ArrayList<GroupManagerDescription> groupManagers = new ArrayList<GroupManagerDescription>();
-        groupManagers = getGroupManagerDescriptionsOnly(null, -1, true, numberOfBacklogEntries, Arrays.asList(groupLeaderDescription_.getId()));
+        
+        groupManagers = getGroupManagerDescriptionsOnly(
+                null, 
+                -1, 
+                true, 
+                numberOfBacklogEntries, 
+                Arrays.asList(groupLeaderDescription_.getId()));
         
         return groupManagers;
 
@@ -454,7 +450,7 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         for (String virtualMachineSubnet : virtualMachineSubnets)
         {
             SubnetUtils subnetUtils = new SubnetUtils(virtualMachineSubnet);
-            SubnetInfo subnetInfo = subnetUtils.getInfo(); 
+            SubnetInfo subnetInfo = subnetUtils.getInfo();
             addressPool.addAll(Arrays.asList(subnetInfo.getAllAddresses()));
         }
         

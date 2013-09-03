@@ -1,21 +1,28 @@
 package org.inria.myriads.snoozenode.message;
 
+/**
+ * 
+ * System message class.
+ * 
+ * @author msimonin
+ *
+ */
 public class SystemMessage
 {
     /** event type.*/
     private SystemMessageType eventType_;
     
     /** message. */
-    private Object message;
+    private Object message_;
 
     /**
-     * @param eventType
-     * @param message
+     * @param eventType     The event type.
+     * @param message       The message.
      */
     public SystemMessage(SystemMessageType eventType, Object message)
     {
         eventType_ = eventType;
-        this.message = message;
+        this.message_ = message;
     }
 
     /**
@@ -39,15 +46,15 @@ public class SystemMessage
      */
     public Object getMessage()
     {
-        return message;
+        return message_;
     }
 
     /**
-     * @param message the message to set
+     * @param message   The message to set
      */
     public void setMessage(Object message)
     {
-        this.message = message;
+        this.message_ = message;
     }
     
     

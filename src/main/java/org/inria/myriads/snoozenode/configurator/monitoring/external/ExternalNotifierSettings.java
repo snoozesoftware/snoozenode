@@ -42,7 +42,7 @@ public final class ExternalNotifierSettings
     private String password_;
     
     /** vhost (rabbitmq specific).*/
-    private String vhost;
+    private String vhost_;
 
     /** number of retries. */
     private int numberOfRetries_;
@@ -119,7 +119,7 @@ public final class ExternalNotifierSettings
      */
     public String getVhost()
     {
-        return vhost;
+        return vhost_;
     }
 
     /**
@@ -127,7 +127,7 @@ public final class ExternalNotifierSettings
      */
     public void setVhost(String vhost)
     {
-        this.vhost = vhost;
+        this.vhost_ = vhost;
     }
 
     /**

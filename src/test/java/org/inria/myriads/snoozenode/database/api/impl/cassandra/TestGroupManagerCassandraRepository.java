@@ -780,6 +780,17 @@ public class TestGroupManagerCassandraRepository extends TestCase
     
     public void testAddAggregatedMonitoringData ()
     {
+        LocalControllerDescription localControllerDescription = new LocalControllerDescription();
+        
+        localControllerDescription.setId("lc1");
+        localControllerDescription.setHostname("mafalda");
+        localControllerDescription.getControlDataAddress().setAddress("127.0.0.1");
+        localControllerDescription.getControlDataAddress().setPort(5000);
+        localControllerDescription.getTotalCapacity().add(1d);
+        
+        // Add
+        repository_.addLocalControllerDescription(localControllerDescription);
+        
         
         ArrayList<VirtualMachineMonitoringData> monitoringDatas = new ArrayList<VirtualMachineMonitoringData>();
         for (int i=0 ; i<10; i++)

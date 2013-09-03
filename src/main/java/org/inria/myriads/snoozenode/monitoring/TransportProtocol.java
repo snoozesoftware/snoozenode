@@ -1,6 +1,13 @@
 package org.inria.myriads.snoozenode.monitoring;
 
-public enum TransportProtocol
+/**
+ * 
+ * Transport protocol.
+ * 
+ * @author msimonin
+ *
+ */
+public enum TransportProtocol 
 {
     /** Rabbitmq.*/
     RABBITMQ,

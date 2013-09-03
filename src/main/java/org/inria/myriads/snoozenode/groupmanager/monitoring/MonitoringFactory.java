@@ -109,10 +109,11 @@ public final class MonitoringFactory
     /**
      * Creates a new group manager monitoring service.
      * 
-     * @param repository            The group manager repository
-     * @param monitoringInterval    The monitoring interval
-     * @return                      The group manager monitoring data sender
-     * @throws Exception            The exception
+     * @param repository                    The group manager repository
+     * @param monitoringSettings            The monitoring settingsl
+     * @param monitoringExternalSettings    The monitoringExternalSettings
+     * @return                              The group manager monitoring data sender
+     * @throws Exception              The exception
      */
     public static GroupManagerMonitoringService 
         newGroupManagerMonitoringService(GroupManagerRepository repository, 

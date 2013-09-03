@@ -15,7 +15,6 @@ import org.inria.myriads.snoozenode.database.api.impl.memory.GroupLeaderMemoryRe
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.monitoring.TransportProtocol;
 import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.TestExternalSender;
 import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
 

@@ -5,7 +5,14 @@ import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ExternalNotifierUtils
+/**
+ * 
+ * External notifier utils.
+ * 
+ * @author msimonin
+ *
+ */
+public final class ExternalNotifierUtils
 {
 
      /** Define the logger. */
@@ -19,6 +26,15 @@ public class ExternalNotifierUtils
             throw new UnsupportedOperationException();
         }
         
+        /**
+         * 
+         * Sends.
+         * 
+         * @param externalNotifier  External notifier.
+         * @param notificationType  Notification type.
+         * @param message           Message.
+         * @param routingKey        Routing key.
+         */
         public static void send(
                 ExternalNotifier externalNotifier,
                 ExternalNotificationType notificationType,
@@ -30,7 +46,7 @@ public class ExternalNotifierUtils
             {
                 externalNotifier.send(notificationType, message, routingKey);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 log_.warn("Impossible to send to external " + e.getMessage());
             }

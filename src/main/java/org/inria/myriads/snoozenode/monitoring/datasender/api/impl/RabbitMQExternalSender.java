@@ -1,20 +1,32 @@
 package org.inria.myriads.snoozenode.monitoring.datasender.api.impl;
 
 import java.io.IOException;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.codehaus.jackson.JsonNode;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+
+
+
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.util.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
 
+
+
+/**
+ * 
+ * RabbitMQ external sender.
+ * 
+ * @author msimonin
+ *
+ */
 public class RabbitMQExternalSender implements DataSender
 {
     
@@ -22,16 +34,16 @@ public class RabbitMQExternalSender implements DataSender
     private static final Logger log_ = LoggerFactory.getLogger(RabbitMQExternalSender.class);
     
     /** Connection factory. */
-    private ConnectionFactory factory = new ConnectionFactory();
+    private ConnectionFactory factory_ = new ConnectionFactory();
     
     /** The connection.*/
-    private Connection connection_ = null;
+    private Connection connection_;
     
     /** The channel.*/
-    private Channel channel_ = null;
+    private Channel channel_;
     
     /***/
-    private String identifier_ = null;
+    private String identifier_;
     
     /** Rabbitmq host. */
     private String host_ = "localhost";
@@ -58,31 +70,32 @@ public class RabbitMQExternalSender implements DataSender
     private String type_ = "topic";
     
     /** Durable option.*/ 
-    private boolean durable_ = false;
+    private boolean durable_;
     
     /** Default routing key to use. */
     private String routingKey_ = "";
 
     /** Thread pool for sending.*/
-    private ExecutorService threadPool = Executors.newSingleThreadExecutor();
+    private ExecutorService threadPool_ = Executors.newSingleThreadExecutor();
     
     /**
      * 
      * Constructor.
      * 
-     * @param monitoringExternalSettings
+     * @param monitoringExternalSettings    external settings.
      */
     public RabbitMQExternalSender(ExternalNotifierSettings monitoringExternalSettings)
     {
         this("amqp-exchange", monitoringExternalSettings);
     }
 
+    
     /**
      * 
      * Constructor.
      * 
-     * @param exchange
-     * @param monitoringExternalSettings
+     * @param exchange                      Exchange name.
+     * @param monitoringExternalSettings    External settings.
      */
     public RabbitMQExternalSender(String exchange, ExternalNotifierSettings monitoringExternalSettings)
     {
@@ -95,6 +108,9 @@ public class RabbitMQExternalSender implements DataSender
         activateOptions();
     }
 
+    /**
+     * Activate options.
+     */
     public void activateOptions() 
     {
         //== creating connection
@@ -127,56 +143,49 @@ public class RabbitMQExternalSender implements DataSender
             log_.error("Unable to create the exchange " + ioe.getMessage());
             ioe.printStackTrace();
         }
-
-//        // create queue
-//        try 
-//        {
-//            this.createQueue();
-//        } 
-//        catch (Exception ioe) 
-//        {
-//            log_.error("Unable to create the queue " +  ioe.getMessage());
-//        }
     }
 
     
     /**
-     * Sets the ConnectionFactory parameters
+     * Sets the ConnectionFactory parameters.
      */
-    private void setFactoryConfiguration() {
-        factory.setHost(this.host_);
-        factory.setPort(this.port_);
-        factory.setVirtualHost(this.virtualHost_);
-        factory.setUsername(this.username_);
-        factory.setPassword(this.password_);
+    private void setFactoryConfiguration() 
+    {
+        factory_.setHost(this.host_);
+        factory_.setPort(this.port_);
+        factory_.setVirtualHost(this.virtualHost_);
+        factory_.setUsername(this.username_);
+        factory_.setPassword(this.password_);
     }
     
     /**
-     * Creates connection to RabbitMQ server according to properties
-     * @return
-     * @throws IOException
+     * Creates connection to RabbitMQ server according to properties.
+     * 
+     * @return  Connection
+     * @throws IOException  Exception
      */
-    private Connection createConnection() throws IOException 
+    private Connection createConnection() throws IOException
     {
         setFactoryConfiguration();
         if (this.connection_ == null || !this.connection_.isOpen()) 
         {
-            this.connection_ = factory.newConnection();
+            this.connection_ = factory_.newConnection();
         }
 
         return this.connection_;
     }
     
     /**
-     * Creates channel on RabbitMQ server
-     * @return
-     * @throws IOException
+     * Creates channel on RabbitMQ server.
+     * @return Channel
+     * @throws IOException  Exception
      */
     private Channel createChannel() throws IOException 
     {
         if (this.connection_ != null) 
         {
-            if (this.channel_ == null || !this.channel_.isOpen() && (this.connection_ != null && this.connection_.isOpen()) ) 
+            if (this.channel_ == null || !this.channel_.isOpen() && 
+                    (this.connection_ != null && this.connection_.isOpen()))
             {
                 this.channel_ = this.connection_.createChannel();
             }
@@ -189,8 +198,8 @@ public class RabbitMQExternalSender implements DataSender
     
     
     /**
-     * Declares the exchange on RabbitMQ server according to properties set
-     * @throws IOException
+     * Declares the exchange on RabbitMQ server according to properties set.
+     * @throws IOException  Exception
      */
     private void createExchange() throws IOException 
     {
@@ -204,40 +213,33 @@ public class RabbitMQExternalSender implements DataSender
     }
 
 
-//    /**
-//     * Declares and binds queue on rabbitMQ server according to properties
-//     * @throws IOException
-//     */
-//    private void createQueue() throws IOException 
-//    {
-//        if (this.channel_ != null && this.channel_.isOpen()) 
-//        {
-//            synchronized (this.channel_) 
-//            {
-//                this.channel_.queueDeclare(this.queue_, false, false, false, null);
-//                this.channel_.queueBind(this.queue_, this.exchange_, this.routingKey_);
-//            }
-//        }
-//    }
-
     /**
-     * Closes the channel and connection to RabbitMQ when shutting down the appender
+     * Closes the channel and connection to RabbitMQ when shutting down the appender.
      */
     @Override
-    public void close() {
-        if (channel_ != null && channel_.isOpen()) {
-            try {
+    public void close() 
+    {
+        if (channel_ != null && channel_.isOpen()) 
+        {
+            try 
+            {
                 channel_.close();
-            } catch (IOException ioe) {
-                
+            } 
+            catch (IOException ioe) 
+            {
+                log_.debug(ioe.getMessage());
             }
         }
 
-        if (connection_ != null && connection_.isOpen()) {
-            try {
+        if (connection_ != null && connection_.isOpen()) 
+        {
+            try 
+            {
                 this.connection_.close();
-            } catch (IOException ioe) {
-                
+            } 
+            catch (IOException ioe) 
+            {
+                log_.debug(ioe.getMessage());
             }
         }
     }
@@ -249,13 +251,13 @@ public class RabbitMQExternalSender implements DataSender
     public void send(Object data) 
     {
         setRoutingKey("");
-        threadPool.submit( new SenderTask(data) );
+        threadPool_.submit(new SenderTask(data));
     }
 
     @Override
     public void send(Object data, String routingKey) 
     {
-        threadPool.submit( new SenderTask(data, routingKey) );
+        threadPool_.submit(new SenderTask(data, routingKey));
     }
 
 
@@ -264,7 +266,7 @@ public class RabbitMQExternalSender implements DataSender
      */
     public ConnectionFactory getFactory()
     {
-        return factory;
+        return factory_;
     }
 
 
@@ -273,7 +275,7 @@ public class RabbitMQExternalSender implements DataSender
      */
     public void setFactory(ConnectionFactory factory)
     {
-        this.factory = factory;
+        this.factory_ = factory;
     }
 
 
@@ -512,17 +514,24 @@ public class RabbitMQExternalSender implements DataSender
 
     
     /**
-     * Simple Callable class that publishes messages to RabbitMQ server
+     * Simple Callable class that publishes messages to RabbitMQ server.
      */
     class SenderTask implements Callable<Object> 
     {
 
-        /** Event message to send */
+        /** Event message to send. */
         private Object eventMessage__;
         
+        /** Routing key.*/
         private String routingKey__;
 
         
+        /**
+         * 
+         * Constructor.
+         * 
+         * @param data      The data.
+         */
         SenderTask(Object data)
         {
             routingKey__ = routingKey_;
@@ -533,8 +542,8 @@ public class RabbitMQExternalSender implements DataSender
          * 
          * Constructor.
          * 
-         * @param data
-         * @param routingKey
+         * @param data          The data.
+         * @param routingKey    The routing key to use.
          */
         SenderTask(Object data, String routingKey) 
         {
@@ -546,13 +555,12 @@ public class RabbitMQExternalSender implements DataSender
 
         /**
          * 
-         * Method is called by ExecutorService and publishes message on RabbitMQ
+         * Method is called by ExecutorService and publishes message on RabbitMQ.
          * 
-         * @return
-         * @throws Exception
+         * @return  eventMessage.
+         * @throws Exception    Exception
          */
-        @Override
-        public Object call() throws Exception 
+        public Object call() throws Exception
         {
 
             activateOptions();

@@ -86,7 +86,6 @@ public final class BootstrapMemoryRepository
     @Override
     public LocalControllerList getLocalControllerList()
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -94,9 +93,9 @@ public final class BootstrapMemoryRepository
      * Gets the groupamanger descriptions.
      * @param firstGroupManagerId           (ignored)
      * @param limit                         (ignored)
-     * @param umberOfMonitoringEntries      number of monitoring entries.
-     * @param groupLeaderId                 (ignored) 
-     * 
+     * @param numberOfMonitoringEntries      number of monitoring entries.
+     * @param groupLeader                   group leader.
+     * @return list of group manager description. 
      */
     @Override
     public List<GroupManagerDescription> getGroupManagerDescriptions(
@@ -125,7 +124,8 @@ public final class BootstrapMemoryRepository
     {
         
         List<LocalControllerDescription> localControllers = new ArrayList<LocalControllerDescription>();
-        try{
+        try
+        {
             NetworkAddress groupLeaderAddress = groupLeader.getListenSettings().getControlDataAddress();
             GroupManagerAPI groupLeaderCommunicator = 
                 CommunicatorFactory.newGroupManagerCommunicator(groupLeaderAddress);
@@ -139,7 +139,8 @@ public final class BootstrapMemoryRepository
             else
             {
                 log_.debug("Gets the localcontrollers of groupmanager " + groupManagerId);
-                GroupManagerDescription groupManager = groupLeaderCommunicator.getGroupManagerDescription(groupManagerId);
+                GroupManagerDescription groupManager = 
+                        groupLeaderCommunicator.getGroupManagerDescription(groupManagerId);
                 
                 if (groupManager == null)
                 {
@@ -155,7 +156,7 @@ public final class BootstrapMemoryRepository
                 
             }
         }
-        catch(Exception exception)
+        catch (Exception exception)
         {
             log_.error("Unable to get the local controller list");
         }
@@ -222,14 +223,19 @@ public final class BootstrapMemoryRepository
     @Override
     public MigrationRequest createMigrationRequest(ClientMigrationRequestSimple migrationRequest)
     {
-        // TODO Auto-generated method stub
         return null;
     }
     
+    /**
+     * 
+     * Test if a string is null or empty.
+     * 
+     * @param s     string to test.
+     * @return  true or false.
+     */
     private boolean isNullOrEmpty(String s)
     {
-        return (s==null || s.equals(""));
+        return s == null || s.equals("");
     }
 
-    
 }

@@ -82,7 +82,7 @@ public final class VirtualMachineManager
     /**
      * Constructor.
      * 
-     * @param schedulerSettings         The scheduler settings
+     * @param nodeConfiguration         The node configuration
      * @param estimator                 The group manager repository
      * @param groupManagerRepository    The number of monitoring entries
      * @param stateMachine              The state machine

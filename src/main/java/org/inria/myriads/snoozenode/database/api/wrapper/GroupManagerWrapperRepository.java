@@ -14,7 +14,6 @@ import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
-import org.inria.myriads.snoozenode.database.enums.DatabaseType;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.inria.myriads.snoozenode.message.SystemMessage;
 import org.inria.myriads.snoozenode.message.SystemMessageType;
@@ -24,6 +23,13 @@ import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 
+ * Wrapper for the group manager class.
+ * 
+ * @author msimonin
+ *
+ */
 public class GroupManagerWrapperRepository implements GroupManagerRepository
 {
 
@@ -33,9 +39,20 @@ public class GroupManagerWrapperRepository implements GroupManagerRepository
     /** The repository. */
     private GroupManagerRepository repository_;
     
-    /**External notifier*/
+    /**External notifier.*/
     private ExternalNotifier externalNotifier_; 
     
+    /**
+     * 
+     * Constructor.
+     * 
+     * @param groupManager                  The group manager description
+     * @param maxCapacity                   The max capacity.
+     * @param interval                      The interval.
+     * @param settings                      The settings.
+     * @param externalNotifierSettings      The external notifier settings.
+     * @param externalNotifier              The external notifier.
+     */
     public GroupManagerWrapperRepository(
             GroupManagerDescription groupManager, 
             int maxCapacity, 
@@ -47,7 +64,7 @@ public class GroupManagerWrapperRepository implements GroupManagerRepository
     {
         log_.debug("Initializing the group manager  wrapper repository");
         externalNotifier_ = externalNotifier;
-        repository_ = DatabaseFactory.newGroupManagerRepository( groupManager, maxCapacity, interval, settings);
+        repository_ = DatabaseFactory.newGroupManagerRepository(groupManager, maxCapacity, interval, settings);
     }
 
             
@@ -74,7 +91,10 @@ public class GroupManagerWrapperRepository implements GroupManagerRepository
     public LocalControllerDescription getLocalControllerDescription(String localControllerId,
             int numberOfMonitoringEntries, boolean withVirtualMachines)
     {
-        return repository_.getLocalControllerDescription(localControllerId, numberOfMonitoringEntries, withVirtualMachines);
+        return repository_.getLocalControllerDescription(
+                localControllerId,
+                numberOfMonitoringEntries, 
+                withVirtualMachines);
     }
 
     @Override

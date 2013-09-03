@@ -19,9 +19,7 @@
  */
 package org.inria.myriads.snoozenode.groupmanager.statemachine.api.impl;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
@@ -29,14 +27,12 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.Mig
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
-import org.inria.myriads.snoozecommon.communication.virtualmachine.ClientMigrationRequest;
 import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.energymanagement.EnergyManagementSettings;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSavingAction;
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.RelocationSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
@@ -61,8 +57,6 @@ import org.inria.myriads.snoozenode.message.ManagementMessage;
 import org.inria.myriads.snoozenode.message.ManagementMessageType;
 import org.inria.myriads.snoozenode.message.SystemMessage;
 import org.inria.myriads.snoozenode.message.SystemMessageType;
-import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
 import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
@@ -107,7 +101,7 @@ public class GroupManagerStateMachine
     /** Anomaly resolver. */
     private AnomalyResolver anomalyResolver_;
     
-    /** External notifier*/
+    /** External notifier. */
     private ExternalNotifier externalNotifier_;
     
     /** 
@@ -116,6 +110,7 @@ public class GroupManagerStateMachine
      * @param nodeConfiguration         The node configuration
      * @param estimator                 The resource demand estimator
      * @param repository                The repository
+     * @param externalNotifier          The external Notifier.
      */
     public GroupManagerStateMachine(NodeConfiguration nodeConfiguration,
                                     ResourceDemandEstimator estimator,
@@ -247,7 +242,8 @@ public class GroupManagerStateMachine
         ExternalNotifierUtils.send(
                 externalNotifier_,
                 ExternalNotificationType.MANAGEMENT,
-                new ManagementMessage(ManagementMessageType.PROCESSED, repository_.getVirtualMachineMetaData(location, 0)),
+                new ManagementMessage(
+                        ManagementMessageType.PROCESSED, repository_.getVirtualMachineMetaData(location, 0)),
                 location.getGroupManagerId() + "." +
                 location.getLocalControllerId() + "." + 
                 location.getVirtualMachineId() + "." +
@@ -274,7 +270,7 @@ public class GroupManagerStateMachine
                     externalNotifier_,
                     ExternalNotificationType.SYSTEM,
                     new SystemMessage(SystemMessageType.GM_BUSY, repository_.getGroupManager()),
-                    "groupmanager."+repository_.getGroupManagerId()
+                    "groupmanager." + repository_.getGroupManagerId()
                     );
             return true;
         }
@@ -318,7 +314,7 @@ public class GroupManagerStateMachine
                 externalNotifier_,
                 ExternalNotificationType.SYSTEM,
                 new SystemMessage(SystemMessageType.GM_IDLE, repository_.getGroupManager()),
-                "groupmanager."+repository_.getGroupManagerId()
+                "groupmanager." + repository_.getGroupManagerId()
                 );
         systemState_ = SystemState.IDLE;
     }
@@ -526,7 +522,7 @@ public class GroupManagerStateMachine
     
     /**
      * Starts the migration of the vm.
-     * @param clientMigrationRequest clientMigrationRequest
+     * @param migrationRequest migrationRequest
      * 
      * 
      * @return     true if everything ok, false otherwise
@@ -569,7 +565,8 @@ public class GroupManagerStateMachine
         VirtualMachineMetaData newVirtualMachineMetaData = 
                 virtualMachineManager_.resizeVirtualMachine(resizeRequest);
         
-        VirtualMachineMetaData virtualMachine = repository_.getVirtualMachineMetaData(resizeRequest.getVirtualMachineLocation(), 0);
+        VirtualMachineMetaData virtualMachine = 
+                repository_.getVirtualMachineMetaData(resizeRequest.getVirtualMachineLocation(), 0);
         virtualMachine.setRequestedCapacity(newVirtualMachineMetaData.getRequestedCapacity());
         return newVirtualMachineMetaData;
         

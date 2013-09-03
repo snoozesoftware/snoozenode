@@ -127,7 +127,7 @@ public final class VirtualClusterSubmissionWorker
             ArrayList<VirtualMachineMetaData> freeVirtualMachines = new ArrayList<VirtualMachineMetaData>();
             ArrayList<VirtualMachineMetaData> errorVirtualMachines = new ArrayList<VirtualMachineMetaData>();
 
-            removeVirtualMachinesWithError(virtualMachines_, freeVirtualMachines,errorVirtualMachines);
+            removeVirtualMachinesWithError(virtualMachines_, freeVirtualMachines, errorVirtualMachines);
 
             
             startVirtualClusterDispatching(freeVirtualMachines);

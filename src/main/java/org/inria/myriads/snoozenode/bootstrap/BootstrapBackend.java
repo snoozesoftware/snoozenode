@@ -58,14 +58,14 @@ public final class BootstrapBackend
     /** The group leader description. */
     private GroupManagerDescription groupLeaderDescription_;
     
-    
+    /** The node configuration.*/
     private NodeConfiguration nodeConfiguration_;
     
     /** The repository.*/
     private BootstrapRepository repository_;
     
     /** Track backend activity.*/
-    private boolean isActive_ = false;
+    private boolean isActive_;
     
     /**
      * Bootstrap backend constructor.
@@ -88,6 +88,11 @@ public final class BootstrapBackend
         isActive_ = true;
     }
     
+    /**
+     * 
+     * Initialize the backend repository (read only).
+     * 
+     */
     private void initializeRepository()
     {
         DatabaseSettings settings = nodeConfiguration_.getDatabase();
@@ -220,6 +225,14 @@ public final class BootstrapBackend
         return information;        
     }
 
+    /**
+     * 
+     * Sends a command to a virtual machine.
+     * 
+     * @param command               command to send.
+     * @param virtualMachineId      virtualMachine Id.
+     * @return                      true iff everything is ok.
+     */
     public synchronized boolean commandVirtualMachine(VirtualMachineCommand command, String virtualMachineId)
     {
        
@@ -272,6 +285,12 @@ public final class BootstrapBackend
         return repository_;
     }
 
+    /**
+     * 
+     * checks if backend is active.
+     * 
+     * @return  isActive
+     */
     public boolean isActive()
     {
         return isActive_;

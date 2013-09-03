@@ -54,8 +54,9 @@ public final class GroupManagerMonitoringService
     /**
      * Group manager monitoring service.
      * 
-     * @param repository            The group manager repository
-     * @param monitoringInterval    The monitoring interval
+     * @param repository                    The group manager repository
+     * @param monitoringSettings            The monitoring settings
+     * @param monitoringExternalSettings    The external settings
      * @throws Exception            The exception
      */
     public GroupManagerMonitoringService(GroupManagerRepository repository, 

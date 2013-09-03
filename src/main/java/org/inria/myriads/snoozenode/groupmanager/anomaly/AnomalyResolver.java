@@ -77,7 +77,7 @@ public final class AnomalyResolver
     private int numberOfMonitoringEntries_;
     
     /** External Notifier.*/
-    ExternalNotifier externalNotifier_;
+    private ExternalNotifier externalNotifier_;
     
     /**
      * Constructor.
@@ -86,6 +86,7 @@ public final class AnomalyResolver
      * @param resourceDemandEstimator    The resource demand estimator
      * @param groupManagerRepository     The group manager repository
      * @param stateMachine               The state machine
+     * @param externalNotifier           The external notifier
      */
     public AnomalyResolver(RelocationSettings relocationPolicies,
                            ResourceDemandEstimator resourceDemandEstimator,
@@ -192,7 +193,7 @@ public final class AnomalyResolver
                 externalNotifier_,
                 ExternalNotificationType.SYSTEM,
                 new SystemMessage(SystemMessageType.LC_ANOMALY, anomalyLocalController),
-                "groupmanager."+groupManagerRepository_.getGroupManagerId()
+                "groupmanager." + groupManagerRepository_.getGroupManagerId()
                 );
         
         if (anomalyLocalController == null)
@@ -234,7 +235,8 @@ public final class AnomalyResolver
             anomalyLocalController_ = anomalyLocalController;
         }
         
-        MigrationPlanEnforcer migrationPlanExecutor = new MigrationPlanEnforcer(groupManagerRepository_, this, externalNotifier_);
+        MigrationPlanEnforcer migrationPlanExecutor = 
+                new MigrationPlanEnforcer(groupManagerRepository_, this, externalNotifier_);
         migrationPlanExecutor.enforceMigrationPlan(migrationPlan);
     }
     
