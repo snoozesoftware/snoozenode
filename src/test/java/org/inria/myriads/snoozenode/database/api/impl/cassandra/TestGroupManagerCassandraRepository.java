@@ -3,7 +3,6 @@ package org.inria.myriads.snoozenode.database.api.impl.cassandra;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -20,7 +19,6 @@ import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.factory.HFactory;
-import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceQuery;
 
@@ -28,9 +26,6 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
-import org.inria.myriads.snoozecommon.communication.groupmanager.ListenSettings;
-import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
-import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorSettings;
@@ -38,7 +33,6 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
-import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.globals.Globals;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraUtils;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.JsonSerializer;
@@ -58,17 +52,21 @@ public class TestGroupManagerCassandraRepository extends TestCase
     private static final Logger log_ = LoggerFactory.getLogger(TestGroupManagerCassandraRepository.class);
     
 
-    
+    /** The repository under test.*/    
     private GroupManagerCassandraRepository repository_;
+    
+    /** Cluster.*/
     private Cluster cluster_;
+    
+    /** Keyspace.*/
     private Keyspace keyspace_;
 
-
-
-    private HashMap<String, VirtualMachineMetaData> virtualMachines; 
+    /** Virtual machines.*/
+    private HashMap<String, VirtualMachineMetaData> virtualMachines_; 
 
     @Override
-    protected void setUp() throws Exception {
+    protected void setUp() throws Exception 
+    {
         System.getProperties().put("org.restlet.engine.loggerFacadeClass", 
                 "org.restlet.ext.slf4j.Slf4jLoggerFacade");
         String logFile = "./configs/log4j.xml";
@@ -83,7 +81,7 @@ public class TestGroupManagerCassandraRepository extends TestCase
             BasicConfigurator.configure();
         }
         
-        cluster_ = HFactory.getOrCreateCluster("Test Cluster",new CassandraHostConfigurator("localhost:9160"));
+        cluster_ = HFactory.getOrCreateCluster("Test Cluster", new CassandraHostConfigurator("localhost:9160"));
         keyspace_ = HFactory.createKeyspace("snooze", cluster_);   
         
         GroupManagerDescription groupManager = new GroupManagerDescription();
@@ -120,7 +118,11 @@ public class TestGroupManagerCassandraRepository extends TestCase
         
         // Check the database
         HColumnFamily<String, String> columnFamily =
-                new HColumnFamilyImpl<String, String>(keyspace_, CassandraUtils.LOCALCONTROLLERS_CF, StringSerializer.get(), StringSerializer.get());
+                new HColumnFamilyImpl<String, String>(
+                        keyspace_,
+                        CassandraUtils.LOCALCONTROLLERS_CF,
+                        StringSerializer.get(), 
+                        StringSerializer.get());
             columnFamily.addKey("9876");
             columnFamily.addColumnName("hostname")
             .addColumnName("isAssigned")
@@ -128,23 +130,34 @@ public class TestGroupManagerCassandraRepository extends TestCase
             .addColumnName("totalCapacity")
             .addColumnName("groupManager")
             .addColumnName("hypervisorSettings")
-            .addColumnName("wakeupSettings")
-          ;
-        ArrayList<Double> totalCapacity = (ArrayList<Double>) columnFamily.getValue("totalCapacity", new JsonSerializer(ArrayList.class));
+            .addColumnName("wakeupSettings");
+            
+        ArrayList<Double> totalCapacity = 
+                (ArrayList<Double>) columnFamily.getValue("totalCapacity", new JsonSerializer(ArrayList.class));
+        
         boolean isAssigned = columnFamily.getValue("isAssigned", BooleanSerializer.get());
-        NetworkAddress controlDataAddress = (NetworkAddress) columnFamily.getValue("controlDataAddress", new JsonSerializer(NetworkAddress.class));
-        HypervisorSettings hypervisorSettings = (HypervisorSettings) columnFamily.getValue("hypervisorSettings", new JsonSerializer(HypervisorSettings.class));
+        NetworkAddress controlDataAddress = 
+                (NetworkAddress) columnFamily.getValue("controlDataAddress", new JsonSerializer(NetworkAddress.class));
+        
+        HypervisorSettings hypervisorSettings = 
+         (HypervisorSettings) columnFamily.getValue("hypervisorSettings", new JsonSerializer(HypervisorSettings.class));
         
         assertEquals("1234", columnFamily.getString("groupManager"));
         assertTrue(isAssigned);
-        assertEquals(localControllerDescription.getControlDataAddress().getAddress(),controlDataAddress.getAddress());
-        assertEquals(localControllerDescription.getControlDataAddress().getPort(),controlDataAddress.getPort());
+        assertEquals(localControllerDescription.getControlDataAddress().getAddress(), controlDataAddress.getAddress());
+        assertEquals(localControllerDescription.getControlDataAddress().getPort(), controlDataAddress.getPort());
         assertEquals(localControllerDescription.getTotalCapacity(), totalCapacity);
-        assertEquals(localControllerDescription.getHypervisorSettings().getDriver(), hypervisorSettings.getDriver()); //bla bla
+        assertEquals(localControllerDescription.getHypervisorSettings().getDriver(), 
+                hypervisorSettings.getDriver()); 
         
         
         columnFamily =
-                new HColumnFamilyImpl<String, String>(keyspace_, CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, StringSerializer.get(), StringSerializer.get());
+                new HColumnFamilyImpl<String, String>(
+                        keyspace_, 
+                        CassandraUtils.LOCALCONTROLLERS_MAPPING_CF,
+                        StringSerializer.get(), 
+                        StringSerializer.get());
+        
             columnFamily.addKey(controlDataAddress.toString());
             columnFamily.addColumnName("id");
             
@@ -159,7 +172,7 @@ public class TestGroupManagerCassandraRepository extends TestCase
     public void testGetLocalControllerDescriptionFound()
     {
         
-        for (int i=0; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             LocalControllerDescription localControllerDescription = new LocalControllerDescription();
             localControllerDescription.setId("lc" + String.valueOf(i));
@@ -186,7 +199,7 @@ public class TestGroupManagerCassandraRepository extends TestCase
     public void testGetLocalControllerDescriptionNotFound()
     {
         LocalControllerDescription localControllerDescription = new LocalControllerDescription();
-        for (int i=0; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             localControllerDescription.setId("lc" + String.valueOf(i));
             localControllerDescription.setHostname("mafalda");
@@ -223,7 +236,7 @@ public class TestGroupManagerCassandraRepository extends TestCase
      */
     public void testGetLocalControllerDescriptionsAll()
     {
-        for(int i=0; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             
             LocalControllerDescription localControllerDescription = new LocalControllerDescription();
@@ -232,8 +245,10 @@ public class TestGroupManagerCassandraRepository extends TestCase
             repository_.addLocalControllerDescription(localControllerDescription);
         }
         
-        ArrayList<LocalControllerDescription> localControllers = repository_.getLocalControllerDescriptions(0, false, false);        
-        assertEquals(10,localControllers.size());
+        ArrayList<LocalControllerDescription> localControllers = 
+                repository_.getLocalControllerDescriptions(0, false, false);
+        
+        assertEquals(10, localControllers.size());
         for (LocalControllerDescription localController : localControllers)
         {
             assertTrue(localController.getIsAssigned());
@@ -250,9 +265,9 @@ public class TestGroupManagerCassandraRepository extends TestCase
      */
     public void testGetLocalControllerDescriptionsAllWithVMs()
     {
-        for(int i=0; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
-            String localControllerId = "lc"+String.valueOf(i);
+            String localControllerId = "lc" + String.valueOf(i);
             LocalControllerDescription localControllerDescription = new LocalControllerDescription();
             localControllerDescription.setId(localControllerId);
             localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);
@@ -261,12 +276,12 @@ public class TestGroupManagerCassandraRepository extends TestCase
             
             ArrayList<AggregatedVirtualMachineData> aggregatedDatas = new ArrayList<AggregatedVirtualMachineData>();
             
-            for (int j=0; j<2 ; j++)
+            for (int j = 0; j < 2; j++)
             {
                 VirtualMachineMetaData   virtualMachine = new VirtualMachineMetaData();
-                String virtualMachineId =  "vm"+i+"-"+j;
+                String virtualMachineId =  "vm" + i + "-" + j;
                 virtualMachine.getVirtualMachineLocation().setVirtualMachineId(virtualMachineId);
-                virtualMachine.getVirtualMachineLocation().setGroupManagerId("gm"+String.valueOf(i));
+                virtualMachine.getVirtualMachineLocation().setGroupManagerId("gm" + String.valueOf(i));
                 virtualMachine.getVirtualMachineLocation().setLocalControllerId(localControllerId);
                 ArrayList<Double> requestedCapacity = new ArrayList<Double>();
                 requestedCapacity.add(2d);
@@ -274,7 +289,7 @@ public class TestGroupManagerCassandraRepository extends TestCase
                 
                 //monitoring datas
                 List<VirtualMachineMonitoringData> monitoring = new ArrayList<VirtualMachineMonitoringData>();
-                for (int k=0; k<10; k++)
+                for (int k = 0; k < 10; k++)
                 {
                     ArrayList<Double> usedCapacity = new ArrayList<Double>();
                     usedCapacity.add(1.5d);
@@ -282,9 +297,10 @@ public class TestGroupManagerCassandraRepository extends TestCase
                     monitoringData.setTimeStamp(k);
                     monitoringData.setUsedCapacity(usedCapacity);
                     monitoring.add(monitoringData);
-                }//monitoring
+                }
                 
-                AggregatedVirtualMachineData aggregatedData = new AggregatedVirtualMachineData(virtualMachineId, monitoring);
+                AggregatedVirtualMachineData aggregatedData = 
+                        new AggregatedVirtualMachineData(virtualMachineId, monitoring);
                 aggregatedDatas.add(aggregatedData);
 
                 virtualMachines.put(virtualMachineId, virtualMachine);
@@ -296,17 +312,18 @@ public class TestGroupManagerCassandraRepository extends TestCase
             repository_.addAggregatedMonitoringData(localControllerId, aggregatedDatas);
         }
         
-        ArrayList<LocalControllerDescription> localControllers = repository_.getLocalControllerDescriptions(5, false, true);
+        ArrayList<LocalControllerDescription> localControllers =
+                repository_.getLocalControllerDescriptions(5, false, true);
         
-        assertEquals(10,localControllers.size());
+        assertEquals(10, localControllers.size());
         //check vms.
         for (LocalControllerDescription localController : localControllers)
         {
             //check the size of assigned vms.
-            assertEquals(2,localController.getVirtualMachineMetaData().size());
-            virtualMachines = localController.getVirtualMachineMetaData();
+            assertEquals(2, localController.getVirtualMachineMetaData().size());
+            virtualMachines_ = localController.getVirtualMachineMetaData();
             //check the number of retrieved monitoring entries.
-            for (VirtualMachineMetaData virtualMachine : virtualMachines.values())
+            for (VirtualMachineMetaData virtualMachine : virtualMachines_.values())
             {
                 assertEquals(5, virtualMachine.getUsedCapacity().size());
             }
@@ -324,12 +341,12 @@ public class TestGroupManagerCassandraRepository extends TestCase
      */
     public void testGetLocalControllerDescriptionsOnlyPassive()
     {
-        for(int i=0; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             LocalControllerDescription localControllerDescription = new LocalControllerDescription();
             localControllerDescription.setId(String.valueOf(i));
             localControllerDescription.setStatus(LocalControllerStatus.PASSIVE);
-            if (i%2==0)
+            if (i % 2 == 0)
             {
                 localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);    
             }
@@ -337,9 +354,10 @@ public class TestGroupManagerCassandraRepository extends TestCase
             repository_.addLocalControllerDescription(localControllerDescription);
         }
         
-        ArrayList<LocalControllerDescription> localControllers = repository_.getLocalControllerDescriptions(0, true, false);
+        ArrayList<LocalControllerDescription> localControllers = 
+                repository_.getLocalControllerDescriptions(0, true, false);
        
-        assertEquals(5,localControllers.size());
+        assertEquals(5, localControllers.size());
     }
     
     /**
@@ -367,7 +385,7 @@ public class TestGroupManagerCassandraRepository extends TestCase
         ArrayList<Double> requestedCapacity = new ArrayList<Double>();
         requestedCapacity.add(2d);
         virtualMachine.setRequestedCapacity(requestedCapacity);
-        log_.debug("XML: "+virtualMachine.getXmlRepresentation());
+        log_.debug("XML: " + virtualMachine.getXmlRepresentation());
         
         repository_.addVirtualMachine(virtualMachine);
         
@@ -375,12 +393,12 @@ public class TestGroupManagerCassandraRepository extends TestCase
         virtualMachine.getVirtualMachineLocation().setVirtualMachineId("test-vm2");
         virtualMachine.getVirtualMachineLocation().setGroupManagerId("gm1");
         virtualMachine.getVirtualMachineLocation().setLocalControllerId("lc1");
-        log_.debug("XML: "+virtualMachine.getXmlRepresentation());
+        log_.debug("XML: " + virtualMachine.getXmlRepresentation());
         
         repository_.addVirtualMachine(virtualMachine);
         
         ArrayList<VirtualMachineMonitoringData> monitoringDatas = new ArrayList<VirtualMachineMonitoringData>();
-        for (int i=0 ; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             VirtualMachineMonitoringData monitoringData = new VirtualMachineMonitoringData();
             monitoringData.setTimeStamp(Long.valueOf(i));
@@ -403,9 +421,9 @@ public class TestGroupManagerCassandraRepository extends TestCase
         
         assertEquals("lc1", retrievedDescription.getId());
         assertEquals(localControllerDescription.getHostname(), retrievedDescription.getHostname());
-        assertEquals(localControllerDescription.getTotalCapacity(),retrievedDescription.getTotalCapacity());
-        assertEquals(2,retrievedDescription.getVirtualMachineMetaData().size());
-        assertEquals(5,retrievedDescription.getVirtualMachineMetaData().get("test-vm").getUsedCapacity().size());
+        assertEquals(localControllerDescription.getTotalCapacity(), retrievedDescription.getTotalCapacity());
+        assertEquals(2, retrievedDescription.getVirtualMachineMetaData().size());
+        assertEquals(5, retrievedDescription.getVirtualMachineMetaData().get("test-vm").getUsedCapacity().size());
         assertEquals(1, retrievedDescription.getVirtualMachineMetaData().get("test-vm").getRequestedCapacity().size());
     }
     
@@ -432,19 +450,19 @@ public class TestGroupManagerCassandraRepository extends TestCase
         virtualMachine.getVirtualMachineLocation().setVirtualMachineId("test-vm");
         virtualMachine.getVirtualMachineLocation().setGroupManagerId("gm1");
         virtualMachine.getVirtualMachineLocation().setLocalControllerId("lc1");
-        log_.debug("XML: "+virtualMachine.getXmlRepresentation());
+        log_.debug("XML: " + virtualMachine.getXmlRepresentation());
         repository_.addVirtualMachine(virtualMachine);
         
         virtualMachine = new VirtualMachineMetaData();
         virtualMachine.getVirtualMachineLocation().setVirtualMachineId("test-vm2");
         virtualMachine.getVirtualMachineLocation().setGroupManagerId("gm1");
         virtualMachine.getVirtualMachineLocation().setLocalControllerId("lc1");
-        log_.debug("XML: "+virtualMachine.getXmlRepresentation());
+        log_.debug("XML: " + virtualMachine.getXmlRepresentation());
         
         repository_.addVirtualMachine(virtualMachine);
         
         ArrayList<VirtualMachineMonitoringData> monitoringDatas = new ArrayList<VirtualMachineMonitoringData>();
-        for (int i=0 ; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             VirtualMachineMonitoringData monitoringData = new VirtualMachineMonitoringData();
             monitoringData.setTimeStamp(Long.valueOf(i));
@@ -467,10 +485,10 @@ public class TestGroupManagerCassandraRepository extends TestCase
         
         assertEquals("lc1", retrievedDescription.getId());
         assertEquals(localControllerDescription.getHostname(), retrievedDescription.getHostname());
-        assertEquals(localControllerDescription.getTotalCapacity(),retrievedDescription.getTotalCapacity());
-        assertEquals(2,retrievedDescription.getVirtualMachineMetaData().size());
-        assertEquals(0,retrievedDescription.getVirtualMachineMetaData().get("test-vm").getUsedCapacity().size());
-        assertEquals(0,retrievedDescription.getVirtualMachineMetaData().get("test-vm2").getUsedCapacity().size());
+        assertEquals(localControllerDescription.getTotalCapacity(), retrievedDescription.getTotalCapacity());
+        assertEquals(2, retrievedDescription.getVirtualMachineMetaData().size());
+        assertEquals(0, retrievedDescription.getVirtualMachineMetaData().get("test-vm").getUsedCapacity().size());
+        assertEquals(0, retrievedDescription.getVirtualMachineMetaData().get("test-vm2").getUsedCapacity().size());
     }
     
     
@@ -512,7 +530,7 @@ public class TestGroupManagerCassandraRepository extends TestCase
         virtualMachine.getVirtualMachineLocation().setLocalControllerId("lc1");
         virtualMachine.setIpAddress("10.0.0.2");
         
-        log_.debug("XML: "+virtualMachine.getXmlRepresentation());
+        log_.debug("XML: " + virtualMachine.getXmlRepresentation());
         
         repository_.addVirtualMachine(virtualMachine);
         
@@ -523,7 +541,12 @@ public class TestGroupManagerCassandraRepository extends TestCase
         // Get the description 
         
         HColumnFamily<String, String> columnFamily =
-                new HColumnFamilyImpl<String, String>(keyspace_, CassandraUtils.VIRTUALMACHINES_CF, StringSerializer.get(), StringSerializer.get());
+                new HColumnFamilyImpl<String, String>(
+                        keyspace_,
+                        CassandraUtils.VIRTUALMACHINES_CF,
+                        StringSerializer.get(),
+                        StringSerializer.get());
+        
             columnFamily.addKey("test-vm");
             columnFamily.addColumnName("ipAddress");
 
@@ -539,14 +562,14 @@ public class TestGroupManagerCassandraRepository extends TestCase
      */
     public void testDropLocalControllerActiveNotForce()
     {
-        for(int i=0; i<2; i++)
+        for (int i = 0; i < 2; i++)
         {
             LocalControllerDescription localControllerDescription = new LocalControllerDescription();
             localControllerDescription.setId(String.valueOf(i));
             localControllerDescription.setStatus(LocalControllerStatus.PASSIVE);
             localControllerDescription.getControlDataAddress().setPort(i);
             localControllerDescription.getControlDataAddress().setAddress("10.0.0.1");
-            if (i%2==0)
+            if (i % 2 == 0)
             {
                 localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);    
             }
@@ -559,7 +582,12 @@ public class TestGroupManagerCassandraRepository extends TestCase
         // Get the description 
         
         HColumnFamily<String, String> columnFamily =
-                new HColumnFamilyImpl<String, String>(keyspace_, CassandraUtils.LOCALCONTROLLERS_CF, StringSerializer.get(), StringSerializer.get());
+                new HColumnFamilyImpl<String, String>(
+                        keyspace_,
+                        CassandraUtils.LOCALCONTROLLERS_CF,
+                        StringSerializer.get(),
+                        StringSerializer.get());
+        
             columnFamily.addKey("0");
             columnFamily.addColumnName("hostname");
 
@@ -568,7 +596,12 @@ public class TestGroupManagerCassandraRepository extends TestCase
        
        //check the mapping
        HColumnFamily<String, String> mappingFamily =
-               new HColumnFamilyImpl<String, String>(keyspace_, CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, StringSerializer.get(), StringSerializer.get());
+               new HColumnFamilyImpl<String, String>(
+                       keyspace_,
+                       CassandraUtils.LOCALCONTROLLERS_MAPPING_CF,
+                       StringSerializer.get(),
+                       StringSerializer.get());
+       
        mappingFamily.addKey("10.0.0.1:0");
        mappingFamily.addColumnName("id");
   
@@ -585,14 +618,14 @@ public class TestGroupManagerCassandraRepository extends TestCase
      */
     public void testDropLocalControllerPassiveForce()
     {
-        for(int i=0; i<2; i++)
+        for (int i = 0; i < 2; i++)
         {
             LocalControllerDescription localControllerDescription = new LocalControllerDescription();
             localControllerDescription.setId(String.valueOf(i));
             localControllerDescription.setStatus(LocalControllerStatus.PASSIVE);
             localControllerDescription.getControlDataAddress().setPort(i);
             localControllerDescription.getControlDataAddress().setAddress("10.0.0.1");
-            if (i%2==0)
+            if (i % 2 == 0)
             {
                 localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);    
             }
@@ -605,7 +638,12 @@ public class TestGroupManagerCassandraRepository extends TestCase
         // Get the description 
         
         HColumnFamily<String, String> columnFamily =
-                new HColumnFamilyImpl<String, String>(keyspace_, CassandraUtils.LOCALCONTROLLERS_CF, StringSerializer.get(), StringSerializer.get());
+                new HColumnFamilyImpl<String, String>(
+                        keyspace_,
+                        CassandraUtils.LOCALCONTROLLERS_CF,
+                        StringSerializer.get(),
+                        StringSerializer.get());
+        
             columnFamily.addKey("1");
             columnFamily.addColumnName("hostname");
 
@@ -614,7 +652,12 @@ public class TestGroupManagerCassandraRepository extends TestCase
        
        //check the mapping
        HColumnFamily<String, String> mappingFamily =
-               new HColumnFamilyImpl<String, String>(keyspace_, CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, StringSerializer.get(), StringSerializer.get());
+               new HColumnFamilyImpl<String, String>(
+                       keyspace_,
+                       CassandraUtils.LOCALCONTROLLERS_MAPPING_CF,
+                       StringSerializer.get(),
+                       StringSerializer.get());
+       
        mappingFamily.addKey("10.0.0.1:1");
        mappingFamily.addColumnName("id");
   
@@ -632,14 +675,14 @@ public class TestGroupManagerCassandraRepository extends TestCase
      */
     public void testDropLocalControllerActiveForce()
     {
-        for(int i=0; i<2; i++)
+        for (int i = 0; i < 2; i++)
         {
             LocalControllerDescription localControllerDescription = new LocalControllerDescription();
             localControllerDescription.setId(String.valueOf(i));
             localControllerDescription.setStatus(LocalControllerStatus.PASSIVE);
             localControllerDescription.getControlDataAddress().setPort(i);
             localControllerDescription.getControlDataAddress().setAddress("10.0.0.1");
-            if (i%2==0)
+            if (i % 2 == 0)
             {
                 localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);    
             }
@@ -650,7 +693,12 @@ public class TestGroupManagerCassandraRepository extends TestCase
 
         // Check the database
         HColumnFamily<String, String> columnFamily =
-                new HColumnFamilyImpl<String, String>(keyspace_, CassandraUtils.LOCALCONTROLLERS_CF, StringSerializer.get(), StringSerializer.get());
+                new HColumnFamilyImpl<String, String>(
+                        keyspace_,
+                        CassandraUtils.LOCALCONTROLLERS_CF,
+                        StringSerializer.get(),
+                        StringSerializer.get());
+        
         columnFamily.addKey("0");
         columnFamily.addColumnName("hostname");
 
@@ -659,7 +707,12 @@ public class TestGroupManagerCassandraRepository extends TestCase
        
        //check the mapping
        HColumnFamily<String, String> mappingFamily =
-               new HColumnFamilyImpl<String, String>(keyspace_, CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, StringSerializer.get(), StringSerializer.get());
+               new HColumnFamilyImpl<String, String>(
+                       keyspace_,
+                       CassandraUtils.LOCALCONTROLLERS_MAPPING_CF,
+                       StringSerializer.get(),
+                       StringSerializer.get());
+       
        mappingFamily.addKey("10.0.0.1:0");
        mappingFamily.addColumnName("id");
   
@@ -677,14 +730,14 @@ public class TestGroupManagerCassandraRepository extends TestCase
      */
     public void testDropLocalControllerPassiveNotForce()
     {
-        for(int i=0; i<2; i++)
+        for (int i = 0; i < 2; i++)
         {
             LocalControllerDescription localControllerDescription = new LocalControllerDescription();
             localControllerDescription.setId(String.valueOf(i));
             localControllerDescription.setStatus(LocalControllerStatus.PASSIVE);
             localControllerDescription.getControlDataAddress().setPort(i);
             localControllerDescription.getControlDataAddress().setAddress("10.0.0.1");
-            if (i%2==0)
+            if (i % 2 == 0)
             {
                 localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);    
             }
@@ -697,7 +750,11 @@ public class TestGroupManagerCassandraRepository extends TestCase
         // Get the description 
         
         HColumnFamily<String, String> columnFamily =
-                new HColumnFamilyImpl<String, String>(keyspace_, CassandraUtils.LOCALCONTROLLERS_CF, StringSerializer.get(), StringSerializer.get());
+                new HColumnFamilyImpl<String, String>(
+                        keyspace_,
+                        CassandraUtils.LOCALCONTROLLERS_CF,
+                        StringSerializer.get(),
+                        StringSerializer.get());
             columnFamily.addKey("1");
             columnFamily.addColumnName("hostname");
 
@@ -706,7 +763,12 @@ public class TestGroupManagerCassandraRepository extends TestCase
        
      //check the mapping
        HColumnFamily<String, String> mappingFamily =
-               new HColumnFamilyImpl<String, String>(keyspace_, CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, StringSerializer.get(), StringSerializer.get());
+               new HColumnFamilyImpl<String, String>(
+                       keyspace_,
+                       CassandraUtils.LOCALCONTROLLERS_MAPPING_CF,
+                       StringSerializer.get(),
+                       StringSerializer.get());
+       
        mappingFamily.addKey("10.0.0.1:1");
        mappingFamily.addColumnName("id");
   
@@ -715,6 +777,9 @@ public class TestGroupManagerCassandraRepository extends TestCase
        
     }
     
+    /**
+     * Test Change local controller status.
+     */
     public void testChangeLocalControllerStatus()
     {
         LocalControllerDescription localControllerDescription = new LocalControllerDescription();
@@ -747,7 +812,12 @@ public class TestGroupManagerCassandraRepository extends TestCase
         
      // Check the database
         HColumnFamily<String, String> columnFamily =
-                new HColumnFamilyImpl<String, String>(keyspace_, CassandraUtils.VIRTUALMACHINES_CF, StringSerializer.get(), StringSerializer.get());
+                new HColumnFamilyImpl<String, String>(
+                        keyspace_,
+                        CassandraUtils.VIRTUALMACHINES_CF,
+                        StringSerializer.get(),
+                        StringSerializer.get());
+        
             columnFamily.addKey("test-vm");
             columnFamily.addColumnName("ipAddress")
             .addColumnName("xmlRepresentation")
@@ -778,7 +848,10 @@ public class TestGroupManagerCassandraRepository extends TestCase
     }
     
     
-    public void testAddAggregatedMonitoringData ()
+    /**
+     * Test add aggregated monitoring data.
+     */
+    public void testAddAggregatedMonitoringData()
     {
         LocalControllerDescription localControllerDescription = new LocalControllerDescription();
         
@@ -793,7 +866,7 @@ public class TestGroupManagerCassandraRepository extends TestCase
         
         
         ArrayList<VirtualMachineMonitoringData> monitoringDatas = new ArrayList<VirtualMachineMonitoringData>();
-        for (int i=0 ; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             VirtualMachineMonitoringData monitoringData = new VirtualMachineMonitoringData();
             monitoringData.setTimeStamp(Long.valueOf(i));
@@ -823,13 +896,13 @@ public class TestGroupManagerCassandraRepository extends TestCase
         VirtualMachineMetaData retrievedDescription = new VirtualMachineMetaData();
         for (HColumn<Long, Object> col : columns.get().getColumns())
         {
-            VirtualMachineMonitoringData summary = (VirtualMachineMonitoringData) col.getValue() ;
+            VirtualMachineMonitoringData summary = (VirtualMachineMonitoringData) col.getValue();
             retrievedDescription.getUsedCapacity().put(summary.getTimeStamp(), summary);
         }
         
         assertNotNull(retrievedDescription.getUsedCapacity());
         assertEquals(10, retrievedDescription.getUsedCapacity().size());
-        for (int i=0; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             assertTrue(retrievedDescription.getUsedCapacity().containsKey(Long.valueOf(i)));
         }
@@ -844,7 +917,7 @@ public class TestGroupManagerCassandraRepository extends TestCase
      */
     public void testGetLocalControllerDescriptionsUnassigned()
     {
-        for(int i=0; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             
             LocalControllerDescription localControllerDescription = new LocalControllerDescription();
@@ -854,9 +927,10 @@ public class TestGroupManagerCassandraRepository extends TestCase
         }
         
         CassandraUtils.unassignNodes(keyspace_, CassandraUtils.LOCALCONTROLLERS_CF);
-        ArrayList<LocalControllerDescription> localControllers = repository_.getLocalControllerDescriptions(0, false, false);
+        ArrayList<LocalControllerDescription> localControllers = 
+                repository_.getLocalControllerDescriptions(0, false, false);
         
-        assertEquals(0,localControllers.size());
+        assertEquals(0, localControllers.size());
     }
     
 }

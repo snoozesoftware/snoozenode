@@ -1,7 +1,5 @@
 package org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.impl;
 
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +7,7 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
+
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
@@ -17,6 +16,11 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.Vi
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPlan;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
+
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
+
+
 
 
 

@@ -4,39 +4,23 @@ package org.inria.myriads.snoozenode.database.api.impl.cassandra;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 import junit.framework.TestCase;
 
-import me.prettyprint.cassandra.serializers.BooleanSerializer;
-import me.prettyprint.cassandra.serializers.LongSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.service.CassandraHostConfigurator;
-import me.prettyprint.cassandra.service.HColumnFamilyImpl;
 import me.prettyprint.hector.api.Cluster;
-import me.prettyprint.hector.api.HColumnFamily;
 import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.beans.ColumnSlice;
-import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.factory.HFactory;
-import me.prettyprint.hector.api.mutation.Mutator;
-import me.prettyprint.hector.api.query.QueryResult;
-import me.prettyprint.hector.api.query.SliceQuery;
-
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
-import org.inria.myriads.snoozecommon.communication.groupmanager.ListenSettings;
-import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
-import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerLocation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraUtils;
-import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.JsonSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,16 +39,19 @@ public class TestCassandraRepository extends TestCase
     /** Logger. */
     private static final Logger log_ = LoggerFactory.getLogger(TestGroupManagerCassandraRepository.class);
     
+    /** Repository under test. */
     private CassandraRepository repository_;
 
+    /** Cassandra Cluster.*/
     private Cluster cluster_;
 
+    /** Keyspace .*/
     private Keyspace keyspace_;
 
     
     @Override
-    protected void setUp() throws Exception {
-        // TODO Auto-generated method stub
+    protected void setUp() throws Exception 
+    {
         System.getProperties().put("org.restlet.engine.loggerFacadeClass", 
                 "org.restlet.ext.slf4j.Slf4jLoggerFacade");
         String logFile = "./configs/log4j.xml";
@@ -78,7 +65,7 @@ public class TestCassandraRepository extends TestCase
             System.out.println("Log file " + logFile + " does not exist or is not readable! Falling back to default!");
             BasicConfigurator.configure();
         }
-        cluster_ = HFactory.getOrCreateCluster("Test Cluster",new CassandraHostConfigurator("localhost:9160"));
+        cluster_ = HFactory.getOrCreateCluster("Test Cluster", new CassandraHostConfigurator("localhost:9160"));
         
         keyspace_ = HFactory.createKeyspace("snooze", cluster_);   
         
@@ -90,7 +77,8 @@ public class TestCassandraRepository extends TestCase
     
 
     @Override
-    protected void tearDown() throws Exception {
+    protected void tearDown() throws Exception 
+    {
         
     }
     
@@ -114,7 +102,13 @@ public class TestCassandraRepository extends TestCase
                 groupManagerDescription, false, true);
         
         
-        ArrayList<GroupManagerDescription> groupManagers = repository_.getGroupManagerDescriptionsOnly(String.valueOf(i), 1, false,0, new ArrayList<String>());
+        ArrayList<GroupManagerDescription> groupManagers = 
+                repository_.getGroupManagerDescriptionsOnly(
+                        String.valueOf(i),
+                        1,
+                        false,
+                        0,
+                        new ArrayList<String>());
         assertEquals(1, groupManagers.size());
         assertEquals("0", groupManagers.get(0).getId());
         
@@ -129,7 +123,7 @@ public class TestCassandraRepository extends TestCase
      */
     public void testGetGroupManagerDescriptionsOnlyFetchAllWithTombstones()
     {
-        for (int i = 0; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             GroupManagerDescription groupManagerDescription = new GroupManagerDescription();
             groupManagerDescription.setId(String.valueOf(i));
@@ -147,12 +141,21 @@ public class TestCassandraRepository extends TestCase
         
         CassandraUtils.drop(keyspace_, Arrays.asList("0", "1", "2", "3", "4"), CassandraUtils.GROUPMANAGERS_CF);
         
-        ArrayList<GroupManagerDescription> groupManagers = repository_.getGroupManagerDescriptionsOnly("", 10, false,0, new ArrayList<String>());
+        ArrayList<GroupManagerDescription> groupManagers = 
+                repository_.getGroupManagerDescriptionsOnly(
+                        "",
+                        10,
+                        false,
+                        0,
+                        new ArrayList<String>());
         assertEquals(5, groupManagers.size());
         
     }
     
     /**
+     * 
+     * Test GetGroupManagerOnly.
+     * 
      * 10 GMs 
      * Fetch all
      * 
@@ -160,7 +163,7 @@ public class TestCassandraRepository extends TestCase
      */
     public void testGetGroupManagerDescriptionsOnlyFetchAllWithoutTombstones()
     {
-        for (int i = 0; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             GroupManagerDescription groupManagerDescription = new GroupManagerDescription();
             groupManagerDescription.setId(String.valueOf(i));
@@ -176,7 +179,13 @@ public class TestCassandraRepository extends TestCase
         }
         
         
-        ArrayList<GroupManagerDescription> groupManagers = repository_.getGroupManagerDescriptionsOnly("", 10, false,0, new ArrayList<String>());
+        ArrayList<GroupManagerDescription> groupManagers = 
+                repository_.getGroupManagerDescriptionsOnly(
+                        "",
+                        10,
+                        false,
+                        0,
+                        new ArrayList<String>());
         assertEquals(10, groupManagers.size());
         
     }
@@ -193,7 +202,7 @@ public class TestCassandraRepository extends TestCase
      */
     public void testGetGroupManagerDescriptionsOnlyAssignedOnly()
     {
-        for (int i=0; i<100; i++)
+        for (int i = 0; i < 100; i++)
         {
             GroupManagerDescription groupManagerDescription = new GroupManagerDescription();
             groupManagerDescription.setId(String.valueOf(i));
@@ -208,12 +217,21 @@ public class TestCassandraRepository extends TestCase
                     groupManagerDescription, false, true);
         }
         
-        for(int i=0 ; i<50; i++)
+        for (int i = 0; i < 50; i++)
         {
-            CassandraUtils.unassignNodes(keyspace_, Arrays.asList(String.valueOf(i)),CassandraUtils.GROUPMANAGERS_CF);
+            CassandraUtils.unassignNodes(
+                    keyspace_, 
+                    Arrays.asList(String.valueOf(i)),
+                    CassandraUtils.GROUPMANAGERS_CF);
         }
         
-        List<GroupManagerDescription> groupManagers = repository_.getGroupManagerDescriptionsOnly("", 25, true,0,  new ArrayList<String>());
+        List<GroupManagerDescription> groupManagers = 
+                repository_.getGroupManagerDescriptionsOnly(
+                        "", 
+                        25, 
+                        true,
+                        0, 
+                        new ArrayList<String>());
         
         assertEquals(25, groupManagers.size());
         
@@ -232,7 +250,7 @@ public class TestCassandraRepository extends TestCase
      */
     public void testGetGroupManagerDescriptionsWithoutGroupLeader()
     {
-        for (int i=0; i<100; i++)
+        for (int i = 0; i < 100; i++)
         {
             GroupManagerDescription groupManagerDescription = new GroupManagerDescription();
             groupManagerDescription.setId(String.valueOf(i));
@@ -243,7 +261,7 @@ public class TestCassandraRepository extends TestCase
             groupManagerDescription.getListenSettings().getControlDataAddress().setPort(5000);
             groupManagerDescription.getListenSettings().getMonitoringDataAddress().setAddress("127.0.0.1");
             groupManagerDescription.getListenSettings().getMonitoringDataAddress().setPort(6000);
-            if (i==10)
+            if (i == 10)
             {
                 repository_.addGroupManagerDescriptionCassandra(
                         groupManagerDescription, true, true);
@@ -256,7 +274,13 @@ public class TestCassandraRepository extends TestCase
         }
         
 
-        List<GroupManagerDescription> groupManagers = repository_.getGroupManagerDescriptionsOnly("", 100, true,0,  Arrays.asList(String.valueOf(10)));
+        List<GroupManagerDescription> groupManagers = 
+                repository_.getGroupManagerDescriptionsOnly(
+                        "",
+                        100,
+                        true,
+                        0,
+                        Arrays.asList(String.valueOf(10)));
         
         assertEquals(99, groupManagers.size());
         
@@ -266,6 +290,8 @@ public class TestCassandraRepository extends TestCase
     
     /**
      * 
+     * Test GetLocalControllerDescriptionsOnly.
+     * 
      * 10 localcontrollers
      * 5 assigned to gm 0
      * 5 assigned to gm 1
@@ -274,20 +300,29 @@ public class TestCassandraRepository extends TestCase
      */
     public void testCasandraRepositoryAllLocalControllerOfAGroupmanager()
     {
-        for(int i=0; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             
             LocalControllerDescription localControllerDescription = new LocalControllerDescription();
             localControllerDescription.setId(String.valueOf(i));
             localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);
-            repository_.addLocalControllerDescriptionCassandra(String.valueOf(i%2), localControllerDescription);
+            repository_.addLocalControllerDescriptionCassandra(String.valueOf(i % 2), localControllerDescription);
         }
-        ArrayList<LocalControllerDescription> localControllers = repository_.getLocalControllerDescriptionsOnly("1", null, -1, 0, false, true);
+        ArrayList<LocalControllerDescription> localControllers = 
+                repository_.getLocalControllerDescriptionsOnly(
+                        "1",
+                        null,
+                        -1,
+                        0,
+                        false,
+                        true);
     
         assertEquals(5, localControllers.size());
     }
     
     /**
+     * 
+     *  Test GetLocalControllerDescriptionsOnly.
      * 
      * 10 localcontrollers
      * 5 assigned to gm 0
@@ -299,22 +334,29 @@ public class TestCassandraRepository extends TestCase
      */
     public void testCasandraRepositoryAllLocalController()
     {
-        for(int i=0; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             
             LocalControllerDescription localControllerDescription = new LocalControllerDescription();
             localControllerDescription.setId(String.valueOf(i));
             localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);
-            repository_.addLocalControllerDescriptionCassandra(String.valueOf(i%2), localControllerDescription);
+            repository_.addLocalControllerDescriptionCassandra(String.valueOf(i % 2), localControllerDescription);
         }
         
         List<String> unassigned = Arrays.asList("0", "1", "2", "3");
         CassandraUtils.unassignNodes(keyspace_, unassigned, CassandraUtils.LOCALCONTROLLERS_CF);
         
-        ArrayList<LocalControllerDescription> localControllers = repository_.getLocalControllerDescriptionsOnly(null, null, -1, 0, false, false);
+        ArrayList<LocalControllerDescription> localControllers = 
+                repository_.getLocalControllerDescriptionsOnly(
+                        null,
+                        null,
+                        -1,
+                        0,
+                        false,
+                        false);
 
         assertEquals(10, localControllers.size());
-        for(LocalControllerDescription localController : localControllers)
+        for (LocalControllerDescription localController : localControllers)
         {
             if (unassigned.contains(localController.getId()))
             {
@@ -329,6 +371,8 @@ public class TestCassandraRepository extends TestCase
     
     /**
      * 
+     * Test GetLocalControllerDescriptionsOnly.
+     * 
      * 10 localcontrollers
      * 5 assigned to gm 0
      * 5 assigned to gm 1
@@ -337,21 +381,30 @@ public class TestCassandraRepository extends TestCase
      */
     public void testCasandraRepositorySomeLocalControllerOfAGroupmanager()
     {
-        for(int i=0; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             
             LocalControllerDescription localControllerDescription = new LocalControllerDescription();
             localControllerDescription.setId(String.valueOf(i));
             localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);
-            repository_.addLocalControllerDescriptionCassandra(String.valueOf(i%2), localControllerDescription);
+            repository_.addLocalControllerDescriptionCassandra(String.valueOf(i % 2), localControllerDescription);
         }
         
-        ArrayList<LocalControllerDescription> localControllers = repository_.getLocalControllerDescriptionsOnly("1", null, 3, 0, false, true);
+        ArrayList<LocalControllerDescription> localControllers = 
+                repository_.getLocalControllerDescriptionsOnly(
+                        "1",
+                        null,
+                        3, 
+                        0,
+                        false,
+                        true);
     
         assertEquals(3, localControllers.size());
     }
     
     /**
+     *
+     * Test GetLocalControllerDescriptionsOnly.
      * 
      * 10 localcontrollers
      * 5 assigned to gm 0
@@ -361,21 +414,21 @@ public class TestCassandraRepository extends TestCase
      */
     public void testCasandraRepositoryAssignedLocalControllerOfAGroupmanager()
     {
-        for(int i=0; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             
             LocalControllerDescription localControllerDescription = new LocalControllerDescription();
             String localControllerId = String.valueOf(i);
             localControllerDescription.setId(localControllerId);
             localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);
-            String groupManagerId = String.valueOf(i%2);
+            String groupManagerId = String.valueOf(i % 2);
             LocalControllerLocation location = new LocalControllerLocation();
             
             location.setLocalControllerId(localControllerId);
             location.setGroupManagerId(groupManagerId);
             NetworkAddress networkAddress = new NetworkAddress();
-            networkAddress.setAddress("10.0.0."+groupManagerId);
-            networkAddress.setPort(6000+i%2);
+            networkAddress.setAddress("10.0.0." + groupManagerId);
+            networkAddress.setPort(6000 + i % 2);
             location.setGroupManagerControlDataAddress(networkAddress);
             localControllerDescription.setLocation(location);
             repository_.addLocalControllerDescriptionCassandra(groupManagerId, localControllerDescription);
@@ -383,7 +436,14 @@ public class TestCassandraRepository extends TestCase
         
         CassandraUtils.unassignNodes(keyspace_, Arrays.asList("1", "3"), CassandraUtils.LOCALCONTROLLERS_CF);
         
-        ArrayList<LocalControllerDescription> localControllers = repository_.getLocalControllerDescriptionsOnly("1", null, -1, 0, false, true);
+        ArrayList<LocalControllerDescription> localControllers = 
+                repository_.getLocalControllerDescriptionsOnly(
+                        "1",
+                        null,
+                        -1,
+                        0,
+                        false,
+                        true);
     
         assertEquals(3, localControllers.size());
         for (LocalControllerDescription localController : localControllers)
@@ -398,6 +458,10 @@ public class TestCassandraRepository extends TestCase
     
     
     /** 
+    * 
+    * Test GetLocalControllerDescriptionsOnly.
+    * 
+    * 
     * 10 localcontrollers
     * 5 assigned to gm 0
     * 5 assigned to gm 1 
@@ -411,21 +475,28 @@ public class TestCassandraRepository extends TestCase
     */
    public void testCasandraRepositoryAssignedAndAciveLocalControllerOfAGroupmanager()
    {
-       for(int i=0; i<10; i++)
+       for (int i = 0; i < 10; i++)
        {
            
            LocalControllerDescription localControllerDescription = new LocalControllerDescription();
            localControllerDescription.setId(String.valueOf(i));
            localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);
-           if((i-1)%4 != 0)
+           if ((i - 1) % 4 != 0)
                localControllerDescription.setStatus(LocalControllerStatus.PASSIVE);
            
-           repository_.addLocalControllerDescriptionCassandra(String.valueOf(i%2), localControllerDescription);
+           repository_.addLocalControllerDescriptionCassandra(String.valueOf(i % 2), localControllerDescription);
        }
        
        CassandraUtils.unassignNodes(keyspace_, Arrays.asList("1", "3"), CassandraUtils.LOCALCONTROLLERS_CF);
        
-       ArrayList<LocalControllerDescription> localControllers = repository_.getLocalControllerDescriptionsOnly("1", null, -1, 0, true, true);
+       ArrayList<LocalControllerDescription> localControllers = 
+               repository_.getLocalControllerDescriptionsOnly(
+                       "1",
+                       null,
+                       -1,
+                       0, 
+                       true,
+                       true);
    
        assertEquals(2, localControllers.size());
        for (LocalControllerDescription localController : localControllers)
@@ -437,6 +508,7 @@ public class TestCassandraRepository extends TestCase
    }
     
     /**
+     * Test GetLocalControllerDescriptionsOnly.
      * 
      * 10 LCs
      * Fetch LC #2 
@@ -444,16 +516,23 @@ public class TestCassandraRepository extends TestCase
      */
     public void testCasandraRepository1LC()
     {
-        for(int i=0; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             
             LocalControllerDescription localControllerDescription = new LocalControllerDescription();
             localControllerDescription.setId(String.valueOf(i));
             localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);
-            repository_.addLocalControllerDescriptionCassandra(String.valueOf(i%2), localControllerDescription);
+            repository_.addLocalControllerDescriptionCassandra(String.valueOf(i % 2), localControllerDescription);
         }
         
-        ArrayList<LocalControllerDescription> localControllers = repository_.getLocalControllerDescriptionsOnly(null,String.valueOf("2"), 1, 0, false, true);
+        ArrayList<LocalControllerDescription> localControllers = 
+                repository_.getLocalControllerDescriptionsOnly(
+                        null,
+                        String.valueOf("2"),
+                        1,
+                        0,
+                        false,
+                        true);
     
         assertEquals(1, localControllers.size());
         //assertEquals("2", localControllers.get("2").getId());
@@ -462,6 +541,9 @@ public class TestCassandraRepository extends TestCase
     }
     
     /**
+     * 
+     * Test GetVirtualMachineDescriptionsOnly.
+     * 
      * 1 GM
      * 2 LCs
      * 10 vms (round robin assignements)
@@ -470,21 +552,31 @@ public class TestCassandraRepository extends TestCase
      */
     public void testGetVirtualMachineDescriptionsGetAll1GM2LCs10VMs()
     {
-        for (int i=0; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             VirtualMachineMetaData virtualMachine = new VirtualMachineMetaData();
             virtualMachine.getVirtualMachineLocation().setVirtualMachineId("vm" + String.valueOf(i));
             virtualMachine.getVirtualMachineLocation().setGroupManagerId("gm0");
-            virtualMachine.getVirtualMachineLocation().setLocalControllerId("lc"+String.valueOf(i%2));
+            virtualMachine.getVirtualMachineLocation().setLocalControllerId("lc" + String.valueOf(i % 2));
             repository_.addVirtualMachineCassandra(virtualMachine);
         }
-        ArrayList<VirtualMachineMetaData> virtualMachines = repository_.getVirtualMachineDescriptionsOnly(null, null, null, -1, 0, true);
+        ArrayList<VirtualMachineMetaData> virtualMachines =
+                repository_.getVirtualMachineDescriptionsOnly(
+                        null,
+                        null,
+                        null,
+                        -1,
+                        0,
+                        true);
         
         //Gets all
         assertEquals(10, virtualMachines.size());
         
         //unassign some of them
-        CassandraUtils.unassignNodes(keyspace_, Arrays.asList("vm0", "vm1", "vm5", "vm6"), CassandraUtils.VIRTUALMACHINES_CF);
+        CassandraUtils.unassignNodes(
+                keyspace_, 
+                Arrays.asList("vm0", "vm1", "vm5", "vm6"), 
+                CassandraUtils.VIRTUALMACHINES_CF);
         virtualMachines = repository_.getVirtualMachineDescriptionsOnly(null, null, null, -1, 0, true);
         assertEquals(6, virtualMachines.size());
         

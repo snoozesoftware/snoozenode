@@ -3,6 +3,8 @@ package org.inria.myriads.snoozenode.database.api.impl.memory;
 
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.easymock.EasyMock;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
@@ -10,28 +12,23 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGrou
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
-import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
-import org.inria.myriads.snoozenode.database.api.impl.memory.GroupLeaderMemoryRepository;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.monitoring.TransportProtocol;
-import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
-import org.inria.snoozenode.external.notifier.ExternalNotificationType;
-import org.inria.snoozenode.external.notifier.ExternalNotifier;
 
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
 
-import junit.framework.TestCase;
 
+
+/**
+ * 
+ * Test group leaer memory repository.
+ * 
+ * @author msimonin
+ *
+ */
 public class TestGroupLeaderMemoryRepository extends TestCase
 {
+    /** Group Leader memory under test.*/
+    private GroupLeaderMemoryRepository repository_;
 
-    GroupLeaderMemoryRepository repository_;
-    /**
-     * 
-     * Setup method.
-     * 
-     */
+    
     @Override
     protected void setUp() throws Exception
     {
@@ -41,7 +38,7 @@ public class TestGroupLeaderMemoryRepository extends TestCase
                new ExternalNotifierSettings();
         
         NodeConfiguration nodeConfiguration = EasyMock.createMock(NodeConfiguration.class);
-        repository_ = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0);
+        repository_ = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets, 0);
     }
     
     /**
@@ -107,23 +104,29 @@ public class TestGroupLeaderMemoryRepository extends TestCase
         assertEquals(gm1, assignedGroupManager.getGroupManager());
     }
 
+    /**
+     * Test generate ips pool for 1 subnet.
+     */
     public void testGenerateAddressPoolOneSubnet()
     {
         String[] virtualMachineSubnets = {"192.168.122.0/30"};
         GroupManagerDescription groupLeader = new GroupManagerDescription();
 
-        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0);
+        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets, 0);
         List<String> ips = repository.generateAddressPool(virtualMachineSubnets);
-        assertEquals(2,ips.size());
+        assertEquals(2, ips.size());
     }
     
+    /**
+     * Test generate ips pool for 2 subnets.
+     */
     public void testGenerateAddressPoolTwoSubnets()
     {
         String[] virtualMachineSubnets = {"192.168.122.0/22", "10.0.0.1/22"};
         GroupManagerDescription groupLeader = new GroupManagerDescription();
-        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets,0);
+        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets, 0);
         List<String> ips = repository.generateAddressPool(virtualMachineSubnets);
-        assertEquals(2044,ips.size());
+        assertEquals(2044, ips.size());
 
     }
 }
