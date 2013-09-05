@@ -9,7 +9,9 @@ import me.prettyprint.cassandra.serializers.BooleanSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.service.CassandraHostConfigurator;
+import me.prettyprint.cassandra.service.HColumnFamilyImpl;
 import me.prettyprint.hector.api.Cluster;
+import me.prettyprint.hector.api.HColumnFamily;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -1055,6 +1057,35 @@ public class CassandraRepository
         }
 
         return virtualMachines;  
+    }
+    
+    /**
+     * 
+     * Gets the local controller id from the mapping column family.
+     * 
+     * @param contactInformation        the network address
+     * @return  the local controller id.
+     */
+    protected String getLocalControllerId(NetworkAddress contactInformation)
+    {
+        HColumnFamily<String, String> mappingColumnFamily =
+                new HColumnFamilyImpl<String, String>(
+                        getKeyspace(),
+                        CassandraUtils.LOCALCONTROLLERS_MAPPING_CF,
+                        StringSerializer.get(),
+                        StringSerializer.get());
+        
+        mappingColumnFamily.addKey(contactInformation.toString());
+        mappingColumnFamily.addColumnName("id");
+        
+        String localControllerId = mappingColumnFamily.getValue("id", StringSerializer.get());
+        if (localControllerId == null)
+        {
+            log_.debug("no id - address mapping exists for this local Controller");
+            return null;
+        }
+        
+        return localControllerId;
     }
     
     /**

@@ -109,7 +109,7 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
     {   
 
         log_.debug("Adding localController Description to the cassandra cluster");
-         
+             
         boolean isAdded = addLocalControllerDescriptionCassandra(groupManagerCache_.getGroupManagerId(), description);
         // add vms
         if (!isAdded)

@@ -333,23 +333,14 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         //look in the localcontroller column family (key is the uuid)
         try
         {
-            HColumnFamily<String, String> mappingColumnFamily =
-                    new HColumnFamilyImpl<String, String>(
-                            getKeyspace(),
-                            CassandraUtils.LOCALCONTROLLERS_MAPPING_CF,
-                            StringSerializer.get(),
-                            StringSerializer.get());
             
-            mappingColumnFamily.addKey(contactInformation.toString());
-            mappingColumnFamily.addColumnName("id");
-            
-            String localControllerId = mappingColumnFamily.getValue("id", StringSerializer.get());
+            String localControllerId = getLocalControllerId(contactInformation);
+            log_.debug("Found a previous local controller with this contact information");
             if (localControllerId == null)
             {
-                log_.warn("no id - address mapping exists for this local Controller");
-                return null;
+                log_.debug("no id - address mapping exists for this local Controller");
             }
-            // we got the corresponding lc id.
+            
             
             HColumnFamily<String, String> localControllerColumnFamily = new HColumnFamilyImpl<String, String>(
                             getKeyspace(), 
@@ -361,7 +352,7 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
                 .addColumnName("isAssigned")
                 .addColumnName("id");
                 
-                String groupManagerId  = localControllerColumnFamily.getValue("groupmanager", StringSerializer.get());
+                String groupManagerId  = localControllerColumnFamily.getValue("groupManager", StringSerializer.get());
                 boolean isAssigned = localControllerColumnFamily.getValue("isAssigned", BooleanSerializer.get());
                
                 AssignedGroupManager assignedGroupManager = null;

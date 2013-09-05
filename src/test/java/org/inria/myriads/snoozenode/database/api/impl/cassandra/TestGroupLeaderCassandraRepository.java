@@ -30,6 +30,7 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDes
 import org.inria.myriads.snoozecommon.communication.groupmanager.ListenSettings;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraUtils;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.JsonSerializer;
 import org.slf4j.Logger;
@@ -432,37 +433,31 @@ public class TestGroupLeaderCassandraRepository extends TestCase
      */
     public void testGetAssignedGroupManagerAssignedAndFound() 
     {
+        for (int i = 0; i<2; i++)
+        {
+            GroupManagerDescription groupManager = new GroupManagerDescription();
+            groupManager.setId("gm"+String.valueOf(i));
+            repository_.addGroupManagerDescription(groupManager);
+        }
+        
+        for (int i = 0; i<10; i++)
+        {
+            LocalControllerDescription localController = new LocalControllerDescription();
+            localController.getControlDataAddress().setAddress("10.0.0."+String.valueOf(i));
+            localController.getControlDataAddress().setPort(1000+i);
+            localController.setId("lc"+String.valueOf(i));
+            repository_.addLocalControllerDescriptionCassandra("gm"+String.valueOf(i % 2), localController);
+        }
         
         NetworkAddress contactInformation = new NetworkAddress();
         contactInformation.setAddress("10.0.0.1");
-        contactInformation.setPort(5000);
-        // Add some LCs
-        Mutator<String> mutator = HFactory.createMutator(keyspace_, StringSerializer.get());
-        mutator.addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("isAssigned", true, StringSerializer.get(), new BooleanSerializer())) 
-               .addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("groupmanager", "123"));
+        contactInformation.setPort(1001);
        
-        
-        mutator.insert(contactInformation.toString(), CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, HFactory.createStringColumn("id", "098"));
-        mutator.execute();
-        
-        // Add Gm
-        GroupManagerDescription groupManagerDescription = new GroupManagerDescription();
-        groupManagerDescription.setId("123");
-        groupManagerDescription.setHostname("mafalda");
-        groupManagerDescription.getHeartbeatAddress().setAddress("127.0.0.1");
-        groupManagerDescription.getHeartbeatAddress().setPort(9000);
-        groupManagerDescription.getListenSettings().getControlDataAddress().setAddress("127.0.0.1");
-        groupManagerDescription.getListenSettings().getControlDataAddress().setPort(5000);
-        groupManagerDescription.getListenSettings().getMonitoringDataAddress().setAddress("127.0.0.1");
-        groupManagerDescription.getListenSettings().getMonitoringDataAddress().setPort(6000);
-        
-        // Add
-        repository_.addGroupManagerDescription(groupManagerDescription);
-        
         AssignedGroupManager assignedGroupManager = repository_.getAssignedGroupManager(contactInformation);
+        // should get lc1 -> gm1
         assertNotNull(assignedGroupManager);
-        assertEquals("098", assignedGroupManager.getLocalControllerId());
-        assertEquals("123", assignedGroupManager.getGroupManager().getId());
+        assertEquals("lc1", assignedGroupManager.getLocalControllerId());
+        assertEquals("gm1", assignedGroupManager.getGroupManager().getId());
     }
 
     
