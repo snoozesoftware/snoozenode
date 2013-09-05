@@ -114,6 +114,7 @@
 	</logger>
 	
 	<logger name="org.inria.myriads.snoozenode.database">
+		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger>
 
@@ -123,6 +124,7 @@
 	</logger> 
 
 	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring.service.VirtualMachineMonitoringService">		
+		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger> 
 	

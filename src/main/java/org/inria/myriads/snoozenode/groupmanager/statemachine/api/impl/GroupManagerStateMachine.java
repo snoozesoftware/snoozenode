@@ -298,6 +298,14 @@ public class GroupManagerStateMachine
 
         log_.debug(String.format("Power cycling %d idle resources!", idleResources.size()));    
         PowerSavingAction action = energyManagementSettings_.getPowerSavingAction();
+        
+        ExternalNotifierUtils.send(
+                externalNotifier_,
+                ExternalNotificationType.SYSTEM,
+                new SystemMessage(SystemMessageType.ENERGY, idleResources),
+                "groupmanager." + repository_.getGroupManagerId()
+                );
+        
         EnergySaverUtils.powerCycleLocalControllers(idleResources, action, repository_);  
         setIdle();
         

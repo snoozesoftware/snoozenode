@@ -94,9 +94,10 @@ public final class EnergySaver
                 localControllers = repository_.getLocalControllerDescriptions(NUMBER_OF_MONITORING_ENTRIES,
                                                                               true,
                                                                               true);
-                                  
-                lockObject_.wait(TimeUtils.convertSecondsToMilliseconds(idleTimeThreshold));
-                
+                synchronized (lockObject_)
+                {
+                    lockObject_.wait(TimeUtils.convertSecondsToMilliseconds(idleTimeThreshold));
+                }
                          
                 if (isTerminated_)
                 {             

@@ -443,6 +443,12 @@ public final class LocalControllerBackend
     {
         boolean isPowerCycled = false;
         
+        ExternalNotifierUtils.send(
+                externalNotifier_,
+                ExternalNotificationType.SYSTEM,
+                new SystemMessage(SystemMessageType.ENERGY, localControllerDescription_),
+                "localcontroller." + localControllerDescription_.getId());
+        
         switch (powerSavingAction)
         {
             case suspendToRam:
@@ -464,6 +470,8 @@ public final class LocalControllerBackend
             default:
                 log_.error(String.format("This power cycling action is not supported: %s", powerSavingAction));
         }
+        
+        
         
         return isPowerCycled;
     }

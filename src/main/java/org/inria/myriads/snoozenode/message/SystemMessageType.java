@@ -30,6 +30,8 @@ public enum SystemMessageType
     /** GM state change to busy.*/
     GM_BUSY, 
     /** GM state change to idle.*/
-    GM_IDLE,
+    GM_IDLE, 
+    /** Energy management.*/
+    ENERGY,
 }
 
