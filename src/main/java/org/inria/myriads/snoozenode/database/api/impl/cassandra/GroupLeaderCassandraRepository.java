@@ -339,22 +339,26 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
             if (localControllerId == null)
             {
                 log_.debug("no id - address mapping exists for this local Controller");
+                return null;
             }
             
+            LocalControllerDescription localController = getLocalControllerDescription(localControllerId);
             
-            HColumnFamily<String, String> localControllerColumnFamily = new HColumnFamilyImpl<String, String>(
-                            getKeyspace(), 
-                            CassandraUtils.LOCALCONTROLLERS_CF, 
-                            StringSerializer.get(), 
-                            StringSerializer.get());
-                localControllerColumnFamily.addKey(localControllerId);
-                localControllerColumnFamily.addColumnName("groupmanager")
-                .addColumnName("isAssigned")
-                .addColumnName("id");
-                
-                String groupManagerId  = localControllerColumnFamily.getValue("groupManager", StringSerializer.get());
-                boolean isAssigned = localControllerColumnFamily.getValue("isAssigned", BooleanSerializer.get());
-               
+            boolean isAssigned = localController.getIsAssigned();
+            String groupManagerId = localController.getLocation().getGroupManagerId();
+//            HColumnFamily<String, String> localControllerColumnFamily = new HColumnFamilyImpl<String, String>(
+//                            getKeyspace(), 
+//                            CassandraUtils.LOCALCONTROLLERS_CF, 
+//                            StringSerializer.get(), 
+//                            StringSerializer.get());
+//                localControllerColumnFamily.addKey(localControllerId);
+//                localControllerColumnFamily.addColumnName("groupManager")
+//                .addColumnName("isAssigned")
+//                .addColumnName("id");
+//                
+//                String groupManagerId  = localControllerColumnFamily.getValue("groupManager", StringSerializer.get());
+//                boolean isAssigned = localControllerColumnFamily.getValue("isAssigned", BooleanSerializer.get());
+//               
                 AssignedGroupManager assignedGroupManager = null;
                 if (isAssigned && groupManagerId != null)
                 {
@@ -425,7 +429,7 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
      */
     public LocalControllerDescription getLocalControllerDescription(String localControllerId) 
     {
-        return null;
+        return this.getLocalControllerDescriptionOnly(localControllerId, 0);
     }
 
     /**

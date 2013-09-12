@@ -446,6 +446,7 @@ public class TestGroupLeaderCassandraRepository extends TestCase
             localController.getControlDataAddress().setAddress("10.0.0."+String.valueOf(i));
             localController.getControlDataAddress().setPort(1000+i);
             localController.setId("lc"+String.valueOf(i));
+            localController.getLocation().setGroupManagerId("gm" + String.valueOf( i % 2));
             repository_.addLocalControllerDescriptionCassandra("gm"+String.valueOf(i % 2), localController);
         }
         
@@ -500,36 +501,32 @@ public class TestGroupLeaderCassandraRepository extends TestCase
     
     /**
      * Test getAssignedGroupManager.
-     * Here the GM is found.
+     * Here the GM is not found.
      */
     public void testGetAssignedGroupManagerAssignedNotFound() 
     {
         
-        NetworkAddress contactInformation = new NetworkAddress();
-        contactInformation.setAddress("10.0.0.1");
-        contactInformation.setPort(5000);
+        for (int i = 0; i<2; i++)
+        {
+            GroupManagerDescription groupManager = new GroupManagerDescription();
+            groupManager.setId("gm"+String.valueOf(i));
+            repository_.addGroupManagerDescription(groupManager);
+        }
+        
         // Add some LCs
-        Mutator<String> mutator = HFactory.createMutator(keyspace_, StringSerializer.get());
-        mutator.addInsertion(contactInformation.toString(), CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("id", "098"))
-            .addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("isAssigned", true, StringSerializer.get(), new BooleanSerializer()))
-            .addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("groupmanager", "1234"));
-
-        mutator.insert(contactInformation.toString(), CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, HFactory.createStringColumn("id", "098"));
-        mutator.execute();
-        // Add Gm
-        GroupManagerDescription groupManagerDescription = new GroupManagerDescription();
-        groupManagerDescription.setId("123");
-        groupManagerDescription.setHostname("mafalda");
-        groupManagerDescription.getHeartbeatAddress().setAddress("127.0.0.1");
-        groupManagerDescription.getHeartbeatAddress().setPort(9000);
-        groupManagerDescription.getListenSettings().getControlDataAddress().setAddress("127.0.0.1");
-        groupManagerDescription.getListenSettings().getControlDataAddress().setPort(5000);
-        groupManagerDescription.getListenSettings().getMonitoringDataAddress().setAddress("127.0.0.1");
-        groupManagerDescription.getListenSettings().getMonitoringDataAddress().setPort(6000);
+        for (int i = 0; i<10; i++)
+        {
+            LocalControllerDescription localController = new LocalControllerDescription();
+            localController.getControlDataAddress().setAddress("10.0.0."+String.valueOf(i));
+            localController.getControlDataAddress().setPort(1000+i);
+            localController.setId("lc"+String.valueOf(i));
+            localController.getLocation().setGroupManagerId("gm" + String.valueOf( i % 2));
+            repository_.addLocalControllerDescriptionCassandra("gm"+String.valueOf(i % 2), localController);
+        }
         
-        // Add
-        repository_.addGroupManagerDescription(groupManagerDescription);
-        
+        NetworkAddress contactInformation = new NetworkAddress();
+        contactInformation.setAddress("192.168.1.1");
+        contactInformation.setPort(5000);
         AssignedGroupManager assignedGroupManager = repository_.getAssignedGroupManager(contactInformation);
         
         assertNull(assignedGroupManager);

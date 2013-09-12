@@ -103,6 +103,8 @@ public class CassandraRepository
         GroupManagerDescription groupManager = groupManagers.get(0);
         if (!groupManager.getId().equals(groupManagerId))
         {
+            log_.debug("The group manager id from cassandra doesn't match the needed group manager id.");
+            log_.debug(groupManagerId + " != " + groupManager.getId());
             return null;
         }
         return groupManager;
