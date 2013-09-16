@@ -101,7 +101,7 @@ public final class VirtualMachineManager
         repository_ = groupManagerRepository;
         stateMachine_ = stateMachine;
         submissionResponses_ = new HashMap<String, VirtualMachineSubmissionResponse>();
-        placementPolicy_ = GroupManagerPolicyFactory.newVirtualMachinePlacement(schedulerSettings.getPlacementPolicy(), 
+        placementPolicy_ = GroupManagerPolicyFactory.newVirtualMachinePlacement(schedulerSettings, 
                                                                                 estimator);
         estimator_ = estimator;
     }

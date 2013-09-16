@@ -26,14 +26,11 @@ import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
-import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
-import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
-import org.inria.myriads.snoozenode.database.enums.DatabaseType;
 import org.inria.myriads.snoozenode.exception.GroupLeaderInitException;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.GroupLeaderPolicyFactory;
@@ -77,6 +74,7 @@ public final class GroupLeaderInit
     /** Resource demand estimator. */
     private ResourceDemandEstimator estimator_;
 
+    /** External notifier.*/
     private ExternalNotifier externalNotifier_;
 
     /**
@@ -84,6 +82,7 @@ public final class GroupLeaderInit
      * 
      * @param nodeConfiguration         The node configuration
      * @param groupLeaderDescription    The group leader description
+     * @param externalNotifier          external notifier.
      * @throws Exception 
      */
     public GroupLeaderInit(NodeConfiguration nodeConfiguration, 

@@ -19,7 +19,6 @@
  */
 package org.inria.myriads.snoozenode.configurator.scheduler;
 
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Placement;
 
 /**
  * Group manager scheduler settings.
@@ -29,14 +28,18 @@ import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Placement
 public final class GroupManagerSchedulerSettings 
 {
     /** Placement policy. */
-    private Placement placementPolicy_;
-
+    private String placementPolicy_;
+    
+    /** Plugins directory. */
+    private String pluginsDirectory_;
+    
     /** Relocation parameters. */
     private RelocationSettings relocation_;
     
     /** Reconfiguration settings. */
     private ReconfigurationSettings reconfiguration_;
 
+    
     /** Empty constructor. */
     public GroupManagerSchedulerSettings()
     {
@@ -69,7 +72,7 @@ public final class GroupManagerSchedulerSettings
      * 
      * @param placementPolicy    The placement policy
      */
-    public void setPlacementPolicy(Placement placementPolicy) 
+    public void setPlacementPolicy(String placementPolicy) 
     {
         placementPolicy_ = placementPolicy;
     }
@@ -79,8 +82,27 @@ public final class GroupManagerSchedulerSettings
      * 
      * @return  The placement policy
      */
-    public Placement getPlacementPolicy() 
+    public String getPlacementPolicy() 
     {
         return placementPolicy_;
+    }
+
+    /**
+     * 
+     * Gets the plugin directory.
+     * 
+     * @return  the plugin directory String.
+     */
+    public String getPluginsDirectory()
+    {
+        return pluginsDirectory_;
+    }
+
+    /**
+     * @param pluginsDirectory the pluginsDirectory to set
+     */
+    public void setPluginsDirectory(String pluginsDirectory)
+    {
+        pluginsDirectory_ = pluginsDirectory;
     }
 }

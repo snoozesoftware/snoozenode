@@ -59,7 +59,6 @@ import org.inria.myriads.snoozenode.exception.NodeConfiguratorException;
 import org.inria.myriads.snoozenode.groupmanager.estimator.enums.Estimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Assignment;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Dispatching;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Placement;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfiguration;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Relocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
@@ -439,7 +438,10 @@ public final class JavaPropertyNodeConfigurator
     {
         GroupManagerSchedulerSettings groupManager = nodeConfiguration_.getGroupManagerScheduler();
         String placementPolicy = getProperty("groupManagerScheduler.placementPolicy");   
-        groupManager.setPlacementPolicy(Placement.valueOf(placementPolicy));
+        groupManager.setPlacementPolicy(String.valueOf(placementPolicy));
+        
+        String pluginsDirectory = getProperty("groupManagerScheduler.pluginsDirectory");
+        groupManager.setPluginsDirectory(pluginsDirectory);
         
         String overloadPolicy = getProperty("groupManagerScheduler.relocation.overloadPolicy");
         groupManager.getRelocationSettings().setOverloadPolicy(Relocation.valueOf(overloadPolicy));
