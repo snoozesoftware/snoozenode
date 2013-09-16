@@ -24,7 +24,7 @@ package org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums;
  * 
  * @author Eugen Feller
  */
-public enum Placement 
+public enum PlacementPolicy 
 {
     /** First-Fit. */
     FirstFit,
