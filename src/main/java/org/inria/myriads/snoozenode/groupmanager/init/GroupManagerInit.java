@@ -32,7 +32,6 @@ import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.ReconfigurationSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
-import org.inria.myriads.snoozenode.database.enums.DatabaseType;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.EnergySaverFactory;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.saver.EnergySaver;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
@@ -45,7 +44,6 @@ import org.inria.myriads.snoozenode.groupmanager.statemachine.api.impl.GroupMana
 import org.inria.myriads.snoozenode.heartbeat.HeartbeatFactory;
 import org.inria.myriads.snoozenode.heartbeat.message.HeartbeatMessage;
 import org.inria.myriads.snoozenode.heartbeat.sender.HeartbeatMulticastSender;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.quartz.SchedulerException;
@@ -101,7 +99,8 @@ public final class GroupManagerInit
      * Group manager logic constructor.
      * 
      * @param nodeConfiguration         The node configuration
-     * @param groupManagerDescription   The group manager description   
+     * @param groupManagerDescription   The group manager description
+     * @param externalNotifier          The external notifier   
      * @throws Exception                The exception
      */
     public GroupManagerInit(NodeConfiguration nodeConfiguration,

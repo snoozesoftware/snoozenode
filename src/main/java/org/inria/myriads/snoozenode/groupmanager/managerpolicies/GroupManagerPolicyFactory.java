@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Eugen Feller, INRIA <eugen.feller@inria.fr>
+ * Copyright (C) 2010-2012 Eugen Feller, INRIA <eugen.feller@inria.fr>
  *
  * This file is part of Snooze, a scalable, autonomic, and
  * energy-aware virtual machine (VM) management framework.
@@ -20,8 +20,8 @@
 package org.inria.myriads.snoozenode.groupmanager.managerpolicies;
 
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Placement;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfiguration;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Relocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
@@ -32,8 +32,11 @@ import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.VirtualMachineRelocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.impl.GreedyOverloadRelocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.impl.GreedyUnderloadRelocation;
+import org.inria.myriads.snoozenode.util.PluginUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+
 
 /**
  * Group manager policy factory.
@@ -53,32 +56,54 @@ public final class GroupManagerPolicyFactory
         throw new UnsupportedOperationException();
     }
     
+
     /**
+     * 
      * Creates a new virtual machine placement policy.
      * 
-     * @param placementPolicy    The placement policy
-     * @param estimator          The resource demand estimator
-     * @return                   The placement policy implementation
+     * @param schedulerSettings         GroupManager scheduler settings.
+     * @param estimator                 Resource demand estimator.
+     * @return  The placement policy.
      */
-    public static PlacementPolicy newVirtualMachinePlacement(Placement placementPolicy,
+    @SuppressWarnings("unchecked")
+    public static PlacementPolicy newVirtualMachinePlacement(GroupManagerSchedulerSettings schedulerSettings,
                                                              ResourceDemandEstimator estimator) 
     {
-        Guard.check(placementPolicy);
-        log_.debug(String.format("Selected virtual machine placement policy: %s", placementPolicy));
+        Guard.check(schedulerSettings, estimator);
+       
         
         PlacementPolicy placement = null;
-        switch (placementPolicy) 
+        String placementPolicy = schedulerSettings.getPlacementPolicy();
+        log_.debug(String.format("Selected virtual machine placement policy: %s", placementPolicy));
+        if (placementPolicy.toLowerCase().equals("firstfit")) 
         {
-            case FirstFit :
+            log_.debug("Loading the first fit placement policy");
+            placement = new FirstFit(estimator);
+        }
+        else if (placementPolicy.toLowerCase().equals("roundrobin"))
+        {
+            log_.debug("Loading the round robin placement policy");
+            placement = new RoundRobin(estimator);
+        }
+        else
+        {
+            try
+            {
+                log_.debug("Loading a custom placement policy");
+                String pluginsDirectory = schedulerSettings.getPluginsDirectory();
+                Class placementClass = PluginUtils.getClassFromDirectory(pluginsDirectory , placementPolicy);
+                log_.debug(String.format("instantiate the placement policy %s from the jar", placementPolicy));
+                Object placementObject =
+                        placementClass.getConstructor(ResourceDemandEstimator.class).newInstance(estimator);
+                placement = (PlacementPolicy) placementObject;
+            }
+            catch (Exception e)
+            {
+                log_.error("Unable to load the placement policy from the plugin directory");
+                e.printStackTrace();
+                log_.debug("Back to default placement policy");
                 placement = new FirstFit(estimator);
-                break;
-            
-            case RoundRobin :
-                placement = new RoundRobin(estimator);
-                break;
-                
-            default :
-                log_.error("Unknown virtual machine placement policy selected!");
+            }                
         }
         
         return placement;
