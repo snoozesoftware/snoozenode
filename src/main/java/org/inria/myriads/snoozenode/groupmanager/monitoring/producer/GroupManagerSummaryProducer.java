@@ -107,7 +107,7 @@ public final class GroupManagerSummaryProducer
         ArrayList<String> legacyIpAddresses = repository_.getLegacyIpAddresses();
         GroupManagerSummaryInformation summary = estimator_.generateGroupManagerSummaryInformation(localControllers);
         summary.setLegacyIpAddresses(legacyIpAddresses);
-        summary.setLocalControllers(repository_.getLocalControllerDescriptions(0, false, false));
+        summary.setLocalControllers(repository_.getLocalControllerDescriptionForDataTransporter());
         String groupManagerId = repository_.getGroupManagerId();
         GroupManagerDataTransporter dataTransporter = new GroupManagerDataTransporter(groupManagerId, summary);      
         return dataTransporter;

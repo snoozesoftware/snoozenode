@@ -230,4 +230,11 @@ public class GroupManagerWrapperRepository implements GroupManagerRepository
         return repository_.getGroupManager();
     }
 
+
+    @Override
+    public ArrayList<LocalControllerDescription> getLocalControllerDescriptionForDataTransporter()
+    {
+        return repository_.getLocalControllerDescriptionForDataTransporter();
+    }
+
 }

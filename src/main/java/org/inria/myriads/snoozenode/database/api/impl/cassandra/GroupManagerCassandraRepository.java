@@ -655,6 +655,9 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
     }
 
 
-
-
+    @Override
+    public ArrayList<LocalControllerDescription> getLocalControllerDescriptionForDataTransporter()
+    {
+        return new ArrayList<LocalControllerDescription>();
+    }
 }
