@@ -936,4 +936,10 @@ public final class GroupManagerMemoryRepository
         return groupManager_;
     }
 
+    @Override
+    public ArrayList<LocalControllerDescription> getLocalControllerDescriptionForDataTransporter()
+    {
+        return getLocalControllerDescriptions(0, false, false);
+    }
+
 }
