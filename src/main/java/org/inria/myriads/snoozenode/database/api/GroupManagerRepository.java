@@ -240,7 +240,12 @@ public interface GroupManagerRepository
      */
     GroupManagerDescription  getGroupManager();
 
-    
+    /**
+     * 
+     * Returns the list of local controllers to transmit to the group leader.
+     * 
+     * @return the list of local controllers to transmit.
+     */
+    ArrayList<LocalControllerDescription> getLocalControllerDescriptionForDataTransporter();
 
-    
 }
