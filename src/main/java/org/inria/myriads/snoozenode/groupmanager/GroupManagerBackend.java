@@ -132,7 +132,7 @@ public final class GroupManagerBackend
                 nodeConfiguration_.getNetworking().getMulticast().getGroupLeaderHeartbeatAddress();
             int timeout = nodeConfiguration_.getFaultTolerance().getHeartbeat().getTimeout();
             heartbeatListener_ = HeartbeatFactory.newHeartbeatMulticastListener(address, timeout, this);       
-            new Thread(heartbeatListener_).start();     
+            new Thread(heartbeatListener_, "HeartBeatListener").start();     
         }
     }
     

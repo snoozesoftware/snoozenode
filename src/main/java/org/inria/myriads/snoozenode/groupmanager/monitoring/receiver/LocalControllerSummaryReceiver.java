@@ -91,7 +91,7 @@ public final class LocalControllerSummaryReceiver extends TCPDataReceiver
     private void starReceiver()
     {
         setHandler(this);
-        new Thread(this).start();
+        new Thread(this, "LocalControllerSummaryReceiver").start();
     }
     
     /**

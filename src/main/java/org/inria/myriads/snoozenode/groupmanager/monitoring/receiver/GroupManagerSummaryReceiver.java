@@ -90,7 +90,7 @@ public final class GroupManagerSummaryReceiver extends TCPDataReceiver
         throws Exception
     {
         GroupManagerSummaryConsumer consumer = new GroupManagerSummaryConsumer(dataQueue_, repository_);
-        new Thread(consumer).start();       
+        new Thread(consumer, "GroupManagerSummaryConsumer").start();       
     }
     
     /**
@@ -99,7 +99,7 @@ public final class GroupManagerSummaryReceiver extends TCPDataReceiver
     private void starDataReceiver()
     {
         setHandler(this);
-        new Thread(this).start();       
+        new Thread(this, "TCPDataReceiver").start();       
     }
     
     /** 

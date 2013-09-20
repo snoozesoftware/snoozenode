@@ -69,7 +69,7 @@ public final class GroupLeaderDiscovery
         hearbeatListener_ = HeartbeatFactory.newHeartbeatMulticastListener(heartbeatAddress, 
                                                                            timeout, 
                                                                            this);
-        new Thread(hearbeatListener_).start();       
+        new Thread(hearbeatListener_, "GroupLeaderDiscovery").start();       
     }
     
     

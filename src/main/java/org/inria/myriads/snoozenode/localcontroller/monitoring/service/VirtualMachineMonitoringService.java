@@ -128,7 +128,7 @@ public final class VirtualMachineMonitoringService
                                                                      dataQueue_,
                                                                      monitoring_,
                                                                      this);
-        new Thread(monitorDataConsumer_).start(); 
+        new Thread(monitorDataConsumer_,"VirtualMachineMonitorDataConsumer").start(); 
     }
 
     /**
@@ -141,7 +141,7 @@ public final class VirtualMachineMonitoringService
             new VirtualMachineHeartbeatDataProducer(localController_.getId(), 
                                                     monitoring_.getMonitoringSettings().getInterval(), 
                                                     dataQueue_);
-        new Thread(heartbeatProducer_).start();
+        new Thread(heartbeatProducer_, "VirtualMachineHeartbeatDataProducer").start();
     }
 
     /**
