@@ -317,7 +317,9 @@ public final class GroupLeaderInit
                                                                                    groupLeader.getId());
         new Thread(HeartbeatFactory.newHeartbeatMulticastSender(heartbeatAddress, 
                                                                 heartbeatInterval,
-                                                                heartbeatMessage)).start();
+                                                                heartbeatMessage),
+                  "HeartbeatSender"
+                ).start();
     }
     
     /** 

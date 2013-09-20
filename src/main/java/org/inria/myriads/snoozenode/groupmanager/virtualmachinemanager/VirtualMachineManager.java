@@ -127,7 +127,7 @@ public final class VirtualMachineManager
                                                                                    this,
                                                                                    externalNotifier_
                                                                                     );
-        new Thread(worker).start();
+        new Thread(worker, "VirtualMachineManager : "+taskIdentifier  ).start();
         return taskIdentifier;
     }
             

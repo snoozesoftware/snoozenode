@@ -52,6 +52,7 @@ public final class ShellCommandExecuter
     {
         Guard.check(timeout);
         timeout_ = timeout;
+        
     }
     
     /**
@@ -63,7 +64,8 @@ public final class ShellCommandExecuter
     public synchronized boolean execute(String command)
     {
         ExecutorThread executor = new ExecutorThread(command, this);
-        Thread executorThread = new Thread(executor);
+        String name = ShellCommandExecuter.class.getName() + " : " + command;
+        Thread executorThread = new Thread(executor, name);
         executorThread.start();
         
         try 

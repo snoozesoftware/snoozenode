@@ -389,6 +389,6 @@ public final class ZooKeeperLeaderElection
     public void start() 
     {
         log_.debug("Starting the leader election algorithm");
-        new Thread(this).start();
+        new Thread(this, "ZookeeperLeaderElection").start();
     }  
 }

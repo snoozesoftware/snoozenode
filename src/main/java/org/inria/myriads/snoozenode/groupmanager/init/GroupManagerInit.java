@@ -243,7 +243,7 @@ public final class GroupManagerInit
             energySaver_ = EnergySaverFactory.newEnergySaver(nodeConfiguration_.getEnergyManagement(), 
                                                              repository_,
                                                              stateMachine_);
-            new Thread(energySaver_).start();
+            new Thread(energySaver_, "EnergySaver").start();
         }  
     }
     
@@ -266,7 +266,7 @@ public final class GroupManagerInit
         heartbeatSender_ = HeartbeatFactory.newHeartbeatMulticastSender(heartbeatAddress, 
                                                                         heartbeatInterval,
                                                                         heartbeatMessage);        
-        new Thread(heartbeatSender_).start();
+        new Thread(heartbeatSender_, "HeartBeatSender").start();
     }
     
     /**

@@ -70,7 +70,7 @@ public final class GroupManagerHeartbeatHandler
         heartbeatFailure_ = heartbeatFailure;
         hearbeatListener_ = HeartbeatFactory.newHeartbeatMulticastListener(heartbeatAddress, timeout, this);
         groupManagerId_ = groupManagerId;
-        new Thread(hearbeatListener_).start();       
+        new Thread(hearbeatListener_, "GroupManagerHeartBeatHandler").start();       
     }
     
     /**
