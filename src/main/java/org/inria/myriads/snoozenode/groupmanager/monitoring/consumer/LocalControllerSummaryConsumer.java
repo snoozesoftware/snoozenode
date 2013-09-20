@@ -68,7 +68,7 @@ public final class LocalControllerSummaryConsumer
         dataQueue_ = dataQueue;
         stateMachine_ = stateMachine;
         repository_ = repository;
-        new Thread(this).start();   
+        new Thread(this, "LocalControllerSummaryConsumer").start();   
     }
     
     /** The run method. */

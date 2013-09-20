@@ -271,7 +271,7 @@ public final class VirtualClusterManager
         {
             log_.debug(String.format("Starting virtual cluster submission thread for task: %s!", 
                                      taskIdentifier));
-            new Thread(submission).start();
+            new Thread(submission, "SubmissionWorker : " + taskIdentifier).start();
         }
         
         workerQueue_.add(submission);
@@ -298,7 +298,7 @@ public final class VirtualClusterManager
         VirtualClusterSubmissionWorker submissionWorker = workerQueue_.peek();
         if (submissionWorker != null)
         {
-            new Thread(submissionWorker).start();
+            new Thread(submissionWorker, "SubmissionWorker : " + taskIdentifier).start();
         }
     }
      

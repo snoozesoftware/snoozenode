@@ -83,7 +83,9 @@ public final class BootstrapBackend
         int heartbeatTimeout = nodeParameters.getFaultTolerance().getHeartbeat().getTimeout();
         new Thread(HeartbeatFactory.newHeartbeatMulticastListener(address, 
                                                                   heartbeatTimeout,
-                                                                  this)).start();
+                                                                  this),
+                "HeartBeatListener"                                                  
+                ).start();
         initializeRepository();
         isActive_ = true;
     }

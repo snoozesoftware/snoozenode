@@ -339,8 +339,8 @@ public final class MigrationPlanEnforcer
         MigrationWatchdog watchdogThread = new MigrationWatchdog(migrationRequest, this);      
         migrationThread.addMigrationListener(watchdogThread);
         migrationThread.addMigrationListener(this);
-        new Thread(migrationThread).start();
-        new Thread(watchdogThread).start();
+        new Thread(migrationThread, "MigrationThread").start();
+        new Thread(watchdogThread, "MigratonWatchdog").start();
         
        
         

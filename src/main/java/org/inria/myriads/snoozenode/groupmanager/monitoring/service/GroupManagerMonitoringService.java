@@ -88,7 +88,7 @@ public final class GroupManagerMonitoringService
                                                                   monitoringSettings_,
                                                                   monitoringExternalSettings_
                                                                   );
-        new Thread(monitoringDataProducer_).start();
+        new Thread(monitoringDataProducer_, "GroupManagerSummaryProducer").start();
     }
         
     /**
