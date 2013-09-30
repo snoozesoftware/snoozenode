@@ -22,10 +22,12 @@ package org.inria.myriads.snoozenode.groupmanager.monitoring;
 import java.util.concurrent.BlockingQueue;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
+import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
+import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.consumer.LocalControllerSummaryConsumer;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.receiver.GroupManagerSummaryReceiver;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.receiver.LocalControllerSummaryReceiver;
@@ -109,18 +111,31 @@ public final class MonitoringFactory
     /**
      * Creates a new group manager monitoring service.
      * 
-     * @param repository                    The group manager repository
-     * @param monitoringSettings            The monitoring settingsl
-     * @param monitoringExternalSettings    The monitoringExternalSettings
-     * @return                              The group manager monitoring data sender
+     * @param groupManagerId                The group manager id.
+     * @param repository                    The group manager repository.
+     * @param estimator                     The resource demand estimator.
+     * @param databaseSettings              The database settings.
+     * @param monitoringSettings            The monitoring settings.
+     * @param monitoringExternalSettings    The monitoringExternalSettings.
+     * @return                              The group manager monitoring data sender.
      * @throws Exception              The exception
      */
     public static GroupManagerMonitoringService 
-        newGroupManagerMonitoringService(GroupManagerRepository repository, 
+        newGroupManagerMonitoringService(
+                                         String groupManagerId,
+                                         GroupManagerRepository repository,
+                                         ResourceDemandEstimator estimator,
+                                         DatabaseSettings databaseSettings,
                                          MonitoringSettings monitoringSettings,
                                          ExternalNotifierSettings monitoringExternalSettings)
         throws Exception 
     {
-        return new GroupManagerMonitoringService(repository, monitoringSettings, monitoringExternalSettings);
+        return new GroupManagerMonitoringService(
+                groupManagerId, 
+                repository, 
+                estimator, 
+                databaseSettings,
+                monitoringSettings, 
+                monitoringExternalSettings);
     }
 }

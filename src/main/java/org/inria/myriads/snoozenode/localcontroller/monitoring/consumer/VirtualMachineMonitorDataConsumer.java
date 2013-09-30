@@ -26,6 +26,7 @@ import java.util.concurrent.BlockingQueue;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.listener.VirtualMachineMonitoringListener;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.service.InfrastructureMonitoring;
@@ -64,7 +65,10 @@ public final class VirtualMachineMonitorDataConsumer
     private boolean isTerminated_;
     
     /** internal sender. */
-    private DataSender internalSender_; 
+    private DataSender monitoringSender_;
+
+    /** Heartbeart sender. */
+     private DataSender heartbeatSender_; 
     
     
     /**
@@ -75,12 +79,15 @@ public final class VirtualMachineMonitorDataConsumer
      * @param dataQueue                 The data queue
      * @param infrastructureMonitoring  The infrastructure monitoring
      * @param callback                  The monitoring service callback
+     * @param databaseSettings          The databaseSettings
+     * @param maxCapacity               The maxCapacity
      * @throws Exception                The exception
      */
     public VirtualMachineMonitorDataConsumer(LocalControllerDescription localController,
                                              NetworkAddress groupManagerAddress, 
                                              BlockingQueue<AggregatedVirtualMachineData> dataQueue,
                                              InfrastructureMonitoring infrastructureMonitoring,
+                                             DatabaseSettings databaseSettings,
                                              VirtualMachineMonitoringListener callback) 
         throws Exception
     {
@@ -91,7 +98,9 @@ public final class VirtualMachineMonitorDataConsumer
         dataQueue_ = dataQueue;
         callback_ = callback; 
         crossingDetector_ = new ThresholdCrossingDetector(monitoringThresholds, localController.getTotalCapacity());
-        internalSender_ = DataSenderFactory.newInternalDataSender(groupManagerAddress);        
+        heartbeatSender_ = DataSenderFactory.newHeartbeatSender(groupManagerAddress);
+        monitoringSender_ =
+                DataSenderFactory.newVirtualMachineMonitoringSender(groupManagerAddress, databaseSettings);
     }
    
     /**
@@ -109,7 +118,7 @@ public final class VirtualMachineMonitorDataConsumer
         log_.debug("Sending local controller heartbeat information to group manager");        
         try
         {
-            internalSender_.send(localControllerData);
+            heartbeatSender_.send(localControllerData);
         }
         catch (IOException exception)
         {
@@ -140,15 +149,22 @@ public final class VirtualMachineMonitorDataConsumer
             new LocalControllerDataTransporter(localControllerId, clonedData);
         
         boolean isDetected = crossingDetector_.detectThresholdCrossing(localControllerData);
-        if (!isDetected)
-        {
-            log_.debug("No threshold crossing detected! Node seems stable for now!");
-        }
+
         
-        log_.debug("Sending aggregated local controller summary information to group maanger");
+        log_.debug("Sending aggregated local controller summary information to group mananger");
         try
         {
-            internalSender_.send(localControllerData);
+            if (!isDetected)
+            {
+                monitoringSender_.send(localControllerData);
+                log_.debug("No threshold crossing detected! Node seems stable for now!");
+            }
+            else
+            {
+                //send directly to GM to take into account the treshold crossing.
+                heartbeatSender_.send(localControllerData);
+            }
+            
         }
         catch (IOException exception)
         {
@@ -211,7 +227,7 @@ public final class VirtualMachineMonitorDataConsumer
     {
         log_.debug("Terminating the virtual machine monitoring data consumer");
         isTerminated_ = true;
-        internalSender_.close();
+        monitoringSender_.close();
     }
 
 }

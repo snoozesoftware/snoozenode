@@ -151,13 +151,11 @@ public final class GroupLeaderInit
     private void initializeRepository(GroupManagerDescription groupLeaderDescription) 
     {
         String[] virtualMachineSubnets = nodeConfiguration_.getNetworking().getVirtualMachineSubnets();
-        int maxCapacity = nodeConfiguration_.getDatabase().getNumberOfEntriesPerGroupManager();
         DatabaseSettings settings = nodeConfiguration_.getDatabase();
         groupLeaderRepository_ = 
                 DatabaseFactory.newGroupLeaderRepository(
                                 groupLeaderDescription,
                                 virtualMachineSubnets, 
-                                maxCapacity,
                                 settings,
                                 externalNotifier_);
     }

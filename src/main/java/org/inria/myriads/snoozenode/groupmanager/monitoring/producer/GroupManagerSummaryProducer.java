@@ -21,6 +21,7 @@ package org.inria.myriads.snoozenode.groupmanager.monitoring.producer;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.BlockingQueue;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
@@ -30,8 +31,6 @@ import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNot
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.transport.GroupManagerDataTransporter;
-import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,10 +61,8 @@ public final class GroupManagerSummaryProducer
     /** Terminated. */
     private boolean isTerminated_;
     
-    /** internal sender.*/
-    private DataSender internalSender_;
-    
-    
+    /** Data queue.*/
+    private BlockingQueue<GroupManagerDataTransporter> dataQueue_;
     
     /**
      * Constructor.
@@ -75,13 +72,15 @@ public final class GroupManagerSummaryProducer
      * @param estimator                     The estimator
      * @param monitoringSettings            The monitoring settings
      * @param monitoringExternalSettings    The external settings
+     * @param dataQueue                     The dataQueue
      * @throws IOException          The I/O exception
      */
     public GroupManagerSummaryProducer(GroupManagerRepository repository, 
                                        NetworkAddress groupLeaderAddress,
                                        ResourceDemandEstimator estimator,
                                        MonitoringSettings monitoringSettings,
-                                       ExternalNotifierSettings monitoringExternalSettings
+                                       ExternalNotifierSettings monitoringExternalSettings,
+                                       BlockingQueue<GroupManagerDataTransporter> dataQueue
                                        )
         throws  IOException 
     { 
@@ -92,7 +91,8 @@ public final class GroupManagerSummaryProducer
         estimator_ = estimator;
         monitoringInterval_ = monitoringSettings.getInterval();
         lockObject_ = new Object();
-        internalSender_ = DataSenderFactory.newInternalDataSender(groupLeaderAddress);
+        dataQueue_ = dataQueue;
+        
     }
     
     /**
@@ -130,16 +130,7 @@ public final class GroupManagerSummaryProducer
                                          summary.getLocalControllers().size()
                                          ));
                 
-                try
-                {
-                    internalSender_.send(dataTransporter);
-                }
-                catch (IOException exception)
-                {
-                    log_.debug(String.format("I/O error during summary sending (%s). Did the group leader fail?", 
-                            exception.getMessage()));
-                    break;
-                }
+                dataQueue_.add(dataTransporter);
                 
                 synchronized (lockObject_)
                 {

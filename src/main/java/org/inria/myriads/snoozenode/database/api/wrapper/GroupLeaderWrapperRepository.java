@@ -45,22 +45,19 @@ public class GroupLeaderWrapperRepository implements GroupLeaderRepository
      * 
      * @param groupLeaderDescription    The groupLeader description.
      * @param virtualMachineSubnets     The virtual machine subnets.
-     * @param settings                  The settings
-     * @param maxCapacity               The max capacity.
+     * @param settings                  The database ettings
      * @param externalNotifier          The external notifier.
      */
     public GroupLeaderWrapperRepository(GroupManagerDescription groupLeaderDescription,
             String[] virtualMachineSubnets,
             DatabaseSettings settings,
-            int maxCapacity,
             ExternalNotifier externalNotifier)
     {
         log_.debug("Initializing the group leader memory repository");
         //call to factory
         repository_ = DatabaseFactory.newGroupLeaderRepository(
                 groupLeaderDescription, 
-                virtualMachineSubnets, 
-                maxCapacity, 
+                virtualMachineSubnets,
                 settings);
         
         externalNotifier_ = externalNotifier;

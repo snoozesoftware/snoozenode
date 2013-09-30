@@ -141,7 +141,20 @@ public final class GroupManagerSummaryReceiver extends TCPDataReceiver
     {
         Guard.check(data, workerThreadId);
         
-        GroupManagerDataTransporter dataTransporter = (GroupManagerDataTransporter) data;            
+        GroupManagerDataTransporter dataTransporter = (GroupManagerDataTransporter) data;
+        
+        if (groupManagerIds_.get(workerThreadId) == null)
+        {
+            log_.debug("No mapping exists for this worker thread! Adding!");
+            groupManagerIds_.put(workerThreadId, dataTransporter.getId());    
+        }
+        
+        if (dataTransporter.getSummary() == null)
+        {
+            log_.debug("Received heartbeat ... skipping");
+            return;
+        }
+        
         log_.debug(String.format("Received group manager %s summary information. " +
                                  "Active: %s, " +
                                  "Passive: %s, " +
@@ -159,11 +172,7 @@ public final class GroupManagerSummaryReceiver extends TCPDataReceiver
                                  dataTransporter.getSummary().getLocalControllers().size(),
                                  workerThreadId));
     
-        if (groupManagerIds_.get(workerThreadId) == null)
-        {
-            log_.debug("No mapping exists for this worker thread! Adding!");
-            groupManagerIds_.put(workerThreadId, dataTransporter.getId());    
-        }
+
         
         dataQueue_.add(dataTransporter);
     }
