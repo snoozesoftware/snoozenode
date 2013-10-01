@@ -63,7 +63,6 @@ public final class DatabaseFactory
      * 
      * @param groupLeaderDescription    The group Leader description.
      * @param virtualMachineSubnets     The virtual machines subnets.
-     * @param maxCapacity               The max Capacity.
      * @param settings                  The database settings.
      * @param externalNotifier          The external notifier to use.
      * @return          The group leader repository.
@@ -71,7 +70,6 @@ public final class DatabaseFactory
     public static GroupLeaderRepository newGroupLeaderRepository(
             GroupManagerDescription groupLeaderDescription, 
             String[] virtualMachineSubnets,   
-            int maxCapacity,
             DatabaseSettings settings,
             ExternalNotifier externalNotifier) 
     {
@@ -80,7 +78,6 @@ public final class DatabaseFactory
                 groupLeaderDescription, 
                 virtualMachineSubnets, 
                 settings, 
-                maxCapacity, 
                 externalNotifier);
     }
     
@@ -90,34 +87,33 @@ public final class DatabaseFactory
      * 
      * @param groupLeaderDescription  The Group leader Description. 
      * @param virtualMachineSubnets   The virtual machine subnets
-     * @param maxCapacity             The maximum capacity
-     * @param settings                The database settings.
+     * @param databaseSettings        The database settings.
      * @return                        The group leader repository
      */
     public static GroupLeaderRepository newGroupLeaderRepository(
             GroupManagerDescription groupLeaderDescription, 
             String[] virtualMachineSubnets,   
-            int maxCapacity,
-            DatabaseSettings settings)
+            DatabaseSettings databaseSettings)
     {
         
         GroupLeaderRepository repository = null;
-        DatabaseType type = settings.getType();
+        DatabaseType type = databaseSettings.getType();
         switch (type) 
         {
             case memory :       
                 repository = new GroupLeaderMemoryRepository(
                         groupLeaderDescription, 
                         virtualMachineSubnets, 
-                        maxCapacity);        
+                        databaseSettings.getNumberOfEntriesPerGroupManager());
                 break;
                 
             case cassandra : 
-                String hosts = settings.getCassandraSettings().getHosts();
+                String hosts = databaseSettings.getCassandraSettings().getHosts();
                 repository = new GroupLeaderCassandraRepository(
                         groupLeaderDescription, 
                         virtualMachineSubnets, 
-                        maxCapacity,
+                        databaseSettings.getNumberOfEntriesPerGroupManager(),
+                        databaseSettings.getNumberOfEntriesPerVirtualMachine(),
                         hosts);
                 break;
             default:
@@ -183,8 +179,11 @@ public final class DatabaseFactory
                 break;
             case cassandra:
                 String hosts = settings.getCassandraSettings().getHosts();
-                int ttl = maxCapacity * interval;
-                repository = new GroupManagerCassandraRepository(groupManager, ttl, hosts);
+                repository = new GroupManagerCassandraRepository(
+                        groupManager,
+                        settings.getNumberOfEntriesPerGroupManager(),
+                        settings.getNumberOfEntriesPerVirtualMachine(),
+                        hosts);
                 break;
             default:
                 log_.error("Unknown group manager database type selected");

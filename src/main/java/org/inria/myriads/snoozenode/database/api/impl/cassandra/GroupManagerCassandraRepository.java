@@ -6,22 +6,16 @@ import java.util.Map;
 
 
 
-import me.prettyprint.cassandra.serializers.LongSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.hector.api.factory.HFactory;
-import me.prettyprint.hector.api.mutation.Mutator;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraUtils;
-import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.JsonSerializer;
 import org.inria.myriads.snoozenode.database.api.impl.memory.GroupManagerMemoryRepository;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.slf4j.Logger;
@@ -45,25 +39,26 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
    /** GroupManagerDescription Cache. */
    private GroupManagerMemoryRepository groupManagerCache_;
    
-   /** Time to live (monitoring info).*/
-   private int ttl_;
    
-
     /**
      * 
      * Constructor.
      * 
-     * @param groupManager  The group manager description.
-     * @param ttl           The ttl of column (for monitoring)
-     * @param hosts         The cassandra hosts to connect to.
+     * @param groupManager      The group manager description.
+     * @param ttlGroupManager   The ttl of group manager monitoring 
+     * @param ttlVirtualMachine The ttl of virtual machine monitoring 
+     * @param hosts             The cassandra hosts to connect to.
      */
-    public GroupManagerCassandraRepository(GroupManagerDescription groupManager, int ttl, String hosts)
+    public GroupManagerCassandraRepository(
+            GroupManagerDescription groupManager,
+            int ttlGroupManager,
+            int ttlVirtualMachine,
+            String hosts)
     {
-        super(hosts);
+        super(hosts, ttlGroupManager, ttlVirtualMachine);
         log_.debug("Initializing the group manager memory repository");
         legacyIpAddresses_ = new ArrayList<String>();
         groupManagerCache_ = new GroupManagerMemoryRepository(groupManager, 0);
-        ttl_ = ttl;
     }
 
 
@@ -277,61 +272,7 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
     @Override
     public void addAggregatedMonitoringData(String localControllerId, List<AggregatedVirtualMachineData> aggregatedData)
     {
-        // done by lc ? 
-        Guard.check(aggregatedData);   
-        log_.debug(String.format("Adding aggregated virtual machine monitoring data to the database for %d VMs", 
-                                 aggregatedData.size()));
-        
-        LocalControllerDescription description = 
-                groupManagerCache_.getLocalControllerDescription(localControllerId, 0, false);
-        if (description == null)
-        {
-            log_.error("Description not found in the cache");
-            return;
-        }
-        
-        for (AggregatedVirtualMachineData aggregatedVirtualMachineData : aggregatedData) 
-        {
-            String virtualMachineId = aggregatedVirtualMachineData.getVirtualMachineId();
-            
-            VirtualMachineLocation location = new VirtualMachineLocation();
-            location.setLocalControllerId(localControllerId);
-            location.setVirtualMachineId(virtualMachineId);
-         
-            List<VirtualMachineMonitoringData> dataList = aggregatedVirtualMachineData.getMonitoringData();
-            if (dataList.isEmpty())
-            {
-                log_.debug("The virtual machine monitoring data list is empty");
-                continue;
-            }
-           
-            Mutator<String> mutator = HFactory.createMutator(getKeyspace(), StringSerializer.get());
-            try
-            {
-                for (VirtualMachineMonitoringData virtualMachineData : dataList) 
-                {
-               
-                    log_.debug(String.format("Adding history data %s for virtual machine: %s",
-                                             virtualMachineData.getUsedCapacity(),   
-                                             virtualMachineId));
-                    mutator.addInsertion(virtualMachineId, CassandraUtils.VIRTUALMACHINES_MONITORING_CF, 
-                            HFactory.createColumn(
-                                    virtualMachineData.getTimeStamp(),
-                                    virtualMachineData,
-                                    ttl_,
-                                    new LongSerializer(),
-                                    new JsonSerializer(VirtualMachineMonitoringData.class)
-                                    ));
-                }
-                mutator.execute();
-               
-            }
-            catch (Exception exception)
-            {
-                log_.error("Unable to add virtualmachine monitoring to the repository " + exception.getMessage());
-            }
-        }
-        
+        addAggregatedMonitoringDataCassandra(localControllerId, aggregatedData);
     }
     
 
@@ -481,6 +422,8 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
     @Override
     public boolean addVirtualMachine(VirtualMachineMetaData virtualMachineMetaData)
     {
+        log_.debug(String.format("Adding virtual machine %s in cassandra repository", 
+                virtualMachineMetaData.getVirtualMachineLocation().getVirtualMachineId()));
         boolean isAdded =  addVirtualMachineCassandra(virtualMachineMetaData);
 
         // update_cache();

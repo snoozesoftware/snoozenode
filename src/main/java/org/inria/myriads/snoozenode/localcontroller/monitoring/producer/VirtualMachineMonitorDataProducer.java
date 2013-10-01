@@ -112,7 +112,8 @@ public final class VirtualMachineMonitorDataProducer
                                              BlockingQueue<AggregatedVirtualMachineData> dataQueue,
                                              VirtualMachineMonitoringListener monitoringListener) 
     {   
-        super(VirtualMachineMonitorDataProducer.class.getName() + ":" + virtualMachineMetaData.getVirtualMachineLocation().getVirtualMachineId());
+        super("VirtualMachineMonitorDataProducer :" + 
+                    virtualMachineMetaData.getVirtualMachineLocation().getVirtualMachineId());
         Guard.check(virtualMachineMetaData, monitoringListener, dataQueue, monitoringListener);   
         log_.debug(String.format("Initializing virtual machine monitoring data producer for %s", 
                                  virtualMachineMetaData.getVirtualMachineLocation().getVirtualMachineId()));

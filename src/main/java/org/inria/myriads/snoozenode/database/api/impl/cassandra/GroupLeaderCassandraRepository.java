@@ -5,15 +5,10 @@ import java.util.List;
 
 
 
-import me.prettyprint.cassandra.serializers.BooleanSerializer;
-import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.service.ColumnSliceIterator;
-import me.prettyprint.cassandra.service.HColumnFamilyImpl;
-import me.prettyprint.hector.api.HColumnFamily;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.factory.HFactory;
-import me.prettyprint.hector.api.mutation.MutationResult;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.SliceQuery;
 
@@ -30,7 +25,6 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraUtils;
-import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.JsonSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,9 +47,6 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
     /** Pool of Ips. */
     private List<String> ipAddress_;
 
-    /** TTL. */
-    private int ttl_;
-
     /** Group leader description.*/
     private GroupManagerDescription groupLeaderDescription_;
 
@@ -64,23 +55,24 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
      * 
      * Constructor.
      * 
-     * @param groupLeaderDescription    The group manager description.
-     * @param virtualMachineSubnets     The virtual machine subnets.
-     * @param maxCapacity               The max capacity.
-     * @param hosts                     The cassandra hosts to connect to.
+     * @param groupLeaderDescription        The group manager description.
+     * @param virtualMachineSubnets         The virtual machine subnets.
+     * @param ttlGroupManager               The ttl for group manager monitoring.
+     * @param ttlVirtualMachine             The ttl for virtual machines monitoring.
+     * @param hosts                         The cassandra hosts to connect to.
      */
     public GroupLeaderCassandraRepository(
             GroupManagerDescription groupLeaderDescription,
             String[] virtualMachineSubnets,
-            int maxCapacity,
+            int ttlGroupManager,
+            int ttlVirtualMachine,
             String hosts
             ) 
     {        
-        super(hosts);
+        super(hosts, ttlGroupManager, ttlVirtualMachine);
         unassignNodes();
         ipAddress_ = generateAddressPool(virtualMachineSubnets);
         populateAddressPool(ipAddress_);
-        ttl_ = maxCapacity;
         groupLeaderDescription_ = groupLeaderDescription;
         addGroupManagerDescription(groupLeaderDescription, true, true);
         log_.debug("Connected to cassandra");
@@ -195,29 +187,12 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
             GroupManagerSummaryInformation summary) 
     {
         log_.debug(String.format("Adding summary information for groupmanager %s in the database", groupManagerId));
+        this.addGroupManagerSummaryInformationCassandra(groupManagerId, summary);
         
-        StringSerializer stringSerializer = new StringSerializer();
-        Mutator<String> mutator = HFactory.createMutator(getKeyspace(), stringSerializer);
         
-
-        try
-        {            
-            mutator.addInsertion(groupManagerId, CassandraUtils.GROUPMANAGERS_MONITORING_CF, HFactory.createColumn(
-                    summary.getTimeStamp(), 
-                    summary,
-                    ttl_,
-                    new LongSerializer(), 
-                    new JsonSerializer(GroupManagerSummaryInformation.class)));
-            MutationResult result = mutator.execute();
-            log_.debug(String.format("Insertion done in %d", result.getExecutionTimeMicro()));
-        }
-        catch (Exception exception)
-        {
-            log_.error("Unable to add groupmanager summary to the repository : " + exception.getMessage());
-            exception.printStackTrace();
-            
-        }
     }
+
+    
 
     /** 
      * Drops a group manager. 

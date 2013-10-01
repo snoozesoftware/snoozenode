@@ -86,7 +86,7 @@ public class TestGroupManagerCassandraRepository extends TestCase
         
         GroupManagerDescription groupManager = new GroupManagerDescription();
         groupManager.setId("1234");
-        repository_ = new GroupManagerCassandraRepository(groupManager, 10, "localhost:9160");
+        repository_ = new GroupManagerCassandraRepository(groupManager, 60, 60, "localhost:9160");
         //add the gm to the repo (cache management)
         repository_.addGroupManagerDescriptionCassandra(groupManager, false, true);
         
