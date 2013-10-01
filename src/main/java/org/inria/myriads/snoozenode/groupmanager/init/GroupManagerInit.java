@@ -178,7 +178,7 @@ public final class GroupManagerInit
         DatabaseSettings settings = nodeConfiguration_.getDatabase();
         int interval = nodeConfiguration_.getMonitoring().getInterval();
         repository_ = DatabaseFactory.newGroupManagerRepository(
-                new GroupManagerDescription(description_,0), 
+                new GroupManagerDescription(description_, 0),
                 maxCapacity,
                 interval,
                 settings,
@@ -281,11 +281,17 @@ public final class GroupManagerInit
         Guard.check(groupLeader);              
         if (monitoringService_ == null)
         {
-            monitoringService_ = MonitoringFactory.newGroupManagerMonitoringService(repository_, nodeConfiguration_.getMonitoring(), nodeConfiguration_.getExternalNotifier());
+            monitoringService_ = MonitoringFactory.newGroupManagerMonitoringService(
+                    description_.getId(), 
+                    repository_,
+                    estimator_,
+                    nodeConfiguration_.getDatabase(),
+                    nodeConfiguration_.getMonitoring(), 
+                    nodeConfiguration_.getExternalNotifier()
+                    );
         }
         
-        monitoringService_.startSummaryProducer(groupLeader.getListenSettings().getMonitoringDataAddress(), 
-                                                estimator_);
+        monitoringService_.startServices(groupLeader.getListenSettings().getMonitoringDataAddress());
     }
         
     /**
@@ -346,6 +352,12 @@ public final class GroupManagerInit
         return repository_;
     }
 
+    /**
+     * 
+     * Gets the external notifier.
+     * 
+     * @return ExternalNotifier     
+     */
     public ExternalNotifier getExternalNotifier()
     {
         return externalNotifier_;

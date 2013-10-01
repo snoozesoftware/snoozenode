@@ -80,7 +80,7 @@ public class TestGroupLeaderCassandraRepository extends TestCase
         groupLeader.setId("groupleader");
         String[] subnets = new String[1];
         subnets[0] = "192.168.2.1/31";
-        repository_ = new GroupLeaderCassandraRepository(groupLeader, subnets, 60, "localhost:9160");
+        repository_ = new GroupLeaderCassandraRepository(groupLeader, subnets, 60,60, "localhost:9160");
         //repository_ = new GroupLeaderCassandraRepository();
         repository_.clear();
     }

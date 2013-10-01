@@ -32,6 +32,7 @@ import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.consumer.VirtualMachineMonitorDataConsumer;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.listener.VirtualMachineMonitoringListener;
@@ -74,16 +75,22 @@ public final class VirtualMachineMonitoringService
     /** Local controller description. */
     private LocalControllerDescription localController_;
     
+    /** Database Settings. */
+    private DatabaseSettings databaseSettings_;
+    
     /**
      * Constructor.
      * 
      * @param localController       The local controller description
      * @param repository            The local controller repository
      * @param monitoring            The infrastructure monitoring
+     * @param databaseSettings      The database settings
      */
     public VirtualMachineMonitoringService(LocalControllerDescription localController,
                                            LocalControllerRepository repository,
-                                           InfrastructureMonitoring monitoring)
+                                           InfrastructureMonitoring monitoring,
+                                           DatabaseSettings databaseSettings
+                                           )
     {
         Guard.check(localController, repository, monitoring);
         log_.debug("Initializing virtual machine monitoring service");
@@ -91,6 +98,7 @@ public final class VirtualMachineMonitoringService
         localController_ = localController;
         repository_ = repository;
         monitoring_ = monitoring;
+        databaseSettings_ = databaseSettings;
         dataQueue_ = new LinkedBlockingQueue<AggregatedVirtualMachineData>();
         producerThreads_ = Collections.synchronizedMap(new HashMap<String, VirtualMachineMonitorDataProducer>());
     }
@@ -127,8 +135,9 @@ public final class VirtualMachineMonitoringService
                                                                      groupManagerAddress, 
                                                                      dataQueue_,
                                                                      monitoring_,
+                                                                     databaseSettings_,
                                                                      this);
-        new Thread(monitorDataConsumer_,"VirtualMachineMonitorDataConsumer").start(); 
+        new Thread(monitorDataConsumer_, "VirtualMachineMonitorDataConsumer").start(); 
     }
 
     /**

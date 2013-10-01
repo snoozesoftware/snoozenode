@@ -40,6 +40,7 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraUtils;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.JsonSerializer;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.RowIterator;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +62,28 @@ public class CassandraRepository
     /** Cassandra Cluster. */
     private Cluster cluster_;
     
+    /** ttl for group manager monitoring.*/
+    private int ttlGroupManager_;
+
+    /** ttl for virtualmachines monitoring.*/
+    private int ttlVirtualMachine_;
+    
+    /**
+     * Constructor.
+     * 
+     *  @param hosts                List of hosts to connect to.
+     *  @param ttlGroupManager      ttl for groupManager monitoring.
+     *  @param ttlVirtualMachine    ttl for virtualMachine monitoring.
+     *  
+     */
+    public CassandraRepository(String hosts, int ttlGroupManager, int ttlVirtualMachine)
+    {
+        cluster_ = HFactory.getOrCreateCluster(CassandraUtils.CLUSTER, new CassandraHostConfigurator(hosts));
+        keyspace_ = HFactory.createKeyspace(CassandraUtils.KEYSPACE, cluster_);
+        ttlGroupManager_ = ttlGroupManager;
+        ttlVirtualMachine_ = ttlVirtualMachine;
+    }
+    
     /**
      * Constructor.
      * 
@@ -69,10 +92,8 @@ public class CassandraRepository
      */
     public CassandraRepository(String hosts)
     {
-        cluster_ = HFactory.getOrCreateCluster(CassandraUtils.CLUSTER, new CassandraHostConfigurator(hosts));
-        keyspace_ = HFactory.createKeyspace(CassandraUtils.KEYSPACE, cluster_);
+        this(hosts, 123456789, 654321);
     }
-
     
     /**
      * 
@@ -786,6 +807,63 @@ public class CassandraRepository
         return true;
     }
     
+    protected void addAggregatedMonitoringDataCassandra(String localControllerId, List<AggregatedVirtualMachineData> aggregatedData)
+    {
+        // done by lc ? 
+        Guard.check(aggregatedData);   
+        log_.debug(String.format("Adding aggregated virtual machine monitoring data to the database for %d VMs", 
+                                 aggregatedData.size()));
+        
+        LocalControllerDescription description = getLocalControllerDescriptionOnly(localControllerId,0);
+        if (description == null)
+        {
+            log_.error("Description not found in the cache");
+            return;
+        }
+        
+        for (AggregatedVirtualMachineData aggregatedVirtualMachineData : aggregatedData) 
+        {
+            String virtualMachineId = aggregatedVirtualMachineData.getVirtualMachineId();
+            
+            VirtualMachineLocation location = new VirtualMachineLocation();
+            location.setLocalControllerId(localControllerId);
+            location.setVirtualMachineId(virtualMachineId);
+         
+            List<VirtualMachineMonitoringData> dataList = aggregatedVirtualMachineData.getMonitoringData();
+            if (dataList.isEmpty())
+            {
+                log_.debug("The virtual machine monitoring data list is empty");
+                continue;
+            }
+           
+            Mutator<String> mutator = HFactory.createMutator(getKeyspace(), StringSerializer.get());
+            try
+            {
+                for (VirtualMachineMonitoringData virtualMachineData : dataList) 
+                {
+               
+                    log_.debug(String.format("Adding history data %s for virtual machine: %s",
+                                             virtualMachineData.getUsedCapacity(),   
+                                             virtualMachineId));
+                    mutator.addInsertion(virtualMachineId, CassandraUtils.VIRTUALMACHINES_MONITORING_CF, 
+                            HFactory.createColumn(
+                                    virtualMachineData.getTimeStamp(),
+                                    virtualMachineData,
+                                    ttlVirtualMachine_,
+                                    new LongSerializer(),
+                                    new JsonSerializer(VirtualMachineMonitoringData.class)
+                                    ));
+                }
+                mutator.execute();
+               
+            }
+            catch (Exception exception)
+            {
+                log_.error("Unable to add virtualmachine monitoring to the repository " + exception.getMessage());
+            }
+        }
+    }
+    
     /**
      * 
      * Add (serialize) a local controller to cassandra.
@@ -877,6 +955,37 @@ public class CassandraRepository
         return true;
     }
     
+    /**
+     * 
+     * Add a groupmanager summary information into cassandra.
+     * 
+     * @param groupManagerId    The groupManager Id.
+     * @param summary           The summary to add.
+     * @param ttl               The ttl to apply.
+     */
+    protected void addGroupManagerSummaryInformationCassandra(String groupManagerId,
+            GroupManagerSummaryInformation summary)
+    {
+        StringSerializer stringSerializer = new StringSerializer();
+        Mutator<String> mutator = HFactory.createMutator(getKeyspace(), stringSerializer);
+        try
+        {            
+            mutator.addInsertion(groupManagerId, CassandraUtils.GROUPMANAGERS_MONITORING_CF, HFactory.createColumn(
+                    summary.getTimeStamp(), 
+                    summary,
+                    ttlGroupManager_,
+                    new LongSerializer(), 
+                    new JsonSerializer(GroupManagerSummaryInformation.class)));
+            MutationResult result = mutator.execute();
+            log_.debug(String.format("Insertion done in %d", result.getExecutionTimeMicro()));
+        }
+        catch (Exception exception)
+        {
+            log_.error("Unable to add groupmanager summary to the repository : " + exception.getMessage());
+            exception.printStackTrace();
+            
+        }
+    }
     
     /**
      * 
@@ -1027,13 +1136,13 @@ public class CassandraRepository
             rowIterator.addEqualsExpression("isAssigned", CassandraUtils.stringTrue);
         }
     
-        if (groupManagerId != null && !groupManagerId.equals("") )
+        if (groupManagerId != null && !groupManagerId.equals(""))
         {
             log_.debug("adding indexes groupmanager");
             rowIterator.addEqualsExpression("groupManager", groupManagerId);
         }
         
-        if (localControllerId != null && !localControllerId.equals("") )
+        if (localControllerId != null && !localControllerId.equals(""))
         {
             log_.debug("adding indexes groupmanager");
             rowIterator.addEqualsExpression("localController", localControllerId);
