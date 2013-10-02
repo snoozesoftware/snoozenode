@@ -38,6 +38,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.Vi
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.request.HostListRequest;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
+import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -310,6 +311,28 @@ public final class BootstrapResource extends ServerResource
                 );
         return virtualMachines;
     }
+    
+    
+    /**
+     * Starts a reconfiguration on the given groupManager.
+     */
+    public boolean startReconfiguration(String groupManagerId)
+    {
+        if (!isBackendActive())
+        {
+            log_.debug("Backend is not initialized yet!");
+            return false;
+        }
+        GroupManagerDescription groupLeader = backend_.getGroupLeaderDescription();
+        GroupManagerDescription groupManager = 
+                backend_.getRepository().getGroupManagerDescription(groupManagerId, groupLeader);
+        NetworkAddress groupManagerAddress = groupManager.getListenSettings().getControlDataAddress();
+        GroupManagerAPI groupManagerCommunicator = CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress);
+        
+        boolean isStarted = groupManagerCommunicator.startReconfiguration();
+        return isStarted;
+    }
+    
     /** 
      * Check backend activity.
      * 
@@ -324,7 +347,4 @@ public final class BootstrapResource extends ServerResource
         
         return true;
     }
-
-    
-
 }

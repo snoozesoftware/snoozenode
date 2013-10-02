@@ -841,6 +841,18 @@ public final class GroupManagerResource extends ServerResource
        
     }
 
+    @Override
+    public boolean startReconfiguration()
+    {
+        log_.debug("Received a request to start a reconfiguration");
+        if (!isGroupManagerActive())
+        {
+            return false;
+        }
+        boolean isStarted = backend_.getGroupManagerInit().getStateMachine().startReconfiguration();
+        return isStarted;
+    }
+
 
    
 }

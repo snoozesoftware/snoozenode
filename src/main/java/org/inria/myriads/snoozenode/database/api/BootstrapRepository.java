@@ -74,8 +74,20 @@ public interface BootstrapRepository
             String firstGroupManagerId,
             int limit,
             int numberOfMonitoringEntries, 
-            GroupManagerDescription groupManagerDescription);
+            GroupManagerDescription groupLeaderDescription);
     
+    
+    /**
+     * 
+     * Gets the group manager description.
+     * 
+     * @param groupManagerId            The group manager identifier to retrieve.
+     * @param groupLeaderDEscription    The groupLeader description.
+     * @return  the groupmanager description.
+     */
+    GroupManagerDescription getGroupManagerDescription(
+            String groupManagerId, 
+            GroupManagerDescription groupLeaderDescription);
     /**
      * 
      * Gets all the local controllers (passive included, unassigned included).
@@ -92,7 +104,7 @@ public interface BootstrapRepository
             String firstLocalControllerId,
             int limit,
             int numberOfMonitoringEntries,
-            GroupManagerDescription groupManagerDescription);
+            GroupManagerDescription groupLeaderDescription);
 
 
     /**

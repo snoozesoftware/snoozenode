@@ -113,6 +113,21 @@ public final class BootstrapMemoryRepository
         return information.getGroupManagerDescriptions();
     }
     
+
+    @Override
+    public GroupManagerDescription getGroupManagerDescription(
+            String groupManagerId, 
+            GroupManagerDescription groupLeader)
+    {
+        NetworkAddress groupLeaderAddress = groupLeader.getListenSettings().getControlDataAddress();
+        GroupManagerAPI groupLeaderCommunicator = 
+                CommunicatorFactory.newGroupManagerCommunicator(groupLeaderAddress); 
+        GroupManagerDescription groupManager= 
+            groupLeaderCommunicator.getGroupManagerDescription(groupManagerId);
+        
+        return groupManager;
+    }
+    
     @Override
     public List<LocalControllerDescription> getLocalControllerDescriptions(
             String groupManagerId,
@@ -237,5 +252,7 @@ public final class BootstrapMemoryRepository
     {
         return s == null || s.equals("");
     }
+
+
 
 }
