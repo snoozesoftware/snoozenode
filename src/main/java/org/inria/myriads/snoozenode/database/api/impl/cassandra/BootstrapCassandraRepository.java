@@ -168,6 +168,15 @@ public class BootstrapCassandraRepository extends CassandraRepository implements
         return internalMigrationRequest;
         
     }
+
+
+    @Override
+    public GroupManagerDescription getGroupManagerDescription(
+            String groupManagerId, 
+            GroupManagerDescription groupLeaderDescription)
+    {
+        return this.getGroupManagerDescriptionOnly(groupManagerId, 0);
+    }
    
 
 }
