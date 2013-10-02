@@ -34,6 +34,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.ClientMigrationRequestSimple;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionResponse;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.request.HostListRequest;
@@ -331,6 +332,24 @@ public final class BootstrapResource extends ServerResource
         
         boolean isStarted = groupManagerCommunicator.startReconfiguration();
         return isStarted;
+    }
+    
+    
+
+    @Override
+    public VirtualClusterSubmissionResponse getVirtualClusterResponse(String taskIdentifier)
+    {
+        if (!isBackendActive())
+        {
+            log_.debug("Backend is not initialized yet");
+            return null;
+        }
+        GroupManagerDescription groupLeader = backend_.getGroupLeaderDescription();
+        NetworkAddress groupLeaderAddress = groupLeader.getListenSettings().getControlDataAddress();
+        GroupManagerAPI groupLeaderCommunicator = CommunicatorFactory.newGroupManagerCommunicator(groupLeaderAddress);
+        
+        VirtualClusterSubmissionResponse response = groupLeaderCommunicator.getVirtualClusterResponse(taskIdentifier);
+        return response;
     }
     
     /** 
