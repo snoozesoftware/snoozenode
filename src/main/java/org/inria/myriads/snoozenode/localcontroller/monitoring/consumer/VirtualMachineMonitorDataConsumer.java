@@ -26,6 +26,8 @@ import java.util.concurrent.BlockingQueue;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.comunicator.CommunicatorFactory;
+import org.inria.myriads.snoozenode.comunicator.api.Communicator;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.listener.VirtualMachineMonitoringListener;
@@ -33,8 +35,6 @@ import org.inria.myriads.snoozenode.localcontroller.monitoring.service.Infrastru
 import org.inria.myriads.snoozenode.localcontroller.monitoring.threshold.ThresholdCrossingDetector;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
-import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,12 +64,8 @@ public final class VirtualMachineMonitorDataConsumer
     /** Signals termination. */
     private boolean isTerminated_;
     
-    /** internal sender. */
-    private DataSender monitoringSender_;
-
-    /** Heartbeart sender. */
-     private DataSender heartbeatSender_; 
-    
+    /** Communicator with the upper level. */
+    private Communicator communicator_;
     
     /**
      * Constructor.
@@ -80,7 +76,6 @@ public final class VirtualMachineMonitorDataConsumer
      * @param infrastructureMonitoring  The infrastructure monitoring
      * @param callback                  The monitoring service callback
      * @param databaseSettings          The databaseSettings
-     * @param maxCapacity               The maxCapacity
      * @throws Exception                The exception
      */
     public VirtualMachineMonitorDataConsumer(LocalControllerDescription localController,
@@ -98,9 +93,7 @@ public final class VirtualMachineMonitorDataConsumer
         dataQueue_ = dataQueue;
         callback_ = callback; 
         crossingDetector_ = new ThresholdCrossingDetector(monitoringThresholds, localController.getTotalCapacity());
-        heartbeatSender_ = DataSenderFactory.newHeartbeatSender(groupManagerAddress);
-        monitoringSender_ =
-                DataSenderFactory.newVirtualMachineMonitoringSender(groupManagerAddress, databaseSettings);
+        communicator_  = CommunicatorFactory.newVirtualMachineCommunicator(groupManagerAddress, databaseSettings);
     }
    
     /**
@@ -118,7 +111,7 @@ public final class VirtualMachineMonitorDataConsumer
         log_.debug("Sending local controller heartbeat information to group manager");        
         try
         {
-            heartbeatSender_.send(localControllerData);
+            communicator_.sendHeartbeatData(localControllerData);
         }
         catch (IOException exception)
         {
@@ -156,15 +149,14 @@ public final class VirtualMachineMonitorDataConsumer
         {
             if (!isDetected)
             {
-                monitoringSender_.send(localControllerData);
+                communicator_.sendRegularData(localControllerData);
                 log_.debug("No threshold crossing detected! Node seems stable for now!");
             }
             else
             {
                 //send directly to GM to take into account the treshold crossing.
-                heartbeatSender_.send(localControllerData);
+                communicator_.sendHeartbeatData(localControllerData);
             }
-            
         }
         catch (IOException exception)
         {
@@ -227,7 +219,7 @@ public final class VirtualMachineMonitorDataConsumer
     {
         log_.debug("Terminating the virtual machine monitoring data consumer");
         isTerminated_ = true;
-        monitoringSender_.close();
+        communicator_.close();
     }
 
 }

@@ -5,10 +5,10 @@ import java.util.concurrent.BlockingQueue;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.comunicator.CommunicatorFactory;
+import org.inria.myriads.snoozenode.comunicator.api.Communicator;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.transport.GroupManagerDataTransporter;
-import org.inria.myriads.snoozenode.monitoring.datasender.DataSenderFactory;
-import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,13 +33,8 @@ public class GroupManagerMonitoringDataConsumer implements Runnable
     /** Signals termination. */
     private boolean isTerminated_;
     
-    /** heartBeat Sender.*/
-    private DataSender heartbeatSender_;
-    
-    /**monitoring Sender.*/
-    //private DataSender monitoringSender_;
-    private DataSender monitoringSender_;
-     
+    /** Communicator (with the upper level).*/
+    private Communicator communicator_;
     
     
     /**
@@ -63,8 +58,7 @@ public class GroupManagerMonitoringDataConsumer implements Runnable
         groupManagerId_ = groupManagerId;
         dataQueue_ = dataQueue;
         isTerminated_ = false;
-        heartbeatSender_ = DataSenderFactory.newHeartbeatSender(groupLeaderAddress);
-        monitoringSender_ = DataSenderFactory.newGroupManagerMonitoringDataSender(groupLeaderAddress, databaseSettings);
+        communicator_ = CommunicatorFactory.newGroupManagerCommunicator(groupLeaderAddress, databaseSettings); 
     }
 
     @Override
@@ -113,7 +107,7 @@ public class GroupManagerMonitoringDataConsumer implements Runnable
     {
         try
         {
-            monitoringSender_.send(groupManagerData);    
+            communicator_.sendRegularData(groupManagerData);    
         }
         catch (Exception exception)
         {
@@ -135,7 +129,7 @@ public class GroupManagerMonitoringDataConsumer implements Runnable
         GroupManagerDataTransporter data = new GroupManagerDataTransporter(groupManagerId, null);
         try
         {
-            heartbeatSender_.send(data);
+            communicator_.sendHeartbeatData(data);
         }
         catch (Exception exception)
         {
