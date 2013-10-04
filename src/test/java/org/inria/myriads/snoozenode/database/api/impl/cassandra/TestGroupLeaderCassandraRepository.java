@@ -33,10 +33,6 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGrou
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraUtils;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.JsonSerializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
 
 /**
  * @author msimonin
@@ -44,8 +40,6 @@ import org.slf4j.LoggerFactory;
  */
 public class TestGroupLeaderCassandraRepository extends TestCase 
 {
-    /** Logger. */
-    private static final Logger log_ = LoggerFactory.getLogger(TestGroupManagerCassandraRepository.class);
     
     /** The repository under test.*/
     private GroupLeaderCassandraRepository repository_;
@@ -80,7 +74,7 @@ public class TestGroupLeaderCassandraRepository extends TestCase
         groupLeader.setId("groupleader");
         String[] subnets = new String[1];
         subnets[0] = "192.168.2.1/31";
-        repository_ = new GroupLeaderCassandraRepository(groupLeader, subnets, 60,60, "localhost:9160");
+        repository_ = new GroupLeaderCassandraRepository(groupLeader, subnets, 60, 60, "localhost:9160");
         //repository_ = new GroupLeaderCassandraRepository();
         repository_.clear();
     }
@@ -403,15 +397,18 @@ public class TestGroupLeaderCassandraRepository extends TestCase
      */
     public void testRemoveIpAddress() 
     {
-        boolean isAdded = repository_.addIpAddress("10.0.0.10");
+        repository_.addIpAddress("10.0.0.10");
         boolean isRemoved = repository_.removeIpAddress("10.0.0.10");
         
         assertTrue(isRemoved);
     }
 
+    /**
+     * Test get free ip address.
+     */
     public void testGetFreeIpAddress() 
     {
-        boolean isAdded = repository_.addIpAddress("10.0.0.10");
+        repository_.addIpAddress("10.0.0.10");
         String ip = repository_.getFreeIpAddress();
         assertNotNull(ip);
     }
@@ -433,21 +430,21 @@ public class TestGroupLeaderCassandraRepository extends TestCase
      */
     public void testGetAssignedGroupManagerAssignedAndFound() 
     {
-        for (int i = 0; i<2; i++)
+        for (int i = 0; i < 2; i++)
         {
             GroupManagerDescription groupManager = new GroupManagerDescription();
-            groupManager.setId("gm"+String.valueOf(i));
+            groupManager.setId("gm" + String.valueOf(i));
             repository_.addGroupManagerDescription(groupManager);
         }
         
-        for (int i = 0; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             LocalControllerDescription localController = new LocalControllerDescription();
-            localController.getControlDataAddress().setAddress("10.0.0."+String.valueOf(i));
-            localController.getControlDataAddress().setPort(1000+i);
-            localController.setId("lc"+String.valueOf(i));
-            localController.getLocation().setGroupManagerId("gm" + String.valueOf( i % 2));
-            repository_.addLocalControllerDescriptionCassandra("gm"+String.valueOf(i % 2), localController);
+            localController.getControlDataAddress().setAddress("10.0.0." + String.valueOf(i));
+            localController.getControlDataAddress().setPort(1000 + i);
+            localController.setId("lc" + String.valueOf(i));
+            localController.getLocation().setGroupManagerId("gm" + String.valueOf(i % 2));
+            repository_.addLocalControllerDescriptionCassandra("gm" + String.valueOf(i % 2), localController);
         }
         
         NetworkAddress contactInformation = new NetworkAddress();
@@ -474,11 +471,14 @@ public class TestGroupLeaderCassandraRepository extends TestCase
         contactInformation.setPort(5000);
         // Add some LCs
         Mutator<String> mutator = HFactory.createMutator(keyspace_, StringSerializer.get());
-        mutator.addInsertion(contactInformation.toString(), CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("id", "098"))
-        .addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("isAssigned", false, StringSerializer.get(), new BooleanSerializer()))
+        mutator.addInsertion(contactInformation.toString(), 
+                CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("id", "098"))
+        .addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF,
+                HFactory.createColumn("isAssigned", false, StringSerializer.get(), new BooleanSerializer()))
         .addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("groupmanager", "1234"));
         
-        mutator.insert(contactInformation.toString(), CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, HFactory.createStringColumn("id", "098"));
+        mutator.insert(contactInformation.toString(), 
+                CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, HFactory.createStringColumn("id", "098"));
         mutator.execute();
         // Add Gm
         GroupManagerDescription groupManagerDescription = new GroupManagerDescription();
@@ -506,22 +506,22 @@ public class TestGroupLeaderCassandraRepository extends TestCase
     public void testGetAssignedGroupManagerAssignedNotFound() 
     {
         
-        for (int i = 0; i<2; i++)
+        for (int i = 0; i < 2; i++)
         {
             GroupManagerDescription groupManager = new GroupManagerDescription();
-            groupManager.setId("gm"+String.valueOf(i));
+            groupManager.setId("gm" + String.valueOf(i));
             repository_.addGroupManagerDescription(groupManager);
         }
         
         // Add some LCs
-        for (int i = 0; i<10; i++)
+        for (int i = 0; i < 10; i++)
         {
             LocalControllerDescription localController = new LocalControllerDescription();
-            localController.getControlDataAddress().setAddress("10.0.0."+String.valueOf(i));
-            localController.getControlDataAddress().setPort(1000+i);
-            localController.setId("lc"+String.valueOf(i));
-            localController.getLocation().setGroupManagerId("gm" + String.valueOf( i % 2));
-            repository_.addLocalControllerDescriptionCassandra("gm"+String.valueOf(i % 2), localController);
+            localController.getControlDataAddress().setAddress("10.0.0." + String.valueOf(i));
+            localController.getControlDataAddress().setPort(1000 + i);
+            localController.setId("lc" + String.valueOf(i));
+            localController.getLocation().setGroupManagerId("gm" + String.valueOf(i % 2));
+            repository_.addLocalControllerDescriptionCassandra("gm" + String.valueOf(i % 2), localController);
         }
         
         NetworkAddress contactInformation = new NetworkAddress();
@@ -545,12 +545,15 @@ public class TestGroupLeaderCassandraRepository extends TestCase
         contactInformation.setPort(5000);
         // Add some LCs
         Mutator<String> mutator = HFactory.createMutator(keyspace_, StringSerializer.get());
-        mutator.addInsertion(contactInformation.toString(), CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("id", "098"))
-        .addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("isAssigned", false, StringSerializer.get(), new BooleanSerializer()))
+        mutator.addInsertion(contactInformation.toString(), 
+                CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("id", "098"))
+        .addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF, 
+                HFactory.createColumn("isAssigned", false, StringSerializer.get(), new BooleanSerializer()))
         .addInsertion("098", CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createStringColumn("groupmanager", "123"));
-//        .addInsertion(contactInformation.toString(), LOCALCONTROLLERS_MAPPING_CF, HFactory.createStringColumn("id", "098"));
+
         
-        mutator.insert(contactInformation.toString(), CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, HFactory.createStringColumn("id", "098"));
+        mutator.insert(contactInformation.toString(), 
+                CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, HFactory.createStringColumn("id", "098"));
         mutator.execute();
         // Add Gm
         GroupManagerDescription groupManagerDescription = new GroupManagerDescription();
