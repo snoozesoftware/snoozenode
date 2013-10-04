@@ -132,6 +132,7 @@ public class TestGroupManagerCassandraRepository extends TestCase
             .addColumnName("hypervisorSettings")
             .addColumnName("wakeupSettings");
             
+        @SuppressWarnings("unchecked")
         ArrayList<Double> totalCapacity = 
                 (ArrayList<Double>) columnFamily.getValue("totalCapacity", new JsonSerializer(ArrayList.class));
         

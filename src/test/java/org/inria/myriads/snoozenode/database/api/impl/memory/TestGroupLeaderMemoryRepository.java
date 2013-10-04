@@ -34,10 +34,9 @@ public class TestGroupLeaderMemoryRepository extends TestCase
     {
         String[] virtualMachineSubnets = {"192.168.122.0/30"};
         GroupManagerDescription groupLeader = new GroupManagerDescription();
-       ExternalNotifierSettings monitoringExternalSettings = 
-               new ExternalNotifierSettings();
+       new ExternalNotifierSettings();
         
-        NodeConfiguration nodeConfiguration = EasyMock.createMock(NodeConfiguration.class);
+        EasyMock.createMock(NodeConfiguration.class);
         repository_ = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets, 0);
     }
     

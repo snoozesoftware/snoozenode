@@ -128,6 +128,10 @@ public final class LocalControllerBackend
     }
 
 
+    /**
+     * Initializes the external notifier.
+     * (should be static...)
+     */
     private void initializeExternalNotifier()
     {
         externalNotifier_ = new ExternalNotifier(nodeConfiguration_);
@@ -315,7 +319,7 @@ public final class LocalControllerBackend
             localControllerRepository_.updateVirtualMachineMetaData(groupManagerDescription);
         localControllerDescription_.setVirtualMachineMetaData(metaData);
         
-        log_.debug(String.format("Update local controller location with : \n"+ 
+        log_.debug(String.format("Update local controller location with : \n" +
                                  "localControllerId  : %s \n" + 
                                  "groupManagerId : %s \n" + 
                                  "groupManagerAddress : %s \n",
