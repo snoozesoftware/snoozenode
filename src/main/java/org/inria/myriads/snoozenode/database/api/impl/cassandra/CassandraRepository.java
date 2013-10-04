@@ -783,15 +783,42 @@ public class CassandraRepository
             
             
             Mutator<String> mutator = HFactory.createMutator(keyspace_, StringSerializer.get());
-            mutator.addInsertion(location.getVirtualMachineId(), CassandraUtils.VIRTUALMACHINES_CF, HFactory.createStringColumn("ipAddress", ipAddress))
-                   .addInsertion(location.getVirtualMachineId(), CassandraUtils.VIRTUALMACHINES_CF, HFactory.createStringColumn("xmlRepresentation", xmlRepresentation))
-                   .addInsertion(location.getVirtualMachineId(), CassandraUtils.VIRTUALMACHINES_CF, HFactory.createStringColumn("status", status))
-                   .addInsertion(location.getVirtualMachineId(), CassandraUtils.VIRTUALMACHINES_CF, HFactory.createStringColumn("errorCode", errorCode))
-                   .addInsertion(location.getVirtualMachineId(), CassandraUtils.VIRTUALMACHINES_CF, HFactory.createColumn("location", location, StringSerializer.get(), new JsonSerializer(VirtualMachineLocation.class)))
-                   .addInsertion(location.getVirtualMachineId(), CassandraUtils.VIRTUALMACHINES_CF, HFactory.createStringColumn("groupManager", location.getGroupManagerId()))
-                   .addInsertion(location.getVirtualMachineId(), CassandraUtils.VIRTUALMACHINES_CF, HFactory.createStringColumn("localController", location.getLocalControllerId()))
-                   .addInsertion(location.getVirtualMachineId(), CassandraUtils.VIRTUALMACHINES_CF, HFactory.createColumn("requestedCapacity", requestedCapacity, StringSerializer.get(), new JsonSerializer(ArrayList.class)))
-                   .addInsertion(location.getVirtualMachineId(), CassandraUtils.VIRTUALMACHINES_CF, HFactory.createColumn("isAssigned", true, StringSerializer.get(), BooleanSerializer.get()));
+            mutator.addInsertion(
+                        location.getVirtualMachineId(),
+                        CassandraUtils.VIRTUALMACHINES_CF, 
+                        HFactory.createStringColumn("ipAddress", ipAddress))
+                   .addInsertion(
+                           location.getVirtualMachineId(),
+                           CassandraUtils.VIRTUALMACHINES_CF,
+                           HFactory.createStringColumn("xmlRepresentation", xmlRepresentation))
+                   .addInsertion(
+                           location.getVirtualMachineId(),
+                           CassandraUtils.VIRTUALMACHINES_CF,
+                           HFactory.createStringColumn("status", status))
+                   .addInsertion(
+                           location.getVirtualMachineId(),
+                           CassandraUtils.VIRTUALMACHINES_CF,
+                           HFactory.createStringColumn("errorCode", errorCode))
+                   .addInsertion(
+                           location.getVirtualMachineId(), 
+                           CassandraUtils.VIRTUALMACHINES_CF, 
+                           HFactory.createColumn("location", location, StringSerializer.get(), new JsonSerializer(VirtualMachineLocation.class)))
+                   .addInsertion(
+                           location.getVirtualMachineId(), 
+                           CassandraUtils.VIRTUALMACHINES_CF,
+                           HFactory.createStringColumn("groupManager", location.getGroupManagerId()))
+                   .addInsertion(
+                           location.getVirtualMachineId(), 
+                           CassandraUtils.VIRTUALMACHINES_CF, 
+                           HFactory.createStringColumn("localController", location.getLocalControllerId()))
+                   .addInsertion(
+                           location.getVirtualMachineId(), 
+                           CassandraUtils.VIRTUALMACHINES_CF, 
+                           HFactory.createColumn("requestedCapacity", requestedCapacity, StringSerializer.get(), new JsonSerializer(ArrayList.class)))
+                   .addInsertion(
+                           location.getVirtualMachineId(), 
+                           CassandraUtils.VIRTUALMACHINES_CF, 
+                           HFactory.createColumn("isAssigned", true, StringSerializer.get(), BooleanSerializer.get()));
     
             log_.debug("executing mutation");
             MutationResult result = mutator.execute();
@@ -807,7 +834,17 @@ public class CassandraRepository
         return true;
     }
     
-    protected void addAggregatedMonitoringDataCassandra(String localControllerId, List<AggregatedVirtualMachineData> aggregatedData)
+    /**
+     * 
+     * Adds aggregated monitoring data to Cassandra.
+     * 
+     * 
+     * @param localControllerId     The localControllerId.
+     * @param aggregatedData        The aggregated datas.
+     */
+    protected void addAggregatedMonitoringDataCassandra(
+            String localControllerId,
+            List<AggregatedVirtualMachineData> aggregatedData)
     {
         // done by lc ? 
         Guard.check(aggregatedData);   
@@ -889,17 +926,47 @@ public class CassandraRepository
             LocalControllerLocation location = description.getLocation();
             
             Mutator<String> mutator = HFactory.createMutator(keyspace_, StringSerializer.get());
-            mutator.addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("hostname", hostname, ttl, StringSerializer.get(), StringSerializer.get()))
-                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("controlDataAddress", controlDataAddress, ttl, StringSerializer.get(), new JsonSerializer(NetworkAddress.class)))
-                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("hypervisorSettings", hypervisorSettings, ttl, StringSerializer.get(), new JsonSerializer(HypervisorSettings.class)))
-                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("totalCapacity", totalCapacity, ttl, StringSerializer.get(), new JsonSerializer(ArrayList.class)))
-                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("wakeupSettings", wakeupSettings, ttl, StringSerializer.get(), new JsonSerializer(WakeupSettings.class)))
-                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("isAssigned", true, ttl, StringSerializer.get(), BooleanSerializer.get()))
-                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("groupManager",  groupManagerId, ttl, StringSerializer.get(), StringSerializer.get()))
-                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("status", String.valueOf(status), ttl, StringSerializer.get(), StringSerializer.get()))
-                   .addInsertion(id, CassandraUtils.LOCALCONTROLLERS_CF, HFactory.createColumn("localControllerLocation", location, ttl, StringSerializer.get(), new JsonSerializer(LocalControllerLocation.class)))
+            mutator.addInsertion(
+                        id,
+                        CassandraUtils.LOCALCONTROLLERS_CF,
+                        HFactory.createColumn("hostname", hostname, ttl, StringSerializer.get(), StringSerializer.get()))
+                   .addInsertion(
+                           id,
+                           CassandraUtils.LOCALCONTROLLERS_CF,
+                           HFactory.createColumn("controlDataAddress", controlDataAddress, ttl, StringSerializer.get(), new JsonSerializer(NetworkAddress.class)))
+                   .addInsertion(
+                           id,
+                           CassandraUtils.LOCALCONTROLLERS_CF,
+                           HFactory.createColumn("hypervisorSettings", hypervisorSettings, ttl, StringSerializer.get(), new JsonSerializer(HypervisorSettings.class)))
+                   .addInsertion(
+                           id,
+                           CassandraUtils.LOCALCONTROLLERS_CF, 
+                           HFactory.createColumn("totalCapacity", totalCapacity, ttl, StringSerializer.get(), new JsonSerializer(ArrayList.class)))
+                   .addInsertion(
+                           id,
+                           CassandraUtils.LOCALCONTROLLERS_CF,
+                           HFactory.createColumn("wakeupSettings", wakeupSettings, ttl, StringSerializer.get(), new JsonSerializer(WakeupSettings.class)))
+                   .addInsertion(
+                           id,
+                           CassandraUtils.LOCALCONTROLLERS_CF,
+                           HFactory.createColumn("isAssigned", true, ttl, StringSerializer.get(), BooleanSerializer.get()))
+                   .addInsertion(
+                           id,
+                           CassandraUtils.LOCALCONTROLLERS_CF,
+                           HFactory.createColumn("groupManager",  groupManagerId, ttl, StringSerializer.get(), StringSerializer.get()))
+                   .addInsertion(
+                           id,
+                           CassandraUtils.LOCALCONTROLLERS_CF,
+                           HFactory.createColumn("status", String.valueOf(status), ttl, StringSerializer.get(), StringSerializer.get()))
+                   .addInsertion(
+                           id,
+                           CassandraUtils.LOCALCONTROLLERS_CF,
+                           HFactory.createColumn("localControllerLocation", location, ttl, StringSerializer.get(), new JsonSerializer(LocalControllerLocation.class)))
             //mapping add
-                    .addInsertion(controlDataAddress.toString(), CassandraUtils.LOCALCONTROLLERS_MAPPING_CF, HFactory.createColumn("id", id, ttl, StringSerializer.get(), StringSerializer.get()));
+                    .addInsertion(
+                            controlDataAddress.toString(),
+                            CassandraUtils.LOCALCONTROLLERS_MAPPING_CF,
+                            HFactory.createColumn("id", id, ttl, StringSerializer.get(), StringSerializer.get()));
             log_.debug("executing mutation");         
             MutationResult result = mutator.execute();
             log_.debug(String.format("Insertion done in %d", result.getExecutionTimeMicro()));
@@ -936,11 +1003,26 @@ public class CassandraRepository
             ListenSettings listenSettings = description.getListenSettings();
             NetworkAddress heartbeatAddress = description.getHeartbeatAddress();
             
-            mutator.addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("hostname", hostname, ttl, StringSerializer.get(), StringSerializer.get()))
-                   .addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("listenSettings", listenSettings, ttl,  StringSerializer.get(), new JsonSerializer(ListenSettings.class)))
-                   .addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("heartbeatAddress", heartbeatAddress, ttl,  StringSerializer.get(), new JsonSerializer(NetworkAddress.class)))
-                   .addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("isAssigned", isAssigned, ttl, StringSerializer.get(),   new BooleanSerializer()))
-                   .addInsertion(id, CassandraUtils.GROUPMANAGERS_CF, HFactory.createColumn("isGroupLeader", isGroupLeader, ttl, StringSerializer.get(),  new BooleanSerializer()));
+            mutator.addInsertion(
+                    id, 
+                    CassandraUtils.GROUPMANAGERS_CF,
+                    HFactory.createColumn("hostname", hostname, ttl, StringSerializer.get(), StringSerializer.get()))
+                   .addInsertion(
+                           id,
+                           CassandraUtils.GROUPMANAGERS_CF,
+                           HFactory.createColumn("listenSettings", listenSettings, ttl,  StringSerializer.get(), new JsonSerializer(ListenSettings.class)))
+                   .addInsertion(
+                           id,
+                           CassandraUtils.GROUPMANAGERS_CF,
+                           HFactory.createColumn("heartbeatAddress", heartbeatAddress, ttl,  StringSerializer.get(), new JsonSerializer(NetworkAddress.class)))
+                   .addInsertion(
+                           id,
+                           CassandraUtils.GROUPMANAGERS_CF,
+                           HFactory.createColumn("isAssigned", isAssigned, ttl, StringSerializer.get(),   new BooleanSerializer()))
+                   .addInsertion(
+                           id,
+                           CassandraUtils.GROUPMANAGERS_CF,
+                           HFactory.createColumn("isGroupLeader", isGroupLeader, ttl, StringSerializer.get(),  new BooleanSerializer()));
             
             MutationResult result = mutator.execute();
             log_.debug(String.format("Insertion done in %d", result.getExecutionTimeMicro()));
@@ -961,7 +1043,6 @@ public class CassandraRepository
      * 
      * @param groupManagerId    The groupManager Id.
      * @param summary           The summary to add.
-     * @param ttl               The ttl to apply.
      */
     protected void addGroupManagerSummaryInformationCassandra(String groupManagerId,
             GroupManagerSummaryInformation summary)

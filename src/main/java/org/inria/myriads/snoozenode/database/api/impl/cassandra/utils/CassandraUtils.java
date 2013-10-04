@@ -79,7 +79,7 @@ public final class CassandraUtils
     /**
      * Hide Constructor.
      */
-    public CassandraUtils()
+    private CassandraUtils()
     {
         throw new UnsupportedOperationException();
     }
@@ -244,8 +244,8 @@ public final class CassandraUtils
      * 
      * Unassign nodes from a column family.
      * 
-     * @param keyspace
-     * @param columnFamily
+     * @param keyspace          The keyspace
+     * @param columnFamily      The column family
      */
     public static void unassignNodes(Keyspace keyspace, String columnFamily)
     {

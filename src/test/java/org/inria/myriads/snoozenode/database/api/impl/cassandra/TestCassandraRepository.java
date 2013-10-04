@@ -21,8 +21,6 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -31,9 +29,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TestCassandraRepository extends TestCase 
 {
-    /** Logger. */
-    private static final Logger log_ = LoggerFactory.getLogger(TestGroupManagerCassandraRepository.class);
-    
+  
     /** Repository under test. */
     private CassandraRepository repository_;
 

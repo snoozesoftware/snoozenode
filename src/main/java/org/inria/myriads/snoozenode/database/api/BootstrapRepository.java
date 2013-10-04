@@ -66,7 +66,7 @@ public interface BootstrapRepository
      * @param firstGroupManagerId       first group manager to fetch.
      * @param limit                     limit.
      * @param numberOfMonitoringEntries numberOfMonitoringEntries.
-     * @param groupManagerDescription   group manager description.
+     * @param groupLeaderDescription    group leader description.
      * @return GroupManagers            list of group manager descriptions.
      * 
      */
@@ -82,7 +82,7 @@ public interface BootstrapRepository
      * Gets the group manager description.
      * 
      * @param groupManagerId            The group manager identifier to retrieve.
-     * @param groupLeaderDEscription    The groupLeader description.
+     * @param groupLeaderDescription    The groupLeader description.
      * @return  the groupmanager description.
      */
     GroupManagerDescription getGroupManagerDescription(
@@ -96,7 +96,7 @@ public interface BootstrapRepository
      * @param firstLocalControllerId        First localcontroller to fecth.
      * @param limit                         Limit.
      * @param numberOfMonitoringEntries     Number Of Monitoring entries.
-     * @param groupManagerDescription       Group manager description.
+     * @param groupLeaderDescription        Group leader description.
      * @return  list of localcontroller descriptions.                  
      */
     List<LocalControllerDescription> getLocalControllerDescriptions(

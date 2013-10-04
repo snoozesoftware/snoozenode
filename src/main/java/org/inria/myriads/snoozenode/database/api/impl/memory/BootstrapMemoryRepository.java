@@ -122,7 +122,7 @@ public final class BootstrapMemoryRepository
         NetworkAddress groupLeaderAddress = groupLeader.getListenSettings().getControlDataAddress();
         GroupManagerAPI groupLeaderCommunicator = 
                 CommunicatorFactory.newGroupManagerCommunicator(groupLeaderAddress); 
-        GroupManagerDescription groupManager= 
+        GroupManagerDescription groupManager =
             groupLeaderCommunicator.getGroupManagerDescription(groupManagerId);
         
         return groupManager;
