@@ -20,6 +20,8 @@
 package org.inria.myriads.snoozenode.localcontroller;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.rest.api.LocalControllerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
@@ -30,6 +32,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.Vi
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
 import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
+import org.inria.myriads.snoozecommon.globals.Globals;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSavingAction;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
@@ -499,7 +502,7 @@ public final class LocalControllerResource extends ServerResource
      * @return                          the new virtual machine meta data 
      * 
      */
-    public VirtualMachineMetaData softResizeVirtualMachine(ResizeRequest resizeRequest) 
+    public VirtualMachineMetaData resizeVirtualMachine(ResizeRequest resizeRequest) 
     {
         log_.debug("Soft resize virtual machine request arrived");
         
@@ -511,26 +514,68 @@ public final class LocalControllerResource extends ServerResource
            }
        String virtualMachineId = resizeRequest.getVirtualMachineLocation().getVirtualMachineId();
        VirtualMachineMetaData virtualMachine = backend_.getRepository().getVirtualMachineMetaData(virtualMachineId);
-       virtualMachine.setRequestedCapacity(resizeRequest.getResizedCapacity());
-       Long memory = resizeRequest.getResizedCapacity().get(1).longValue();
+       //compute resize capacity
+       Double memory = resizeRequest.getResizedCapacity().get(Globals.MEMORY_UTILIZATION_INDEX);
+       if (memory <= 0d)
+       {
+           memory = virtualMachine.getRequestedCapacity().get(Globals.MEMORY_UTILIZATION_INDEX);
+       }
+       Double vcpus = resizeRequest.getResizedCapacity().get(Globals.CPU_UTILIZATION_INDEX);
+       if (vcpus <= 0d)
+       {
+           vcpus = virtualMachine.getRequestedCapacity().get(Globals.CPU_UTILIZATION_INDEX);
+       }
+       Double rx = resizeRequest.getResizedCapacity().get(Globals.NETWORK_RX_UTILIZATION_INDEX);
+       if (rx <= 0d)
+       {
+           rx = virtualMachine.getRequestedCapacity().get(Globals.NETWORK_RX_UTILIZATION_INDEX);
+       }
+       Double tx = resizeRequest.getResizedCapacity().get(Globals.NETWORK_TX_UTILIZATION_INDEX);
+       if (rx <= 0d)
+       {
+           tx = virtualMachine.getRequestedCapacity().get(Globals.NETWORK_TX_UTILIZATION_INDEX);
+       }
        
-       boolean isResized = 
-               backend_.getVirtualMachineActuator().setMemory(virtualMachineId, memory);
-       
-       if (!isResized)
-           return null;
-       
-       int vcpu = new Double(resizeRequest.getResizedCapacity().get(0)).intValue();
-       isResized =
-               backend_.getVirtualMachineActuator().setVcpu(virtualMachineId, vcpu);
+       ArrayList<Double> requestedCapacity = new ArrayList<Double>(Arrays.asList(vcpus, memory, tx, rx));
 
-       if (!isResized)
-           return null;
-
+       boolean isResizedMem = 
+               backend_.getVirtualMachineActuator().setMemory(virtualMachineId, memory.longValue());
        
+       if (!isResizedMem)
+       {
+           return null;
+       }
+       
+       boolean isResizedCpu = 
+               backend_.getVirtualMachineActuator().setVcpu(virtualMachineId, vcpus.intValue());
+       
+       if (!isResizedCpu)
+       {
+           return null;
+       }
+       
+       virtualMachine.setRequestedCapacity(requestedCapacity); 
+
        return virtualMachine;
     }
-    
+
+    @Override
+    public List<VirtualMachineMetaData> getVirtualMachines(int numberOfMonitoringEntries)
+    {
+        if (!isBackendActive())
+        {
+           log_.warn("Backend is not initialized yet!");
+           return null;
+        }
+      
+        List<VirtualMachineMetaData> virtualMachines = new ArrayList<VirtualMachineMetaData>();
+        
+        virtualMachines = backend_.getRepository().getVirtualMachines(numberOfMonitoringEntries);
+        
+        return virtualMachines;
+    }
+
+
     
 }
 

@@ -38,14 +38,17 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionResponse;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
+import org.inria.myriads.snoozecommon.globals.Globals;
 import org.inria.myriads.snoozecommon.util.TimeUtils;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.exception.DispatchPlanException;
 import org.inria.myriads.snoozenode.exception.MissingGroupManagerException;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.util.EnergySaverUtils;
+import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPlan;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
+import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.impl.Static;
 import org.inria.myriads.snoozenode.groupmanager.virtualclustermanager.listener.VirtualClusterSubmissionListener;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.slf4j.Logger;
@@ -70,6 +73,9 @@ public final class VirtualClusterSubmissionWorker
 
     /** Virtual cluster dispatch policy. */
     private DispatchingPolicy dispatchingPolicy_;
+    
+    /** Virtual cluster dispatch policy. */
+    private DispatchingPolicy staticDispatchingPolicy_;
 
     /** Group leader repository. */
     private GroupLeaderRepository repository_;
@@ -80,6 +86,8 @@ public final class VirtualClusterSubmissionWorker
     /** Task identifier. */
     private String taskIdentifier_;
     
+
+    
     /**
      * Constructor.
      * 
@@ -87,6 +95,7 @@ public final class VirtualClusterSubmissionWorker
      * @param nodeConfiguration    The node configuration
      * @param dispatchingPolicy    The dispatching policy
      * @param repository           The group leader repository
+     * @param estimator            The resource demand estimator
      * @param virtualMachines      The virtual machines
      * @param submissionListener   The submission listener
      */
@@ -95,6 +104,7 @@ public final class VirtualClusterSubmissionWorker
                                           NodeConfiguration nodeConfiguration, 
                                           DispatchingPolicy dispatchingPolicy, 
                                           GroupLeaderRepository repository,
+                                          ResourceDemandEstimator estimator,
                                           VirtualClusterSubmissionListener submissionListener)
     {
         log_.debug("Initializing the virtual cluster submission");
@@ -104,6 +114,7 @@ public final class VirtualClusterSubmissionWorker
         nodeConfiguration_ = nodeConfiguration;
         repository_ = repository;
         dispatchingPolicy_ = dispatchingPolicy;
+        staticDispatchingPolicy_ = new Static(estimator);
         submissionListener_ = submissionListener;
     }
         
@@ -115,7 +126,9 @@ public final class VirtualClusterSubmissionWorker
         {  
             ArrayList<VirtualMachineMetaData> freeVirtualMachines = new ArrayList<VirtualMachineMetaData>();
             ArrayList<VirtualMachineMetaData> errorVirtualMachines = new ArrayList<VirtualMachineMetaData>();
-            splitVirtualMachines(virtualMachines_, freeVirtualMachines, errorVirtualMachines);
+
+            removeVirtualMachinesWithError(virtualMachines_, freeVirtualMachines, errorVirtualMachines);
+
             
             startVirtualClusterDispatching(freeVirtualMachines);
         }
@@ -150,7 +163,8 @@ public final class VirtualClusterSubmissionWorker
      * @param freeVirtualMachines       Virtual machines with no error
      * @param errorVirtualMachines      Virtual machines wiht error
      */
-    private void splitVirtualMachines(
+    private void removeVirtualMachinesWithError(
+    
             ArrayList<VirtualMachineMetaData> allVirtualMachines, 
             ArrayList<VirtualMachineMetaData> freeVirtualMachines,
             ArrayList<VirtualMachineMetaData> errorVirtualMachines)
@@ -184,6 +198,7 @@ public final class VirtualClusterSubmissionWorker
         int numberOfMonitoringEntries = nodeConfiguration_.getEstimator().getNumberOfMonitoringEntries();
         List<GroupManagerDescription> groupManagers = 
             repository_.getGroupManagerDescriptions(numberOfMonitoringEntries);
+        
         if (groupManagers.size() == 0)
         {
             throw new MissingGroupManagerException("No group managers available yet!");
@@ -197,14 +212,33 @@ public final class VirtualClusterSubmissionWorker
                         
         ArrayList<VirtualMachineMetaData> virtualMachinesCopy = 
             new ArrayList<VirtualMachineMetaData>(Arrays.asList(new VirtualMachineMetaData[virtualMachines.size()]));  
+
+        
         Collections.copy(virtualMachinesCopy, virtualMachines);
-       
-        DispatchingPlan dispatchPlan = dispatchingPolicy_.dispatch(virtualMachinesCopy, groupManagers); 
-        if (dispatchPlan == null)
+        ArrayList<VirtualMachineMetaData> boundVirtualMachines = new ArrayList<VirtualMachineMetaData>();
+        ArrayList<VirtualMachineMetaData> freeVirtualMachines = new ArrayList<VirtualMachineMetaData>();
+        
+        splitVirtualMachines(virtualMachinesCopy, boundVirtualMachines, freeVirtualMachines);
+        
+        //dispatch static vms
+        staticDispatchingPolicy_.dispatch(boundVirtualMachines, groupManagers);
+        
+        //dispatch free vms
+        dispatchingPolicy_.dispatch(freeVirtualMachines, groupManagers);
+
+        //merge the two dispatching plan
+        ArrayList<GroupManagerDescription> groupManagerCandidates = new ArrayList<GroupManagerDescription>();
+        
+        for (GroupManagerDescription groupManager : groupManagers)
         {
-            throw new DispatchPlanException("Dispatch plan is not available!");
+            if (groupManager.getVirtualMachines().size() > 0)
+            {
+                groupManagerCandidates.add(groupManager);
+            }
         }
         
+        DispatchingPlan dispatchPlan = new DispatchingPlan(groupManagerCandidates);
+                
         startVirtualCluster(dispatchPlan);    
         
         if (isEnergySavings)
@@ -213,6 +247,40 @@ public final class VirtualClusterSubmissionWorker
         }
     }
                
+    /**
+     * 
+     * Splits the virtual machines.
+     * 
+     * @param virtualMachinesCopy   the virtual machines list to split
+     * @param boundVirtualMachines  the bound virtual machines
+     * @param freeVirtualMachines   the free virtual machines
+     */
+    protected void splitVirtualMachines(ArrayList<VirtualMachineMetaData> virtualMachinesCopy,
+            ArrayList<VirtualMachineMetaData> boundVirtualMachines,
+            ArrayList<VirtualMachineMetaData> freeVirtualMachines)
+    {
+        
+        for (VirtualMachineMetaData virtualMachine : virtualMachinesCopy)
+        {
+            if (virtualMachine.getErrorCode().equals(VirtualMachineErrorCode.INVALID_HOST_ID))
+            {
+                log_.debug("Skipping virtual machine with invalid host id");
+                continue;
+            }
+            //if (virtualMachine.getGroupManagerLocation().getGroupManagerId().equals(Globals.DEFAULT_INITIALIZATION) )
+            if (virtualMachine.getVirtualMachineLocation().getGroupManagerId().equals(Globals.DEFAULT_INITIALIZATION))
+            {
+                log_.debug("Found a free virtual machine");
+                freeVirtualMachines.add(virtualMachine);
+            }
+            else
+            {
+                log_.debug("Found a bound virtual machine");
+                boundVirtualMachines.add(virtualMachine);   
+            }
+        }
+    }
+
     /**
      * Attempts to start the virtual cluster on the assigned group managers.
      * 
@@ -223,9 +291,10 @@ public final class VirtualClusterSubmissionWorker
         throws DispatchPlanException 
     {        
         log_.debug("Starting virtual cluster submission");
-           
+        
         Map<String, GroupManagerDescription> submissionResponses = new HashMap<String, GroupManagerDescription>(); 
         List<GroupManagerDescription> groupManagers = dispatchPlan.getGroupManagers();
+        log_.debug(String.format("starting placement on %d group managers", groupManagers.size()));
         for (GroupManagerDescription groupManager : groupManagers) 
         {
             ArrayList<VirtualMachineMetaData> assignedVirtualMachines = groupManager.getVirtualMachines();
@@ -403,6 +472,7 @@ public final class VirtualClusterSubmissionWorker
         return taskIdentifier;
     }
     
+
     /**
      * Sends a message to get virtual machine response.
      * 

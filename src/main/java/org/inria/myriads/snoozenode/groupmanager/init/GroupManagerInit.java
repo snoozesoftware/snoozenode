@@ -28,10 +28,10 @@ import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
+import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.ReconfigurationSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
-import org.inria.myriads.snoozenode.database.enums.DatabaseType;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.EnergySaverFactory;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.saver.EnergySaver;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
@@ -45,6 +45,7 @@ import org.inria.myriads.snoozenode.heartbeat.HeartbeatFactory;
 import org.inria.myriads.snoozenode.heartbeat.message.HeartbeatMessage;
 import org.inria.myriads.snoozenode.heartbeat.sender.HeartbeatMulticastSender;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,15 +90,23 @@ public final class GroupManagerInit
     /** State machine. */
     private StateMachine stateMachine_;
     
+    /** External Notifier. */
+    private ExternalNotifier externalNotifier_;
+    
+    
+    
     /**
      * Group manager logic constructor.
      * 
      * @param nodeConfiguration         The node configuration
-     * @param groupManagerDescription   The group manager description   
+     * @param groupManagerDescription   The group manager description
+     * @param externalNotifier          The external notifier   
      * @throws Exception                The exception
      */
     public GroupManagerInit(NodeConfiguration nodeConfiguration,
-                            GroupManagerDescription groupManagerDescription) 
+                            GroupManagerDescription groupManagerDescription,
+                            ExternalNotifier externalNotifier
+            ) 
         throws Exception 
     {
         Guard.check(nodeConfiguration, groupManagerDescription);
@@ -105,14 +114,19 @@ public final class GroupManagerInit
         
         nodeConfiguration_ = nodeConfiguration; 
         description_ = groupManagerDescription;
+        externalNotifier_ = externalNotifier;
         initializeRepository();
         initializeResourceDemandEstimator();
         initializeStateMachine();
         checkAndEnableFeatures();
         startLocalControllerMonitoringService();
         startHeartbeatSender();
+        
+
     }
         
+   
+
     /**
      * Stops the group manager services.
      * 
@@ -159,13 +173,18 @@ public final class GroupManagerInit
      * Initializes the repository.
      */
     private void initializeRepository()
-    {
-        String groupManagerId = description_.getId();
+    {        
         int maxCapacity = nodeConfiguration_.getDatabase().getNumberOfEntriesPerVirtualMachine();
-        DatabaseType databaseType = nodeConfiguration_.getDatabase().getType();
-        repository_ = DatabaseFactory.newGroupManagerRepository(groupManagerId, 
-                                                                maxCapacity, 
-                                                                databaseType);
+        DatabaseSettings settings = nodeConfiguration_.getDatabase();
+        int interval = nodeConfiguration_.getMonitoring().getInterval();
+        repository_ = DatabaseFactory.newGroupManagerRepository(
+                new GroupManagerDescription(description_, 0),
+                maxCapacity,
+                interval,
+                settings,
+                nodeConfiguration_.getExternalNotifier(),
+                externalNotifier_
+                );
     }
     
     /**
@@ -183,7 +202,7 @@ public final class GroupManagerInit
      */
     private void initializeStateMachine() 
     {
-        stateMachine_ = new GroupManagerStateMachine(nodeConfiguration_, estimator_, repository_);
+        stateMachine_ = new GroupManagerStateMachine(nodeConfiguration_, estimator_, repository_, externalNotifier_);
     }
     
     /**
@@ -224,7 +243,7 @@ public final class GroupManagerInit
             energySaver_ = EnergySaverFactory.newEnergySaver(nodeConfiguration_.getEnergyManagement(), 
                                                              repository_,
                                                              stateMachine_);
-            new Thread(energySaver_).start();
+            new Thread(energySaver_, "EnergySaver").start();
         }  
     }
     
@@ -247,7 +266,7 @@ public final class GroupManagerInit
         heartbeatSender_ = HeartbeatFactory.newHeartbeatMulticastSender(heartbeatAddress, 
                                                                         heartbeatInterval,
                                                                         heartbeatMessage);        
-        new Thread(heartbeatSender_).start();
+        new Thread(heartbeatSender_, "HeartBeatSender").start();
     }
     
     /**
@@ -262,12 +281,17 @@ public final class GroupManagerInit
         Guard.check(groupLeader);              
         if (monitoringService_ == null)
         {
-            int monitoringInterval = nodeConfiguration_.getMonitoring().getInterval();
-            monitoringService_ = MonitoringFactory.newGroupManagerMonitoringService(repository_, monitoringInterval);
+            monitoringService_ = MonitoringFactory.newGroupManagerMonitoringService(
+                    description_.getId(), 
+                    repository_,
+                    estimator_,
+                    nodeConfiguration_.getDatabase(),
+                    nodeConfiguration_.getMonitoring(), 
+                    nodeConfiguration_.getExternalNotifier()
+                    );
         }
         
-        monitoringService_.startSummaryProducer(groupLeader.getListenSettings().getMonitoringDataAddress(), 
-                                                estimator_);
+        monitoringService_.startServices(groupLeader.getListenSettings().getMonitoringDataAddress());
     }
         
     /**
@@ -295,15 +319,16 @@ public final class GroupManagerInit
         NetworkAddress address = groupLeader.getListenSettings().getControlDataAddress();
         log_.debug(String.format("Joining group leader %s with control data port: %s",
                                  address.getAddress(), address.getPort()));
-    
+
         repository_.fillGroupManagerDescription(description_);
+        
         GroupManagerAPI communicator = CommunicatorFactory.newGroupManagerCommunicator(address);
         boolean hasJoined = communicator.joinGroupLeader(description_);
         if (hasJoined)
         {
             startGroupManagerMonitoringService(groupLeader);
         }
-    
+        
         return hasJoined;
     }
  
@@ -325,5 +350,16 @@ public final class GroupManagerInit
     public GroupManagerRepository getRepository()
     {
         return repository_;
+    }
+
+    /**
+     * 
+     * Gets the external notifier.
+     * 
+     * @return ExternalNotifier     
+     */
+    public ExternalNotifier getExternalNotifier()
+    {
+        return externalNotifier_;
     }
 }

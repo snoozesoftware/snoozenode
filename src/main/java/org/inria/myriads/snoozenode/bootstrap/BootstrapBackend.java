@@ -29,8 +29,14 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.repository.Grou
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
+import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
+import org.inria.myriads.snoozenode.database.DatabaseFactory;
+import org.inria.myriads.snoozenode.database.api.BootstrapRepository;
+import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
 import org.inria.myriads.snoozenode.heartbeat.HeartbeatFactory;
 import org.inria.myriads.snoozenode.heartbeat.listener.HeartbeatListener;
 import org.inria.myriads.snoozenode.heartbeat.message.HeartbeatMessage;
@@ -52,6 +58,15 @@ public final class BootstrapBackend
     /** The group leader description. */
     private GroupManagerDescription groupLeaderDescription_;
     
+    /** The node configuration.*/
+    private NodeConfiguration nodeConfiguration_;
+    
+    /** The repository.*/
+    private BootstrapRepository repository_;
+    
+    /** Track backend activity.*/
+    private boolean isActive_;
+    
     /**
      * Bootstrap backend constructor.
      * 
@@ -63,13 +78,29 @@ public final class BootstrapBackend
     {
         Guard.check(nodeParameters);
         log_.debug("Starting bootstrap backend");
+        nodeConfiguration_ = nodeParameters;
         NetworkAddress address = nodeParameters.getNetworking().getMulticast().getGroupLeaderHeartbeatAddress();
         int heartbeatTimeout = nodeParameters.getFaultTolerance().getHeartbeat().getTimeout();
         new Thread(HeartbeatFactory.newHeartbeatMulticastListener(address, 
                                                                   heartbeatTimeout,
-                                                                  this)).start();
+                                                                  this),
+                "HeartBeatListener"                                                  
+                ).start();
+        initializeRepository();
+        isActive_ = true;
     }
     
+    /**
+     * 
+     * Initialize the backend repository (read only).
+     * 
+     */
+    private void initializeRepository()
+    {
+        DatabaseSettings settings = nodeConfiguration_.getDatabase();
+        repository_ = DatabaseFactory.newBootstrapRepository(settings);
+    }
+
     /** 
      * Return current group leader.
      *  
@@ -131,7 +162,7 @@ public final class BootstrapBackend
         NetworkAddress groupLeaderAddress = groupLeaderDescription_.getListenSettings().getControlDataAddress();
         
         GroupLeaderRepositoryInformation groupLeaderInformation = 
-                getGroupLeaderRepositoryInformation(groupLeaderAddress, 10);
+                getGroupLeaderRepositoryInformation(groupLeaderAddress, 0);
 
         GroupLeaderRepositoryInformation hierarchy = new GroupLeaderRepositoryInformation();
         ArrayList<GroupManagerDescription> groupManagers = groupLeaderInformation.getGroupManagerDescriptions();
@@ -140,7 +171,7 @@ public final class BootstrapBackend
         for (GroupManagerDescription groupManager : groupManagers) 
         {
             NetworkAddress address = groupManager.getListenSettings().getControlDataAddress();
-            GroupManagerRepositoryInformation information = getGroupManagerRepositoryInformations(address, 10);
+            GroupManagerRepositoryInformation information = getGroupManagerRepositoryInformations(address, 0);
             HashMap<String, LocalControllerDescription> localControllers =
                     new HashMap<String, LocalControllerDescription>();
             for (LocalControllerDescription localController : information.getLocalControllerDescriptions())
@@ -195,4 +226,77 @@ public final class BootstrapBackend
                 groupManagerCommunicator.getGroupManagerRepositoryInformation(numberOfBacklogEntries);
         return information;        
     }
+
+    /**
+     * 
+     * Sends a command to a virtual machine.
+     * 
+     * @param command               command to send.
+     * @param virtualMachineId      virtualMachine Id.
+     * @return                      true iff everything is ok.
+     */
+    public synchronized boolean commandVirtualMachine(VirtualMachineCommand command, String virtualMachineId)
+    {
+       
+        VirtualMachineMetaData virtualMachine = 
+                getRepository().getVirtualMachineMetaData(virtualMachineId, 0, getGroupLeaderDescription());
+        
+        if (virtualMachine == null)
+        {
+            log_.debug(String.format("Virtual Machine %s not found in the system", virtualMachineId));
+            return false;
+        }
+        
+        VirtualMachineLocation location = virtualMachine.getVirtualMachineLocation();
+        NetworkAddress groupManagerAddress = location.getGroupManagerControlDataAddress();
+        GroupManagerAPI groupManagerCommunicator = CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress);
+        boolean isProcessed = false;
+        switch(command)
+        {
+            case DESTROY:
+                isProcessed = groupManagerCommunicator.destroyVirtualMachine(location);
+                break;
+            case REBOOT :
+                isProcessed = groupManagerCommunicator.rebootVirtualMachine(location);
+                break;
+            case SUSPEND :
+                isProcessed = groupManagerCommunicator.suspendVirtualMachine(location);
+                break;
+            case RESUME :
+                isProcessed = groupManagerCommunicator.resumeVirtualMachine(location);
+                break;
+            case SHUTDOWN : 
+                isProcessed = groupManagerCommunicator.shutdownVirtualMachine(location);
+                break;
+            default : 
+                log_.debug("Unknown command provided");
+        }
+        
+        return isProcessed;
+        
+    }
+    
+    /**
+     * 
+     * Gets the bootstrap repository.
+     * 
+     * @return      The repository.
+     */
+    public BootstrapRepository getRepository()
+    {
+        return repository_;
+    }
+
+    /**
+     * 
+     * checks if backend is active.
+     * 
+     * @return  isActive
+     */
+    public boolean isActive()
+    {
+        return isActive_;
+    }
+    
+    
 }

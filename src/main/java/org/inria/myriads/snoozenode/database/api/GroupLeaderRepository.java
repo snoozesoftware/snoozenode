@@ -21,8 +21,12 @@ package org.inria.myriads.snoozenode.database.api;
 
 import java.util.ArrayList;
 
+import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
+import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 
 /**
  * Group leader repository interface.
@@ -46,6 +50,15 @@ public interface GroupLeaderRepository
      * @return                          The group manager descriptions
      */
     ArrayList<GroupManagerDescription> getGroupManagerDescriptions(int numberOfBacklogEntries);
+    
+    /**
+     * Returns the group manager description.
+     * 
+     * @param groupManagerId            The group manager id
+     * @param numberOfBacklogEntries    The number of backlog entries
+     * @return                          The group manager description
+     */
+    GroupManagerDescription getGroupManagerDescription(String groupManagerId, int numberOfBacklogEntries);
                
     /** 
      * Adds group manager data.
@@ -86,10 +99,39 @@ public interface GroupLeaderRepository
      */
     String getFreeIpAddress();
 
+
     /**
-     * Returns the number of free IP addresses.
      * 
-     * @return  The number of free IP addresses
+     * Returns the local controllers list.
+     * 
+     * @return  The local controllers list (unused).
      */
-    int getNumberOfFreeIpAddresses();
+    ArrayList<LocalControllerDescription> getLocalControllerList();
+
+    
+    /**
+     * 
+     * Gets the group manager assigned to the localcontroller identified by its contact information.
+     * 
+     * @param contactInformation        the contact address/port of the local controller.
+     * @return                          The assigned group manager or null if none is found.
+     */
+    AssignedGroupManager getAssignedGroupManager(NetworkAddress contactInformation);
+
+    /**
+     * Given a local controller location updates the location with the proper groupmanager.
+     * @param location          location.
+     * @return                  True if everything is ok.
+     */
+    boolean updateLocation(VirtualMachineLocation location);
+
+    /**
+     * 
+     * Gets the localController description.
+     * 
+     * @param localControllerId     Localcontroller Id.
+     * @return  The local controller description.
+     */
+    LocalControllerDescription getLocalControllerDescription(String localControllerId);
+    
 }

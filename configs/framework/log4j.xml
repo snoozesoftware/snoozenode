@@ -42,38 +42,49 @@
 		<appender-ref ref="FA"/>   
 	</category> 
 
+	<category name="me.prettyprint.cassandra">  
+		<priority value="WARN" />  
+		<appender-ref ref="FA"/>   
+	</category> 
+
+	<category name="HColumnFamilyLogger">  
+		<priority value="WARN" />  
+		<appender-ref ref="FA"/>   
+	</category> 
+
+
 	<logger name="org.apache.commons.httpclient">
-		<level value="WARN"/>
+		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>	
 	</logger>
 
 	<logger name="httpclient.wire">
-		<level value="WARN"/>
+		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>	
 	</logger>
 
 	<logger name="httpclient.content">
-		<level value="WARN"/>
+		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>	
 	</logger>
 	
 	<logger name="org.restlet">
-		<level value="OFF"/>
+		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>
 	</logger>
 		
 	<logger name="LogService">
-		<level value="WARN"/>
+		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>
 	</logger>
     
 	<logger name="org.mortbay.jetty">
-		<level value="WARN"/>
+		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>
 	</logger>
 
 	<logger name="org.apache.http">
-		<level value="WARN"/>
+		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>
 	</logger>
 
@@ -83,12 +94,12 @@
 	</logger>
 	    
 	<logger name="org.eclipse.jetty">
-		<level value="WARN"/>
+		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>
 	</logger>
 	
 	<logger name="org.inria.myriads.snoozecommon">
-		<level value="WARN"/>
+		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>
 	</logger>
 
@@ -98,9 +109,14 @@
 	</logger>  
 	
 	<logger name="org.inria.myriads.snoozenode.groupmanager.GroupManagerResource">
-		<level value="WARN"/>
+		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>
-	</logger> 
+	</logger>
+	
+	<logger name="org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy">
+		<level value="DEBUG"/>
+		<appender-ref ref="FA"/>
+	</logger>  
 	
 	<logger name="org.inria.myriads.snoozenode.groupmanager.monitoring.receiver.LocalControllerSummaryReceiver">
 		<level value="WARN"/>
@@ -122,6 +138,11 @@
 		<appender-ref ref="FA"/>
 	</logger> 
 
+	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring.service.VirtualMachineMonitoringService">		
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+	</logger> 
+	
 	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl">
 		<level value="WARN"/>
 		<appender-ref ref="FA"/>
@@ -138,7 +159,7 @@
 	</logger>
 	
 	<logger name="org.inria.myriads.snoozenode.util">
-		<level value="WARN"/>
+		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>
 	</logger>
 	

@@ -21,23 +21,26 @@ package org.inria.myriads.snoozenode.groupmanager.monitoring.producer;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.BlockingQueue;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.transport.GroupManagerDataTransporter;
-import org.inria.myriads.snoozenode.tcpip.TCPDataSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * Group manager monitoring data producer.
  * 
  * @author Eugen Feller
  */
-public final class GroupManagerSummaryProducer extends TCPDataSender
+public final class GroupManagerSummaryProducer
     implements Runnable
 {
     /** Define the logger. */
@@ -57,29 +60,39 @@ public final class GroupManagerSummaryProducer extends TCPDataSender
     
     /** Terminated. */
     private boolean isTerminated_;
-        
+    
+    /** Data queue.*/
+    private BlockingQueue<GroupManagerDataTransporter> dataQueue_;
+    
     /**
      * Constructor.
      * 
-     * @param repository            The group manager repository
-     * @param groupLeaderAddress    The group leader address
-     * @param estimator             The estimator
-     * @param monitoringInterval    The monitoring interval
+     * @param repository                    The group manager repository
+     * @param groupLeaderAddress            The group leader address
+     * @param estimator                     The estimator
+     * @param monitoringSettings            The monitoring settings
+     * @param monitoringExternalSettings    The external settings
+     * @param dataQueue                     The dataQueue
      * @throws IOException          The I/O exception
      */
     public GroupManagerSummaryProducer(GroupManagerRepository repository, 
                                        NetworkAddress groupLeaderAddress,
                                        ResourceDemandEstimator estimator,
-                                       int monitoringInterval)
+                                       MonitoringSettings monitoringSettings,
+                                       ExternalNotifierSettings monitoringExternalSettings,
+                                       BlockingQueue<GroupManagerDataTransporter> dataQueue
+                                       )
         throws  IOException 
     { 
-        super(groupLeaderAddress);
-        log_.debug("Initializing the group manager summary information producer");
         
+        log_.debug("Initializing the group manager summary information producer");
+       
         repository_ = repository;
         estimator_ = estimator;
-        monitoringInterval_ = monitoringInterval;
+        monitoringInterval_ = monitoringSettings.getInterval();
         lockObject_ = new Object();
+        dataQueue_ = dataQueue;
+        
     }
     
     /**
@@ -90,11 +103,11 @@ public final class GroupManagerSummaryProducer extends TCPDataSender
     private GroupManagerDataTransporter createDataTransporter()
     {
         ArrayList<LocalControllerDescription> localControllers = 
-            repository_.getLocalControllerDescriptions(estimator_.getNumberOfMonitoringEntries(), false);
+            repository_.getLocalControllerDescriptions(estimator_.getNumberOfMonitoringEntries(), false, true);
         ArrayList<String> legacyIpAddresses = repository_.getLegacyIpAddresses();
-        
-        GroupManagerSummaryInformation summary = estimator_.generateGroupManagerSummaryInformation(localControllers, 
-                                                                                                   legacyIpAddresses);
+        GroupManagerSummaryInformation summary = estimator_.generateGroupManagerSummaryInformation(localControllers);
+        summary.setLegacyIpAddresses(legacyIpAddresses);
+        summary.setLocalControllers(repository_.getLocalControllerDescriptionForDataTransporter());
         String groupManagerId = repository_.getGroupManagerId();
         GroupManagerDataTransporter dataTransporter = new GroupManagerDataTransporter(groupManagerId, summary);      
         return dataTransporter;
@@ -110,10 +123,15 @@ public final class GroupManagerSummaryProducer extends TCPDataSender
                 GroupManagerDataTransporter dataTransporter = createDataTransporter();
                 GroupManagerSummaryInformation summary = dataTransporter.getSummary();
                 log_.debug(String.format("Sending summary information to the group leader! " +
-                                         "Active: %s, passive: %s, requested: %s, and used: %s capacity", 
+                                         "Active: %s, passive: %s, requested: %s, used: %s capacity with %d " +
+                                         "local controllers assigned ", 
                                          summary.getActiveCapacity(), summary.getPassiveCapacity(),
-                                         summary.getRequestedCapacity(), summary.getUsedCapacity()));
-                send(dataTransporter);
+                                         summary.getRequestedCapacity(), summary.getUsedCapacity(),
+                                         summary.getLocalControllers().size()
+                                         ));
+                
+                dataQueue_.add(dataTransporter);
+                
                 synchronized (lockObject_)
                 {
                     lockObject_.wait(monitoringInterval_);
@@ -122,21 +140,14 @@ public final class GroupManagerSummaryProducer extends TCPDataSender
         } 
         catch (InterruptedException exception)
         {
-            log_.error(String.format("Group manager summary information producer was interruped", exception));
+            log_.debug(exception.getMessage());
         }
-        catch (IOException exception) 
-        {
-            if (!isTerminated_)
-            {
-                log_.debug(String.format("I/O error during summary sending (%s). Did the group leader fail?", 
-                                         exception.getMessage()));
-            }
-        } 
-        
-        close();
+        terminate();
         log_.debug("Group manager summary information producer is stopped!");
     }
     
+    
+
     /** 
      * Terminating the thread.
      */
@@ -149,4 +160,6 @@ public final class GroupManagerSummaryProducer extends TCPDataSender
             lockObject_.notify();
         }
     }
+
+    
 }

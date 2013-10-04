@@ -41,6 +41,7 @@ public final class GroupManagerDataTransporter
     /** Summary information. */
     private GroupManagerSummaryInformation summary_;
     
+    
     /** Default constructor. */
     public GroupManagerDataTransporter() 
     {
@@ -53,7 +54,8 @@ public final class GroupManagerDataTransporter
      * @param summary           The summary information
      */
     public GroupManagerDataTransporter(String groupManagerId,
-                                       GroupManagerSummaryInformation summary)
+                                       GroupManagerSummaryInformation summary
+                                        )
     {
         groupManagerId_ = groupManagerId;
         summary_ = summary;
@@ -78,4 +80,6 @@ public final class GroupManagerDataTransporter
     {
         return summary_;
     }
+
+    
 }

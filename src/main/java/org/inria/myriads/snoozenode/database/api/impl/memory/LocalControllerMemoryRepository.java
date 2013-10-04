@@ -17,17 +17,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.database.api.impl;
+package org.inria.myriads.snoozenode.database.api.impl.memory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +46,9 @@ public final class LocalControllerMemoryRepository
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(LocalControllerMemoryRepository.class);
     
+    /** external notifier.*/
+    private ExternalNotifier externalNotifier_;
+    
     /** 
      * Virtual machine meta data map. 
      *  
@@ -52,11 +59,15 @@ public final class LocalControllerMemoryRepository
     
     /**
      * Local controller memory repository constructor.
+     * 
+     * @param externalNotifier      The external notifier.
+     * 
      */
-    public LocalControllerMemoryRepository()
+    public LocalControllerMemoryRepository(ExternalNotifier externalNotifier)
     {
         log_.debug("Initializing the local controller in-memory repository");
         virtualMachineMetaData_ = new HashMap<String, VirtualMachineMetaData>();
+        externalNotifier_ = externalNotifier;
     }
     
     /**
@@ -78,9 +89,10 @@ public final class LocalControllerMemoryRepository
             log_.debug("This virtual machine meta data is already in the database!");
             return false;
         }
-        
+        virtualMachineMetaData.setIsAssigned(true);
         virtualMachineMetaData_.put(virtualMachineId, virtualMachineMetaData);
         log_.debug("Virtual machine meta data added!");
+        
         return true;
     }
     
@@ -129,6 +141,7 @@ public final class LocalControllerMemoryRepository
         
         virtualMachineMetaData_.remove(virtualMachineId);
         log_.debug("Virtual machine meta data mapping removed!");
+       
         return true;
     }
     
@@ -148,7 +161,9 @@ public final class LocalControllerMemoryRepository
         for (VirtualMachineMetaData metaData : virtualMachineMetaData_.values())
         {
             NetworkAddress controlAddress = groupManagerDescription.getListenSettings().getControlDataAddress();
-            metaData.setGroupManagerControlDataAddress(controlAddress);
+            VirtualMachineLocation location = metaData.getVirtualMachineLocation();
+            location.setGroupManagerId(groupManagerDescription.getId());
+            location.setGroupManagerControlDataAddress(controlAddress);
         }
         
         return virtualMachineMetaData_;
@@ -179,5 +194,14 @@ public final class LocalControllerMemoryRepository
     public Map<String, VirtualMachineMetaData> getVirtualMachineMetaData() 
     {
         return virtualMachineMetaData_;
+    }
+
+    @Override
+    public List<VirtualMachineMetaData> getVirtualMachines(int numberOfMonitoringEntries)
+    {
+        log_.debug("Getting all virtual machines");
+        List<VirtualMachineMetaData> virtualMachines = new ArrayList<VirtualMachineMetaData>(); 
+        virtualMachines.addAll(virtualMachineMetaData_.values());
+        return virtualMachines;
     }
 }

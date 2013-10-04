@@ -109,7 +109,7 @@ public abstract class TCPDataReceiver
                 log_.debug("New connected estabilished");
                 TCPWorkerThread workerThread = new TCPWorkerThread(clientSocket, dataHandler_);
                 workerThreads_.add(workerThread);
-                new Thread(workerThread).start();
+                new Thread(workerThread, "WorkerThread : " + clientSocket.toString()).start();
             }
         }
         catch (IOException exception) 

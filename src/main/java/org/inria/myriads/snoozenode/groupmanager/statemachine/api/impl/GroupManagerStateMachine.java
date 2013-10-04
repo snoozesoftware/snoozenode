@@ -19,16 +19,15 @@
  */
 package org.inria.myriads.snoozenode.groupmanager.statemachine.api.impl;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
-import org.inria.myriads.snoozecommon.communication.virtualmachine.ClientMigrationRequest;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.energymanagement.EnergyManagementSettings;
@@ -54,6 +53,13 @@ import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineComm
 import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinemanager.VirtualMachineManager;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
+import org.inria.myriads.snoozenode.message.ManagementMessage;
+import org.inria.myriads.snoozenode.message.ManagementMessageType;
+import org.inria.myriads.snoozenode.message.SystemMessage;
+import org.inria.myriads.snoozenode.message.SystemMessageType;
+import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
+import org.inria.snoozenode.external.notifier.ExternalNotificationType;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,24 +101,31 @@ public class GroupManagerStateMachine
     /** Anomaly resolver. */
     private AnomalyResolver anomalyResolver_;
     
+    /** External notifier. */
+    private ExternalNotifier externalNotifier_;
+    
     /** 
      * Constructor. 
      * 
      * @param nodeConfiguration         The node configuration
      * @param estimator                 The resource demand estimator
      * @param repository                The repository
+     * @param externalNotifier          The external Notifier.
      */
     public GroupManagerStateMachine(NodeConfiguration nodeConfiguration,
                                     ResourceDemandEstimator estimator,
-                                    GroupManagerRepository repository)
+                                    GroupManagerRepository repository,
+                                    ExternalNotifier externalNotifier
+                                    )
     {
         log_.debug("Initializing the state machine");
         systemState_ = SystemState.IDLE; 
         energyManagementSettings_ = nodeConfiguration.getEnergyManagement();
         estimatorSettings_ = nodeConfiguration.getEstimator();
         repository_ = repository;
+        externalNotifier_ = externalNotifier;
         // Migration plan enforcer
-        migrationPlanEnforcer_ = new MigrationPlanEnforcer(repository, this);
+        migrationPlanEnforcer_ = new MigrationPlanEnforcer(repository, this, externalNotifier_);
         // Wakeup 
         wakeupResources_ = createWakeupResources(energyManagementSettings_, repository);
         // Virtual machine manager
@@ -140,7 +153,9 @@ public class GroupManagerStateMachine
         AnomalyResolver anomalyResolver = new AnomalyResolver(relocation, 
                                                               estimator, 
                                                               repository, 
-                                                              this);
+                                                              this,
+                                                              externalNotifier_
+                                                              );
         return anomalyResolver;
     }
     
@@ -156,8 +171,8 @@ public class GroupManagerStateMachine
                                                               ResourceDemandEstimator estimator,
                                                               GroupManagerRepository repository)
     {
-        GroupManagerSchedulerSettings settings = nodeConfiguration.getGroupManagerScheduler();
-        VirtualMachineManager virtualMachineManager = new VirtualMachineManager(settings, 
+        
+        VirtualMachineManager virtualMachineManager = new VirtualMachineManager(nodeConfiguration, 
                                                                                 estimator, 
                                                                                 repository, 
                                                                                 this);
@@ -223,6 +238,18 @@ public class GroupManagerStateMachine
         
         setIdle();
         boolean isProcessed = virtualMachineManager_.processControlCommand(command, location);
+        
+        ExternalNotifierUtils.send(
+                externalNotifier_,
+                ExternalNotificationType.MANAGEMENT,
+                new ManagementMessage(
+                        ManagementMessageType.PROCESSED, repository_.getVirtualMachineMetaData(location, 0)),
+                location.getGroupManagerId() + "." +
+                location.getLocalControllerId() + "." + 
+                location.getVirtualMachineId() + "." +
+                command
+                );
+        
         return isProcessed;
     }
 
@@ -238,6 +265,13 @@ public class GroupManagerStateMachine
         {
             log_.debug(String.format("Changing system state to: %s", state));
             systemState_ = state;
+            // log state change.
+            ExternalNotifierUtils.send(
+                    externalNotifier_,
+                    ExternalNotificationType.SYSTEM,
+                    new SystemMessage(SystemMessageType.GM_BUSY, repository_.getGroupManager()),
+                    "groupmanager." + repository_.getGroupManagerId()
+                    );
             return true;
         }
         
@@ -264,6 +298,14 @@ public class GroupManagerStateMachine
 
         log_.debug(String.format("Power cycling %d idle resources!", idleResources.size()));    
         PowerSavingAction action = energyManagementSettings_.getPowerSavingAction();
+        
+        ExternalNotifierUtils.send(
+                externalNotifier_,
+                ExternalNotificationType.SYSTEM,
+                new SystemMessage(SystemMessageType.ENERGY, idleResources),
+                "groupmanager." + repository_.getGroupManagerId()
+                );
+        
         EnergySaverUtils.powerCycleLocalControllers(idleResources, action, repository_);  
         setIdle();
         
@@ -276,6 +318,12 @@ public class GroupManagerStateMachine
     private synchronized void setIdle()
     {
         log_.debug(String.format("Changing system state from: %s to IDLE", systemState_));
+        ExternalNotifierUtils.send(
+                externalNotifier_,
+                ExternalNotificationType.SYSTEM,
+                new SystemMessage(SystemMessageType.GM_IDLE, repository_.getGroupManager()),
+                "groupmanager." + repository_.getGroupManagerId()
+                );
         systemState_ = SystemState.IDLE;
     }
     
@@ -298,7 +346,7 @@ public class GroupManagerStateMachine
         {
             int numberOfMonitoringEntries = estimatorSettings_.getNumberOfMonitoringEntries();
             List<LocalControllerDescription> localControllers = 
-                repository_.getLocalControllerDescriptions(numberOfMonitoringEntries, true);
+                repository_.getLocalControllerDescriptions(numberOfMonitoringEntries, true, true);
             if (localControllers == null)
             {
                 throw new GroupManagerInitException("Local controllers list is not available!");
@@ -482,15 +530,15 @@ public class GroupManagerStateMachine
     
     /**
      * Starts the migration of the vm.
-     * @param clientMigrationRequest clientMigrationRequest
+     * @param migrationRequest migrationRequest
      * 
      * 
      * @return     true if everything ok, false otherwise
      */
     @Override
-    public boolean startMigration(ClientMigrationRequest clientMigrationRequest)
+    public boolean startMigration(MigrationRequest migrationRequest)
     {
-        log_.debug("Starting the reconfiguration procedure");
+        log_.debug("Starting the migration procedure");
         
         if (!changeState(SystemState.RECONFIGURATION))
         {
@@ -499,19 +547,7 @@ public class GroupManagerStateMachine
         
         try
         {
-            VirtualMachineLocation oldLocation = clientMigrationRequest.getOldLocation();
-            VirtualMachineLocation newLocation = clientMigrationRequest.getNewLocation();
-            VirtualMachineMetaData virtualMachine = repository_.getVirtualMachineMetaData(oldLocation, 0);
-            LocalControllerDescription newLocalController = 
-                    repository_.getLocalControllerDescription(newLocation.getLocalControllerId(), 0);
-            Map<VirtualMachineMetaData, LocalControllerDescription> mapping = 
-                    new HashMap<VirtualMachineMetaData, LocalControllerDescription>();
-            mapping.put(virtualMachine, newLocalController);
-            //construction of the migration plan with the migration request.
-            //artificially release node to use the logic behind.
-            ReconfigurationPlan migrationPlan = new ReconfigurationPlan(mapping, 1, 1);
-            
-            migrationPlanEnforcer_.enforceMigrationPlan(migrationPlan);
+            migrationPlanEnforcer_.startManualMigration(migrationRequest);
         }
         catch (Exception exception) 
         {
@@ -519,6 +555,28 @@ public class GroupManagerStateMachine
             log_.debug(String.format("Unable to execute the migration plan: %s", exception.getMessage()));
             return false;
         }
+        
         return true;
+    }
+
+    @Override
+    public VirtualMachineMetaData resizeVirtualMachine(ResizeRequest resizeRequest)
+    {
+        log_.debug("Starting a resize request");
+        
+        if (!changeState(SystemState.MANAGEMENT))
+        {
+            return null;
+        }   
+        
+        setIdle();
+        VirtualMachineMetaData newVirtualMachineMetaData = 
+                virtualMachineManager_.resizeVirtualMachine(resizeRequest);
+        
+        VirtualMachineMetaData virtualMachine = 
+                repository_.getVirtualMachineMetaData(resizeRequest.getVirtualMachineLocation(), 0);
+        virtualMachine.setRequestedCapacity(newVirtualMachineMetaData.getRequestedCapacity());
+        return newVirtualMachineMetaData;
+        
     }
 }

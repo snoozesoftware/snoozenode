@@ -90,7 +90,7 @@ public final class GroupManagerSummaryReceiver extends TCPDataReceiver
         throws Exception
     {
         GroupManagerSummaryConsumer consumer = new GroupManagerSummaryConsumer(dataQueue_, repository_);
-        new Thread(consumer).start();       
+        new Thread(consumer, "GroupManagerSummaryConsumer").start();       
     }
     
     /**
@@ -99,7 +99,7 @@ public final class GroupManagerSummaryReceiver extends TCPDataReceiver
     private void starDataReceiver()
     {
         setHandler(this);
-        new Thread(this).start();       
+        new Thread(this, "TCPDataReceiver").start();       
     }
     
     /** 
@@ -141,13 +141,27 @@ public final class GroupManagerSummaryReceiver extends TCPDataReceiver
     {
         Guard.check(data, workerThreadId);
         
-        GroupManagerDataTransporter dataTransporter = (GroupManagerDataTransporter) data;            
+        GroupManagerDataTransporter dataTransporter = (GroupManagerDataTransporter) data;
+        
+        if (groupManagerIds_.get(workerThreadId) == null)
+        {
+            log_.debug("No mapping exists for this worker thread! Adding!");
+            groupManagerIds_.put(workerThreadId, dataTransporter.getId());    
+        }
+        
+        if (dataTransporter.getSummary() == null)
+        {
+            log_.debug("Received heartbeat ... skipping");
+            return;
+        }
+        
         log_.debug(String.format("Received group manager %s summary information. " +
                                  "Active: %s, " +
                                  "Passive: %s, " +
                                  "Requested: %s, " +
                                  "Used: %s, " +
                                  "Legacy IP addresses: %s, " +
+                                 "Assigned localControllers: %d, " +
                                  "Worker thread id: %s",
                                  dataTransporter.getId(), 
                                  dataTransporter.getSummary().getActiveCapacity(),
@@ -155,13 +169,10 @@ public final class GroupManagerSummaryReceiver extends TCPDataReceiver
                                  dataTransporter.getSummary().getRequestedCapacity(),
                                  dataTransporter.getSummary().getUsedCapacity(), 
                                  dataTransporter.getSummary().getLegacyIpAddresses(),
+                                 dataTransporter.getSummary().getLocalControllers().size(),
                                  workerThreadId));
     
-        if (groupManagerIds_.get(workerThreadId) == null)
-        {
-            log_.debug("No mapping exists for this worker thread! Adding!");
-            groupManagerIds_.put(workerThreadId, dataTransporter.getId());    
-        }
+
         
         dataQueue_.add(dataTransporter);
     }

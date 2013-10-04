@@ -26,6 +26,7 @@ import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerLocation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorSettings;
 import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
@@ -36,6 +37,7 @@ import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSavingAction;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.ShutdownDriver;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.SuspendDriver;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.database.enums.DatabaseType;
@@ -57,7 +59,12 @@ import org.inria.myriads.snoozenode.localcontroller.monitoring.service.VirtualMa
 import org.inria.myriads.snoozenode.localcontroller.powermanagement.PowerManagementFactory;
 import org.inria.myriads.snoozenode.localcontroller.powermanagement.shutdown.Shutdown;
 import org.inria.myriads.snoozenode.localcontroller.powermanagement.suspend.Suspend;
+import org.inria.myriads.snoozenode.message.SystemMessage;
+import org.inria.myriads.snoozenode.message.SystemMessageType;
+import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
+import org.inria.snoozenode.external.notifier.ExternalNotificationType;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,7 +103,8 @@ public final class LocalControllerBackend
     /** Suspend logic. */
     private Suspend suspendLogic_;
     
-
+    /**  External Notifier. */
+    private ExternalNotifier externalNotifier_;
     
     /**
      * Constructor.
@@ -111,6 +119,7 @@ public final class LocalControllerBackend
         log_.debug("Initializing the local controller backend");
         
         nodeConfiguration_ = configuration;
+        initializeExternalNotifier();
         initializeDatabase();
         initializePowerManagement();
         startHypervisorServices();  
@@ -120,12 +129,23 @@ public final class LocalControllerBackend
 
 
     /**
+     * Initializes the external notifier.
+     * (should be static...)
+     */
+    private void initializeExternalNotifier()
+    {
+        externalNotifier_ = new ExternalNotifier(nodeConfiguration_);
+    }
+
+
+    /**
      * Initializes the database.
      */
     private void initializeDatabase()
     {
         DatabaseType type = nodeConfiguration_.getDatabase().getType();
-        localControllerRepository_ = DatabaseFactory.newLocalControllerRepository(type);
+        ExternalNotifierSettings externalNotifierSettings = nodeConfiguration_.getExternalNotifier();
+        localControllerRepository_ = DatabaseFactory.newLocalControllerRepository(type, externalNotifier_);
     }
     
     /**
@@ -174,7 +194,8 @@ public final class LocalControllerBackend
         VirtualMachineMonitor virtualMachineMonitor =  MonitoringFactory.newVirtualMachineMonitor(connector); 
         resourceMonitoring_ = new InfrastructureMonitoring(virtualMachineMonitor, 
                                                            hostMonitor,
-                                                           nodeConfiguration_.getMonitoring());
+                                                           nodeConfiguration_.getMonitoring(),
+                                                           nodeConfiguration_.getExternalNotifier());
     }
     
     /**
@@ -202,7 +223,9 @@ public final class LocalControllerBackend
         {
             virtualMachineMonitoringService_ = new VirtualMachineMonitoringService(localControllerDescription_,  
                                                                                    localControllerRepository_, 
-                                                                                   resourceMonitoring_);
+                                                                                   resourceMonitoring_,
+                                                                                   nodeConfiguration_.getDatabase()
+                                                                                    );
         }
         
         virtualMachineMonitoringService_.startService(groupManager.getListenSettings().getMonitoringDataAddress());
@@ -224,9 +247,16 @@ public final class LocalControllerBackend
             virtualMachineMonitoringService_.stopService();
         }
         
+        ExternalNotifierUtils.send(
+                externalNotifier_,
+                ExternalNotificationType.SYSTEM,
+                new SystemMessage(SystemMessageType.GM_FAILED, localControllerDescription_),
+                "localcontroller." + localControllerDescription_.getId());
+        
         new GroupLeaderDiscovery(nodeConfiguration_.getNetworking().getMulticast().getGroupLeaderHeartbeatAddress(), 
                                  nodeConfiguration_.getFaultTolerance().getHeartbeat().getTimeout(),
                                  this);
+        
     }
 
     /**
@@ -270,7 +300,8 @@ public final class LocalControllerBackend
             log_.error("Unable to join the assigned group manager!");           
             return false;
         }
-       
+        
+        
         startSystemServices(groupManager);
         return true;  
     }
@@ -286,7 +317,25 @@ public final class LocalControllerBackend
         
         HashMap<String, VirtualMachineMetaData> metaData =
             localControllerRepository_.updateVirtualMachineMetaData(groupManagerDescription);
-        localControllerDescription_.setVirtualMachineMetaData(metaData);        
+        localControllerDescription_.setVirtualMachineMetaData(metaData);
+        
+        log_.debug(String.format("Update local controller location with : \n" +
+                                 "localControllerId  : %s \n" + 
+                                 "groupManagerId : %s \n" + 
+                                 "groupManagerAddress : %s \n",
+                                 localControllerDescription_.getId(),
+                                 groupManagerDescription.getId(),
+                                 groupManagerDescription.getListenSettings().getControlDataAddress().toString()
+                ));
+        
+        
+        //update also localcontroller location.
+        LocalControllerLocation location = new LocalControllerLocation();
+        location.setLocalControllerId(localControllerDescription_.getId());
+        location.setGroupManagerId(groupManagerDescription.getId());
+        location.setGroupManagerControlDataAddress(groupManagerDescription.getListenSettings().getControlDataAddress());
+        
+        localControllerDescription_.setLocation(location);
     }
     
     /**
@@ -400,6 +449,12 @@ public final class LocalControllerBackend
     {
         boolean isPowerCycled = false;
         
+        ExternalNotifierUtils.send(
+                externalNotifier_,
+                ExternalNotificationType.SYSTEM,
+                new SystemMessage(SystemMessageType.ENERGY, localControllerDescription_),
+                "localcontroller." + localControllerDescription_.getId());
+        
         switch (powerSavingAction)
         {
             case suspendToRam:
@@ -421,6 +476,8 @@ public final class LocalControllerBackend
             default:
                 log_.error(String.format("This power cycling action is not supported: %s", powerSavingAction));
         }
+        
+        
         
         return isPowerCycled;
     }

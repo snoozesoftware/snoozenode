@@ -27,9 +27,12 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.repository.Grou
 import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupManagerRepositoryInformation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerList;
+import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.discovery.VirtualMachineDiscoveryResponse;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.requests.MetaDataRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
@@ -37,11 +40,14 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.Vi
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
-import org.inria.myriads.snoozecommon.communication.virtualmachine.ClientMigrationRequest;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinediscovery.VirtualMachineDiscovery;
+import org.inria.myriads.snoozenode.message.ManagementMessage;
+import org.inria.myriads.snoozenode.message.ManagementMessageType;
+import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +66,7 @@ public final class GroupManagerResource extends ServerResource
     /** Define group manager backend. */
     private GroupManagerBackend backend_;
     
+    
     /**
      * Constructor.
      */
@@ -67,6 +74,7 @@ public final class GroupManagerResource extends ServerResource
     {
         log_.debug("Starting group manager resource");
         backend_ = (GroupManagerBackend) getApplication().getContext().getAttributes().get("backend");
+    
     }
        
     /**
@@ -105,10 +113,13 @@ public final class GroupManagerResource extends ServerResource
     public boolean joinGroupLeader(GroupManagerDescription groupManager) 
     {
         Guard.check(groupManager);
+        
         log_.debug(String.format("Received join request from group manager %s at address %s",
                                  groupManager.getId(), 
                                  groupManager.getListenSettings().getControlDataAddress().getAddress()));
     
+        
+        
         if (!isGroupLeaderActive())
         {
             return false;
@@ -117,8 +128,13 @@ public final class GroupManagerResource extends ServerResource
         boolean isAdded = backend_.getGroupLeaderInit()
                                   .getRepository()
                                   .addGroupManagerDescription(groupManager);
+        
+        //backend group manager join
+        
+        
         return isAdded;
     }
+
 
     /** 
      * Assign local controller to a group manager.
@@ -424,9 +440,12 @@ public final class GroupManagerResource extends ServerResource
  
     /**
      * Checks if a virtual machine is active a particular local controller.
+     * (energy management)
      * 
+     * @deprecated
      * @param localControllerAddress      The virtual machine location
      * @return                            true if everything ok, false otherwise
+     * 
      */
     @Override
     public String hasLocalController(NetworkAddress localControllerAddress) 
@@ -481,7 +500,20 @@ public final class GroupManagerResource extends ServerResource
         
         return virtualMachine;
     }
-                
+    
+    @Override
+    public GroupManagerDescription getGroupManagerDescription(String groupManagerId)
+    {
+        log_.debug("Received a request to return a group manager description");
+        
+        if (!isGroupLeaderActive())
+        {
+            return null;
+        }
+        
+        return backend_.getGroupLeaderInit().getRepository().getGroupManagerDescription(groupManagerId, 0);
+        
+    }
     /**
      * Return the group leader information.
      * 
@@ -501,7 +533,8 @@ public final class GroupManagerResource extends ServerResource
         GroupManagerRepositoryInformation groupManagerInformation = new GroupManagerRepositoryInformation();
         ArrayList<LocalControllerDescription> localControllers = 
           backend_.getGroupManagerInit().getRepository().getLocalControllerDescriptions(numberOfMonitoringEntries,
-                                                                                         false);
+                                                                                         false,
+                                                                                         true);
         groupManagerInformation.setLocalControllerDescriptions(localControllers);
         
         log_.debug(String.format("Returning reference: %s, number of local controllers: %d", 
@@ -603,9 +636,27 @@ public final class GroupManagerResource extends ServerResource
     public boolean dropVirtualMachineMetaData(VirtualMachineLocation virtualMachineLocation)
     {
         Guard.check(virtualMachineLocation);
+        
+        
+        if (!isGroupManagerActive())
+        {
+            return false;
+        }
+        
+        
         boolean isDropped = backend_.getGroupManagerInit()
                                         .getRepository()
                                         .dropVirtualMachineData(virtualMachineLocation);
+        
+        backend_.getGroupManagerInit().getExternalNotifier().send(
+            ExternalNotificationType.MANAGEMENT,
+            new ManagementMessage(ManagementMessageType.PROCESSED, null),
+            virtualMachineLocation.getGroupManagerId() + "." +
+            virtualMachineLocation.getLocalControllerId() + "." + 
+            virtualMachineLocation.getVirtualMachineId() + "." +
+            "DROP"
+        );
+        
         return isDropped;
     }
 
@@ -657,28 +708,151 @@ public final class GroupManagerResource extends ServerResource
         return respomse;
     }
 
+    
+    /**
+     * 
+     * Gets the list of local controllers.
+     * 
+     * @return      The local controller list
+     */
+    public LocalControllerList getLocalControllerList()
+    {
+        log_.debug(String.format("Received a request for local controller list"));
+        
+        if (!isGroupLeaderActive())
+        {
+            return null;
+        }
+        
+        ArrayList<LocalControllerDescription> localControllers = backend_.getGroupLeaderInit()
+                                                                               .getRepository()
+                                                                               .getLocalControllerList();
 
+        LocalControllerList localControllerList = new LocalControllerList(localControllers);
+        return localControllerList;
+
+        
+    }
+    
     /**
      * Migrate a virtual machine.
      * (call by the client)
      * 
-     * @param clientMigrationRequest     The client migration Request
+     * @param migrationRequest     The client migration Request
      * @return                           true if ok false otherwise
      */
-    public boolean migrateVirtualMachine(ClientMigrationRequest clientMigrationRequest) 
+    public boolean migrateVirtualMachine(MigrationRequest migrationRequest) 
     {
-        Guard.check(clientMigrationRequest);
+        Guard.check(migrationRequest);
+        if (!isGroupManagerActive())
+        {
+            // Group Leader Logic
+            VirtualMachineLocation oldLocation = migrationRequest.getSourceVirtualMachineLocation();
+            VirtualMachineLocation newLocation = migrationRequest.getDestinationVirtualMachineLocation();
+            boolean updated = true;
+            updated = backend_.getGroupLeaderInit().getRepository().updateLocation(oldLocation);
+            if (!updated)
+            {
+                return false;
+            }
+            updated = backend_.getGroupLeaderInit().getRepository().updateLocation(newLocation);
+            if (!updated)
+            {
+                return false;
+            }
+            LocalControllerDescription localController = backend_
+                    .getGroupLeaderInit()
+                    .getRepository()
+                    .getLocalControllerDescription(newLocation.getLocalControllerId());
+            
+            migrationRequest.setDestinationHypervisorSettings(localController.getHypervisorSettings());
+            // call to the gm source to migrate the vm.
+            NetworkAddress groupManagerSource = oldLocation.getGroupManagerControlDataAddress();
+            GroupManagerAPI communicator = CommunicatorFactory.newGroupManagerCommunicator(groupManagerSource);
+            communicator.migrateVirtualMachine(migrationRequest);
+            
+            return true;
+        }
+        else
+        {
+            // Group Manager Logic
+            boolean isMigrated = backend_.getGroupManagerInit()
+                    .getStateMachine().startMigration(migrationRequest);
+    
+            return isMigrated;
+
+        }
+    }
+    
+    
+
+    /**
+     * Resize a virtual machine.
+     * (call by the client)
+     * 
+     * @param resizeRequest     The client resize Request
+     * @return                  true if ok false otherwise
+     */    
+    public VirtualMachineMetaData resizeVirtualMachine(ResizeRequest resizeRequest)
+    {
+        Guard.check(resizeRequest);
+        if (!isGroupManagerActive())
+        {
+            return null;
+        }
+        
+        VirtualMachineMetaData newVirtualMachineMetaData = backend_.getGroupManagerInit()
+                .getStateMachine()
+                .resizeVirtualMachine(resizeRequest);
+        
+        return newVirtualMachineMetaData;
+    }
+
+    
+    @Override
+    public boolean addVirtualMachineAfterMigration(VirtualMachineMetaData virtualMachine)
+    {
+        Guard.check(virtualMachine);
         if (!isGroupManagerActive())
         {
             return false;
         }
         
-        boolean isMigrated = backend_.getGroupManagerInit()
-                .getStateMachine().startMigration(clientMigrationRequest);
-
-        return isMigrated;
-        
+        boolean isUpdated = backend_.getGroupManagerInit().getRepository().addVirtualMachine(virtualMachine);
+        return isUpdated;
     }
+
+    @Override
+    public LocalControllerDescription getLocalControllerDescription(String localControllerId)
+    {
+       log_.debug("Received a request to return a local controller description");
+        
+       if (!isGroupManagerActive())
+       {
+           return null;
+       }
+       
+       LocalControllerDescription localController = backend_
+               .getGroupManagerInit()
+               .getRepository()
+               .getLocalControllerDescription(localControllerId, 0, false);
+               
+       return localController;
+       
+    }
+
+    @Override
+    public boolean startReconfiguration()
+    {
+        log_.debug("Received a request to start a reconfiguration");
+        if (!isGroupManagerActive())
+        {
+            return false;
+        }
+        boolean isStarted = backend_.getGroupManagerInit().getStateMachine().startReconfiguration();
+        return isStarted;
+    }
+
 
    
 }

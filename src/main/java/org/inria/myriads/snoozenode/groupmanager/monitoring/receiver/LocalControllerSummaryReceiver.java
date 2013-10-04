@@ -91,7 +91,7 @@ public final class LocalControllerSummaryReceiver extends TCPDataReceiver
     private void starReceiver()
     {
         setHandler(this);
-        new Thread(this).start();
+        new Thread(this, "LocalControllerSummaryReceiver").start();
     }
     
     /**
@@ -141,8 +141,9 @@ public final class LocalControllerSummaryReceiver extends TCPDataReceiver
              
         if (monitoringData.getData() == null)
         {
-            log_.debug(String.format("Ignoring received heartbeat data from %s!", workerThreadId));
-            return;
+            //log_.debug(String.format("Ignoring received heartbeat data from %s!", workerThreadId));
+            dataQueue_.add(monitoringData);
+            //return;
         } 
     
         log_.debug(String.format("Worker thread: %s received local controller summary information from: %s",

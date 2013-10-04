@@ -17,7 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.database.api.impl;
+package org.inria.myriads.snoozenode.database.api.impl.memory;
+
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,10 +28,13 @@ import java.util.Map;
 
 import org.apache.commons.net.util.SubnetUtils;
 import org.apache.commons.net.util.SubnetUtils.SubnetInfo;
+import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
+import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
@@ -51,6 +55,7 @@ public final class GroupLeaderMemoryRepository
     /** Start index for the IP address pool. */
     private static final int IP_ADDRESS_START_IDEX = 1;
 
+    
     /** 
      * History data of the group managers.
      * 
@@ -67,17 +72,21 @@ public final class GroupLeaderMemoryRepository
 
     /** 
      * Constructor.
+     * @param groupLeaderDescription 
      * 
      * @param virtualMachineSubnets    The virtual machine subnet
      * @param maxCapacity              The maximum capacity
      */
-    public GroupLeaderMemoryRepository(String[] virtualMachineSubnets, int maxCapacity)
+    public GroupLeaderMemoryRepository(GroupManagerDescription groupLeaderDescription,
+            String[] virtualMachineSubnets,
+            int maxCapacity)
     {
         log_.debug("Initializing the group leader memory repository");
         
         ipAddressPool_ = generateAddressPool(virtualMachineSubnets);
         maxCapacity_ = maxCapacity;
         groupManagerDescriptions_ = new HashMap<String, GroupManagerDescription>();
+        
     }
 
     /**
@@ -188,9 +197,13 @@ public final class GroupLeaderMemoryRepository
             return false;
         }
             
-        groupManager.setSummaryInformation(new LRUCache<Long, GroupManagerSummaryInformation>(maxCapacity_));    
+        groupManager.setSummaryInformation(new LRUCache<Long, GroupManagerSummaryInformation>(maxCapacity_));
+        groupManager.setIsAssigned(true);
         groupManagerDescriptions_.put(groupManagerId, groupManager);     
         removeIpAddresses(groupManager.getLocalControllers());
+        
+
+        
         return true;
     }
        
@@ -248,7 +261,20 @@ public final class GroupLeaderMemoryRepository
         
         return groupManagers;
     }
-                
+
+    @Override
+    public GroupManagerDescription getGroupManagerDescription(String groupManagerId, int numberOfBacklogEntries)
+    {
+        log_.debug(String.format("Getting group manager description, number of monitoring data entries: %d", 
+                numberOfBacklogEntries));
+        GroupManagerDescription groupManagerDescription = groupManagerDescriptions_.get(groupManagerId);
+        if (groupManagerDescription == null)
+        {
+            log_.debug(String.format("No group manager found with the id %s in the repository", groupManagerId));
+            return null;
+        }
+        return groupManagerDescription;
+    }
     /**
      * Adds group manager data.
      * 
@@ -269,11 +295,49 @@ public final class GroupLeaderMemoryRepository
             return;
         }
         
-        Map<Long, GroupManagerSummaryInformation> historyData = groupManagerDescription.getSummaryInformation();
-        historyData.put(summary.getTimeStamp(), summary);
+        updateLocalControllerInformation(groupManagerId, summary);
         updateNetworkingInformation(summary);
+        updateHistoryData(groupManagerId, summary);
     }
-   
+
+    /**
+     * 
+     * Update the history data of a given group manager.
+     * 
+     * @param groupManagerId        group manager id.
+     * @param summary               summary.
+     */
+    private void updateHistoryData(String groupManagerId,
+            GroupManagerSummaryInformation summary)
+    {
+        GroupManagerDescription groupManagerDescription = groupManagerDescriptions_.get(groupManagerId);
+        Map<Long, GroupManagerSummaryInformation> historyData = groupManagerDescription.getSummaryInformation();
+        // remove lcs ? 
+        summary.setLocalControllers(new ArrayList<LocalControllerDescription>());
+        historyData.put(summary.getTimeStamp(), summary);
+    }
+
+    /**
+     * 
+     * Updates the mapping local controllers - group manager.
+     * 
+     * @param summary           The summary information
+     * @param groupManagerId    The group manager id
+     */
+    private void updateLocalControllerInformation(String groupManagerId, GroupManagerSummaryInformation summary)
+    {
+        log_.debug("Updating the local controllers settings");
+        GroupManagerDescription groupManagerDescription = groupManagerDescriptions_.get(groupManagerId);
+        HashMap<String, LocalControllerDescription> localControllers = 
+                new HashMap<String, LocalControllerDescription>();
+        for (LocalControllerDescription localController : summary.getLocalControllers())
+        {
+            log_.debug(String.format("Adding localController %s to the mapping", localController.getId()));
+            localControllers.put(localController.getId(), localController);
+        }
+        groupManagerDescription.setLocalControllers(localControllers);
+    }
+
     /**
      * Updates the networking information.
      * 
@@ -281,7 +345,7 @@ public final class GroupLeaderMemoryRepository
      */
     private void updateNetworkingInformation(GroupManagerSummaryInformation groupManagerData) 
     {
-        log_.debug("Processing the group manager summary information");
+        log_.debug("Updating the network information");
         
         List<String> legacyIpAddresses = groupManagerData.getLegacyIpAddresses();
         if (legacyIpAddresses == null)
@@ -335,27 +399,123 @@ public final class GroupLeaderMemoryRepository
         if (groupManagerDescriptions_.containsKey(groupManagerId))
         {
             log_.debug("Group manager dropped!");
+
             groupManagerDescriptions_.remove(groupManagerId);
+            
             return true;
         }
         
         log_.debug("No such group manager in the database!");
         return false;
     }
-
+    
     /**
-     * Returns the number of free IP addresses.
      * 
-     * @return  The number of IP addresses
+     * Returns the local controllers list.
+     * 
+     * @return  The local controllers list
      */
     @Override
-    public int getNumberOfFreeIpAddresses() 
+    public ArrayList<LocalControllerDescription> getLocalControllerList()
     {
-        if (ipAddressPool_.size() > 1)
+        ArrayList<LocalControllerDescription> localControllers = new ArrayList<LocalControllerDescription>();
+        for (GroupManagerDescription groupManager : groupManagerDescriptions_.values()) 
         {
-            return ipAddressPool_.size();
+            for (LocalControllerDescription localController : groupManager.getLocalControllers().values())
+            {
+                localControllers.add(localController);
+            }
+        }
+        return localControllers;
+    }
+
+    /**
+     * 
+     * Gets the group manager assigned to the localcontroller identified by its contact information.
+     * 
+     * @param contactInformation        the contact address/port of the local controller.
+     * @return                          The assigned group manager or null if none is found.
+     */
+    @Override
+    public AssignedGroupManager getAssignedGroupManager(NetworkAddress contactInformation)
+    {
+        for (GroupManagerDescription groupManager : groupManagerDescriptions_.values())
+        {
+            for (LocalControllerDescription localController : groupManager.getLocalControllers().values())
+            {
+                NetworkAddress tmpAddress = localController.getControlDataAddress();
+                boolean isEqualAddress = tmpAddress.getAddress().equals(contactInformation.getAddress());
+                boolean isEqualPort = tmpAddress.getPort() == contactInformation.getPort();
+                if (isEqualAddress && isEqualPort)
+                {
+                    AssignedGroupManager lookup = new AssignedGroupManager();
+                    lookup.setLocalControllerId(localController.getId());
+                    lookup.setGroupManager(groupManager);
+                    return lookup;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 
+     * Gets the group manager assigned to the localcontroller identified by its Id.
+     * 
+     * @param localControllerId         The local controller Id.
+     * @return                          The assigned group manager or null if none is found.
+     */    
+    private AssignedGroupManager getAssignedGroupManager(String localControllerId)
+    {
+        for (GroupManagerDescription groupManager : groupManagerDescriptions_.values())
+        {
+            for (LocalControllerDescription localController : groupManager.getLocalControllers().values())
+            {
+                if (localController.getId().equals(localControllerId))
+                {
+                    AssignedGroupManager lookup = new AssignedGroupManager();
+                    lookup.setLocalControllerId(localController.getId());
+                    lookup.setGroupManager(groupManager);
+                    return lookup;
+                }
+            }
+        }
+        return null;
+    }
+    
+    @Override
+    public boolean updateLocation(VirtualMachineLocation location)
+    {
+        String localControllerId = location.getLocalControllerId();
+        AssignedGroupManager lookup = getAssignedGroupManager(localControllerId);
+        if (lookup == null)
+        {
+            return false;
         }
         
-        return 0;
+        location.setGroupManagerId(lookup.getGroupManager().getId());
+        location.setGroupManagerControlDataAddress(
+                lookup.getGroupManager().getListenSettings().getControlDataAddress());
+        return true;
     }
+
+    
+    @Override
+    public LocalControllerDescription getLocalControllerDescription(String localControllerId)
+    {
+        
+        for (GroupManagerDescription groupManager : groupManagerDescriptions_.values())
+        {
+            for (LocalControllerDescription localController : groupManager.getLocalControllers().values())
+            {
+                if (localController.getId().equals(localControllerId))
+                {
+                    return localController;
+                }
+            }
+        }
+        return null;
+    }
+
+
 }

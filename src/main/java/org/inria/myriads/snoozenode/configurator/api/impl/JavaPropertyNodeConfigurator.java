@@ -48,6 +48,7 @@ import org.inria.myriads.snoozenode.configurator.faulttolerance.FaultToleranceSe
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.configurator.networking.NetworkingSettings;
 import org.inria.myriads.snoozenode.configurator.node.NodeSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupLeaderSchedulerSettings;
@@ -58,10 +59,10 @@ import org.inria.myriads.snoozenode.exception.NodeConfiguratorException;
 import org.inria.myriads.snoozenode.groupmanager.estimator.enums.Estimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Assignment;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Dispatching;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Placement;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfiguration;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Relocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
+import org.inria.myriads.snoozenode.monitoring.TransportProtocol;
 
 /**
  * Node configurator.
@@ -101,6 +102,7 @@ public final class JavaPropertyNodeConfigurator
         setDatabaseSettings();
         setFaultToleranceSettings();
         setMonitoringSettings();
+        setMonitoringExternalSettings();
         setEstimatorSettings();
         setGroupLeaderSchedulerSettings();
         setGroupManagerSchedulerSettings();
@@ -110,6 +112,7 @@ public final class JavaPropertyNodeConfigurator
         fileInput.close();
     }
     
+
     /**
      * Sets the general settings.
      * 
@@ -276,6 +279,7 @@ public final class JavaPropertyNodeConfigurator
     private void setDatabaseSettings()
         throws NodeConfiguratorException 
     {
+        String separator = ",";
         DatabaseSettings databaseSettings = nodeConfiguration_.getDatabase();
         
         String databaseType = getProperty("database.type");
@@ -285,7 +289,10 @@ public final class JavaPropertyNodeConfigurator
         databaseSettings.setNumberOfEntriesPerGroupManager(Integer.valueOf(numberOfGroupManagerEntries));
         
         String numberOfVirtualMachineEntries = getProperty("database.numberOfEntriesPerVirtualMachine");
-        databaseSettings.setNumberOfEntriesPerVirtualMachine(Integer.valueOf(numberOfVirtualMachineEntries));        
+        databaseSettings.setNumberOfEntriesPerVirtualMachine(Integer.valueOf(numberOfVirtualMachineEntries));
+        
+        String cassandraHosts = getProperty("database.cassandra.hosts");        
+        databaseSettings.getCassandraSettings().setHosts(cassandraHosts);
     }
 
     /**
@@ -309,41 +316,73 @@ public final class JavaPropertyNodeConfigurator
         String heartbeatTimeout = getProperty("faultTolerance.heartbeat.timeout"); 
         faultToleranceSettings.getHeartbeat().setTimeout(Integer.valueOf(heartbeatTimeout));
     }
+    
+    
+    /**
+     * 
+     * Set the monitoring settings.
+     * 
+     * @throws NodeConfiguratorException    The configuration exception
+     */
+    private void setMonitoringSettings() 
+            throws NodeConfiguratorException 
+        {     
+            String separator = ",";
             
+            MonitoringSettings monitoringSettings = nodeConfiguration_.getMonitoring();
+            String monitoringInterval = getProperty("monitoring.interval");   
+            monitoringSettings.setInterval(Integer.valueOf(monitoringInterval));
+            
+            String monitoringTimeout = getProperty("monitoring.timeout");   
+            monitoringSettings.setTimeout(Integer.valueOf(monitoringTimeout));
+            
+            String numberOfMonitoringEntries = getProperty("monitoring.numberOfMonitoringEntries"); 
+            monitoringSettings.setNumberOfMonitoringEntries(Integer.valueOf(numberOfMonitoringEntries));
+            
+            String tmpUtilizationThresholds = getProperty("monitoring.thresholds.cpu"); 
+       
+            List<Double> cpuThresholds = StringUtils.convertStringToDoubleArray(tmpUtilizationThresholds, separator);
+            tmpUtilizationThresholds = getProperty("monitoring.thresholds.memory"); 
+            List<Double> memoryUtilizationThresholds = StringUtils.convertStringToDoubleArray(tmpUtilizationThresholds,
+                                                                                              separator);        
+            tmpUtilizationThresholds = getProperty("monitoring.thresholds.network");
+            List<Double> networkUtilizationThresholds = 
+                    StringUtils.convertStringToDoubleArray(tmpUtilizationThresholds, 
+                                                                                               separator);        
+            MonitoringThresholds monitoringThresholds = new MonitoringThresholds(cpuThresholds,
+                                                                                 memoryUtilizationThresholds,
+                                                                                 networkUtilizationThresholds);
+            monitoringSettings.setThresholds(monitoringThresholds);
+        }    
     /**
      * Sets the utilization settings.
      * 
      * @throws NodeConfiguratorException    The configuration exception
      */
-    private void setMonitoringSettings() 
+    private void setMonitoringExternalSettings() 
         throws NodeConfiguratorException 
     {     
-        String separator = ",";
+        ExternalNotifierSettings monitoringExternalSettings = nodeConfiguration_.getExternalNotifier();
+        String transport = getProperty("external.notifier.transport");
+        monitoringExternalSettings.setTransportProtocol(TransportProtocol.valueOf(transport));
         
-        MonitoringSettings monitoringSettings = nodeConfiguration_.getMonitoring();
-        String monitoringInterval = getProperty("monitoring.interval");   
-        monitoringSettings.setInterval(Integer.valueOf(monitoringInterval));
+        String address = getProperty("external.notifier.address");
+        int port = Integer.valueOf(getProperty("external.notifier.port"));
+        NetworkAddress sendDataAddress = NetworkUtils.createNetworkAddress(address, port);
+        monitoringExternalSettings.setAddress(sendDataAddress);
         
-        String monitoringTimeout = getProperty("monitoring.timeout");   
-        monitoringSettings.setTimeout(Integer.valueOf(monitoringTimeout));
-        
-        String numberOfMonitoringEntries = getProperty("monitoring.numberOfMonitoringEntries"); 
-        monitoringSettings.setNumberOfMonitoringEntries(Integer.valueOf(numberOfMonitoringEntries));
-        
-        String tmpUtilizationThresholds = getProperty("monitoring.thresholds.cpu"); 
-   
-        List<Double> cpuThresholds = StringUtils.convertStringToDoubleArray(tmpUtilizationThresholds, separator);
-        tmpUtilizationThresholds = getProperty("monitoring.thresholds.memory"); 
-        List<Double> memoryUtilizationThresholds = StringUtils.convertStringToDoubleArray(tmpUtilizationThresholds,
-                                                                                          separator);        
-        tmpUtilizationThresholds = getProperty("monitoring.thresholds.network");
-        List<Double> networkUtilizationThresholds = StringUtils.convertStringToDoubleArray(tmpUtilizationThresholds, 
-                                                                                           separator);        
-        MonitoringThresholds monitoringThresholds = new MonitoringThresholds(cpuThresholds,
-                                                                             memoryUtilizationThresholds,
-                                                                             networkUtilizationThresholds);
-        monitoringSettings.setThresholds(monitoringThresholds);
+        String username = getProperty("external.notifier.username");
+        String password = getProperty("external.notifier.password");
+        String vhost = getProperty("external.notifier.vhost");
+        int numberOfRetries = Integer.valueOf(getProperty("external.notifier.faultTolerance.numberOfRetries"));
+        int retryInterval = Integer.valueOf(getProperty("external.notifier.faultTolerance.retryInterval"));
+        monitoringExternalSettings.setUsername(username);
+        monitoringExternalSettings.setPassword(password);
+        monitoringExternalSettings.setVhost(vhost);
+        monitoringExternalSettings.setNumberOfRetries(numberOfRetries);
+        monitoringExternalSettings.setRetryInterval(retryInterval);
     }
+    
     
     /**
      * Sets estimator settings.
@@ -399,7 +438,10 @@ public final class JavaPropertyNodeConfigurator
     {
         GroupManagerSchedulerSettings groupManager = nodeConfiguration_.getGroupManagerScheduler();
         String placementPolicy = getProperty("groupManagerScheduler.placementPolicy");   
-        groupManager.setPlacementPolicy(Placement.valueOf(placementPolicy));
+        groupManager.setPlacementPolicy(String.valueOf(placementPolicy));
+        
+        String pluginsDirectory = getProperty("groupManagerScheduler.pluginsDirectory");
+        groupManager.setPluginsDirectory(pluginsDirectory);
         
         String overloadPolicy = getProperty("groupManagerScheduler.relocation.overloadPolicy");
         groupManager.getRelocationSettings().setOverloadPolicy(Relocation.valueOf(overloadPolicy));

@@ -24,7 +24,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.StringWriter;
+import java.io.Writer;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.inria.myriads.snoozecommon.guard.Guard;
 
 /**
@@ -81,5 +84,24 @@ public final class SerializationUtils
         ObjectInputStream objectInput = new ObjectInputStream(byteInput);
         Object object = objectInput.readObject();
         return object;
+    }
+
+    /**
+     * 
+     * Serializes object to json.
+     * 
+     * @param data  The data
+     * @return  String (serialiazed)
+     * @throws IOException              Exception
+     */
+    public static String serializeObjectToJSON(Object data) 
+            throws  IOException
+    {
+        
+        ObjectMapper mapper = new ObjectMapper();
+        Writer strWriter = new StringWriter();
+        mapper.writeValue(strWriter, data);
+        String json = strWriter.toString();
+        return json;
     }
 }

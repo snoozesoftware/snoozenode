@@ -22,6 +22,7 @@ package org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching;
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.guard.Guard;
 
 /**
  * Dispatching plan.
@@ -52,4 +53,20 @@ public final class DispatchingPlan
     {
         return groupManagers_;
     }
+    
+    
+    /** 
+     * Merge a dispatching plan. 
+     * 
+     * @param dispatchPlan      The dispatch plan to merge with.
+     * @return 
+     * 
+     * */
+    public void merge(DispatchingPlan dispatchPlan)
+    {
+        Guard.check(dispatchPlan);
+        groupManagers_.addAll(dispatchPlan.getGroupManagers());
+    }
+
+    
 }

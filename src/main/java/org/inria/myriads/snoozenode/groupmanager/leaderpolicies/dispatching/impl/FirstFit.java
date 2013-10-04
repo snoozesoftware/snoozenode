@@ -98,7 +98,8 @@ public final class FirstFit
                                               groupManager.getId()));
                     
                     NetworkAddress address = groupManager.getListenSettings().getControlDataAddress();
-                    virtualMachine.setGroupManagerControlDataAddress(address);
+                    virtualMachine.getVirtualMachineLocation().setGroupManagerControlDataAddress(address);
+                    virtualMachine.getVirtualMachineLocation().setGroupManagerId(groupManager.getId());
                     groupManager.getVirtualMachines().add(virtualMachine);
                     iterator.remove();
                 }

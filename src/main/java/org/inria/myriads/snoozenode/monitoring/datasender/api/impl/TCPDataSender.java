@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Eugen Feller, INRIA <eugen.feller@inria.fr>
+ * Copyright (C) 2010-2012 Eugen Feller, INRIA <eugen.feller@inria.fr>
  *
  * This file is part of Snooze, a scalable, autonomic, and
  * energy-aware virtual machine (VM) management framework.
@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.tcpip;
+package org.inria.myriads.snoozenode.monitoring.datasender.api.impl;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -27,6 +27,7 @@ import org.apache.commons.io.IOUtils;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Eugen Feller
  */
-public abstract class TCPDataSender 
+public class TCPDataSender implements DataSender
 {    
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(TCPDataSender.class);
@@ -48,12 +49,12 @@ public abstract class TCPDataSender
     private ObjectOutputStream outputStream_;
     
     /**
-     * TCP data sender consturctor.
+     * TCP data sender constructor.
      * 
      * @param networkAddress          The network address
      * @throws IOException            The I/O exception
      */
-    protected TCPDataSender(NetworkAddress networkAddress) 
+    public TCPDataSender(NetworkAddress networkAddress) 
         throws IOException 
     {
         Guard.check(networkAddress);
@@ -61,6 +62,18 @@ public abstract class TCPDataSender
                                  networkAddress.getAddress(), networkAddress.getPort()));
         
         clientSocket_ = new Socket(networkAddress.getAddress(), networkAddress.getPort());
+        log_.debug(String.format("socket created with options \n" +
+                " receive buffer size: %d \n" +
+                " send buffer size   : %d \n" +
+                " nagle algorithm    : %b \n" +
+                " linge              : %d \n" +
+                " traffic class      : %d \n" ,
+                clientSocket_.getReceiveBufferSize(),
+                clientSocket_.getSendBufferSize(),
+                clientSocket_.getTcpNoDelay(),
+                clientSocket_.getSoLinger(),
+                clientSocket_.getTrafficClass()
+                ));
         outputStream_ = new ObjectOutputStream(clientSocket_.getOutputStream());
     }           
 
@@ -73,8 +86,7 @@ public abstract class TCPDataSender
     public void send(Object data)
         throws IOException 
     {
-        Guard.check(data);
-        outputStream_.writeObject(data);
+       send(data, "0");
     }
     
     /**
@@ -92,5 +104,12 @@ public abstract class TCPDataSender
         {
             IOUtils.closeQuietly(outputStream_);
         }
+    }
+
+    @Override
+    public void send(Object data, String senderId) throws IOException
+    {
+        Guard.check(data);
+        outputStream_.writeObject(data);
     }
 }

@@ -27,12 +27,16 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.UUID;
 
+import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionResponse;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineTemplate;
 import org.inria.myriads.snoozecommon.exception.VirtualClusterParserException;
+import org.inria.myriads.snoozecommon.globals.Globals;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.parser.VirtualClusterParserFactory;
 import org.inria.myriads.snoozecommon.parser.api.VirtualClusterParser;
@@ -130,11 +134,82 @@ public final class VirtualClusterManager
         log_.debug("Generating virtual machine meta data");
         
         VirtualClusterParser parser = VirtualClusterParserFactory.newVirtualClusterParser();
-        ArrayList<VirtualMachineMetaData> virtualMachines = 
-            parser.createVirtualMachineMetaData(submissionRequest);      
-        return virtualMachines;
+        
+        ArrayList<VirtualMachineMetaData> metaData = new ArrayList<VirtualMachineMetaData>();
+        List<VirtualMachineTemplate> virtualMachineDescriptions = submissionRequest.getVirtualMachineTemplates();
+        
+        for (VirtualMachineTemplate description : virtualMachineDescriptions)
+        {
+            VirtualMachineMetaData virtualMachine;
+            try 
+            {
+                virtualMachine = parser.parseDescription(description);
+            } 
+            catch (Exception exception) 
+            {
+                throw new VirtualClusterParserException(String.format("Failed parsing libvirt template: %s", 
+                                                                      exception.getMessage()));
+            }        
+            
+            
+            setVirtualMachineLocation(virtualMachine, description.getHostId());
+            metaData.add(virtualMachine);
+        }
+                
+        return metaData;
     }
             
+    /**
+     * 
+     * Sets the virtual machine location in case of the user force destination for the virtual machine. 
+     * 
+     * @param virtualMachine        virtual machine meta data (under construction).
+     * @param hostId                hostId
+     */
+    protected void setVirtualMachineLocation(VirtualMachineMetaData virtualMachine, String hostId)
+    {
+        Guard.check(virtualMachine, hostId);
+        if (hostId.equals(Globals.DEFAULT_INITIALIZATION))
+        {
+            log_.debug("No binding : fallback to default location");
+            return;
+        }
+        
+        ArrayList<GroupManagerDescription> groupManagers = repository_.getGroupManagerDescriptions(0);
+        
+        for (GroupManagerDescription groupManager : groupManagers)
+        {
+            if (groupManager.getId().equals(hostId))
+            {
+                log_.debug("Found a binding : the virtual machine will be started on group manager" + hostId);
+                virtualMachine.getVirtualMachineLocation().setGroupManagerId(hostId);
+                return;
+            }
+            else
+            {
+                HashMap<String, LocalControllerDescription> localControllers = groupManager.getLocalControllers();
+                log_.debug(String.format("Lookup on %d local controllers of the group manager %s ",
+                                          localControllers.size(), groupManager.getId()));
+                
+                for (LocalControllerDescription localController : localControllers.values())
+                {
+                    if (localController.getId().equals(hostId))
+                    {
+                        log_.debug(String.format(
+                                "Found a binding : the virtual machine will be started on local controller %s", 
+                                hostId));
+                        virtualMachine.getVirtualMachineLocation().setGroupManagerId(groupManager.getId());
+                        virtualMachine.getVirtualMachineLocation().setLocalControllerId(hostId);
+                        return;
+                    }
+                }
+            }                
+        }
+        log_.debug("Binding not found : fallback to default location");
+        virtualMachine.setStatus(VirtualMachineStatus.ERROR);
+        virtualMachine.setErrorCode(VirtualMachineErrorCode.INVALID_HOST_ID);
+    }
+
     /**
      * Dispatches the virtual cluster submission request.
      * 
@@ -190,12 +265,13 @@ public final class VirtualClusterManager
                                                                                        nodeConfiguration_,
                                                                                        virtualClusterDispatching_,
                                                                                        repository_,
+                                                                                       estimator_,
                                                                                        this);   
         if (workerQueue_.size() == 0)
         {
             log_.debug(String.format("Starting virtual cluster submission thread for task: %s!", 
                                      taskIdentifier));
-            new Thread(submission).start();
+            new Thread(submission, "SubmissionWorker : " + taskIdentifier).start();
         }
         
         workerQueue_.add(submission);
@@ -222,7 +298,7 @@ public final class VirtualClusterManager
         VirtualClusterSubmissionWorker submissionWorker = workerQueue_.peek();
         if (submissionWorker != null)
         {
-            new Thread(submissionWorker).start();
+            new Thread(submissionWorker, "SubmissionWorker : " + taskIdentifier).start();
         }
     }
      

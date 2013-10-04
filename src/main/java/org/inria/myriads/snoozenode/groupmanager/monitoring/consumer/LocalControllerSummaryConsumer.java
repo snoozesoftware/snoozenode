@@ -68,7 +68,7 @@ public final class LocalControllerSummaryConsumer
         dataQueue_ = dataQueue;
         stateMachine_ = stateMachine;
         repository_ = repository;
-        new Thread(this).start();   
+        new Thread(this, "LocalControllerSummaryConsumer").start();   
     }
     
     /** The run method. */
@@ -78,7 +78,13 @@ public final class LocalControllerSummaryConsumer
         {
             while (true)
             {                            
-                LocalControllerDataTransporter monitoringData = dataQueue_.take();   
+                LocalControllerDataTransporter monitoringData = dataQueue_.take();
+                if (monitoringData.getData() == null)
+                {
+                    log_.debug("Received heartbeat from localController");
+
+                    continue;
+                }
                 String localControllerId = monitoringData.getLocalControllerId();
                 repository_.addAggregatedMonitoringData(localControllerId, monitoringData.getData());
                 boolean isStable = monitoringData.getState().equals(LocalControllerState.STABLE);                

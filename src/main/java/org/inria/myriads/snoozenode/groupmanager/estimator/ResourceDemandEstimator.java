@@ -48,6 +48,7 @@ import org.inria.myriads.snoozenode.groupmanager.estimator.enums.Estimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
 import org.inria.myriads.snoozenode.util.ThresholdUtils;
 import org.inria.myriads.snoozenode.util.UtilizationUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +57,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Eugen Feller
  */
-public final class ResourceDemandEstimator 
+public class ResourceDemandEstimator 
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(ResourceDemandEstimator.class);
@@ -209,7 +210,6 @@ public final class ResourceDemandEstimator
             summaryData.setPassiveCapacity(newPassiveCapacity);
             return true;
         }
-        
         virtualMachine.setStatus(VirtualMachineStatus.ERROR);
         virtualMachine.setErrorCode(VirtualMachineErrorCode.NOT_ENOUGH_GROUP_MANAGER_CAPACITY);
         return false;
@@ -501,12 +501,10 @@ public final class ResourceDemandEstimator
      * Returns the current group manager summary data.
      * 
      * @param localControllers      The list of local controllers
-     * @param legacyIpAddresses     The list of legacy ip addresses
      * @return                      The group manager summary information
      */
     public synchronized GroupManagerSummaryInformation 
-        generateGroupManagerSummaryInformation(ArrayList<LocalControllerDescription> localControllers,
-                                               ArrayList<String> legacyIpAddresses) 
+        generateGroupManagerSummaryInformation(ArrayList<LocalControllerDescription> localControllers) 
     {        
         ArrayList<Double> requestedCapacity = computeRequestedGroupManagerCapacity(localControllers);        
         ArrayList<Double> usedCapacity = computeUsedGroupManagerCapacity(localControllers);
@@ -520,7 +518,7 @@ public final class ResourceDemandEstimator
         summary.setPassiveCapacity(totalPassiveCapacity);
         summary.setRequestedCapacity(requestedCapacity);
         summary.setUsedCapacity(usedCapacity);
-        summary.setLegacyIpAddresses(legacyIpAddresses);     
+    
         return summary;
     }
 

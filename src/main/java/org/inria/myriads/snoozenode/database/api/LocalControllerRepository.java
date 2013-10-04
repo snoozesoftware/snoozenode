@@ -20,6 +20,7 @@
 package org.inria.myriads.snoozenode.database.api;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
@@ -81,4 +82,12 @@ public interface LocalControllerRepository
      * @return                      The virtual machine meta data
      */
     VirtualMachineMetaData getVirtualMachineMetaData(String virtualMachineId);
+    
+    /**
+     * Get virtual machines meta data.
+     * 
+     * @param numberOfMonitoringEntries The virtual machine identifier
+     * @return                          The virtual machines meta data
+     */
+    List<VirtualMachineMetaData> getVirtualMachines(int numberOfMonitoringEntries);
 }

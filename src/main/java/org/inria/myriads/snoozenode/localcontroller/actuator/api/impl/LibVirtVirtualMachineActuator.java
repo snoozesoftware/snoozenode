@@ -333,7 +333,7 @@ public final class LibVirtVirtualMachineActuator
     public boolean setMemory(String virtualMachineId, long memory)
     {
         Guard.check(virtualMachineId);
-        log_.debug(String.format("Set memory of virtual machine : %s", virtualMachineId));
+        log_.debug(String.format("Set memory of virtual machine : %s to %d", virtualMachineId, memory));
         
         try 
         {

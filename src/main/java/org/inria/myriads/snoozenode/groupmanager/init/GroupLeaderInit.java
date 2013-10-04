@@ -26,13 +26,11 @@ import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
-import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
-import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
+import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
-import org.inria.myriads.snoozenode.database.enums.DatabaseType;
 import org.inria.myriads.snoozenode.exception.GroupLeaderInitException;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.GroupLeaderPolicyFactory;
@@ -44,6 +42,7 @@ import org.inria.myriads.snoozenode.groupmanager.virtualmachinediscovery.Virtual
 import org.inria.myriads.snoozenode.heartbeat.HeartbeatFactory;
 import org.inria.myriads.snoozenode.heartbeat.message.HeartbeatMessage;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,23 +74,32 @@ public final class GroupLeaderInit
     /** Resource demand estimator. */
     private ResourceDemandEstimator estimator_;
 
+    /** External notifier.*/
+    private ExternalNotifier externalNotifier_;
+
     /**
      * Constructor.
      * 
      * @param nodeConfiguration         The node configuration
      * @param groupLeaderDescription    The group leader description
+     * @param externalNotifier          external notifier.
      * @throws Exception 
      */
-    public GroupLeaderInit(NodeConfiguration nodeConfiguration, GroupManagerDescription groupLeaderDescription) 
+    public GroupLeaderInit(NodeConfiguration nodeConfiguration, 
+            GroupManagerDescription groupLeaderDescription,
+            ExternalNotifier externalNotifier
+            ) 
         throws Exception 
     {
         Guard.check(nodeConfiguration);
         log_.debug("Initializing the group leader logic");
-        
         nodeConfiguration_ = nodeConfiguration;    
+        externalNotifier_ = externalNotifier;
         startInitialization(groupLeaderDescription);
     }
 
+    
+    
     /**
      * Starts the initialization.
      * 
@@ -104,12 +112,14 @@ public final class GroupLeaderInit
         Guard.check(groupLeaderDescription);
         log_.debug("Starting the group leader components initialization!");
         
+    
         initializeLocalControllerAssignmentPolicy();
         initializeRepository(groupLeaderDescription);
         initializeResourceDemandEstimator();
         initializeVirtualClusterManager();
         initializeVirtualMachineDiscovery();
         startGroupManagerMonitoringDataReceiver(); 
+        //everyting is setup we can send heartbeat.
         startHeartbeatSender(groupLeaderDescription);       
     }
         
@@ -141,9 +151,13 @@ public final class GroupLeaderInit
     private void initializeRepository(GroupManagerDescription groupLeaderDescription) 
     {
         String[] virtualMachineSubnets = nodeConfiguration_.getNetworking().getVirtualMachineSubnets();
-        int maxCapacity = nodeConfiguration_.getDatabase().getNumberOfEntriesPerGroupManager();
-        DatabaseType type = nodeConfiguration_.getDatabase().getType();
-        groupLeaderRepository_ = DatabaseFactory.newGroupLeaderRepository(virtualMachineSubnets, maxCapacity, type);
+        DatabaseSettings settings = nodeConfiguration_.getDatabase();
+        groupLeaderRepository_ = 
+                DatabaseFactory.newGroupLeaderRepository(
+                                groupLeaderDescription,
+                                virtualMachineSubnets, 
+                                settings,
+                                externalNotifier_);
     }
     
     /**
@@ -258,22 +272,27 @@ public final class GroupLeaderInit
         log_.debug("Performing local controller lookup on group managers");
         NetworkAddress contactInformation = localController.getControlDataAddress();
         
-        for (GroupManagerDescription groupManager : groupManagers)
-        {
-            NetworkAddress groupManagerAddress = groupManager.getListenSettings().getControlDataAddress();
-            GroupManagerAPI groupManagerCommunicator = 
-                CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress);
-            String localControllerId = groupManagerCommunicator.hasLocalController(contactInformation);
-            if (localControllerId != null)
-            {
-                AssignedGroupManager lookup = new AssignedGroupManager();
-                lookup.setLocalControllerId(localControllerId);
-                lookup.setGroupManager(groupManager);
-                return lookup;
-            }
-        }
+
+        AssignedGroupManager lookup = groupLeaderRepository_.getAssignedGroupManager(contactInformation);
         
-        return null;
+        return lookup;
+        // We don't need this anymore since we got the LCs in the GL repo
+//        for (GroupManagerDescription groupManager : groupManagers)
+//        {
+//            NetworkAddress groupManagerAddress = groupManager.getListenSettings().getControlDataAddress();
+//            GroupManagerAPI groupManagerCommunicator = 
+//                CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress);
+//            String localControllerId = groupManagerCommunicator.hasLocalController(contactInformation);
+//            if (localControllerId != null)
+//            {
+//                AssignedGroupManager lookup = new AssignedGroupManager();
+//                lookup.setLocalControllerId(localControllerId);
+//                lookup.setGroupManager(groupManager);
+//                return lookup;
+//            }
+//        }
+        
+//        return null;
     }
     
     /** 
@@ -296,7 +315,9 @@ public final class GroupLeaderInit
                                                                                    groupLeader.getId());
         new Thread(HeartbeatFactory.newHeartbeatMulticastSender(heartbeatAddress, 
                                                                 heartbeatInterval,
-                                                                heartbeatMessage)).start();
+                                                                heartbeatMessage),
+                  "HeartbeatSender"
+                ).start();
     }
     
     /** 

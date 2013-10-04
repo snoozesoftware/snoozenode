@@ -26,12 +26,15 @@ import java.util.concurrent.BlockingQueue;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.comunicator.CommunicatorFactory;
+import org.inria.myriads.snoozenode.comunicator.api.Communicator;
+import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.listener.VirtualMachineMonitoringListener;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.service.InfrastructureMonitoring;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.threshold.ThresholdCrossingDetector;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
-import org.inria.myriads.snoozenode.tcpip.TCPDataSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Eugen Feller
  */
-public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
+public final class VirtualMachineMonitorDataConsumer 
     implements Runnable
 {
     /** Define the logger. */
@@ -61,45 +64,61 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
     /** Signals termination. */
     private boolean isTerminated_;
     
+    /** Communicator with the upper level. */
+    private Communicator communicator_;
+    
     /**
      * Constructor.
      * 
-     * @param localController       The local controller description
-     * @param groupManagerAddress   The group manager address
-     * @param dataQueue             The data queue
-     * @param monitoringThresholds  The monitoring thresholds
-     * @param callback              The monitoring service callback
-     * @throws Exception            The exception
+     * @param localController           The local controller description
+     * @param groupManagerAddress       The group manager address
+     * @param dataQueue                 The data queue
+     * @param infrastructureMonitoring  The infrastructure monitoring
+     * @param callback                  The monitoring service callback
+     * @param databaseSettings          The databaseSettings
+     * @throws Exception                The exception
      */
     public VirtualMachineMonitorDataConsumer(LocalControllerDescription localController,
                                              NetworkAddress groupManagerAddress, 
                                              BlockingQueue<AggregatedVirtualMachineData> dataQueue,
-                                             MonitoringThresholds monitoringThresholds,
+                                             InfrastructureMonitoring infrastructureMonitoring,
+                                             DatabaseSettings databaseSettings,
                                              VirtualMachineMonitoringListener callback) 
         throws Exception
     {
-        super(groupManagerAddress);
-        log_.debug("Initializing the virtual machine monitoring data consumer"); 
+        
+        log_.debug("Initializing the virtual machine monitoring data consumer");
+        MonitoringThresholds monitoringThresholds = infrastructureMonitoring.getMonitoringSettings().getThresholds();
         localControllerId_ = localController.getId();
         dataQueue_ = dataQueue;
         callback_ = callback; 
         crossingDetector_ = new ThresholdCrossingDetector(monitoringThresholds, localController.getTotalCapacity());
+        communicator_  = CommunicatorFactory.newVirtualMachineCommunicator(groupManagerAddress, databaseSettings);
     }
    
     /**
      * Sends heartbeat data.
      * 
-     * @param localControllerId     The local controller identifier
-     * @throws IOException          The exception
+     * @param localControllerId         The local controller identifier
+     * @throws InterruptedException 
+     * @throws InterruptedException          The exception
      */
-    private void sendHeartbeatData(String localControllerId) 
-        throws IOException
+    private void sendHeartbeatData(String localControllerId) throws InterruptedException 
     {
         Guard.check(localControllerId);
         LocalControllerDataTransporter localControllerData = new LocalControllerDataTransporter(localControllerId, 
                                                                                                 null);
-        log_.debug("Sending local controller heartbeat information to group manager");
-        send(localControllerData);  
+        log_.debug("Sending local controller heartbeat information to group manager");        
+        try
+        {
+            communicator_.sendHeartbeatData(localControllerData);
+        }
+        catch (IOException exception)
+        {
+            log_.debug(String.format("I/O error during data sending heartbeat (%s)! Did the group manager close " +
+                    "its connection unexpectedly?", exception.getMessage()));
+            throw new InterruptedException();
+        }
     }
     
     /**
@@ -107,11 +126,12 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
      * 
      * @param localControllerId     The local controller identifier
      * @param aggregatedData        The aggregated data
-     * @throws IOException          The I/O exception
+     * @throws InterruptedException 
+     * @throws InterruptedException          The I/O exception
      */
     @SuppressWarnings("unchecked")
-    private void sendRegularData(String localControllerId, ArrayList<AggregatedVirtualMachineData> aggregatedData) 
-        throws IOException
+    private void sendRegularData(String localControllerId, ArrayList<AggregatedVirtualMachineData> aggregatedData)
+                    throws InterruptedException 
     {
         Guard.check(localControllerId, aggregatedData);
         
@@ -122,21 +142,36 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
             new LocalControllerDataTransporter(localControllerId, clonedData);
         
         boolean isDetected = crossingDetector_.detectThresholdCrossing(localControllerData);
-        if (!isDetected)
-        {
-            log_.debug("No threshold crossing detected! Node seems stable for now!");
-        }
+
         
-        log_.debug("Sending aggregated local controller summary information to group maanger");
-        send(localControllerData);  
+        log_.debug("Sending aggregated local controller summary information to group mananger");
+        try
+        {
+            if (!isDetected)
+            {
+                communicator_.sendRegularData(localControllerData);
+                log_.debug("No threshold crossing detected! Node seems stable for now!");
+            }
+            else
+            {
+                //send directly to GM to take into account the treshold crossing.
+                communicator_.sendHeartbeatData(localControllerData);
+            }
+        }
+        catch (IOException exception)
+        {
+            log_.debug(String.format("I/O error during data sending (%s)! Did the group manager close " +
+                    "its connection unexpectedly?", exception.getMessage()));
+            throw new InterruptedException();
+        }
     }
     
     /** Run method. */
     public void run() 
     {
         ArrayList<AggregatedVirtualMachineData> aggregatedData = new ArrayList<AggregatedVirtualMachineData>();
-        try 
-        {  
+        try
+        {
             while (!isTerminated_)
             {                               
                 log_.debug("Waiting for virtual machine monitoring data to arrive...");
@@ -144,11 +179,14 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
                 log_.debug(String.format("Received virtual machine %s data", 
                                          virtualMachineData.getVirtualMachineId()));
                 
+                
                 if (virtualMachineData.getVirtualMachineId().equals("heartbeat"))
                 {
+                    
                     sendHeartbeatData(localControllerId_);
                     continue;
                 }
+
                                 
                 aggregatedData.add(virtualMachineData);
                 
@@ -162,15 +200,6 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
                     aggregatedData.clear();
                 }
             }   
-        }
-        catch (IOException exception) 
-        {
-            if (!isTerminated_)
-            {
-                log_.debug(String.format("I/O error during data sending (%s)! Did the group manager close " +
-                                         "its connection unexpectedly?", exception.getMessage()));
-                close();
-            }
         } 
         catch (InterruptedException exception)
         {
@@ -178,8 +207,11 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
         }  
         
         log_.debug("Virtual machine monitoring data consumer stopped!");
+        terminate();
     }
     
+
+
     /**
      * Terminates the consumer.
      */
@@ -187,6 +219,7 @@ public final class VirtualMachineMonitorDataConsumer extends TCPDataSender
     {
         log_.debug("Terminating the virtual machine monitoring data consumer");
         isTerminated_ = true;
-        close();
+        communicator_.close();
     }
+
 }

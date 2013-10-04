@@ -36,6 +36,18 @@ import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.Aggrega
  * 
  * @author Eugen Feller
  */
+/**
+ * @author msimonin
+ *
+ */
+/**
+ * @author msimonin
+ *
+ */
+/**
+ * @author msimonin
+ *
+ */
 public interface GroupManagerRepository 
 {      
     /** 
@@ -50,10 +62,13 @@ public interface GroupManagerRepository
      * 
      * @param numberOfMonitoringEntries    The number of monitoring entries
      * @param isActiveOnly                 true if active only controllers are needed
+     * @param withVirtualMachines          true if virtualMachines are needed
      * @return                             The local controller descriptions
      */
     ArrayList<LocalControllerDescription> getLocalControllerDescriptions(int numberOfMonitoringEntries, 
-                                                                         boolean isActiveOnly);
+                                                                         boolean isActiveOnly,
+                                                                         boolean withVirtualMachines
+                                                                         );
     
     /**
      * Returns the local controller control addressed associated with a virtual machine.
@@ -68,9 +83,12 @@ public interface GroupManagerRepository
      * 
      * @param localControllerId          The local controller identifier
      * @param numberOfMonitoringEntries  The number of monitoring entries
+     * @param withVirtualMachines        True if virtual machines are needed
      * @return                           The local controller description
      */
-    LocalControllerDescription getLocalControllerDescription(String localControllerId, int numberOfMonitoringEntries);
+    LocalControllerDescription getLocalControllerDescription(String localControllerId, 
+                                                             int numberOfMonitoringEntries, 
+                                                             boolean withVirtualMachines);
        
     /** 
      * Adds local controller description. 
@@ -188,13 +206,6 @@ public interface GroupManagerRepository
                                          VirtualMachineLocation newVirtualMachineLocation);
 
     /**
-     * Returns the number of local controllers.
-     * 
-     * @return  The number of local controllers
-     */
-    int getNumberOfLocalControllers();
-    
-    /**
      * Changes the local controller status.
      * 
      * @param localControllerId     The local controller identifier
@@ -219,4 +230,22 @@ public interface GroupManagerRepository
      * @return                      true if everything ok
      */
     boolean updateVirtualMachineMetaData(VirtualMachineMetaData virtualMachine);
+
+    
+    /**
+     * 
+     * Return the group manager description.
+     * 
+     * @return      GroupManager description
+     */
+    GroupManagerDescription  getGroupManager();
+
+    /**
+     * 
+     * Returns the list of local controllers to transmit to the group leader.
+     * 
+     * @return the list of local controllers to transmit.
+     */
+    ArrayList<LocalControllerDescription> getLocalControllerDescriptionForDataTransporter();
+
 }

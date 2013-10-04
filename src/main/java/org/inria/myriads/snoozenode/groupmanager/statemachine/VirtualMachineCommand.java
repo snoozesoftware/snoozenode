@@ -27,17 +27,57 @@ package org.inria.myriads.snoozenode.groupmanager.statemachine;
 public enum VirtualMachineCommand 
 {
     /** Suspend. */
-    SUSPEND,
+    SUSPEND("suspend"),
     /** Resume. */
-    RESUME,
+    RESUME("resume"),
     /** Shutdown. */
-    SHUTDOWN,
+    SHUTDOWN("shutdown"),
     /** Reboot. */
-    REBOOT,
+    REBOOT("reboot"),
     /** Destroy. */
-    DESTROY,
+    DESTROY("destroy"),
     /** Migrate. */
-    MIGRATE,
+    MIGRATE("migrate"),
     /** Resize. */
-    RESIZE,
+    RESIZE("resize");
+
+    /** name.*/
+    private String name_ = "";
+    
+    /**
+     * @param name  The name.
+     */
+    VirtualMachineCommand(String name)
+    {
+        name_ = name;
+    }
+    
+    @Override
+    public String toString()
+    {
+        return name_;
+    }
+    
+    
+    /**
+     * 
+     * Convert from string.
+     * 
+     * @param text      The strings text to convert.
+     * @return  VirtualMachineCommand.
+     */
+    public static VirtualMachineCommand fromString(String text) 
+    {
+        if (text != null) 
+        {
+          for (VirtualMachineCommand v : VirtualMachineCommand.values()) 
+          {
+            if (text.equalsIgnoreCase(v.toString())) 
+            {
+              return v;
+            }
+          }
+        }
+        throw new IllegalArgumentException("No matching enum found");
+      }
 }

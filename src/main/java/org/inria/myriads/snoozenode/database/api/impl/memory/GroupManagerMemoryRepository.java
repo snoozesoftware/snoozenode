@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.database.api.impl;
+package org.inria.myriads.snoozenode.database.api.impl.memory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,8 +50,8 @@ public final class GroupManagerMemoryRepository
     /** Logger.*/
     private static final Logger log_ = LoggerFactory.getLogger(GroupManagerMemoryRepository.class);
     
-    /** Group manager id. */
-    private String groupManagerId_;
+    /** GroupManagerDescription. */
+    private GroupManagerDescription groupManager_;
     
     /**
      * Virtual machine to local controller assignment map.
@@ -66,19 +66,24 @@ public final class GroupManagerMemoryRepository
 
     /** The maximum capacity. */
     private int maxCapacity_;
-        
-    /** 
+            
+
+    
+    
+    /**
+     * 
      * Constructor.
      * 
-     * @param groupManagerId    The group manager identifier
-     * @param maxCapacity       The maximum capacity
+     * @param groupManager  group manager.
+     * @param maxCapacity   max capacity.
      */
-    public GroupManagerMemoryRepository(String groupManagerId, int maxCapacity) 
+    public GroupManagerMemoryRepository(GroupManagerDescription groupManager,
+            int maxCapacity) 
     {
-        Guard.check(groupManagerId);
+        
         log_.debug("Initializing the group manager memory repository");
         
-        groupManagerId_ = groupManagerId;
+        groupManager_ = groupManager;
         maxCapacity_ = maxCapacity;
         localControllerDescriptions_ = new HashMap<String, LocalControllerDescription>();
         legacyIpAddresses_ = new ArrayList<String>();
@@ -89,11 +94,12 @@ public final class GroupManagerMemoryRepository
      * 
      * @param numberOfMonitoringEntries     The number of monitoring entries
      * @param isActiveOnly                  true if active only controllers are required
+     * @param withVirtualMachines           true if virtual machines are needed
      * @return                              The local controller descriptions
      */
     @Override
     public synchronized ArrayList<LocalControllerDescription> 
-        getLocalControllerDescriptions(int numberOfMonitoringEntries, boolean isActiveOnly)
+        getLocalControllerDescriptions(int numberOfMonitoringEntries, boolean isActiveOnly, boolean withVirtualMachines)
     {
         Guard.check(numberOfMonitoringEntries);
         log_.debug(String.format("Getting all local controllers, number of monitoring entries: %d",     
@@ -117,7 +123,9 @@ public final class GroupManagerMemoryRepository
             
             log_.debug(String.format("Gettung local controller description for %s", localController.getId()));
             LocalControllerDescription copy = new LocalControllerDescription(localController, 
-                                                                             numberOfMonitoringEntries);
+                                                                             numberOfMonitoringEntries,
+                                                                             withVirtualMachines
+                                                                              );
             localControllers.add(copy);
         }
         
@@ -160,12 +168,15 @@ public final class GroupManagerMemoryRepository
      * 
      * @param groupManager      The group manager description
      */
+    @SuppressWarnings("unchecked")
     @Override
     public synchronized void fillGroupManagerDescription(GroupManagerDescription groupManager) 
     {   
         Guard.check(groupManager);
         log_.debug("Adding possible virtual machine meta data to group manager description");
-        groupManager.setLocalControllers(localControllerDescriptions_);   
+        //it should be a copy ?  
+        groupManager.setLocalControllers(
+                (HashMap<String, LocalControllerDescription>) localControllerDescriptions_.clone());   
     }
     
     /**
@@ -181,6 +192,7 @@ public final class GroupManagerMemoryRepository
         String localControllerId = localController.getId();
         log_.debug(String.format("Adding description for local controller: %s", localControllerId));
         
+        localController.setIsAssigned(true);
         localControllerDescriptions_.put(localControllerId, localController);
         boolean isUpdated = updateVirtualMachineAssignmens(localController);
         if (!isUpdated)
@@ -190,11 +202,14 @@ public final class GroupManagerMemoryRepository
         }
                      
         log_.debug("Local controller description added successfully!");
+        
+        
         return true;
     }
     
     /**
      * Updates the virtual machine assignment set.
+     * (When a new local controller join)
      *
      * @param localController   The local controller description
      * @return                  true if everything ok, false otherwise
@@ -264,11 +279,14 @@ public final class GroupManagerMemoryRepository
      * 
      * @param localControllerId         The local controller identifier
      * @param numberOfMonitoringEntries The number of monitoring entries
+     * @param withVirtualMachines       true if virtual machines are needed
      * @return                          The local controller description
      */
     @Override
     public synchronized LocalControllerDescription getLocalControllerDescription(String localControllerId,
-                                                                                 int numberOfMonitoringEntries)
+                                                                                 int numberOfMonitoringEntries,
+                                                                                 boolean withVirtualMachines
+            )
     {
         Guard.check(localControllerId, numberOfMonitoringEntries);       
         log_.debug(String.format("Getting local controller description for %s", localControllerId));
@@ -281,7 +299,9 @@ public final class GroupManagerMemoryRepository
         }
         
         LocalControllerDescription localControllerCopy = new LocalControllerDescription(localController,
-                                                                                        numberOfMonitoringEntries);
+                                                                                        numberOfMonitoringEntries,
+                                                                                        withVirtualMachines
+                                                                                        );
         return localControllerCopy;
     }
     
@@ -358,7 +378,8 @@ public final class GroupManagerMemoryRepository
         }
         
         virtualMachine.setUsedCapacity(new LRUCache<Long, VirtualMachineMonitoringData>(maxCapacity_));
-        metaData.put(virtualMachineId, virtualMachine);    
+        metaData.put(virtualMachineId, virtualMachine); 
+        
         return true;
     }
     
@@ -583,6 +604,7 @@ public final class GroupManagerMemoryRepository
         }
         
         virtualMachineMetaData.setStatus(status);
+        
         return true;
     }
     
@@ -594,7 +616,7 @@ public final class GroupManagerMemoryRepository
     @Override
     public synchronized String getGroupManagerId() 
     {
-        return groupManagerId_;
+        return groupManager_.getId();
     }
 
     /**
@@ -680,7 +702,7 @@ public final class GroupManagerMemoryRepository
             log_.debug("Networking information released successfully!");
             localControllerDescriptions_.remove(localControllerId);        
         }
-        
+                
         return true;
     }
         
@@ -780,8 +802,14 @@ public final class GroupManagerMemoryRepository
                                                              VirtualMachineLocation newLocation) 
     {
         Guard.check(oldLocation, newLocation);
-        log_.debug(String.format("Updating virtual machine location for: %s", 
-                                 oldLocation.getVirtualMachineId()));
+        log_.debug(String.format("Updating virtual machine location for: %s (host : %s) to %s ( host : %s)", 
+                                 oldLocation.getVirtualMachineId(),
+                                 oldLocation.getLocalControllerControlDataAddress().getAddress(),
+                                 newLocation.getVirtualMachineId(),
+                                 newLocation.getGroupManagerControlDataAddress().getAddress()
+                ));
+        
+        
         
         VirtualMachineMetaData metaData = getVirtualMachineMetaData(oldLocation);
         if (metaData == null)
@@ -804,19 +832,8 @@ public final class GroupManagerMemoryRepository
             log_.error("Failed to remove virtual machine meta data mapping");
             return false;
         }
-        
+        //send to external here : management/groupmanager.gmid.vm.vmid.migration(Metadata)
         return true;
-    }
-
-    /**
-     * Returns the number of local controllers.
-     * 
-     * @return  The number of local controllers
-     */
-    @Override
-    public synchronized int getNumberOfLocalControllers() 
-    {
-        return localControllerDescriptions_.size();
     }
 
     /**
@@ -844,6 +861,7 @@ public final class GroupManagerMemoryRepository
     
     /**
      * Checks if local controller exists.
+     * @deprecated
      * 
      * @param localControllerAddress     The lcoal controller address
      * @return                           The previous identifier, null otherwise
@@ -895,4 +913,33 @@ public final class GroupManagerMemoryRepository
         return true;   
       
     }
+
+    /**
+     * @return the localControllerDescriptions
+     */
+    public HashMap<String, LocalControllerDescription> getLocalControllerDescriptions()
+    {
+        return localControllerDescriptions_;
+    }
+
+    /**
+     * @param localControllerDescriptions the localControllerDescriptions to set
+     */
+    public void setLocalControllerDescriptions(HashMap<String, LocalControllerDescription> localControllerDescriptions)
+    {
+        localControllerDescriptions_ = localControllerDescriptions;
+    }
+
+    @Override
+    public GroupManagerDescription getGroupManager()
+    {
+        return groupManager_;
+    }
+
+    @Override
+    public ArrayList<LocalControllerDescription> getLocalControllerDescriptionForDataTransporter()
+    {
+        return getLocalControllerDescriptions(0, false, false);
+    }
+
 }

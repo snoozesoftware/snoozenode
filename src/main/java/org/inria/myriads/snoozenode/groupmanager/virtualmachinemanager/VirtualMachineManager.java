@@ -26,11 +26,14 @@ import java.util.UUID;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.LocalControllerAPI;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
@@ -40,6 +43,7 @@ import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineComm
 import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinemanager.listener.VirtualMachineManagerListener;
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinemanager.worker.VirtualMachineSubmissionWorker;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,28 +73,37 @@ public final class VirtualMachineManager
     /** Number of monitoring entries. */
     private int numberOfMonitoringEntries_;
 
+    /** Resource demand estimator. */
+    private ResourceDemandEstimator estimator_;
+    
+    /** External Notifier. */
+    private ExternalNotifier externalNotifier_;
+    
     /**
      * Constructor.
      * 
-     * @param schedulerSettings         The scheduler settings
+     * @param nodeConfiguration         The node configuration
      * @param estimator                 The group manager repository
      * @param groupManagerRepository    The number of monitoring entries
      * @param stateMachine              The state machine
      */
-    public VirtualMachineManager(GroupManagerSchedulerSettings schedulerSettings,
+    public VirtualMachineManager(
+                                 NodeConfiguration nodeConfiguration,
                                  ResourceDemandEstimator estimator,
                                  GroupManagerRepository groupManagerRepository, 
                                  StateMachine stateMachine) 
     {
-        Guard.check(schedulerSettings, estimator);
+        Guard.check(estimator);
         log_.debug("Initializing virtual machine management");
-            
+        GroupManagerSchedulerSettings schedulerSettings = nodeConfiguration.getGroupManagerScheduler();
+        externalNotifier_ = new ExternalNotifier(nodeConfiguration);
         numberOfMonitoringEntries_ = estimator.getNumberOfMonitoringEntries();        
         repository_ = groupManagerRepository;
         stateMachine_ = stateMachine;
         submissionResponses_ = new HashMap<String, VirtualMachineSubmissionResponse>();
-        placementPolicy_ = GroupManagerPolicyFactory.newVirtualMachinePlacement(schedulerSettings.getPlacementPolicy(), 
+        placementPolicy_ = GroupManagerPolicyFactory.newVirtualMachinePlacement(schedulerSettings, 
                                                                                 estimator);
+        estimator_ = estimator;
     }
     
     /**
@@ -110,9 +123,12 @@ public final class VirtualMachineManager
                                                                                    repository_, 
                                                                                    placementPolicy_, 
                                                                                    stateMachine_,
-                                                                                   this);
-        new Thread(worker).start();
-        return taskIdentifier;
+                                                                                   estimator_,
+                                                                                   this,
+                                                                                   externalNotifier_
+                                                                                    );
+        new Thread(worker, "VirtualMachineManager : " + taskIdentifier).start();
+        return taskIdentifier; 
     }
             
     /**
@@ -152,7 +168,6 @@ public final class VirtualMachineManager
             log_.error("Unable to change the virtual machine status");
             return false;
         }
-        
         return true;
     }
     
@@ -389,6 +404,40 @@ public final class VirtualMachineManager
         }
        
         return isProcessed;
+    }
+
+    /**
+     * 
+     * Resizes a resize request.
+     * 
+     * @param resizeRequest         The resize request.
+     * @return                      True if everything's fine, false otherwise.
+     */
+    public VirtualMachineMetaData resizeVirtualMachine(ResizeRequest resizeRequest)
+    {
+        //we can only request for less resources.
+        VirtualMachineLocation location = resizeRequest.getVirtualMachineLocation();
+        String virtualMachineId = location.getVirtualMachineId();
+        log_.debug(String.format("Resizing virtual machine %s", virtualMachineId));
+        
+        if (!repository_.checkVirtualMachineStatus(location, VirtualMachineStatus.RUNNING))
+        {
+            return null;
+        }
+
+        NetworkAddress localController = repository_.getLocalControllerControlDataAddress(location);
+        if (localController == null)
+        {
+            log_.debug(String.format("Unable to get local controller description from virtual machine: %s",
+                                     virtualMachineId));
+            return null;
+        }
+        
+        LocalControllerAPI communicator = CommunicatorFactory.newLocalControllerCommunicator(localController);
+        VirtualMachineMetaData newVirtualMachineMetaData = 
+                communicator.resizeVirtualMachine(resizeRequest);
+                                            
+        return newVirtualMachineMetaData;
     }
 
 }

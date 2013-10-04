@@ -20,6 +20,7 @@
 package org.inria.myriads.snoozenode.localcontroller.monitoring.service;
 
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.HostMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.VirtualMachineMonitor;
 
@@ -38,21 +39,28 @@ public final class InfrastructureMonitoring
     
     /** Monitoring settings. */
     private MonitoringSettings monitoringSettings_;
+    
+    /** Monitoring External Settngs. */
+    private ExternalNotifierSettings monitoringExternalSettings_;
    
     /**
      * Constructor.
      * 
-     * @param virtualMachineMonitor     The virtual machine monitor
-     * @param hostMonitor               The host monitor
-     * @param monitoringSettings        The monitoring settings
+     * @param virtualMachineMonitor         The virtual machine monitor
+     * @param hostMonitor                   The host monitor
+     * @param monitoringSettings            The monitoring settings
+     * @param monitoringExternalSettings    The monitoring external notifier.
      */
     public InfrastructureMonitoring(VirtualMachineMonitor virtualMachineMonitor, 
                                     HostMonitor hostMonitor, 
-                                    MonitoringSettings monitoringSettings) 
+                                    MonitoringSettings monitoringSettings,
+                                    ExternalNotifierSettings monitoringExternalSettings
+                                    ) 
     {
         virtualMachineMonitor_ = virtualMachineMonitor;
         hostMonitor_ = hostMonitor;
         monitoringSettings_ = monitoringSettings;
+        monitoringExternalSettings_ = monitoringExternalSettings; 
     }
 
     /**
@@ -83,5 +91,13 @@ public final class InfrastructureMonitoring
     public MonitoringSettings getMonitoringSettings() 
     {
         return monitoringSettings_;
+    }
+
+    /**
+     * @return the monitoringExternalSettings
+     */
+    public ExternalNotifierSettings getMonitoringExternalSettings()
+    {
+        return monitoringExternalSettings_;
     }
 }

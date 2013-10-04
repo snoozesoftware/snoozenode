@@ -32,11 +32,18 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
+import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.impl.Static;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinemanager.listener.VirtualMachineManagerListener;
+import org.inria.myriads.snoozenode.message.ManagementMessage;
+import org.inria.myriads.snoozenode.message.ManagementMessageType;
+import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
+import org.inria.snoozenode.external.notifier.ExternalNotificationType;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +63,10 @@ public final class VirtualMachineSubmissionWorker
     
     /** Submission policy. */
     private PlacementPolicy placementPolicy_;
-
+    
+    /** Static policy. */
+    private PlacementPolicy staticPlacementPolicy_;
+    
     /** Virtual machine submission listener. */
     private VirtualMachineManagerListener managerListener_;
 
@@ -72,6 +82,9 @@ public final class VirtualMachineSubmissionWorker
     /** Task identifier. */
     private String taskIdentifier_;
     
+    /** External Notifier. */
+    private ExternalNotifier externalNotifier_;
+    
     /**
      * Constructor.
      * 
@@ -81,7 +94,9 @@ public final class VirtualMachineSubmissionWorker
      * @param repository                 The repository
      * @param placementPolicy            The placement policy
      * @param stateMachine               The state machine
+     * @param estimator                  The resource estimator
      * @param managerListener            The manager listener
+     * @param externalNotifier           The external Notifier
      */
     public VirtualMachineSubmissionWorker(String taskIdentifier,
                                           int numberOfMonitoringEntries,
@@ -89,7 +104,10 @@ public final class VirtualMachineSubmissionWorker
                                           GroupManagerRepository repository,
                                           PlacementPolicy placementPolicy,
                                           StateMachine stateMachine,
-                                          VirtualMachineManagerListener managerListener)
+                                          ResourceDemandEstimator estimator,
+                                          VirtualMachineManagerListener managerListener,
+                                          ExternalNotifier externalNotifier
+                                          )
     {
         taskIdentifier_ = taskIdentifier;
         numberOfMonitoringEntries_ = numberOfMonitoringEntries;
@@ -98,6 +116,9 @@ public final class VirtualMachineSubmissionWorker
         placementPolicy_ = placementPolicy;
         stateMachine_ = stateMachine;
         managerListener_ = managerListener;
+    
+        staticPlacementPolicy_ = new Static(estimator);
+        externalNotifier_ = externalNotifier;
     }
     
     /**
@@ -115,8 +136,18 @@ public final class VirtualMachineSubmissionWorker
                 ManagementUtils.updateVirtualMachineMetaData(virtualMachine,
                                                              VirtualMachineStatus.ERROR,
                                                              VirtualMachineErrorCode.FAILED_TO_UPDATE_REPOSITORY);
-            }      
+            }
         }
+        
+        ExternalNotifierUtils.send(
+                externalNotifier_,
+                ExternalNotificationType.MANAGEMENT,
+                new ManagementMessage(ManagementMessageType.PROCESSED, virtualMachine),
+                repository_.getGroupManagerId() + "." +
+                virtualMachine.getVirtualMachineLocation().getLocalControllerId() + "." + 
+                virtualMachine.getVirtualMachineLocation().getVirtualMachineId() + "." +
+                "START"
+                );
     }
     
     /**
@@ -216,10 +247,77 @@ public final class VirtualMachineSubmissionWorker
           
         ArrayList<VirtualMachineMetaData> virtualMachines = submissionRequest_.getVirtualMachineMetaData(); 
         List<LocalControllerDescription> localControllers = 
-                repository_.getLocalControllerDescriptions(numberOfMonitoringEntries_, false);
+                repository_.getLocalControllerDescriptions(numberOfMonitoringEntries_, false, true);
         
-        PlacementPlan placementPlan = placementPolicy_.place(virtualMachines, localControllers);
+        ArrayList<VirtualMachineMetaData> boundVirtualMachines = new ArrayList<VirtualMachineMetaData>();
+        ArrayList<VirtualMachineMetaData> freeVirtualMachines = new ArrayList<VirtualMachineMetaData>();
+        
+        splitVirtualMachines(virtualMachines, boundVirtualMachines, freeVirtualMachines);
+        //split vms static placement/ non static placement
+        
+        //places static vms
+        PlacementPlan boundPlacementPlan = staticPlacementPolicy_.place(boundVirtualMachines, localControllers);
+        
+        //place free vms
+        PlacementPlan freePlacementPlan = placementPolicy_.place(freeVirtualMachines, localControllers);
+        
+        ArrayList<LocalControllerDescription> targetLocalControllers = new ArrayList<LocalControllerDescription>();
+        for (LocalControllerDescription localController : localControllers)
+        {
+            if (localController.getAssignedVirtualMachines().size() > 0)
+            {
+                targetLocalControllers.add(localController);
+            }
+        }
+        List<VirtualMachineMetaData> unassignedVirtualMachine = new ArrayList<VirtualMachineMetaData>();
+        unassignedVirtualMachine.addAll(boundPlacementPlan.gettUnassignedVirtualMachines());
+        unassignedVirtualMachine.addAll(freePlacementPlan.gettUnassignedVirtualMachines());
+
+        PlacementPlan placementPlan = new PlacementPlan(targetLocalControllers, unassignedVirtualMachine);
+        
+        
         VirtualMachineSubmissionResponse submissionResponse = enforcePlacementPlan(placementPlan);
         managerListener_.onSubmissionFinished(taskIdentifier_, submissionResponse);
+    }
+
+    /**
+     * 
+     * Splits the virtual machines.
+     * 
+     * @param virtualMachines           the virtual machines list
+     * @param boundVirtualMachines      the bound virtual machines
+     * @param freeVirtualMachines       the free virtual machines
+     */
+    protected void splitVirtualMachines(ArrayList<VirtualMachineMetaData> virtualMachines,
+            ArrayList<VirtualMachineMetaData> boundVirtualMachines,
+            ArrayList<VirtualMachineMetaData> freeVirtualMachines)
+    {
+        for (VirtualMachineMetaData virtualMachine : virtualMachines)
+        {
+            if (virtualMachine.getVirtualMachineLocation().getLocalControllerId() != null)
+            {
+                String localControllerId = virtualMachine.getVirtualMachineLocation().getLocalControllerId();
+                log_.debug(String.format(
+                        "The user force the start of this vm on local localcontroller %s",
+                        localControllerId));
+                LocalControllerDescription localController =
+                        repository_.getLocalControllerDescription(localControllerId, 0, false);
+                if (localController != null)
+                {
+                    log_.debug("Found a bound virtual machine");
+                    boundVirtualMachines.add(virtualMachine);
+                }
+                else
+                {
+                    log_.debug("Found a free virtual machine");
+                    freeVirtualMachines.add(virtualMachine);
+                }
+            }
+            else
+            {
+                freeVirtualMachines.add(virtualMachine); 
+            }
+        }
+        
     }
 }

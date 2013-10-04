@@ -27,6 +27,7 @@ import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorSettings;
 import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
+import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.communication.rest.api.LocalControllerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
@@ -39,6 +40,13 @@ import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationLis
 import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationPlanListener;
 import org.inria.myriads.snoozenode.groupmanager.migration.watchdog.MigrationWatchdog;
 import org.inria.myriads.snoozenode.groupmanager.migration.worker.MigrationWorker;
+import org.inria.myriads.snoozenode.message.ManagementMessage;
+import org.inria.myriads.snoozenode.message.ManagementMessageType;
+import org.inria.myriads.snoozenode.message.SystemMessage;
+import org.inria.myriads.snoozenode.message.SystemMessageType;
+import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
+import org.inria.snoozenode.external.notifier.ExternalNotificationType;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,18 +76,26 @@ public final class MigrationPlanEnforcer
     /** Number of migrations. */
     private int numberOfMigrations_;
     
+    
+    /** External Sender. */
+    private ExternalNotifier externalNotifier_;
+    
     /**
      * Constructor.
      * 
-     * @param groupManagerRepository     The group manager repository
-     * @param listener                   Migration plan listener
+     * @param groupManagerRepository     The group manager repository.
+     * @param listener                   Migration plan listener.
+     * @param externalNotifier           External notifier.
      */
-    public MigrationPlanEnforcer(GroupManagerRepository groupManagerRepository, 
-                                 MigrationPlanListener listener)
+    public MigrationPlanEnforcer(
+                                GroupManagerRepository groupManagerRepository, 
+                                MigrationPlanListener listener,
+                                ExternalNotifier externalNotifier
+                                 )
     {
         Guard.check(groupManagerRepository);
         log_.debug("Initializing the migration plan enforcer");
-        
+        externalNotifier_ = externalNotifier;
         groupManagerRepository_ = groupManagerRepository;
         listener_ = listener;
         finishedMigrations_ = new ArrayList<MigrationRequest>();
@@ -106,8 +122,10 @@ public final class MigrationPlanEnforcer
         
         NetworkAddress destinationAddress =
             migrationRequest.getDestinationVirtualMachineLocation().getLocalControllerControlDataAddress();
+        
         if (destinationAddress == null)
         {
+            log_.error("Local controller destination address invalid!");
             throw new MigrationPlanEnforcerException("Local controller destination address invalid!");
         }
         
@@ -115,36 +133,70 @@ public final class MigrationPlanEnforcer
             migrationRequest.getDestinationVirtualMachineLocation().getLocalControllerId();
         if (destinationId == null)
         {
+            log_.error("Local controller identifier is invalid!");
             throw new MigrationPlanEnforcerException("Local controller identifier is invalid!");
         }
         
         VirtualMachineLocation oldLocation = migrationRequest.getSourceVirtualMachineLocation();
-        VirtualMachineLocation newLocation = createNewVirtualMachineLocation(virtualMachineId, 
-                                                                             destinationId, 
-                                                                             destinationAddress);  
-        boolean isUpdated = groupManagerRepository_.updateVirtualMachineLocation(oldLocation, newLocation);
+        
+        
+        VirtualMachineLocation newLocation = migrationRequest.getDestinationVirtualMachineLocation();
+        newLocation.setVirtualMachineId(oldLocation.getVirtualMachineId());
+        
+        boolean isUpdated = false;
+        VirtualMachineMetaData metaData = null;
+        log_.debug("Migration terminated : updating the group manager repository");
+        
+        if (oldLocation.getGroupManagerId().equals(newLocation.getGroupManagerId()))
+        {
+            log_.debug("Migration terminated : updating the LOCAL group manager repository");
+            isUpdated = groupManagerRepository_.updateVirtualMachineLocation(oldLocation, newLocation);
+            metaData = groupManagerRepository_.getVirtualMachineMetaData(newLocation, NUMBER_OF_MONITORING_ENTRIES);
+        }
+        else
+        {
+            log_.debug("Migration terminated : updating the REMOTE group manager repository");
+            metaData = groupManagerRepository_.getVirtualMachineMetaData(oldLocation, NUMBER_OF_MONITORING_ENTRIES);
+            NetworkAddress newGroupManager = newLocation.getGroupManagerControlDataAddress();
+            log_.debug(String.format("Migration terminated : sending a request to update the group manager %s", 
+                    newGroupManager.getAddress()
+                    ));
+            
+            boolean isRemoved = groupManagerRepository_.dropVirtualMachineData(oldLocation);
+            if (!isRemoved)
+            {
+                throw new MigrationPlanEnforcerException("Failed to update virtual machine location!");
+            }
+
+            
+            metaData.setVirtualMachineLocation(newLocation);
+            GroupManagerAPI communicator = CommunicatorFactory.newGroupManagerCommunicator(newGroupManager);
+            isUpdated = communicator.addVirtualMachineAfterMigration(metaData);
+            
+        }
         if (!isUpdated)
         {
             throw new MigrationPlanEnforcerException("Failed to update virtual machine location!");
         }
         
-        VirtualMachineMetaData metaData = 
-            groupManagerRepository_.getVirtualMachineMetaData(newLocation, NUMBER_OF_MONITORING_ENTRIES);   
         if (metaData == null)
         {
             throw new MigrationPlanEnforcerException("Virtual machine meta data is invalid!");
         }
         
-        boolean isStarted = startVirtualMachineMonitoring(destinationAddress, metaData);
+        boolean isStarted = startVirtualMachineMonitoring(destinationAddress, metaData);       
+        
         if (!isStarted)
-        {
-            log_.error("Unable to start virtual machine monitoring on destination!");
-            return false;
+        {            
+            throw new MigrationPlanEnforcerException("Unable to start virtual machine monitoring on destination!");
         }
+        
+
         
         return true;
     }
     
+   
     /**
      * Starts virtual machine monitoring.
      * 
@@ -182,14 +234,37 @@ public final class MigrationPlanEnforcer
                 try 
                 {               
                     processFinishedMigration(finishedMigration);
+
                 } 
                 catch (MigrationPlanEnforcerException exception) 
                 {
                     log_.error("Exception during migration processing", exception);
-                }    
+                    
+                    ExternalNotifierUtils.send(
+                            externalNotifier_,
+                            ExternalNotificationType.MANAGEMENT,
+                            new ManagementMessage(ManagementMessageType.ERROR , finishedMigration),
+                            groupManagerRepository_.getGroupManagerId() + "." +
+                            finishedMigration.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
+                            finishedMigration.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
+                            "MIGRATION"
+                            );
+                }
+                ExternalNotifierUtils.send(
+                        externalNotifier_,
+                        ExternalNotificationType.MANAGEMENT,
+                        new ManagementMessage(ManagementMessageType.PROCESSED , finishedMigration),
+                        groupManagerRepository_.getGroupManagerId() + "." +
+                        finishedMigration.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
+                        finishedMigration.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
+                        "MIGRATION"
+                        );
+                
             }
             
             log_.debug("Migration plan enforced!");
+            
+            
             listener_.onMigrationPlanEnforced();
             finishedMigrations_.clear();
         }
@@ -218,19 +293,21 @@ public final class MigrationPlanEnforcer
     /**
      * Creates new virtual machine location from local controller description.
      * 
-     * @param virtualMachineId    The virtual machine identifier
-     * @param localControllerId   The local controller identifier
-     * @param controlDataAddress  The control data address
+     * @param sourceLocation        The virtual machine location
+     * @param localControllerId     The local controller identifier
+     * @param controlDataAddress    The control data address
      * @return                    The virtual machine location
      */
-    private VirtualMachineLocation createNewVirtualMachineLocation(String virtualMachineId,
+    private VirtualMachineLocation createNewVirtualMachineLocation(VirtualMachineLocation sourceLocation,
                                                                    String localControllerId,
                                                                    NetworkAddress controlDataAddress)
     {
         VirtualMachineLocation location = new VirtualMachineLocation();
-        location.setVirtualMachineId(virtualMachineId);
+        location.setVirtualMachineId(sourceLocation.getVirtualMachineId());
         location.setLocalControllerId(localControllerId);
         location.setLocalControllerControlDataAddress(controlDataAddress);
+        location.setGroupManagerControlDataAddress(sourceLocation.getGroupManagerControlDataAddress());
+        location.setGroupManagerId(sourceLocation.getGroupManagerId());
         return location;
     }
 
@@ -239,7 +316,7 @@ public final class MigrationPlanEnforcer
      *  
      * @param migrationRequest      The migration request
      */
-    private void startMigration(MigrationRequest migrationRequest) 
+    public void startMigration(MigrationRequest migrationRequest) 
     {    
         log_.debug(String.format("Starting to migrate virtual machine %s from local controller %s:%d to %s:%d",
             migrationRequest.getSourceVirtualMachineLocation().getVirtualMachineId(),
@@ -247,13 +324,26 @@ public final class MigrationPlanEnforcer
             migrationRequest.getSourceVirtualMachineLocation().getLocalControllerControlDataAddress().getPort(), 
             migrationRequest.getDestinationVirtualMachineLocation().getLocalControllerControlDataAddress().getAddress(),
             migrationRequest.getDestinationVirtualMachineLocation().getLocalControllerControlDataAddress().getPort()));
-                       
+                
+        ExternalNotifierUtils.send(
+                externalNotifier_,
+                ExternalNotificationType.MANAGEMENT,
+                new ManagementMessage(ManagementMessageType.PENDING , migrationRequest),
+                groupManagerRepository_.getGroupManagerId() + "." +
+                migrationRequest.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
+                migrationRequest.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
+                "MIGRATION"
+                );
+        
         MigrationWorker migrationThread = new MigrationWorker(migrationRequest);
         MigrationWatchdog watchdogThread = new MigrationWatchdog(migrationRequest, this);      
         migrationThread.addMigrationListener(watchdogThread);
         migrationThread.addMigrationListener(this);
-        new Thread(migrationThread).start();
-        new Thread(watchdogThread).start();
+        new Thread(migrationThread, "MigrationThread").start();
+        new Thread(watchdogThread, "MigratonWatchdog").start();
+        
+       
+        
     }
         
     /**
@@ -288,6 +378,13 @@ public final class MigrationPlanEnforcer
         
         log_.debug(String.format("Number of migrations: %s", numberOfMigrations_));
         
+        ExternalNotifierUtils.send(
+                externalNotifier_,
+                ExternalNotificationType.SYSTEM,
+                new SystemMessage(SystemMessageType.RECONFIGURATION, migrationPlan),
+                "groupmanager." + groupManagerRepository_.getGroupManagerId()
+                );
+        
         Map<VirtualMachineMetaData, LocalControllerDescription> mapping = migrationPlan.getMapping();
         for (Map.Entry<VirtualMachineMetaData, LocalControllerDescription> entry : mapping.entrySet())
         {
@@ -296,13 +393,27 @@ public final class MigrationPlanEnforcer
             
             VirtualMachineLocation sourceLocation = virtualMachine.getVirtualMachineLocation();            
             VirtualMachineLocation destinationLocation = 
-                createNewVirtualMachineLocation(sourceLocation.getVirtualMachineId(),
+                createNewVirtualMachineLocation(sourceLocation,
                                                 localController.getId(), 
                                                 localController.getControlDataAddress());
+            
             MigrationRequest migrationRequest = createMigrationRequest(sourceLocation,
                                                                        destinationLocation,
                                                                        localController.getHypervisorSettings()); 
             startMigration(migrationRequest);
         }
+    }
+    
+    /**
+     * 
+     * Start a migration.
+     * Call by the client.
+     * 
+     * @param migrationRequest      The migration request.
+     */
+    public void startManualMigration(MigrationRequest migrationRequest)
+    {
+        numberOfMigrations_ = 1;
+        startMigration(migrationRequest);
     }  
 }

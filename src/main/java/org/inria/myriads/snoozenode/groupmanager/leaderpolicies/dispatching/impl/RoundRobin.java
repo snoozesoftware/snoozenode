@@ -51,7 +51,7 @@ public class RoundRobin
     private ResourceDemandEstimator estimator_;
     
     /** Running index. */
-    int runningIndex_;
+    private int runningIndex_;
         
     /** 
      * Constructor. 
@@ -106,7 +106,8 @@ public class RoundRobin
                                               groupManager.getId()));
                     
                     NetworkAddress address = groupManager.getListenSettings().getControlDataAddress();
-                    metaData.setGroupManagerControlDataAddress(address);
+                    metaData.getVirtualMachineLocation().setGroupManagerControlDataAddress(address);
+                    metaData.getVirtualMachineLocation().setGroupManagerId(groupManager.getId());
                     groupManager.getVirtualMachines().add(metaData);
                     candidateGroupManagers.put(groupManager.getId(), groupManager);
                     iterator.remove();

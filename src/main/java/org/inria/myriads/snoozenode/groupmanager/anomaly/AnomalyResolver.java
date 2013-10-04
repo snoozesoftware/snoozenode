@@ -39,6 +39,11 @@ import org.inria.myriads.snoozenode.groupmanager.migration.MigrationPlanEnforcer
 import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationPlanListener;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
+import org.inria.myriads.snoozenode.message.SystemMessage;
+import org.inria.myriads.snoozenode.message.SystemMessageType;
+import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
+import org.inria.snoozenode.external.notifier.ExternalNotificationType;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,6 +76,9 @@ public final class AnomalyResolver
     /** Number of monitoring entries. */
     private int numberOfMonitoringEntries_;
     
+    /** External Notifier.*/
+    private ExternalNotifier externalNotifier_;
+    
     /**
      * Constructor.
      * 
@@ -78,11 +86,14 @@ public final class AnomalyResolver
      * @param resourceDemandEstimator    The resource demand estimator
      * @param groupManagerRepository     The group manager repository
      * @param stateMachine               The state machine
+     * @param externalNotifier           The external notifier
      */
     public AnomalyResolver(RelocationSettings relocationPolicies,
                            ResourceDemandEstimator resourceDemandEstimator,
                            GroupManagerRepository groupManagerRepository,
-                           StateMachine stateMachine)
+                           StateMachine stateMachine,
+                           ExternalNotifier externalNotifier
+                            )
     {
         Guard.check(relocationPolicies, resourceDemandEstimator, groupManagerRepository, stateMachine);
         log_.debug("Initializing the anomaly resolver");
@@ -96,6 +107,7 @@ public final class AnomalyResolver
         numberOfMonitoringEntries_ = resourceDemandEstimator.getNumberOfMonitoringEntries();
         groupManagerRepository_ = groupManagerRepository;
         stateMachine_ = stateMachine;
+        externalNotifier_ = externalNotifier;
     }
     /**
      * Computes the relocation plan.
@@ -147,12 +159,16 @@ public final class AnomalyResolver
         if (state.equals(LocalControllerState.OVERLOADED))
         {
             log_.debug("Getting all local controllers (including PASSIVE)");
-            destination = groupManagerRepository_.getLocalControllerDescriptions(numberOfMonitoringEntries_, false);    
+            destination = groupManagerRepository_.getLocalControllerDescriptions(numberOfMonitoringEntries_, 
+                                                                                 false,
+                                                                                 true);
             return destination;
         }
         
         log_.debug("Getting all local controllers (excluding PASSIVE)");
-        destination = groupManagerRepository_.getLocalControllerDescriptions(numberOfMonitoringEntries_, true);       
+        destination = groupManagerRepository_.getLocalControllerDescriptions(numberOfMonitoringEntries_,
+                                                                             true,
+                                                                             true);
         return destination;
     }
        
@@ -170,7 +186,16 @@ public final class AnomalyResolver
         log_.debug("Starting anomaly resolution");
                
         LocalControllerDescription anomalyLocalController = 
-            groupManagerRepository_.getLocalControllerDescription(localControllerId, numberOfMonitoringEntries_);
+            groupManagerRepository_.getLocalControllerDescription(localControllerId, 
+                                                                  numberOfMonitoringEntries_,
+                                                                  true);
+        ExternalNotifierUtils.send(
+                externalNotifier_,
+                ExternalNotificationType.SYSTEM,
+                new SystemMessage(SystemMessageType.LC_ANOMALY, anomalyLocalController),
+                "groupmanager." + groupManagerRepository_.getGroupManagerId()
+                );
+        
         if (anomalyLocalController == null)
         {
             throw new AnomalyResolverException("Local controller description is not available!");
@@ -210,7 +235,8 @@ public final class AnomalyResolver
             anomalyLocalController_ = anomalyLocalController;
         }
         
-        MigrationPlanEnforcer migrationPlanExecutor = new MigrationPlanEnforcer(groupManagerRepository_, this);
+        MigrationPlanEnforcer migrationPlanExecutor = 
+                new MigrationPlanEnforcer(groupManagerRepository_, this, externalNotifier_);
         migrationPlanExecutor.enforceMigrationPlan(migrationPlan);
     }
     

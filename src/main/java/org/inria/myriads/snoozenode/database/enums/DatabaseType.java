@@ -27,5 +27,8 @@ package org.inria.myriads.snoozenode.database.enums;
 public enum DatabaseType 
 {
     /** In-memory. */
-    memory
+    memory,
+    
+    /** Cassandra.*/
+    cassandra,
 }

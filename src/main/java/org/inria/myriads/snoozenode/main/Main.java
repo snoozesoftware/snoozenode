@@ -214,6 +214,7 @@ public final class Main
         
         Application application = null;
         NodeRole nodeRole = nodeConfiguration.getNode().getRole();
+        
         switch (nodeRole) 
         {
             case bootstrap :
