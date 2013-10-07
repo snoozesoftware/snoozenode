@@ -101,9 +101,12 @@ public final class GroupLeaderMemoryRepository
         List<String> addressPool = new ArrayList<String>();
         for (String virtualMachineSubnet : virtualMachineSubnets)
         {
-            SubnetUtils subnetUtils = new SubnetUtils(virtualMachineSubnet);
-            SubnetInfo subnetInfo = subnetUtils.getInfo(); 
-            addressPool.addAll(Arrays.asList(subnetInfo.getAllAddresses()));
+            if (! virtualMachineSubnet.equals(""))
+            {
+                SubnetUtils subnetUtils = new SubnetUtils(virtualMachineSubnet);
+                SubnetInfo subnetInfo = subnetUtils.getInfo(); 
+                addressPool.addAll(Arrays.asList(subnetInfo.getAllAddresses()));
+            }
         }
         
         return addressPool;
