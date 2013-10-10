@@ -108,7 +108,7 @@ public class BootstrapCassandraRepository extends CassandraRepository implements
 
 
     @Override
-    public List<VirtualMachineMetaData> getVirtualMachineDescriptions(
+    public ArrayList<VirtualMachineMetaData> getVirtualMachineDescriptions(
             String groupManagerId, 
             String localControllerId,
             String startVirtualMachine,
@@ -126,8 +126,8 @@ public class BootstrapCassandraRepository extends CassandraRepository implements
                         limit, 
                         numberOfBacklogEntries, 
                         false);
-        return virtualMachines;
         
+        return virtualMachines;
     }
 
 

@@ -141,6 +141,16 @@
                 </executions>
                 <configuration>
                     <finalName>uber-${project.artifactId}-${project.version}</finalName>
+                    <filters>
+        				<filter>
+            				<artifact>*:*</artifact>
+            				<excludes>
+	                			<exclude>META-INF/*.SF</exclude>
+                				<exclude>META-INF/*.DSA</exclude>
+                				<exclude>META-INF/*.RSA</exclude>
+            				</excludes>
+        				</filter>
+    				</filters>
                 </configuration>
             </plugin>
         
@@ -149,8 +159,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.0.2</version>
                 <configuration>
-                 <source>1.6</source>
-                 <target>1.6</target>
+                 <source>1.7</source>
+                 <target>1.7</target>
                 </configuration>
             </plugin>
       
@@ -336,5 +346,12 @@
 			<artifactId>hector-core</artifactId>
 			<version>1.0-5</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.inria.myriads</groupId>
+			<artifactId>snoozeimages</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		
     </dependencies>
 </project>

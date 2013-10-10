@@ -36,6 +36,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.Mig
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionResponse;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.VirtualMachinesList;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.request.HostListRequest;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
@@ -288,7 +289,7 @@ public final class BootstrapResource extends ServerResource
     
 
     @Override
-    public List<VirtualMachineMetaData> getVirtualMachineDescriptions(HostListRequest hostListRequest)
+    public VirtualMachinesList getVirtualMachineDescriptions(HostListRequest hostListRequest)
     {
         if (!isBackendActive())
         {
@@ -309,7 +310,10 @@ public final class BootstrapResource extends ServerResource
                 numberOfMonitoringEntries,
                 backend_.getGroupLeaderDescription()
                 );
-        return virtualMachines;
+        VirtualMachinesList virtualMachinesList = new VirtualMachinesList();
+        virtualMachinesList.setVirtualMachines(virtualMachines);
+        
+        return virtualMachinesList;
     }
     
     

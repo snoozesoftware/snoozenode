@@ -19,6 +19,15 @@
  */
 package org.inria.myriads.snoozenode.localcontroller.actuator.api.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+
+import org.inria.myriads.libvirt.domain.LibvirtConfigDomain;
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorSettings;
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.MigrationMethod;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
@@ -103,17 +112,41 @@ public final class LibVirtVirtualMachineActuator
     public boolean start(String xmlDescription)
     {
         Guard.check(xmlDescription);
-        log_.debug(String.format("Creating domain from XML: %s", xmlDescription));
         
-        if (xmlDescription == null)
+        String newXmlDescription = null;
+        //fill with capabilities before hard coded to test.
+        try
+        {
+            JAXBContext context_ = JAXBContext.newInstance(LibvirtConfigDomain.class);
+            Unmarshaller jaxbUnmarshaller = context_.createUnmarshaller();
+            InputStream input = new ByteArrayInputStream(xmlDescription.getBytes());
+            LibvirtConfigDomain domain = (LibvirtConfigDomain) jaxbUnmarshaller.unmarshal(input);
+            domain.setType("kvm");
+            //marshal it again
+            Marshaller jaxbMarshaller = context_.createMarshaller();
+            jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            jaxbMarshaller.marshal(domain, stream);
+            newXmlDescription = stream.toString();
+        }
+        catch (Exception e)
+        {
+            log_.error("Unable to add capabilities to vm xml desc");
+            e.printStackTrace();
+        }
+        
+        
+        log_.debug(String.format("Creating domain from XML: %s", newXmlDescription));
+        
+        if (newXmlDescription == null)
         {
             log_.debug("XML description is empty!!");
             return false;
         }
         
         try 
-        {
-            connect_.domainCreateLinux(xmlDescription, 0);
+        {   
+            connect_.domainCreateLinux(newXmlDescription, 0);
         } 
         catch (LibvirtException exception) 
         {
@@ -378,6 +411,7 @@ public final class LibVirtVirtualMachineActuator
         
         return true;
     }
+
 
 
 }

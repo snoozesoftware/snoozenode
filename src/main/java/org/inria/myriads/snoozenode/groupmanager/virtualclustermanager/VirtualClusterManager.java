@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.UUID;
 
+import org.apache.commons.lang.StringUtils;
+import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
@@ -40,6 +42,10 @@ import org.inria.myriads.snoozecommon.globals.Globals;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.parser.VirtualClusterParserFactory;
 import org.inria.myriads.snoozecommon.parser.api.VirtualClusterParser;
+import org.inria.myriads.snoozecommon.virtualmachineimage.VirtualMachineImage;
+import org.inria.myriads.snoozeimages.communication.rest.CommunicatorFactory;
+import org.inria.myriads.snoozeimages.communication.rest.api.ImageRepositoryAPI;
+import org.inria.myriads.snoozeimages.communication.rest.api.ImagesRepositoryAPI;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupLeaderSchedulerSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
@@ -132,23 +138,26 @@ public final class VirtualClusterManager
     {
         Guard.check(submissionRequest);
         log_.debug("Generating virtual machine meta data");
-        
-        VirtualClusterParser parser = VirtualClusterParserFactory.newVirtualClusterParser();
-        
+        VirtualClusterParser parser = 
+                VirtualClusterParserFactory.newVirtualClusterParser();
+        log_.debug("parser initialized");
         ArrayList<VirtualMachineMetaData> metaData = new ArrayList<VirtualMachineMetaData>();
         List<VirtualMachineTemplate> virtualMachineDescriptions = submissionRequest.getVirtualMachineTemplates();
+        
         
         for (VirtualMachineTemplate description : virtualMachineDescriptions)
         {
             VirtualMachineMetaData virtualMachine;
             try 
             {
+                // generate VirtualMachineMetaData from description
                 virtualMachine = parser.parseDescription(description);
+                generateDiskInfo(virtualMachine, description);
             } 
             catch (Exception exception) 
             {
-                throw new VirtualClusterParserException(String.format("Failed parsing libvirt template: %s", 
-                                                                      exception.getMessage()));
+                log_.error("Unable to generate meta data for virtual machine ");
+                continue;
             }        
             
             
@@ -159,6 +168,34 @@ public final class VirtualClusterManager
         return metaData;
     }
             
+    private void generateDiskInfo(VirtualMachineMetaData virtualMachine, VirtualMachineTemplate description) throws Exception
+    {
+        
+        
+        String libvirtTemplate = description.getLibVirtTemplate();
+        if (StringUtils.isBlank(libvirtTemplate))
+        {
+            log_.debug("Generate the disk information from parameters");    
+            NetworkAddress address = nodeConfiguration_.getImageRepositorySettings().getImageRepositoryAddress();
+            ImageRepositoryAPI communicator = CommunicatorFactory.newImageRepositoryCommunicator(address, description.getImageId());
+            VirtualMachineImage image = communicator.getImage();
+            if (image == null)
+            {
+                throw new Exception("Unable to fetch image info");
+            }
+            virtualMachine.setImage(image);
+            log_.debug("Disk information generated");
+        }
+        else
+        {
+            log_.debug("Generate the disk information from libvirt template");
+            VirtualClusterParser parser = 
+                    VirtualClusterParserFactory.newVirtualClusterParser();
+            VirtualMachineImage image = parser.getFirstDiskImage(description.getLibVirtTemplate());
+            virtualMachine.setImage(image);
+        }
+    }
+
     /**
      * 
      * Sets the virtual machine location in case of the user force destination for the virtual machine. 
@@ -242,6 +279,7 @@ public final class VirtualClusterManager
         {
             if (virtualMachines == null)
             {
+                log_.debug("Returning null taskIdentifier");
                 return null;
             }
             
