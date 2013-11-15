@@ -27,6 +27,7 @@ import org.inria.myriads.snoozenode.configurator.energymanagement.EnergyManageme
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.faulttolerance.FaultToleranceSettings;
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
+import org.inria.myriads.snoozenode.configurator.imagerepository.ImageRepositorySettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.configurator.networking.NetworkingSettings;
@@ -85,6 +86,9 @@ public class NodeConfiguration
     /** Networking settings. */
     private NetworkingSettings networking_;
     
+    /** Image Repository settings*/
+    private ImageRepositorySettings imageRepositorySettings_;
+    
     /** Empty constructor. */
     public NodeConfiguration()
     {
@@ -101,6 +105,7 @@ public class NodeConfiguration
         externalNotifier_ = new ExternalNotifierSettings();
         energyManagement_ = new EnergyManagementSettings();
         networking_ = new NetworkingSettings();
+        imageRepositorySettings_ = new ImageRepositorySettings();
     }
 
     /**
@@ -229,5 +234,13 @@ public class NodeConfiguration
     public ExternalNotifierSettings getExternalNotifier()
     {
         return externalNotifier_;
+    }
+
+    /**
+     * @return the imageRepositorySettings
+     */
+    public ImageRepositorySettings getImageRepositorySettings()
+    {
+        return imageRepositorySettings_;
     }
 }

@@ -89,7 +89,30 @@ public final class LocalControllerResource extends ServerResource
             VirtualMachineLocation location = virtualMachine.getVirtualMachineLocation();
             log_.debug(String.format("Starting virtual machine: %s", location.getVirtualMachineId()));
             
+            boolean isImageReady = backend_.getImageManager().fetchImage(virtualMachine);
+            if (!isImageReady)
+            {
+                
+                log_.error("Failed to provision virtual machine on hypervisor!");
+                ManagementUtils.updateVirtualMachineMetaData(virtualMachine,
+                                                             VirtualMachineStatus.ERROR,
+                                                             VirtualMachineErrorCode.FAILED_TO_START_ON_HYPERVISOR);
+                continue;
+            }    
+            // generate context iso here.
+            // boolean isContextualized = backend_.getVirtualMachineContextualizor().contextualize(virtualMachine);
             
+            // fill the xml desc here (domain type ... os type ...)
+            boolean isProvisioned = backend_.getVirtualMachineProvisioner().provision(virtualMachine);
+            if (!isProvisioned)
+            {
+                
+                log_.error("Failed to provision virtual machine on hypervisor!");
+                ManagementUtils.updateVirtualMachineMetaData(virtualMachine,
+                                                             VirtualMachineStatus.ERROR,
+                                                             VirtualMachineErrorCode.FAILED_TO_START_ON_HYPERVISOR);
+                continue;
+            }
             
             
             boolean isStarted = backend_.getVirtualMachineActuator().start(virtualMachine.getXmlRepresentation());

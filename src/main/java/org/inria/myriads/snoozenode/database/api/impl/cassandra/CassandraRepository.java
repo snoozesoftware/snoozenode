@@ -37,6 +37,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozecommon.virtualmachineimage.VirtualMachineImage;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraUtils;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.JsonSerializer;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.RowIterator;
@@ -662,6 +663,7 @@ public class CassandraRepository
         
         boolean isAssigned = 
                 columns.getColumnByName("isAssigned").getValue().equals(CassandraUtils.stringTrue) ? true : false;
+        
         String ipAddress = columns.getColumnByName("ipAddress").getValue();
         String xmlRepresentation = columns.getColumnByName("xmlRepresentation").getValue();
         VirtualMachineStatus status = VirtualMachineStatus.valueOf(columns.getColumnByName("status").getValue());
@@ -674,6 +676,9 @@ public class CassandraRepository
         @SuppressWarnings("unchecked")
         ArrayList<Double> requestedCapacity = (ArrayList<Double>) requestedCapacitySerializer
         .fromString(columns.getColumnByName("requestedCapacity").getValue());
+        JsonSerializer imageSerializer = new JsonSerializer(VirtualMachineImage.class);
+        VirtualMachineImage image = (VirtualMachineImage) 
+                imageSerializer.fromString(columns.getColumnByName("image").getValue());
         
         virtualMachineMetaData.setIpAddress(ipAddress);
         virtualMachineMetaData.setXmlRepresentation(xmlRepresentation);
@@ -682,6 +687,7 @@ public class CassandraRepository
         virtualMachineMetaData.setVirtualMachineLocation(location);
         virtualMachineMetaData.setRequestedCapacity(requestedCapacity);
         virtualMachineMetaData.setIsAssigned(isAssigned);
+        virtualMachineMetaData.setImage(image);
         
         log_.debug("Returning the deserialized metadata");
         return virtualMachineMetaData;
@@ -779,6 +785,8 @@ public class CassandraRepository
             String status = String.valueOf(virtualMachineMetaData.getStatus());
             String errorCode = String.valueOf(virtualMachineMetaData.getErrorCode());
             VirtualMachineLocation location = virtualMachineMetaData.getVirtualMachineLocation();
+            VirtualMachineImage image = virtualMachineMetaData.getImage();
+            
             ArrayList<Double> requestedCapacity = virtualMachineMetaData.getRequestedCapacity();
             
             
@@ -818,8 +826,13 @@ public class CassandraRepository
                    .addInsertion(
                            location.getVirtualMachineId(), 
                            CassandraUtils.VIRTUALMACHINES_CF, 
-                           HFactory.createColumn("isAssigned", true, StringSerializer.get(), BooleanSerializer.get()));
-    
+                           HFactory.createColumn("isAssigned", true, StringSerializer.get(), BooleanSerializer.get()))
+                    .addInsertion(
+                            location.getVirtualMachineId(),
+                            CassandraUtils.VIRTUALMACHINES_CF,
+                            HFactory.createColumn("image", image, StringSerializer.get(), new JsonSerializer(VirtualMachineImage.class))
+                            );
+            
             log_.debug("executing mutation");
             MutationResult result = mutator.execute();
             log_.debug(String.format("Insertion done in %d", result.getExecutionTimeMicro()));

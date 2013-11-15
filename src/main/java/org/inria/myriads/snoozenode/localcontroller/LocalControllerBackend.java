@@ -37,6 +37,7 @@ import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSavingAction;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.ShutdownDriver;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.SuspendDriver;
+import org.inria.myriads.snoozenode.configurator.imagerepository.ImageRepositorySettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
@@ -51,6 +52,10 @@ import org.inria.myriads.snoozenode.heartbeat.listener.GroupManagerHeartbeatFail
 import org.inria.myriads.snoozenode.localcontroller.actuator.ActuatorFactory;
 import org.inria.myriads.snoozenode.localcontroller.actuator.api.VirtualMachineActuator;
 import org.inria.myriads.snoozenode.localcontroller.connector.Connector;
+import org.inria.myriads.snoozenode.localcontroller.imagemanager.ImageManagerFactory;
+import org.inria.myriads.snoozenode.localcontroller.imagemanager.api.ImageManager;
+import org.inria.myriads.snoozenode.localcontroller.imagemanager.api.impl.BackingImageManager;
+import org.inria.myriads.snoozenode.localcontroller.imagemanager.api.impl.LocalBackingImageManager;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.MonitoringFactory;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.HostMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.VirtualMachineMonitor;
@@ -59,6 +64,8 @@ import org.inria.myriads.snoozenode.localcontroller.monitoring.service.VirtualMa
 import org.inria.myriads.snoozenode.localcontroller.powermanagement.PowerManagementFactory;
 import org.inria.myriads.snoozenode.localcontroller.powermanagement.shutdown.Shutdown;
 import org.inria.myriads.snoozenode.localcontroller.powermanagement.suspend.Suspend;
+import org.inria.myriads.snoozenode.localcontroller.provisioner.VirtualMachineProvisionerFactory;
+import org.inria.myriads.snoozenode.localcontroller.provisioner.api.VirtualMachineProvisioner;
 import org.inria.myriads.snoozenode.message.SystemMessage;
 import org.inria.myriads.snoozenode.message.SystemMessageType;
 import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
@@ -105,6 +112,11 @@ public final class LocalControllerBackend
     
     /**  External Notifier. */
     private ExternalNotifier externalNotifier_;
+
+    /** VirtualMachine Provisioner. */
+    private VirtualMachineProvisioner virtualMachineProvisioner_;
+
+    private ImageManager imageManager_;
     
     /**
      * Constructor.
@@ -122,9 +134,31 @@ public final class LocalControllerBackend
         initializeExternalNotifier();
         initializeDatabase();
         initializePowerManagement();
+        initializeProvisioner();
+        initializeImageManager();
         startHypervisorServices();  
         createLocalControllerDescription();
         onGroupManagerHeartbeatFailure();
+    }
+
+
+    private void initializeImageManager()
+    {
+       ImageRepositorySettings settings = nodeConfiguration_.getImageRepositorySettings();
+       imageManager_ = ImageManagerFactory.newImageManager(settings);
+    }
+
+
+    private void initializeProvisioner()
+    {
+        HypervisorSettings hypervisorSettings = 
+                nodeConfiguration_.getHypervisor();
+        ImageRepositorySettings imageSettings =
+                nodeConfiguration_.getImageRepositorySettings();
+        
+        virtualMachineProvisioner_ = 
+                VirtualMachineProvisionerFactory.newProvisioner(hypervisorSettings, imageSettings);
+        
     }
 
 
@@ -480,5 +514,17 @@ public final class LocalControllerBackend
         
         
         return isPowerCycled;
+    }
+
+
+    public VirtualMachineProvisioner getVirtualMachineProvisioner()
+    {
+        return virtualMachineProvisioner_;
+    }
+
+
+    public ImageManager getImageManager()
+    {
+        return imageManager_;
     }
 }

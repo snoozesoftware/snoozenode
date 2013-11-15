@@ -46,6 +46,8 @@ import org.inria.myriads.snoozenode.configurator.energymanagement.enums.SuspendD
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.faulttolerance.FaultToleranceSettings;
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
+import org.inria.myriads.snoozenode.configurator.imagerepository.DiskHostingType;
+import org.inria.myriads.snoozenode.configurator.imagerepository.ImageRepositorySettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
@@ -108,10 +110,14 @@ public final class JavaPropertyNodeConfigurator
         setGroupManagerSchedulerSettings();
         setSubmissionSettings();
         setEnergyManagementSettings();
+        setImageRepositorySettings();
         
         fileInput.close();
     }
     
+
+
+
 
     /**
      * Sets the general settings.
@@ -499,6 +505,26 @@ public final class JavaPropertyNodeConfigurator
         energyManagement.getDrivers().getWakeup().setOptions(wakeupOptions);
     }
 
+    private void setImageRepositorySettings() throws NodeConfiguratorException
+    {
+        ImageRepositorySettings imageRepositorySettings = 
+                nodeConfiguration_.getImageRepositorySettings();
+        
+        String address = getProperty("imageRepository.address");
+        String port = getProperty("imageRepository.port");
+        NetworkAddress imageRepositoryAddress = new NetworkAddress();
+        imageRepositoryAddress.setAddress(address);
+        imageRepositoryAddress.setPort(Integer.valueOf(port));
+        imageRepositorySettings.setImageRepositoryAddress(imageRepositoryAddress);
+        
+        String diskHostingType = getProperty("imageRepository.manager.disks");
+        imageRepositorySettings.setDiskType(DiskHostingType.valueOf(diskHostingType));
+        
+        String source = getProperty("imageRepository.manager.source");
+        imageRepositorySettings.setSource(source);
+        String destination = getProperty("imageRepository.manager.destination");
+        imageRepositorySettings.setDestination(destination);
+    }
     /** 
      * Returns the node configuration.
      *  
