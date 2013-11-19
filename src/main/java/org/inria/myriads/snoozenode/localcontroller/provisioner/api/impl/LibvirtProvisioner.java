@@ -80,6 +80,10 @@ public class LibvirtProvisioner implements VirtualMachineProvisioner
         xmlDesc = parser.setOsType(xmlDescription, hypervisorSettings_.getDriver());
         virtualMachine.setXmlRepresentation(xmlDesc);
         
+        log_.debug("Enable vnc");
+        xmlDescription = virtualMachine.getXmlRepresentation();
+        xmlDesc = parser.addGraphics(xmlDescription, "vnc", "0.0.0.0", "5900");
+        virtualMachine.setXmlRepresentation(xmlDesc);
         
         return true;
     }
