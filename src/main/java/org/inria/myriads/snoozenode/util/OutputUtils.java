@@ -244,7 +244,30 @@ public final class OutputUtils
                                  configuration.getEnergyManagement().getThresholds().getWakeupTime()));
         log_.debug(String.format("energyManagement.commandExecutionTimeout: %d",
                                  configuration.getEnergyManagement().getCommandExecutionTimeout())); 
-        log_.debug("--------------------------------------");
+        log_.debug("-----------------------");
+        log_.debug("Provisioner Settings");
+        log_.debug("-----------------------");
+        log_.debug(String.format("provisioner.contextDisk.bus: %s",
+                configuration.getProvisionerSettings().getFirstCdSettings().getDiskBusType()));
+        log_.debug(String.format("provisioner.contextDisk.dev: %s",
+                configuration.getProvisionerSettings().getFirstCdSettings().getDiskDevice()));
+        log_.debug(String.format("provisioner.disk.bus: %s",
+                configuration.getProvisionerSettings().getFirstHdSettings().getDiskBusType()));
+        log_.debug(String.format("provisioner.disk.dev: %s",
+                configuration.getProvisionerSettings().getFirstHdSettings().getDiskDevice()));
+        log_.debug(String.format("provisioner.serial.enable: %s",
+                configuration.getProvisionerSettings().isEnableSerial()));
+        log_.debug(String.format("provisioner.vnc.enable: %s",
+                configuration.getProvisionerSettings().getVncSettings().isEnableVnc()));
+        log_.debug(String.format("provisioner.vnc.listenAdddress: %s",
+                configuration.getProvisionerSettings().getVncSettings().getListenAddress()));
+        log_.debug(String.format("provisioner.vnc.startPort: %s",
+                configuration.getProvisionerSettings().getVncSettings().getStartPort()));
+        log_.debug(String.format("provisioner.vnc.portRange: %s",
+                configuration.getProvisionerSettings().getVncSettings().getVncPortRange()));
+        log_.debug(String.format("provisioner.vnc.keymap: %s",
+                configuration.getProvisionerSettings().getVncSettings().getKeymap()));
     }   
+    
 
 }

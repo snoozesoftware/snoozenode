@@ -1,15 +1,8 @@
 package org.inria.myriads.snoozenode.localcontroller.imagemanager.api.impl;
 
 import java.io.IOException;
-import java.nio.file.CopyOption;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
-import org.inria.myriads.snoozecommon.virtualmachineimage.VirtualMachineImage;
 import org.inria.myriads.snoozenode.configurator.imagerepository.ImageRepositorySettings;
 import org.inria.myriads.snoozenode.localcontroller.imagemanager.api.ImageManager;
 import org.slf4j.Logger;
@@ -31,11 +24,17 @@ public class BackingImageManager implements ImageManager
     private static final Logger log_ = LoggerFactory.getLogger(BackingImageManager.class);
      
     /** Source. (snapshot local directory path)*/
-    String source_ ;
+    private String source_;
     
     /** destination. (local directory path)*/
-    String destination_ ;
+    private String destination_;
     
+    /**
+     * 
+     * Constructor.
+     * 
+     * @param settings  The image repository settings.
+     */
     public BackingImageManager(ImageRepositorySettings settings)
     {
         source_ = settings.getSource();

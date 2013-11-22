@@ -53,6 +53,9 @@ import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.configurator.networking.NetworkingSettings;
 import org.inria.myriads.snoozenode.configurator.node.NodeSettings;
+import org.inria.myriads.snoozenode.configurator.provisioner.ImageDiskSettings;
+import org.inria.myriads.snoozenode.configurator.provisioner.ProvisionerSettings;
+import org.inria.myriads.snoozenode.configurator.provisioner.VncSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupLeaderSchedulerSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
 import org.inria.myriads.snoozenode.configurator.submission.SubmissionSettings;
@@ -111,10 +114,60 @@ public final class JavaPropertyNodeConfigurator
         setSubmissionSettings();
         setEnergyManagementSettings();
         setImageRepositorySettings();
+        setProvisionerSettings();
         
         fileInput.close();
     }
     
+
+
+    /**
+     * 
+     * Sets the provisioner settings.
+     * 
+     * @throws NodeConfiguratorException    Node configuration exception.
+     */
+    private void setProvisionerSettings() throws NodeConfiguratorException
+    {
+        ProvisionerSettings provisionerSettings = nodeConfiguration_.getProvisionerSettings();
+        
+        /** Serial */
+        String enableSerial = getProperty("provisioner.serial.enable");
+        provisionerSettings.setEnableSerial(Boolean.valueOf(enableSerial));
+        
+        /** VNC */
+        VncSettings vncSettings = new VncSettings();
+        String enableVnc = getProperty("provisioner.vnc.enable");
+        vncSettings.setEnableVnc(Boolean.valueOf(enableVnc));
+        String listenAddress = getProperty("provisioner.vnc.listenAddress");
+        vncSettings.setListenAddress(listenAddress);
+        String vncStartPort  = getProperty("provisioner.vnc.startPort");
+        vncSettings.setStartPort(Integer.valueOf(vncStartPort));
+        String vncPortRange = getProperty("provisioner.vnc.portRange");
+        vncSettings.setVncPortRange(Integer.valueOf(vncPortRange));
+        String keymap = getProperty("provisioner.vnc.keymap");
+        vncSettings.setKeymap(keymap);
+        provisionerSettings.setVncSettings(vncSettings);
+
+        
+        /** First hd*/
+        ImageDiskSettings imageDiskSettings = new ImageDiskSettings();
+        String diskBusType = getProperty("provisioner.disk.bus");
+        imageDiskSettings.setDiskBusType(diskBusType);
+        String diskDevice = getProperty("provisioner.disk.dev");
+        imageDiskSettings.setDiskDevice(diskDevice);
+        provisionerSettings.setFirstHdSettings(imageDiskSettings);
+        
+        /** Context cd*/
+        ImageDiskSettings contextDiskSettings = new ImageDiskSettings();
+        diskBusType = getProperty("provisioner.contextDisk.bus");
+        contextDiskSettings.setDiskBusType(diskBusType);
+        diskDevice = getProperty("provisioner.contextDisk.dev");
+        contextDiskSettings.setDiskDevice(diskDevice);
+        provisionerSettings.setFirstCdSettings(contextDiskSettings);
+        
+    }
+
 
 
 
@@ -505,6 +558,12 @@ public final class JavaPropertyNodeConfigurator
         energyManagement.getDrivers().getWakeup().setOptions(wakeupOptions);
     }
 
+    /**
+     * 
+     * Sets the image repository settings.
+     * 
+     * @throws NodeConfiguratorException    Node configuration exception.
+     */
     private void setImageRepositorySettings() throws NodeConfiguratorException
     {
         ImageRepositorySettings imageRepositorySettings = 
