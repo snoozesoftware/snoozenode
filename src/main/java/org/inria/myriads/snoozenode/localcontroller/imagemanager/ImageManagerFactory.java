@@ -6,6 +6,13 @@ import org.inria.myriads.snoozenode.localcontroller.imagemanager.api.ImageManage
 import org.inria.myriads.snoozenode.localcontroller.imagemanager.api.impl.BackingImageManager;
 import org.inria.myriads.snoozenode.localcontroller.imagemanager.api.impl.LocalBackingImageManager;
 
+/**
+ * 
+ * Image manager factory.
+ * 
+ * @author msimonin
+ *
+ */
 public final class ImageManagerFactory
 {
     /**
@@ -17,6 +24,13 @@ public final class ImageManagerFactory
     }
     
     
+    /**
+     * 
+     * creates a new Image manager.
+     * 
+     * @param settings  The image repository settings.
+     * @return  the Image Manager (default to backing).
+     */
     public static ImageManager newImageManager(ImageRepositorySettings settings)
     {
         DiskHostingType diskType = settings.getDiskType();

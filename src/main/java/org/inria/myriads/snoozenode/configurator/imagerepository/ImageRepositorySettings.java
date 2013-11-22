@@ -20,8 +20,6 @@
 package org.inria.myriads.snoozenode.configurator.imagerepository;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
-import org.inria.myriads.snoozenode.configurator.database.cassandra.CassandraSettings;
-import org.inria.myriads.snoozenode.database.enums.DatabaseType;
 
 /**
  * Database settings.
@@ -34,7 +32,7 @@ public final class ImageRepositorySettings
     private NetworkAddress imageRepositoryAddress_;
     
     /** disks type.*/
-    private DiskHostingType diskType;
+    private DiskHostingType diskType_;
     
     
     /** Source path (mounted locally).*/
@@ -73,7 +71,7 @@ public final class ImageRepositorySettings
      */
     public DiskHostingType getDiskType()
     {
-        return diskType;
+        return diskType_;
     }
 
     /**
@@ -81,7 +79,7 @@ public final class ImageRepositorySettings
      */
     public void setDiskType(DiskHostingType diskType)
     {
-        this.diskType = diskType;
+        this.diskType_ = diskType;
     }
 
     /**

@@ -32,6 +32,7 @@ import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.configurator.networking.NetworkingSettings;
 import org.inria.myriads.snoozenode.configurator.node.NodeSettings;
+import org.inria.myriads.snoozenode.configurator.provisioner.ProvisionerSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupLeaderSchedulerSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
 import org.inria.myriads.snoozenode.configurator.submission.SubmissionSettings;
@@ -86,8 +87,11 @@ public class NodeConfiguration
     /** Networking settings. */
     private NetworkingSettings networking_;
     
-    /** Image Repository settings*/
+    /** Image Repository settings.*/
     private ImageRepositorySettings imageRepositorySettings_;
+    
+    /** Provisioner settings.*/
+    private ProvisionerSettings provisionerSettings_;
     
     /** Empty constructor. */
     public NodeConfiguration()
@@ -106,6 +110,7 @@ public class NodeConfiguration
         energyManagement_ = new EnergyManagementSettings();
         networking_ = new NetworkingSettings();
         imageRepositorySettings_ = new ImageRepositorySettings();
+        provisionerSettings_ = new ProvisionerSettings();
     }
 
     /**
@@ -242,5 +247,21 @@ public class NodeConfiguration
     public ImageRepositorySettings getImageRepositorySettings()
     {
         return imageRepositorySettings_;
+    }
+
+    /**
+     * @return the provisionerSettings
+     */
+    public ProvisionerSettings getProvisionerSettings()
+    {
+        return provisionerSettings_;
+    }
+
+    /**
+     * @param provisionerSettings the provisionerSettings to set
+     */
+    public void setProvisionerSettings(ProvisionerSettings provisionerSettings)
+    {
+        provisionerSettings_ = provisionerSettings;
     }
 }

@@ -1,6 +1,5 @@
 package org.inria.myriads.snoozenode.localcontroller.imagemanager.api.impl;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
@@ -8,7 +7,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.virtualmachineimage.VirtualMachineImage;
@@ -16,6 +14,13 @@ import org.inria.myriads.snoozenode.localcontroller.imagemanager.api.ImageManage
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 
+ * Local Backing Image manager.
+ * 
+ * @author msimonin
+ *
+ */
 public class LocalBackingImageManager implements ImageManager
 {
     /** Define the logger. */
@@ -39,10 +44,10 @@ public class LocalBackingImageManager implements ImageManager
         VirtualMachineImage image = virtualMachine.getImage();
         String sourcePath = image.getPath();
         String destinationDirectory = "/var/lib/libvirt/images/";
-//        File dir = new File(destinationDirectory);
-//        dir.mkdirs();
-        String destinationPathMaster = destinationDirectory + image.getName()+"2";
-        String destinationPathSlave = destinationDirectory + virtualMachine.getVirtualMachineLocation().getVirtualMachineId();
+        String destinationPathMaster = destinationDirectory + image.getName();
+        String destinationPathSlave = 
+                destinationDirectory + virtualMachine.getVirtualMachineLocation().getVirtualMachineId();
+        
         try
         {   
             if (!cache_.contains(image.getName()))

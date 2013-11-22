@@ -1,18 +1,19 @@
 package org.inria.myriads.snoozenode.localcontroller.provisioner.api.impl;
 
-import java.util.ArrayList;
-
-import org.inria.myriads.libvirt.domain.LibvirtConfigSerialConsole;
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorSettings;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.parser.VirtualClusterParserFactory;
 import org.inria.myriads.snoozecommon.parser.api.VirtualClusterParser;
-import org.inria.myriads.snoozecommon.parser.api.impl.LibVirtXMLParser;
 import org.inria.myriads.snoozenode.configurator.imagerepository.ImageRepositorySettings;
+import org.inria.myriads.snoozenode.configurator.provisioner.ProvisionerSettings;
 import org.inria.myriads.snoozenode.localcontroller.provisioner.api.VirtualMachineProvisioner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * @author msimonin
+ *
+ */
 public class LibvirtProvisioner implements VirtualMachineProvisioner
 {
     /** Define the logger. */
@@ -23,19 +24,30 @@ public class LibvirtProvisioner implements VirtualMachineProvisioner
 
     /** image repository settings. */
     private ImageRepositorySettings imageSettings_;
+    
+    /** next vnc port to use.*/
+    private int incrementVncPort_;
 
+    /** provisioner settings.*/
+    private ProvisionerSettings provisionerSettings_;
     
     /**
      * 
+     * Constructor.
+     * 
+     * @param provisionerSettings   The provisioner settings.
+     * @param hypervisorSettings    The hypervisor settings.
+     * @param imageSettings         The image settings.
      */
     public LibvirtProvisioner(
-            HypervisorSettings hypervisorSettings,
+            ProvisionerSettings provisionerSettings, HypervisorSettings hypervisorSettings,
             ImageRepositorySettings imageSettings
             )
     {
+       provisionerSettings_ =  provisionerSettings;
        hypervisorSettings_ = hypervisorSettings;
        imageSettings_ = imageSettings;
-       
+       incrementVncPort_ = 0;
     }
 
 
@@ -48,26 +60,26 @@ public class LibvirtProvisioner implements VirtualMachineProvisioner
         VirtualClusterParser parser = 
                 VirtualClusterParserFactory.newVirtualClusterParser();
         
+        String xmlDescription = virtualMachine.getXmlRepresentation();
+        String xmlDesc = xmlDescription;
+        
         log_.debug("Removing previous disks");
-        String xmlDesc = parser.removeDisk(virtualMachine.getXmlRepresentation(), virtualMachine.getImage().getName());
+        xmlDescription = virtualMachine.getXmlRepresentation();
+        xmlDesc = parser.removeDisk(xmlDescription, virtualMachine.getImage().getName());
         virtualMachine.setXmlRepresentation(xmlDesc);
         
         log_.debug("Adding the disk");
-        xmlDesc = parser.addDiskImage(virtualMachine.getXmlRepresentation(),virtualMachine.getImage());
-        virtualMachine.setXmlRepresentation(xmlDesc);
-        
-        log_.debug("Adding the serial console");
-        String xmlDescription = virtualMachine.getXmlRepresentation();
-        xmlDesc = parser.addSerial(xmlDescription, "pty", "0");
+        xmlDescription = virtualMachine.getXmlRepresentation();
+        String bus = provisionerSettings_.getFirstHdSettings().getDiskBusType();
+        String dev = provisionerSettings_.getFirstHdSettings().getDiskDevice();
+        xmlDesc = parser.addDiskImage(xmlDescription, virtualMachine.getImage(), bus, dev);
         virtualMachine.setXmlRepresentation(xmlDesc);
         
         log_.debug("Adding the cdrom contextualization file");
         xmlDescription = virtualMachine.getXmlRepresentation();
-        xmlDesc = parser.addCdRomImage(xmlDescription, imageSettings_.getSource() + "/context.iso");
-        virtualMachine.setXmlRepresentation(xmlDesc);
-        
-        xmlDescription = virtualMachine.getXmlRepresentation();
-        xmlDesc = parser.addConsole(xmlDescription, "pty", "0", "serial");
+        bus = provisionerSettings_.getFirstCdSettings().getDiskBusType();
+        dev = provisionerSettings_.getFirstCdSettings().getDiskDevice();
+        xmlDesc = parser.addCdRomImage(xmlDescription, imageSettings_.getSource() + "/context.iso", bus, dev);
         virtualMachine.setXmlRepresentation(xmlDesc);
         
         log_.debug("set the domain type");
@@ -80,10 +92,36 @@ public class LibvirtProvisioner implements VirtualMachineProvisioner
         xmlDesc = parser.setOsType(xmlDescription, hypervisorSettings_.getDriver());
         virtualMachine.setXmlRepresentation(xmlDesc);
         
-        log_.debug("Enable vnc");
-        xmlDescription = virtualMachine.getXmlRepresentation();
-        xmlDesc = parser.addGraphics(xmlDescription, "vnc", "0.0.0.0", "5900");
-        virtualMachine.setXmlRepresentation(xmlDesc);
+        if (provisionerSettings_.getVncSettings().isEnableVnc())
+        {
+            log_.debug("Enable vnc");
+            xmlDescription = virtualMachine.getXmlRepresentation();
+            int startPort = provisionerSettings_.getVncSettings().getStartPort();
+            int portRange = provisionerSettings_.getVncSettings().getVncPortRange();
+            String keymap = provisionerSettings_.getVncSettings().getKeymap();
+            String listenAddress = provisionerSettings_.getVncSettings().getListenAddress();
+            xmlDesc = parser.addGraphics(
+                    xmlDescription,
+                    "vnc",
+                    listenAddress,
+                    String.valueOf(startPort + incrementVncPort_),
+                    keymap
+                    );
+            virtualMachine.setXmlRepresentation(xmlDesc);
+            incrementVncPort_ = (incrementVncPort_ + 1) % portRange;
+        }
+        
+        if (provisionerSettings_.isEnableSerial())
+        {
+            log_.debug("Adding the serial console");
+            xmlDescription = virtualMachine.getXmlRepresentation();
+            xmlDesc = parser.addSerial(xmlDescription, "pty", "0");
+            virtualMachine.setXmlRepresentation(xmlDesc);
+            
+            xmlDescription = virtualMachine.getXmlRepresentation();
+            xmlDesc = parser.addConsole(xmlDescription, "pty", "0", "serial");
+            virtualMachine.setXmlRepresentation(xmlDesc);
+        }
         
         return true;
     }
