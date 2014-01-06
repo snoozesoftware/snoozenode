@@ -10,6 +10,7 @@ import java.util.ArrayList;
 
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.virtualmachineimage.VirtualMachineImage;
+import org.inria.myriads.snoozenode.configurator.imagerepository.ImageRepositorySettings;
 import org.inria.myriads.snoozenode.localcontroller.imagemanager.api.ImageManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,14 +28,22 @@ public class LocalBackingImageManager implements ImageManager
     private static final Logger log_ = LoggerFactory.getLogger(LocalBackingImageManager.class);
      
     /** Cache.*/
-    private ArrayList<String> cache_; 
+    private ArrayList<String> cache_;
+
+    /** The source of the file (absolute pathe to the nfs shared directory).*/
+    private String source_;
+
+    /** The destination path (where the images will be stored).*/
+    private String destination_; 
     
     /**
      * Constructor. 
      */
-    public LocalBackingImageManager()
+    public LocalBackingImageManager(ImageRepositorySettings settings)
     {
         cache_ = new ArrayList<String>();
+        source_ = settings.getSource();
+        destination_ = settings.getDestination();
     }
 
     @Override
@@ -42,17 +51,19 @@ public class LocalBackingImageManager implements ImageManager
     {
         int exitCode = 0;
         VirtualMachineImage image = virtualMachine.getImage();
-        String sourcePath = image.getPath();
-        String destinationDirectory = "/var/lib/libvirt/images/";
-        String destinationPathMaster = destinationDirectory + image.getName();
+        String sourcePath = source_ + "/" + virtualMachine.getImage().getName();
+        String destinationDirectory = destination_;
+        String destinationPathMaster = destinationDirectory + "/" + image.getName();
         String destinationPathSlave = 
-                destinationDirectory + virtualMachine.getVirtualMachineLocation().getVirtualMachineId();
+                destinationDirectory + "/" +  virtualMachine.getVirtualMachineLocation().getVirtualMachineId();
         
         try
         {   
             if (!cache_.contains(image.getName()))
             {
-                log_.debug("copying the master file");
+                log_.debug(String.format("copying the master file from %s to %s", 
+                        sourcePath,
+                        destinationPathMaster));
                 Path from = Paths.get(sourcePath);
                 Path to = Paths.get(destinationPathMaster);
                 //overwrite existing file, if exists
@@ -60,7 +71,8 @@ public class LocalBackingImageManager implements ImageManager
                   StandardCopyOption.REPLACE_EXISTING,
                   StandardCopyOption.COPY_ATTRIBUTES
                 }; 
-                Files.copy(from, to, options);    
+                Files.copy(from, to, options);  
+                log_.debug("Master file copied");
             }
             
             log_.debug("creating the snapshot");
@@ -77,16 +89,15 @@ public class LocalBackingImageManager implements ImageManager
         }
         catch (IOException e)
         {
-            e.printStackTrace();
-            log_.error("Failed to fecth vm image disk");
+            log_.error("Failed to fetch vm image disk " + e.getMessage());
             return false;
         }
         catch (InterruptedException e)
         {
-            e.printStackTrace();
-            log_.error("Failed to fecth vm image disk 2");
+            log_.error("Failed to fecth vm image disk " + e.getMessage());
             return false;
         }
+        
         if (exitCode == 0)
         {
             cache_.add(image.getName());
@@ -94,7 +105,7 @@ public class LocalBackingImageManager implements ImageManager
             virtualMachine.getImage().setFormat("qcow2");
             return true;
         }
-        log_.error("Failed to fecth vm image disk 3");
+        log_.error("Failed to fetch vm image disk");
         return false;
     }
 
