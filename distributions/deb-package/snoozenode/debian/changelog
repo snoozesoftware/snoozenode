@@ -1,6 +1,14 @@
+snoozenode (2.1.2-0) unstable; urgency=low
+
+   * Fix localBacking file issue.
+   * Fix Backing file migration.
+
+ -- Matthieu Simonin <matthieu.simonin@inria.fr>  Wed,  28 Jun 2013 14:27:28 -0700
+
 snoozenode (2.1.1-0) unstable; urgency=low
 
-   * TODO
+   * Fix localBacking file issue.
+   * Fix Backing file migration.
 
  -- Matthieu Simonin <matthieu.simonin@inria.fr>  Wed,  28 Jun 2013 14:27:28 -0700
 
