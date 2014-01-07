@@ -72,7 +72,7 @@ public class LibvirtProvisioner implements VirtualMachineProvisioner
         xmlDescription = virtualMachine.getXmlRepresentation();
         String bus = provisionerSettings_.getFirstHdSettings().getDiskBusType();
         String dev = provisionerSettings_.getFirstHdSettings().getDiskDevice();
-        xmlDesc = parser.addDiskImage(xmlDescription, virtualMachine.getImage(), bus, dev);
+        xmlDesc = parser.addDiskImage(xmlDescription, virtualMachine.getImage(), bus, dev, "none");
         virtualMachine.setXmlRepresentation(xmlDesc);
         
         log_.debug("Adding the cdrom contextualization file");

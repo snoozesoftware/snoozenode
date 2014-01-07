@@ -1,5 +1,6 @@
 package org.inria.myriads.snoozenode.localcontroller.imagemanager.api.impl;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
@@ -9,6 +10,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
 import org.inria.myriads.snoozecommon.virtualmachineimage.VirtualMachineImage;
 import org.inria.myriads.snoozenode.configurator.imagerepository.ImageRepositorySettings;
 import org.inria.myriads.snoozenode.localcontroller.imagemanager.api.ImageManager;
@@ -109,4 +111,48 @@ public class LocalBackingImageManager implements ImageManager
         return false;
     }
 
+    @Override
+    public boolean prepareMigration(MigrationRequest migrationRequest,
+            ImageRepositorySettings imageRepositorySettings,
+            VirtualMachineImage virtualMachineImage
+            )
+    {
+        log_.debug("Migration is not implemented yet when using localBacking image type !");
+        return false;
+    }
+
+    @Override
+    public boolean prepareMigration(VirtualMachineImage virtualMachineImage)
+    {
+        log_.debug("Migration is not implemented yet when using localBacking image type !");
+        return false;
+    }
+    
+    @Override
+    public boolean removeDisk(VirtualMachineImage image, ImageRepositorySettings imageRepositorySettings)
+    {
+        
+        String sourcePath = imageRepositorySettings.getSource();
+        String destinationPath = imageRepositorySettings.getDestination();
+        if (sourcePath.equals(destinationPath))
+        {
+            // Meaning that everything is on a shared directory.
+            // nothing to do
+            return true;
+        }
+        
+        log_.debug("removing the disk image");
+        File imagePath = new File(image.getPath());
+        
+        if (!imagePath.exists())
+        {
+            log_.debug("The file doesn't exist");
+            return true;
+        }
+        
+        boolean isDeleted = imagePath.delete();
+        log_.debug("Has the file been deleted ? " + isDeleted);
+        
+        return isDeleted;
+    }
 }
