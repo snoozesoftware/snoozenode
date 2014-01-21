@@ -414,7 +414,14 @@ public final class LocalControllerResource extends ServerResource
             log_.warn("Backend is not initialized yet!");
             return false;
         }
-                            
+        
+        VirtualMachineMetaData virtualMachine = backend_.getRepository().getVirtualMachineMetaData(virtualMachineId);
+        if (virtualMachine == null)
+        {
+            log_.debug(String.format("Unable to find the virtual machine %s"), virtualMachineId);
+            return false;
+        }
+        
         boolean isDestroyed = backend_.getVirtualMachineActuator().destroy(virtualMachineId);
         if (!isDestroyed)
         {
@@ -422,7 +429,17 @@ public final class LocalControllerResource extends ServerResource
             return false; 
         }
         
-
+        VirtualMachineImage image = virtualMachine.getImage();
+        boolean isRemoved = backend_.getImageManager().removeDisk(
+                image, 
+                backend_.getNodeParameters().getImageRepositorySettings());
+        
+        if (!isRemoved)
+        {
+            log_.error("Unable to remove the local disk image");
+            return false;
+        }
+        
         boolean isChanged = backend_.getRepository().changeVirtualMachineStatus(virtualMachineId, 
                 VirtualMachineStatus.SHUTDOWN_PENDING);
 
