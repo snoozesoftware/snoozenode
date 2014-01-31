@@ -39,7 +39,7 @@ public final class ImageManagerFactory
         case backing:
             return new BackingImageManager(settings);
         case localBacking:
-            return new LocalBackingImageManager();
+            return new LocalBackingImageManager(settings);
         default:
             return new BackingImageManager(settings);
         }

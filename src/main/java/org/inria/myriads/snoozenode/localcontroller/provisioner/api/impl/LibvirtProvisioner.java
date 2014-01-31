@@ -72,7 +72,7 @@ public class LibvirtProvisioner implements VirtualMachineProvisioner
         xmlDescription = virtualMachine.getXmlRepresentation();
         String bus = provisionerSettings_.getFirstHdSettings().getDiskBusType();
         String dev = provisionerSettings_.getFirstHdSettings().getDiskDevice();
-        xmlDesc = parser.addDiskImage(xmlDescription, virtualMachine.getImage(), bus, dev);
+        xmlDesc = parser.addDiskImage(xmlDescription, virtualMachine.getImage(), bus, dev, "none");
         virtualMachine.setXmlRepresentation(xmlDesc);
         
         log_.debug("Adding the cdrom contextualization file");
@@ -90,6 +90,11 @@ public class LibvirtProvisioner implements VirtualMachineProvisioner
         log_.debug("set the os type");
         xmlDescription = virtualMachine.getXmlRepresentation();
         xmlDesc = parser.setOsType(xmlDescription, hypervisorSettings_.getDriver());
+        virtualMachine.setXmlRepresentation(xmlDesc);
+        
+        log_.debug("set the features");
+        xmlDescription = virtualMachine.getXmlRepresentation();
+        xmlDesc = parser.setFeatures(xmlDescription);
         virtualMachine.setXmlRepresentation(xmlDesc);
         
         if (provisionerSettings_.getVncSettings().isEnableVnc())
