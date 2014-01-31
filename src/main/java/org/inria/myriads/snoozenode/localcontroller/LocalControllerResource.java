@@ -34,8 +34,10 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.Vi
 import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.globals.Globals;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozecommon.virtualmachineimage.VirtualMachineImage;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSavingAction;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
+import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -159,13 +161,32 @@ public final class LocalControllerResource extends ServerResource
         {
             log_.warn("Backend is not initialized!");
             return false;
-        } 
-                
+        }
+        
+        VirtualMachineMetaData virtualMachine = backend_.getRepository().getVirtualMachineMetaData(virtualMachineId);
+        if (virtualMachine == null)
+        {
+            log_.debug("Failed to find the virtual machine on this local controller");
+            return false;
+        }
+        
         boolean isStopped = backend_.getVirtualMachineMonitoringService().stop(virtualMachineId);
         if (!isStopped)
         {
             log_.debug("Failed to stop the virtual machine monitoring!");
             return isStopped;
+        }
+        
+        boolean isReady = backend_.getImageManager().prepareMigration(
+                migrationRequest, 
+                backend_.getNodeParameters().getImageRepositorySettings(),
+                virtualMachine.getImage()
+                );
+        if (!isReady)
+        {
+            log_.debug("Failed to prepare virtual machine migration");
+            backend_.getVirtualMachineMonitoringService().restart(virtualMachineId);
+            return isReady;
         }
         
         boolean isMigrated = backend_.getVirtualMachineActuator().migrate(migrationRequest);
@@ -181,6 +202,15 @@ public final class LocalControllerResource extends ServerResource
         {
             log_.debug("Failed to drop the virtual machine meta data!");
             return isDropped;
+        }
+        
+        boolean isDiskRemoved = backend_.getImageManager().removeDisk(
+                virtualMachine.getImage(), 
+                backend_.getNodeParameters().getImageRepositorySettings()
+                );
+        if (!isDiskRemoved)
+        {
+            log_.debug("Unable to remove the disk after the migration");
         }
         
         return isMigrated;
@@ -384,7 +414,14 @@ public final class LocalControllerResource extends ServerResource
             log_.warn("Backend is not initialized yet!");
             return false;
         }
-                            
+        
+        VirtualMachineMetaData virtualMachine = backend_.getRepository().getVirtualMachineMetaData(virtualMachineId);
+        if (virtualMachine == null)
+        {
+            log_.debug(String.format("Unable to find the virtual machine %s"), virtualMachineId);
+            return false;
+        }
+        
         boolean isDestroyed = backend_.getVirtualMachineActuator().destroy(virtualMachineId);
         if (!isDestroyed)
         {
@@ -392,7 +429,17 @@ public final class LocalControllerResource extends ServerResource
             return false; 
         }
         
-
+        VirtualMachineImage image = virtualMachine.getImage();
+        boolean isRemoved = backend_.getImageManager().removeDisk(
+                image, 
+                backend_.getNodeParameters().getImageRepositorySettings());
+        
+        if (!isRemoved)
+        {
+            log_.error("Unable to remove the local disk image");
+            return false;
+        }
+        
         boolean isChanged = backend_.getRepository().changeVirtualMachineStatus(virtualMachineId, 
                 VirtualMachineStatus.SHUTDOWN_PENDING);
 
@@ -596,6 +643,14 @@ public final class LocalControllerResource extends ServerResource
         virtualMachines = backend_.getRepository().getVirtualMachines(numberOfMonitoringEntries);
         
         return virtualMachines;
+    }
+
+    @Override
+    public boolean prepareMigration(VirtualMachineImage virtualMachineImage)
+    {
+        boolean isPrepared = backend_.getImageManager().prepareMigration(virtualMachineImage);
+        
+        return isPrepared;
     }
 
 
