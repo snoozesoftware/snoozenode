@@ -23,14 +23,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.HostMonitoringData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedHostMonitoringData;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +56,9 @@ public final class LocalControllerMemoryRepository
     /** external notifier.*/
     private ExternalNotifier externalNotifier_;
     
+    /** Host Resources to monitor. */
+    private HashMap<String, Resource> hostResources_;
+    
     /** 
      * Virtual machine meta data map. 
      *  
@@ -63,10 +73,11 @@ public final class LocalControllerMemoryRepository
      * @param externalNotifier      The external notifier.
      * 
      */
-    public LocalControllerMemoryRepository(ExternalNotifier externalNotifier)
+    public LocalControllerMemoryRepository(LocalControllerDescription localController, ExternalNotifier externalNotifier)
     {
         log_.debug("Initializing the local controller in-memory repository");
         virtualMachineMetaData_ = new HashMap<String, VirtualMachineMetaData>();
+        hostResources_ = localController.getHostResources();
         externalNotifier_ = externalNotifier;
     }
     
@@ -204,4 +215,91 @@ public final class LocalControllerMemoryRepository
         virtualMachines.addAll(virtualMachineMetaData_.values());
         return virtualMachines;
     }
+
+    @Override
+    public synchronized void addAggregatedHostMonitoringData(List<AggregatedHostMonitoringData> aggregatedData)
+    {
+        for (AggregatedHostMonitoringData monitorData : aggregatedData)
+        {
+            for ( HostMonitoringData  monitoringData : monitorData.getMonitoringData())
+            {
+                for (Entry<String, Double> m: monitoringData.getUsedCapacity().entrySet())
+                {
+                    Resource resource = hostResources_.get(m.getKey());
+                    if (resource == null)
+                    {
+                        log_.debug(String.format("The resource %s is not registered yet ... passing", m.getKey()));
+                        continue;
+                    }
+                    log_.debug(String.format("Adding new hostory value for %s", m.getValue()));
+                    resource.getHistory().put(monitoringData.getTimeStamp(), m.getValue());
+                }
+            }
+        }
+    }
+
+    @Override
+    public HashMap<String, Resource> getHostResources()
+    {
+        return hostResources_;
+    }
+
+    @Override
+    public void addAggregatedVirtualMachineData(ArrayList<AggregatedVirtualMachineData> aggregatedDatas)
+    {
+        Guard.check(aggregatedDatas);
+        try
+        {
+            for (AggregatedVirtualMachineData aggregatedData : aggregatedDatas)
+            {
+                String virtualMachineId = aggregatedData.getVirtualMachineId();
+                VirtualMachineMetaData virtualMachine = virtualMachineMetaData_.get(virtualMachineId);
+                if (virtualMachine == null)
+                {
+                    log_.error(String.format("The virtual machine %s doesn't exist in the repo ...skipping", virtualMachineId));
+                    continue;
+                }
+                log_.debug("Adding used Capacity to the vm");
+                for (VirtualMachineMonitoringData  virtualMachineMonitoring : aggregatedData.getMonitoringData())
+                {
+                    virtualMachine.getUsedCapacity().put(virtualMachineMonitoring.getTimeStamp(), virtualMachineMonitoring);
+                }
+            }
+        }
+        catch(Exception exception)
+        {
+            log_.error("Unable to update the repository");
+            exception.printStackTrace();
+        }
+    
+    }
+
+    @Override
+    public Map<String, Resource> getLastHostMonitoringValues(long pastTimestamp)
+    {
+        log_.debug(String.format("Getting the last host monitoring value (since %d)", pastTimestamp));
+        Map<String, Resource> hostResourcesCopy = new HashMap<String, Resource>();
+        for (Entry<String, Resource> resourceSet  : hostResources_.entrySet())
+        {
+            Resource resource = resourceSet.getValue();
+            // creating new resource.
+            Resource resourceCopy = new Resource(resource, pastTimestamp);
+            hostResourcesCopy.put(resourceSet.getKey(), resourceCopy);
+        }
+        return hostResourcesCopy;
+    }
+
+    @Override
+    public List<VirtualMachineMetaData> getLastVirtualMachineMetaData(long pastTimestamp)
+    {
+        log_.debug(String.format("Getting the last virtual machine monitoring value (since %d)", pastTimestamp));
+        List<VirtualMachineMetaData> virtualMachines = new ArrayList<VirtualMachineMetaData>();
+        for (Entry<String, VirtualMachineMetaData> virtualMachineSet : virtualMachineMetaData_.entrySet())
+        {
+            VirtualMachineMetaData virtualMachineCopied = new VirtualMachineMetaData(virtualMachineSet.getValue(), pastTimestamp);
+            virtualMachines.add(virtualMachineCopied);
+        }
+        return virtualMachines;
+    }
+    
 }

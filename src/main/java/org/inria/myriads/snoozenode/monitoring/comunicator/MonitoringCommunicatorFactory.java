@@ -1,14 +1,14 @@
-package org.inria.myriads.snoozenode.comunicator;
+package org.inria.myriads.snoozenode.monitoring.comunicator;
 
 import java.io.IOException;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
-import org.inria.myriads.snoozenode.comunicator.api.Communicator;
-import org.inria.myriads.snoozenode.comunicator.api.impl.GroupManagerCassandraCommunicator;
-import org.inria.myriads.snoozenode.comunicator.api.impl.MemoryCommunicator;
-import org.inria.myriads.snoozenode.comunicator.api.impl.VirtualMachineCassandraCommunicator;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.database.enums.DatabaseType;
+import org.inria.myriads.snoozenode.monitoring.comunicator.api.MonitoringCommunicator;
+import org.inria.myriads.snoozenode.monitoring.comunicator.api.impl.GroupManagerCassandraCommunicator;
+import org.inria.myriads.snoozenode.monitoring.comunicator.api.impl.LocalControllerMemoryCommunicator;
+import org.inria.myriads.snoozenode.monitoring.comunicator.api.impl.LocalControllerCassandraCommunicator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,13 +19,13 @@ import org.slf4j.LoggerFactory;
  * @author msimonin
  *
  */
-public final class CommunicatorFactory
+public final class MonitoringCommunicatorFactory
 {
     /** Logging instance. */
-    private static final Logger log_ = LoggerFactory.getLogger(Communicator.class);
+    private static final Logger log_ = LoggerFactory.getLogger(MonitoringCommunicatorFactory.class);
     
     /** Hide constructor. */
-    private CommunicatorFactory()
+    private MonitoringCommunicatorFactory()
     {
         throw new UnsupportedOperationException();
     }
@@ -40,7 +40,7 @@ public final class CommunicatorFactory
      * @return  DataSender
      * @throws IOException  Exception
      */
-    public static Communicator newGroupManagerCommunicator(
+    public static MonitoringCommunicator newGroupManagerCommunicator(
             NetworkAddress groupLeader,
             DatabaseSettings databaseSettings
             ) throws IOException
@@ -49,11 +49,11 @@ public final class CommunicatorFactory
         switch(database)
         {
             case memory:
-                return new MemoryCommunicator(groupLeader);
+                return new LocalControllerMemoryCommunicator(groupLeader);
             case cassandra:
                 return new GroupManagerCassandraCommunicator(groupLeader, databaseSettings);
             default:
-                return new MemoryCommunicator(groupLeader);
+                return new LocalControllerMemoryCommunicator(groupLeader);
         }
         
     }
@@ -67,18 +67,28 @@ public final class CommunicatorFactory
      * @return  a data sender
      * @throws IOException          Exception
      */
-    public static Communicator newVirtualMachineCommunicator(NetworkAddress groupManagerAddress,
+    public synchronized static MonitoringCommunicator newVirtualMachineCommunicator(NetworkAddress groupManagerAddress,
             DatabaseSettings databaseSettings) throws IOException
     {
+        
+       
         DatabaseType database = databaseSettings.getType();
         switch(database)
         {
             case memory:
-                return new MemoryCommunicator(groupManagerAddress);
+                log_.debug("Creating a new virtual machine memory communicator instance");
+                return new LocalControllerMemoryCommunicator(groupManagerAddress);
+                
             case cassandra:
-                return new VirtualMachineCassandraCommunicator(groupManagerAddress, databaseSettings);
+                log_.debug("Creating a new virtual machine cassandra communicator instance");
+                return new LocalControllerCassandraCommunicator(groupManagerAddress, databaseSettings);
+                
             default:
-                return new MemoryCommunicator(groupManagerAddress);
+                log_.debug("Creating a new virtual machine default communicator instance");
+                return new LocalControllerMemoryCommunicator(groupManagerAddress);
         }
+        
+
     }
+
 }

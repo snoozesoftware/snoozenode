@@ -154,7 +154,8 @@ public final class VirtualMachineMonitorDataProducer
     {
         VirtualMachineMonitor virtualMachineMonitor = infrastructureMonitoring_.getVirtualMachineMonitor();
         String virtualMachineId = virtualMachineMetaData_.getVirtualMachineLocation().getVirtualMachineId();
-        int historySize = infrastructureMonitoring_.getMonitoringSettings().getNumberOfMonitoringEntries();
+        //int historySize = infrastructureMonitoring_.getMonitoringSettings().getNumberOfMonitoringEntries();
+        int historySize = 1; //send directly.
         int monitoringInterval =  infrastructureMonitoring_.getMonitoringSettings().getInterval();
         
         log_.debug(String.format("Starting virtual machine monitoring data producer for %s", virtualMachineId));

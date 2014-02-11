@@ -23,18 +23,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
+import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.HostMonitoringData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedHostMonitoringData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,8 +72,6 @@ public final class GroupManagerMemoryRepository
     private int maxCapacity_;
             
 
-    
-    
     /**
      * 
      * Constructor.
@@ -426,6 +428,38 @@ public final class GroupManagerMemoryRepository
                 monitoringData.put(virtualMachineData.getTimeStamp(), virtualMachineData);
             }
         }
+    }
+    
+    @Override
+    public synchronized void addAggregatedHostMonitoringData(String localControllerId,
+            AggregatedHostMonitoringData hostMonitoringData)
+    {
+        Guard.check(hostMonitoringData);
+        LocalControllerDescription localController = localControllerDescriptions_.get(localControllerId);
+        HashMap<String, Resource> hostResources = localController.getHostResources();
+        for (HostMonitoringData  monitoringData : hostMonitoringData.getMonitoringData())
+        {
+            log_.debug("treating new ts");
+            log_.debug("" + monitoringData.getTimeStamp());
+            // given a timestamp.
+            for (Entry<String, Double> used : monitoringData.getUsedCapacity().entrySet())
+            {
+                //iterate over all metric collected.
+                String metricName = used.getKey();
+                double metricValue = used.getValue();
+                log_.debug("Treating " + metricName + " with value "+ metricValue );
+                Resource hostResource = hostResources.get(metricName);
+                if (hostResource == null)
+                {
+                    log_.debug("This resource isn't monitored ... skipping");
+                    continue;
+                }
+                
+                hostResource.getHistory().put(monitoringData.getTimeStamp(), metricValue);
+                log_.debug(String.format("Adding metric for %s with value %f", metricName, metricValue));
+            }
+        }
+        
     }
         
     /**
@@ -940,6 +974,6 @@ public final class GroupManagerMemoryRepository
     public ArrayList<LocalControllerDescription> getLocalControllerDescriptionForDataTransporter()
     {
         return getLocalControllerDescriptions(0, false, false);
-    }
-
+    }   
+    
 }

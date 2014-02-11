@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
  * @author msimonin
  *
  */
+// TODO Singleton.
 public class ExternalNotifier
 {
     

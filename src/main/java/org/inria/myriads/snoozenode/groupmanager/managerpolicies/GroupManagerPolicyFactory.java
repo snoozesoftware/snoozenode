@@ -90,6 +90,7 @@ public final class GroupManagerPolicyFactory
             try
             {
                 log_.debug("Loading a custom placement policy");
+
                 String pluginsDirectory = schedulerSettings.getPluginsDirectory();
                 Class placementClass = PluginUtils.getClassFromDirectory(pluginsDirectory , placementPolicy);
                 log_.debug(String.format("instantiate the placement policy %s from the jar", placementPolicy));

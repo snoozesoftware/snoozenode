@@ -139,7 +139,7 @@ public final class LocalControllerSummaryReceiver extends TCPDataReceiver
             localControllerIds_.put(workerThreadId, localControllerId);     
         }
              
-        if (monitoringData.getData() == null)
+        if (monitoringData.getVirtualMachineAggregatedData() == null)
         {
             //log_.debug(String.format("Ignoring received heartbeat data from %s!", workerThreadId));
             dataQueue_.add(monitoringData);

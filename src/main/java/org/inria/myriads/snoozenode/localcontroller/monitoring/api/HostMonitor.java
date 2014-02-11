@@ -21,6 +21,7 @@ package org.inria.myriads.snoozenode.localcontroller.monitoring.api;
 
 import java.util.ArrayList;
 
+import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.HostMonitoringData;
 import org.inria.myriads.snoozenode.exception.HostMonitoringException;
 
 /**
@@ -38,4 +39,13 @@ public interface HostMonitor
      */
     ArrayList<Double> getTotalCapacity() 
         throws HostMonitoringException;
+
+    /**
+     * 
+     * 
+     * Gets the monitoring data in charge of this monitor.
+     * 
+     * @return
+     */
+    HostMonitoringData getResourceData() throws HostMonitoringException;;
 }

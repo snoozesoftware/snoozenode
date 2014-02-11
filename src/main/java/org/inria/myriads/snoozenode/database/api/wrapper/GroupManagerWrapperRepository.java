@@ -14,6 +14,7 @@ import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedHostMonitoringData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.inria.myriads.snoozenode.message.SystemMessage;
 import org.inria.myriads.snoozenode.message.SystemMessageType;
@@ -142,6 +143,13 @@ public class GroupManagerWrapperRepository implements GroupManagerRepository
         repository_.addAggregatedMonitoringData(localControllerId, aggregatedData);
 
     }
+    
+    @Override
+    public void addAggregatedHostMonitoringData(String localControllerId,
+            AggregatedHostMonitoringData hostMonitoringData)
+    {
+        repository_.addAggregatedHostMonitoringData(localControllerId, hostMonitoringData);
+    }
 
     @Override
     public ArrayList<String> getLegacyIpAddresses()
@@ -236,5 +244,8 @@ public class GroupManagerWrapperRepository implements GroupManagerRepository
     {
         return repository_.getLocalControllerDescriptionForDataTransporter();
     }
+
+
+
 
 }

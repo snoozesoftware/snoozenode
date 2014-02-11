@@ -20,6 +20,7 @@
 package org.inria.myriads.snoozenode.util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,6 +29,8 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDes
 import org.inria.myriads.snoozecommon.communication.groupmanager.ListenSettings;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
+import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
+import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
@@ -35,6 +38,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
+import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorSettings;
 import org.inria.myriads.snoozenode.configurator.networking.NetworkingSettings;
 import org.inria.myriads.snoozenode.heartbeat.message.HeartbeatMessage;
 import org.slf4j.Logger;
@@ -147,7 +151,9 @@ public final class ManagementUtils
      * @return                     The local controller information
      */
     public static LocalControllerDescription createLocalController(NodeConfiguration nodeConfiguration,
-                                                                   ArrayList<Double> totalCapacity) 
+                                                                   ArrayList<Double> totalCapacity,
+                                                                   MonitoringThresholds thresholds
+                                                                   ) 
     {
         Guard.check(nodeConfiguration);
         log_.debug("Creating local controller description from node parameters");
@@ -161,7 +167,17 @@ public final class ManagementUtils
         localController.setHypervisorSettings(nodeConfiguration.getHypervisor());
         localController.setWakeupSettings(nodeConfiguration.getEnergyManagement().getDrivers().getWakeup());
         localController.setTotalCapacity(totalCapacity);
-                
+        localController.setThresholds(thresholds);
+        HashMap<String, Resource> resources = localController.getHostResources();
+        // for each monitor.
+        for (HostMonitorSettings  monitors: nodeConfiguration.getHostMonitoringSettings().getHostMonitorSettings().values())
+        {
+            // for each resource managed by this monitor.
+            for (Resource resource : monitors.getResources())
+            {
+                resources.put(resource.getName(), resource);
+            }
+        }
         return localController;
     }
     

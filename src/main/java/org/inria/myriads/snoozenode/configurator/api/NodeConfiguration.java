@@ -28,6 +28,7 @@ import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.faulttolerance.FaultToleranceSettings;
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
 import org.inria.myriads.snoozenode.configurator.imagerepository.ImageRepositorySettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.configurator.networking.NetworkingSettings;
@@ -93,6 +94,9 @@ public class NodeConfiguration
     /** Provisioner settings.*/
     private ProvisionerSettings provisionerSettings_;
     
+    /** HostMonitoring settings.*/
+    private HostMonitoringSettings hostMonitoringSettings_;
+    
     /** Empty constructor. */
     public NodeConfiguration()
     {
@@ -111,6 +115,7 @@ public class NodeConfiguration
         networking_ = new NetworkingSettings();
         imageRepositorySettings_ = new ImageRepositorySettings();
         provisionerSettings_ = new ProvisionerSettings();
+        hostMonitoringSettings_ = new HostMonitoringSettings();
     }
 
     /**
@@ -263,5 +268,29 @@ public class NodeConfiguration
     public void setProvisionerSettings(ProvisionerSettings provisionerSettings)
     {
         provisionerSettings_ = provisionerSettings;
+    }
+
+    /**
+     * @return the serialversionuid
+     */
+    public static long getSerialversionuid()
+    {
+        return serialVersionUID;
+    }
+
+    /**
+     * @return the httpd
+     */
+    public HTTPdSettings getHttpd()
+    {
+        return httpd_;
+    }
+
+    /**
+     * @return the hostMonitoringSettings
+     */
+    public HostMonitoringSettings getHostMonitoringSettings()
+    {
+        return hostMonitoringSettings_;
     }
 }

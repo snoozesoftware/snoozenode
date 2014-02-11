@@ -1,10 +1,10 @@
-package org.inria.myriads.snoozenode.comunicator.api.impl;
+package org.inria.myriads.snoozenode.monitoring.comunicator.api.impl;
 
 import java.io.IOException;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
-import org.inria.myriads.snoozenode.comunicator.api.Communicator;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
+import org.inria.myriads.snoozenode.monitoring.comunicator.api.MonitoringCommunicator;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.CassandraGroupManagerDataSender;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.TCPDataSender;
@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
  * @author msimonin
  *
  */
-public class GroupManagerCassandraCommunicator implements Communicator
+public class GroupManagerCassandraCommunicator implements MonitoringCommunicator
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(GroupManagerCassandraCommunicator.class);

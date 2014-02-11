@@ -23,11 +23,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.NodeRole;
+import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
+import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorDriver;
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorSettings;
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorTransport;
@@ -48,8 +51,10 @@ import org.inria.myriads.snoozenode.configurator.faulttolerance.FaultToleranceSe
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
 import org.inria.myriads.snoozenode.configurator.imagerepository.DiskHostingType;
 import org.inria.myriads.snoozenode.configurator.imagerepository.ImageRepositorySettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorType;
+import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
-import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.configurator.networking.NetworkingSettings;
 import org.inria.myriads.snoozenode.configurator.node.NodeSettings;
@@ -115,10 +120,88 @@ public final class JavaPropertyNodeConfigurator
         setEnergyManagementSettings();
         setImageRepositorySettings();
         setProvisionerSettings();
+        setHostMonitoringSettings();
         
         fileInput.close();
     }
     
+
+
+    private void setHostMonitoringSettings() throws NodeConfiguratorException
+    {
+        String separator = ",";
+        HostMonitoringSettings hostMonitoringSettings = nodeConfiguration_.getHostMonitoringSettings();
+        String stringHostMonitorTypes = getProperty("localController.hostmonitor.type");
+        String hostMonitors[] = stringHostMonitorTypes.split(separator);
+        for (String hostMonitor : hostMonitors)
+        {
+            HostMonitorSettings hostMonitorSettings = new HostMonitorSettings();
+            // type
+            HostMonitorType type = HostMonitorType.valueOf(hostMonitor);
+            hostMonitorSettings.setType(type);
+            //network address (contact address)
+            String hostname = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "hostname"));
+            String port = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "port"));
+            NetworkAddress contactAddress = NetworkUtils.createNetworkAddress(hostname, Integer.valueOf(port));
+            hostMonitorSettings.setContactAddress(contactAddress);
+            // default numberOfMonitoringEntries
+            String defaultNumberOfMonitoringEntries = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "numberOfMonitoringEntries"), "10");
+            //default interval 
+            String defaultInterval = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "interval"), "3000");
+            hostMonitorSettings.setInterval(Integer.valueOf(defaultInterval));
+            //default threshold
+            String stringDefaultThresholds = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "thresholds"), "0,1,1"); 
+            //List<Double> defaultThresholds = StringUtils.convertStringToDoubleArray(stringDefaultThresholds, separator);
+            
+            // published metrics
+            String stringPublished = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "published"));
+            String[] published = stringPublished.split(separator);
+            for (String resourceName : published)
+            {
+                 //number of monitoring entries.
+                int localNumberOfMonitoringEntries = 0;
+                String stringLocalNumberOfMonitoringEntries = 
+                         getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "numberOfMonitoringEntries", resourceName), defaultNumberOfMonitoringEntries);
+                localNumberOfMonitoringEntries = Integer.valueOf(stringLocalNumberOfMonitoringEntries);
+                 
+                 
+                String stringLocalThresholds = 
+                         getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "thresholds", resourceName), stringDefaultThresholds);
+                if (stringLocalThresholds == null)
+                    stringLocalThresholds = stringDefaultThresholds;
+                 
+                List<Double> thresholds = StringUtils.convertStringToDoubleArray(stringLocalThresholds, separator);
+                 
+                Resource resource = new Resource(localNumberOfMonitoringEntries);
+                resource.setName(resourceName);
+                resource.setThresholds(thresholds);
+                //register the resource settings.
+                hostMonitorSettings.add(resource);
+            }
+            //register the host monitor setting (and all its resource)
+            hostMonitoringSettings.add(type, hostMonitorSettings);
+        }
+    }
+
+    private String buildHostMonitorProperty(String ... strings)
+    {
+        String result = "";
+        int i = 0; 
+        for (String string : strings)
+        {   
+            if (i == 0)
+            {
+                result += string;
+            }
+            else
+            {
+                result += "." + string;
+            }
+            i++;
+        }
+        return result;
+        
+    }
 
 
     /**
@@ -613,4 +696,25 @@ public final class JavaPropertyNodeConfigurator
         content = content.trim();
         return content;             
     }
+    
+    /**
+     * Returns the content of a properties.
+     * 
+     * @param tag                           The tag
+     * @return                              The content string
+     * @throws NodeConfiguratorException    The configuration exception
+     */
+    private String getProperty(String tag, String defaultValue) 
+        throws NodeConfiguratorException
+    {
+        String content = properties_.getProperty(tag);
+        if (content == null) 
+        {
+           content = defaultValue;
+        }
+        
+        content = content.trim();
+        return content;             
+    }
+    
 }

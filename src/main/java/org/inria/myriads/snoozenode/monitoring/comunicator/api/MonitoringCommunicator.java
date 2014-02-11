@@ -1,4 +1,4 @@
-package org.inria.myriads.snoozenode.comunicator.api;
+package org.inria.myriads.snoozenode.monitoring.comunicator.api;
 
 import java.io.IOException;
 
@@ -9,7 +9,7 @@ import java.io.IOException;
  * @author msimonin
  *
  */
-public interface Communicator
+public interface MonitoringCommunicator
 {
 
     /**

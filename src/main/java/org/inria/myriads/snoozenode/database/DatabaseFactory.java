@@ -20,6 +20,7 @@
 package org.inria.myriads.snoozenode.database;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.BootstrapRepository;
@@ -224,18 +225,20 @@ public final class DatabaseFactory
      * @param externalNotifier  The external notifier.
      * @return                  The local controller repository.
      */
-    public static LocalControllerRepository newLocalControllerRepository(DatabaseType type, 
+    public static LocalControllerRepository newLocalControllerRepository(
+            LocalControllerDescription localController,
+            DatabaseType type, 
             ExternalNotifier externalNotifier)
     {
         LocalControllerRepository repository = null;
         switch (type) 
         {
             case memory :       
-                repository = new LocalControllerMemoryRepository(externalNotifier);
+                repository = new LocalControllerMemoryRepository(localController, externalNotifier);
                 break;
                    
             default:
-                repository = new LocalControllerMemoryRepository(externalNotifier);
+                repository = new LocalControllerMemoryRepository(localController, externalNotifier);
                 log_.error("Unknown local controller database type selected");
         }
         return repository;

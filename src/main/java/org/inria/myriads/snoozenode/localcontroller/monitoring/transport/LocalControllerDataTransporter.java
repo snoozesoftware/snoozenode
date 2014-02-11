@@ -42,7 +42,10 @@ public final class LocalControllerDataTransporter
     private String localControllerId_;
         
     /** Virtual machine monitoring data. */
-    private List<AggregatedVirtualMachineData> aggregatedData_;
+    private List<AggregatedVirtualMachineData> virtualMachineAggregatedData_;
+    
+    /** Host monitoring data.*/
+    private List<AggregatedHostMonitoringData> hostMonitoringAggregatedData_;
     
     /**
      * Constructor.
@@ -54,17 +57,23 @@ public final class LocalControllerDataTransporter
                                           List<AggregatedVirtualMachineData> aggregatedData)
     {
         localControllerId_ = localControllerId;
-        aggregatedData_ = aggregatedData;
+        virtualMachineAggregatedData_ = aggregatedData;
     }
     
+    public LocalControllerDataTransporter(String localControllerId)
+    {
+       localControllerId_ = localControllerId;
+       // vm and host null.
+    }
+
     /**
      * Returns the aggregated data map.
      * 
      * @return      The aggregated monitoring data
      */
-    public List<AggregatedVirtualMachineData> getData()
+    public List<AggregatedVirtualMachineData> getVirtualMachineAggregatedData()
     {
-        return aggregatedData_;
+        return virtualMachineAggregatedData_;
     }
     
     /**
@@ -95,5 +104,37 @@ public final class LocalControllerDataTransporter
     public void setState(LocalControllerState state)
     {
         state_ = state;
+    }
+
+    /**
+     * @return the hostMonitoringAggregatedData
+     */
+    public List<AggregatedHostMonitoringData> getHostMonitoringAggregatedData()
+    {
+        return hostMonitoringAggregatedData_;
+    }
+
+    /**
+     * @param localControllerId the localControllerId to set
+     */
+    public void setLocalControllerId(String localControllerId)
+    {
+        localControllerId_ = localControllerId;
+    }
+
+    /**
+     * @param virtualMachineAggregatedData the virtualMachineAggregatedData to set
+     */
+    public void setVirtualMachineAggregatedData(List<AggregatedVirtualMachineData> virtualMachineAggregatedData)
+    {
+        virtualMachineAggregatedData_ = virtualMachineAggregatedData;
+    }
+
+    /**
+     * @param hostMonitoringAggregatedData the hostMonitoringAggregatedData to set
+     */
+    public void setHostMonitoringAggregatedData(List<AggregatedHostMonitoringData> hostMonitoringAggregatedData)
+    {
+        hostMonitoringAggregatedData_ = hostMonitoringAggregatedData;
     }
 }

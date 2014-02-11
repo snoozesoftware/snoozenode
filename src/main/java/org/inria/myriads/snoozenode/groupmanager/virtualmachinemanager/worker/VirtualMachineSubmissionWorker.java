@@ -244,40 +244,48 @@ public final class VirtualMachineSubmissionWorker
     public void run()
     {
         log_.debug(String.format("Starting the virtual machine submission %s procedure", taskIdentifier_));
-          
-        ArrayList<VirtualMachineMetaData> virtualMachines = submissionRequest_.getVirtualMachineMetaData(); 
-        List<LocalControllerDescription> localControllers = 
-                repository_.getLocalControllerDescriptions(numberOfMonitoringEntries_, false, true);
+        
+        ArrayList<VirtualMachineMetaData> virtualMachines = submissionRequest_.getVirtualMachineMetaData();
         
         ArrayList<VirtualMachineMetaData> boundVirtualMachines = new ArrayList<VirtualMachineMetaData>();
         ArrayList<VirtualMachineMetaData> freeVirtualMachines = new ArrayList<VirtualMachineMetaData>();
-        
+        // split virtual machines.
         splitVirtualMachines(virtualMachines, boundVirtualMachines, freeVirtualMachines);
-        //split vms static placement/ non static placement
         
+        // build the construction plan.
+        List<LocalControllerDescription> localControllers = 
+                repository_.getLocalControllerDescriptions(numberOfMonitoringEntries_, false, true);
+        
+        PlacementPlan placementPlan = buildPlacementPlan(boundVirtualMachines, freeVirtualMachines, localControllers);
+                
+        VirtualMachineSubmissionResponse submissionResponse = enforcePlacementPlan(placementPlan);
+        managerListener_.onSubmissionFinished(taskIdentifier_, submissionResponse);
+    }
+
+    
+    protected PlacementPlan buildPlacementPlan(
+            ArrayList<VirtualMachineMetaData> boundVirtualMachines, 
+            ArrayList<VirtualMachineMetaData> freeVirtualMachines,
+            List<LocalControllerDescription> localControllers
+            )
+    {
         //places static vms
         PlacementPlan boundPlacementPlan = staticPlacementPolicy_.place(boundVirtualMachines, localControllers);
-        
+
         //place free vms
         PlacementPlan freePlacementPlan = placementPolicy_.place(freeVirtualMachines, localControllers);
         
+        //merge boundPlacement.getLocalControllers and freePlacementPlan.getLocalControllers (remove monitoring ?)
         ArrayList<LocalControllerDescription> targetLocalControllers = new ArrayList<LocalControllerDescription>();
-        for (LocalControllerDescription localController : localControllers)
-        {
-            if (localController.getAssignedVirtualMachines().size() > 0)
-            {
-                targetLocalControllers.add(localController);
-            }
-        }
+        targetLocalControllers.addAll(boundPlacementPlan.getLocalControllers());
+        targetLocalControllers.addAll(freePlacementPlan.getLocalControllers());
+        
         List<VirtualMachineMetaData> unassignedVirtualMachine = new ArrayList<VirtualMachineMetaData>();
         unassignedVirtualMachine.addAll(boundPlacementPlan.gettUnassignedVirtualMachines());
         unassignedVirtualMachine.addAll(freePlacementPlan.gettUnassignedVirtualMachines());
 
-        PlacementPlan placementPlan = new PlacementPlan(targetLocalControllers, unassignedVirtualMachine);
-        
-        
-        VirtualMachineSubmissionResponse submissionResponse = enforcePlacementPlan(placementPlan);
-        managerListener_.onSubmissionFinished(taskIdentifier_, submissionResponse);
+       return new PlacementPlan(targetLocalControllers, unassignedVirtualMachine);
+
     }
 
     /**

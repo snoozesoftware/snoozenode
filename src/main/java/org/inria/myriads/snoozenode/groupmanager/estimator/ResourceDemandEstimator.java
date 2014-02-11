@@ -27,6 +27,7 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDes
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
+import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
@@ -36,7 +37,6 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MathUtils;
 import org.inria.myriads.snoozecommon.util.MonitoringUtils;
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
-import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
 import org.inria.myriads.snoozenode.configurator.submission.PackingDensity;
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.CPUDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.MemoryDemandEstimator;
@@ -366,7 +366,7 @@ public class ResourceDemandEstimator
         log_.debug(String.format("Checking capacity constraints for local controller used and total capacity: " +
                                  "%s / %s", localControllerUsedCapacity, localControllerTotalCapacity)); 
                 
-        double cpuMid = ThresholdUtils.getMidThreshold(monitoringThresholds_.getCPU());
+        double cpuMid = ThresholdUtils.getMidThreshold(monitoringThresholds_.getCpu());
         double memoryMid = ThresholdUtils.getMidThreshold(monitoringThresholds_.getMemory());
         double networkRxMid = ThresholdUtils.getMidThreshold(monitoringThresholds_.getNetwork());
         double networkTxMid = ThresholdUtils.getMidThreshold(monitoringThresholds_.getNetwork());
@@ -570,7 +570,7 @@ public class ResourceDemandEstimator
         ArrayList<Double> totalCapacity = description.getTotalCapacity();
 
         double allowedCPU = UtilizationUtils.getCpuUtilization(totalCapacity) *
-                            ThresholdUtils.getMidThreshold(monitoringThresholds_.getCPU());
+                            ThresholdUtils.getMidThreshold(monitoringThresholds_.getCpu());
         
         double allowedMemory = UtilizationUtils.getMemoryUtilization(totalCapacity) *
                                ThresholdUtils.getMidThreshold(monitoringThresholds_.getMemory());

@@ -5,10 +5,10 @@ import java.util.concurrent.BlockingQueue;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.comunicator.CommunicatorFactory;
-import org.inria.myriads.snoozenode.comunicator.api.Communicator;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.transport.GroupManagerDataTransporter;
+import org.inria.myriads.snoozenode.monitoring.comunicator.MonitoringCommunicatorFactory;
+import org.inria.myriads.snoozenode.monitoring.comunicator.api.MonitoringCommunicator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,7 @@ public class GroupManagerMonitoringDataConsumer implements Runnable
     private boolean isTerminated_;
     
     /** Communicator (with the upper level).*/
-    private Communicator communicator_;
+    private MonitoringCommunicator communicator_;
     
     
     /**
@@ -58,7 +58,7 @@ public class GroupManagerMonitoringDataConsumer implements Runnable
         groupManagerId_ = groupManagerId;
         dataQueue_ = dataQueue;
         isTerminated_ = false;
-        communicator_ = CommunicatorFactory.newGroupManagerCommunicator(groupLeaderAddress, databaseSettings); 
+        communicator_ = MonitoringCommunicatorFactory.newGroupManagerCommunicator(groupLeaderAddress, databaseSettings); 
     }
 
     @Override

@@ -21,6 +21,7 @@ package org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl;
 
 import java.util.ArrayList;
 
+import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.HostMonitoringData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MathUtils;
@@ -97,5 +98,11 @@ public final class LibVirtHostMonitor
                                                                        networkCapacity_);       
         log_.debug(String.format("Total host capacity is: %s", totalCapacity));   
         return totalCapacity;
+    }
+
+    @Override
+    public HostMonitoringData getResourceData() throws HostMonitoringException
+    {
+        return null;
     }
 }

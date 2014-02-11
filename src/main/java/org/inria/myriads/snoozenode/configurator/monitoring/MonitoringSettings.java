@@ -19,6 +19,8 @@
  */
 package org.inria.myriads.snoozenode.configurator.monitoring;
 
+import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
+
 /**
  * Monitoring settings.
  * 

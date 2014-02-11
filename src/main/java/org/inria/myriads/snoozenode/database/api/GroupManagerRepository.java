@@ -29,6 +29,7 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedHostMonitoringData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 
 /**
@@ -123,6 +124,16 @@ public interface GroupManagerRepository
     void addAggregatedMonitoringData(String localControllerId, 
                                      List<AggregatedVirtualMachineData> aggregatedData);
    
+    
+    /**
+     * 
+     * Adds the host monitoring data.
+     * 
+     * @param localControllerId     The local controller identifier
+     * @param hostMonitoringData    The monitoring datas.
+     */
+    void addAggregatedHostMonitoringData(String localControllerId, AggregatedHostMonitoringData hostMonitoringData);
+    
     /**
      * Returns a list of legacy IP addresses.
      * 
@@ -247,5 +258,7 @@ public interface GroupManagerRepository
      * @return the list of local controllers to transmit.
      */
     ArrayList<LocalControllerDescription> getLocalControllerDescriptionForDataTransporter();
+
+    
 
 }

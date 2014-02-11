@@ -25,16 +25,17 @@ import java.util.concurrent.BlockingQueue;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.comunicator.CommunicatorFactory;
-import org.inria.myriads.snoozenode.comunicator.api.Communicator;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
-import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
+import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.listener.VirtualMachineMonitoringListener;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.service.InfrastructureMonitoring;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.threshold.ThresholdCrossingDetector;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
+import org.inria.myriads.snoozenode.monitoring.comunicator.MonitoringCommunicatorFactory;
+import org.inria.myriads.snoozenode.monitoring.comunicator.api.MonitoringCommunicator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +66,10 @@ public final class VirtualMachineMonitorDataConsumer
     private boolean isTerminated_;
     
     /** Communicator with the upper level. */
-    private Communicator communicator_;
+    private MonitoringCommunicator communicator_;
+    
+    /** Repository.*/
+    LocalControllerRepository repository_;
     
     /**
      * Constructor.
@@ -79,7 +83,8 @@ public final class VirtualMachineMonitorDataConsumer
      * @throws Exception                The exception
      */
     public VirtualMachineMonitorDataConsumer(LocalControllerDescription localController,
-                                             NetworkAddress groupManagerAddress, 
+                                             LocalControllerRepository repository,
+                                             MonitoringCommunicator communicator, 
                                              BlockingQueue<AggregatedVirtualMachineData> dataQueue,
                                              InfrastructureMonitoring infrastructureMonitoring,
                                              DatabaseSettings databaseSettings,
@@ -87,13 +92,14 @@ public final class VirtualMachineMonitorDataConsumer
         throws Exception
     {
         
-        log_.debug("Initializing the virtual machine monitoring data consumer");
+        log_.debug("Initializing virtual machine monitoring consumer");
         MonitoringThresholds monitoringThresholds = infrastructureMonitoring.getMonitoringSettings().getThresholds();
         localControllerId_ = localController.getId();
         dataQueue_ = dataQueue;
-        callback_ = callback; 
+        callback_ = callback;
+        repository_ = repository;
         crossingDetector_ = new ThresholdCrossingDetector(monitoringThresholds, localController.getTotalCapacity());
-        communicator_  = CommunicatorFactory.newVirtualMachineCommunicator(groupManagerAddress, databaseSettings);
+        communicator_  = communicator;
     }
    
     /**
@@ -141,20 +147,22 @@ public final class VirtualMachineMonitorDataConsumer
         LocalControllerDataTransporter localControllerData = 
             new LocalControllerDataTransporter(localControllerId, clonedData);
         
-        boolean isDetected = crossingDetector_.detectThresholdCrossing(localControllerData);
-
+       // boolean isDetected = crossingDetector_.detectThresholdCrossing(localControllerData);
+        boolean isDetected = false;
         
         log_.debug("Sending aggregated local controller summary information to group mananger");
         try
         {
             if (!isDetected)
             {
+                repository_.addAggregatedVirtualMachineData(clonedData);
                 communicator_.sendRegularData(localControllerData);
                 log_.debug("No threshold crossing detected! Node seems stable for now!");
             }
             else
             {
-                //send directly to GM to take into account the treshold crossing.
+                //send directly to GM to take into account the treshold crossing. 
+                // hack ? we use the heartbeat message for that.
                 communicator_.sendHeartbeatData(localControllerData);
             }
         }
@@ -175,7 +183,11 @@ public final class VirtualMachineMonitorDataConsumer
             while (!isTerminated_)
             {                               
                 log_.debug("Waiting for virtual machine monitoring data to arrive...");
-                AggregatedVirtualMachineData virtualMachineData = dataQueue_.take();   
+                AggregatedVirtualMachineData virtualMachineData = dataQueue_.take();
+                if (virtualMachineData == null)
+                {
+                    continue;
+                }
                 log_.debug(String.format("Received virtual machine %s data", 
                                          virtualMachineData.getVirtualMachineId()));
                 
@@ -214,12 +226,16 @@ public final class VirtualMachineMonitorDataConsumer
 
     /**
      * Terminates the consumer.
+     * @throws InterruptedException 
      */
-    public void terminate()
+    public void terminate() 
     {
         log_.debug("Terminating the virtual machine monitoring data consumer");
         isTerminated_ = true;
         communicator_.close();
+
     }
+
+    
 
 }

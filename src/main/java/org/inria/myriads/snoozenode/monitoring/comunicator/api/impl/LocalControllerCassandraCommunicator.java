@@ -1,10 +1,10 @@
-package org.inria.myriads.snoozenode.comunicator.api.impl;
+package org.inria.myriads.snoozenode.monitoring.comunicator.api.impl;
 
 import java.io.IOException;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
-import org.inria.myriads.snoozenode.comunicator.api.Communicator;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
+import org.inria.myriads.snoozenode.monitoring.comunicator.api.MonitoringCommunicator;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.DataSender;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.CassandraVirtualMachineDataSender;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.TCPDataSender;
@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
  * @author msimonin
  *
  */
-public class VirtualMachineCassandraCommunicator implements Communicator
+public class LocalControllerCassandraCommunicator implements MonitoringCommunicator
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(GroupManagerCassandraCommunicator.class);
@@ -29,9 +29,6 @@ public class VirtualMachineCassandraCommunicator implements Communicator
     /** Monitoring sender.*/
     private DataSender monitoringSender_;
     
-
-    
-    
     /**
      * 
      * Virtual Machine Cassandra Communicator.
@@ -40,7 +37,7 @@ public class VirtualMachineCassandraCommunicator implements Communicator
      * @param databaseSettings          Database settings.
      * @throws IOException              Exception
      */
-    public VirtualMachineCassandraCommunicator(NetworkAddress groupLeaderAddress, DatabaseSettings databaseSettings)
+    public LocalControllerCassandraCommunicator(NetworkAddress groupLeaderAddress, DatabaseSettings databaseSettings)
             throws IOException
     {
         heartbeatSender_ = new TCPDataSender(groupLeaderAddress);

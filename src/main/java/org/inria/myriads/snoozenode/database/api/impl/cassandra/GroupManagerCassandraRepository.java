@@ -17,6 +17,7 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraUtils;
 import org.inria.myriads.snoozenode.database.api.impl.memory.GroupManagerMemoryRepository;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedHostMonitoringData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -275,9 +276,6 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         addAggregatedMonitoringDataCassandra(localControllerId, aggregatedData);
     }
     
-
-   
-
     @Override
     public ArrayList<String> getLegacyIpAddresses()
     {
@@ -602,5 +600,14 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
     public ArrayList<LocalControllerDescription> getLocalControllerDescriptionForDataTransporter()
     {
         return new ArrayList<LocalControllerDescription>();
+    }
+
+
+    @Override
+    public void addAggregatedHostMonitoringData(String localControllerId,
+            AggregatedHostMonitoringData hostMonitoringData)
+    {
+        // TODO Auto-generated method stub
+        
     }
 }

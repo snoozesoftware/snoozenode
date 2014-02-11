@@ -1,10 +1,11 @@
-package org.inria.myriads.snoozenode.comunicator.api.impl;
+package org.inria.myriads.snoozenode.monitoring.comunicator.api.impl;
 
 import java.io.IOException;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
-import org.inria.myriads.snoozenode.comunicator.api.Communicator;
+import org.inria.myriads.snoozenode.monitoring.comunicator.api.MonitoringCommunicator;
 import org.inria.myriads.snoozenode.monitoring.datasender.api.impl.TCPDataSender;
+import org.inria.myriads.snoozenode.util.OutputUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,14 +16,15 @@ import org.slf4j.LoggerFactory;
  * @author msimonin
  *
  */
-public class MemoryCommunicator implements Communicator
+public class LocalControllerMemoryCommunicator implements MonitoringCommunicator
 {
     /** Define the logger. */
-    private static final Logger log_ = LoggerFactory.getLogger(GroupManagerCassandraCommunicator.class);
+    private static final Logger log_ = LoggerFactory.getLogger(LocalControllerMemoryCommunicator.class);
     
     /** Internal sender.*/
     private TCPDataSender sender_;
 
+    
     /**
      * 
      * Constructor.
@@ -30,16 +32,18 @@ public class MemoryCommunicator implements Communicator
      * @param groupLeaderAddress        The group Leader address.  
      * @throws IOException              Exception.
      */
-    public MemoryCommunicator(NetworkAddress groupLeaderAddress) throws IOException
+    public LocalControllerMemoryCommunicator(NetworkAddress groupLeaderAddress) throws IOException
     {
         sender_ = new TCPDataSender(groupLeaderAddress);
-        log_.debug("Memory Communicator initialized");
+        log_.debug("Memory Communicator initialized to " + groupLeaderAddress);
     }
 
+    
     @Override
     public void sendRegularData(Object data) throws IOException
     {
        log_.debug("Sending regular data");
+       OutputUtils.dump(data);
        sender_.send(data);
     }
 

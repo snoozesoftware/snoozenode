@@ -19,12 +19,16 @@
  */
 package org.inria.myriads.snoozenode.localcontroller.monitoring;
 
+import java.util.List;
+
+import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.inria.myriads.snoozenode.exception.HostMonitoringException;
 import org.inria.myriads.snoozenode.exception.VirtualMachineMonitoringException;
 import org.inria.myriads.snoozenode.localcontroller.connector.Connector;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.HostMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.VirtualMachineMonitor;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl.GangliaHostMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl.LibVirtHostMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl.LibVirtVirtualMachineMonitor;
 
@@ -68,5 +72,11 @@ public final class MonitoringFactory
         throws HostMonitoringException
     {
         return new LibVirtHostMonitor(connector, networkCapacity);
+    }
+
+    public static HostMonitor newHostMonitor(List<String> resourceNames, String address,
+            NetworkAddress contactAddress)
+    {
+        return new GangliaHostMonitor(resourceNames, address, contactAddress);
     }
 }

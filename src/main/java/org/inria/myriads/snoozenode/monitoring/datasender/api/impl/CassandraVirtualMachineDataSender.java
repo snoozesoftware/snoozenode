@@ -68,7 +68,7 @@ public class CassandraVirtualMachineDataSender extends CassandraRepository imple
        {
            LocalControllerDataTransporter dataTransporter = (LocalControllerDataTransporter) data;
            
-           this.addAggregatedMonitoringDataCassandra(dataTransporter.getLocalControllerId(), dataTransporter.getData());
+           this.addAggregatedMonitoringDataCassandra(dataTransporter.getLocalControllerId(), dataTransporter.getVirtualMachineAggregatedData());
        }
        catch (Exception exception)
        {
