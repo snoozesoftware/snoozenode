@@ -60,6 +60,13 @@ public class GroupManagerCassandraCommunicator implements MonitoringCommunicator
     }
 
     @Override
+    public void sendAnomalyData(Object data) throws IOException
+    {
+        log_.debug("Sending anomaly data");
+        log_.debug("Anomaly sender not implemented.");
+    }
+    
+    @Override
     public void close()
     {
         log_.debug("Closing the communicator");

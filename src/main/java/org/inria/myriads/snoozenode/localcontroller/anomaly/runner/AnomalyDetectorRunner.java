@@ -17,8 +17,10 @@ import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.Anomaly
 import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.AnomalyDetectorEstimator;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.listener.AnomalyDetectorListener;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.runner.AnomalyDetectorRunner;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.producer.VirtualMachineHeartbeatDataProducer;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
 import org.inria.myriads.snoozenode.util.OutputUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +59,10 @@ public class AnomalyDetectorRunner implements Runnable
      * 
      * @param 
      */
-    public AnomalyDetectorRunner(LocalControllerRepository repository, AnomalyDetector anomalyDetector)
+    public AnomalyDetectorRunner(
+            LocalControllerRepository repository, 
+            AnomalyDetector anomalyDetector, 
+            AnomalyDetectorListener listener)
     {
         Guard.check(repository);
         log_.debug("Initializing the anomaly detector");
@@ -65,6 +70,7 @@ public class AnomalyDetectorRunner implements Runnable
         lockObject_ = new Object();
         interval_ = 10000; //TODO remove hard coded.
         anomalyDetector_ = anomalyDetector;
+        listener_ = listener;
     }
     
     /** The run() method. */
@@ -73,19 +79,23 @@ public class AnomalyDetectorRunner implements Runnable
         long pastTimestamp = 0 ; 
         try
         {
+            boolean isDetected = false;
             while (!isTerminated_)
             {    
-                log_.debug("Anomaly detector waked up ...");
-                log_.debug(OutputUtils.toString(repository_.getHostResources()));
-                log_.debug(OutputUtils.toString(repository_.getVirtualMachines(10)));
+                log_.debug("Anomaly detector waked up");
                 if (pastTimestamp > 0)
                 {
                     Map<String, Resource> hostResources = repository_.getLastHostMonitoringValues(pastTimestamp);
                     List<VirtualMachineMetaData> virtualMachines = repository_.getLastVirtualMachineMetaData(pastTimestamp);
                     
                     //logic to extract in this class
-                    anomalyDetector_.detectAnomaly(hostResources, virtualMachines);
+                    LocalControllerState state = anomalyDetector_.detectAnomaly(hostResources, virtualMachines);
+                    if (!state.equals(LocalControllerState.STABLE))
+                    {
+                        listener_.onAnomalyDetected(state);
+                    }
                 }
+                
                 pastTimestamp = new Timestamp(System.currentTimeMillis()).getTime();
                 synchronized (lockObject_)
                 {

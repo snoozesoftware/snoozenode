@@ -195,14 +195,16 @@ public final class VirtualMachineMonitorDataProducer
                         AggregatedVirtualMachineData data = createAggregatedVirtualMachineData(aggregatedData_);
                         dataQueue_.put(data);
                         aggregatedData_.clear();
-                    } else
-                    {
-                        log_.debug(String.format("Adding virtual machine %s monitoring data: %s to " +
-                                                 "the local monitoring data list", 
-                                                 virtualMachineId,
-                                                 monitoringData.getUsedCapacity()));
-                        aggregatedData_.add(monitoringData);
                     }
+//                    else
+//                    {
+                    // allways add monitoring datas.
+                    log_.debug(String.format("Adding virtual machine %s monitoring data: %s to " +
+                                             "the local monitoring data list", 
+                                             virtualMachineId,
+                                             monitoringData.getUsedCapacity()));
+                    aggregatedData_.add(monitoringData);
+//                    }
                 }
                 
                 beforeSleepTime_ = System.nanoTime();      

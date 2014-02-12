@@ -84,7 +84,7 @@ public final class GroupManagerMemoryRepository
     {
         
         log_.debug("Initializing the group manager memory repository");
-        
+        log_.debug("Max Capacity :" + maxCapacity);
         groupManager_ = groupManager;
         maxCapacity_ = maxCapacity;
         localControllerDescriptions_ = new HashMap<String, LocalControllerDescription>();

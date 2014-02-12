@@ -175,7 +175,7 @@ public final class VirtualMachineMonitoringService
                    
         ManagementUtils.setVirtualMachineRunning(virtualMachineMetaData, localController_);
         virtualMachineMetaData.setUsedCapacity(
-                new LRUCache<Long, VirtualMachineMonitoringData>(monitoring_.getMonitoringSettings().getNumberOfMonitoringEntries())
+                new LRUCache<Long, VirtualMachineMonitoringData>(databaseSettings_.getNumberOfEntriesPerVirtualMachine())
                 );
         boolean isAdded = repository_.addVirtualMachineMetaData(virtualMachineMetaData);
         if (!isAdded)

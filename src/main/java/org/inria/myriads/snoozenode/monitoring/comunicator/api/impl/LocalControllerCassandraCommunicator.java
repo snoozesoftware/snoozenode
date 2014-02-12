@@ -28,6 +28,9 @@ public class LocalControllerCassandraCommunicator implements MonitoringCommunica
     
     /** Monitoring sender.*/
     private DataSender monitoringSender_;
+
+    /** Anomaly sender.*/
+    private DataSender anomalySender_;
     
     /**
      * 
@@ -41,6 +44,7 @@ public class LocalControllerCassandraCommunicator implements MonitoringCommunica
             throws IOException
     {
         heartbeatSender_ = new TCPDataSender(groupLeaderAddress);
+        anomalySender_ = heartbeatSender_;
         monitoringSender_ = new CassandraVirtualMachineDataSender(databaseSettings);
         log_.debug("GroupManagerCassandraCommunicator initialized");
     }
@@ -58,6 +62,13 @@ public class LocalControllerCassandraCommunicator implements MonitoringCommunica
         log_.debug("Sending heartbeat data");
         heartbeatSender_.send(data);
     }
+    
+    @Override
+    public void sendAnomalyData(Object data) throws IOException
+    {
+        log_.debug("Sending anomaly data");
+        anomalySender_.send(data);
+    }
 
     @Override
     public void close()
@@ -67,5 +78,7 @@ public class LocalControllerCassandraCommunicator implements MonitoringCommunica
         heartbeatSender_.close();
 
     }
+
+
 
 }

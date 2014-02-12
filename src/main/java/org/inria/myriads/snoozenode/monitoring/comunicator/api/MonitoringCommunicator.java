@@ -2,6 +2,8 @@ package org.inria.myriads.snoozenode.monitoring.comunicator.api;
 
 import java.io.IOException;
 
+import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
+
 /**
  * 
  * Communicator.
@@ -33,9 +35,21 @@ public interface MonitoringCommunicator
     
     
     /**
+     * 
+     * Sends anomaly data
+     * 
+     * @param state
+     * @throws IOException 
+     */
+    void sendAnomalyData(Object data) throws IOException;
+    
+    /**
      * Closes the communicator.
      */
     void close();
+
+
+
     
     
 }

@@ -1,5 +1,7 @@
 package org.inria.myriads.snoozenode.localcontroller.anomaly.service;
 
+import java.io.IOException;
+
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
@@ -9,9 +11,11 @@ import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.Anomaly
 import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.AnomalyDetectorEstimator;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.listener.AnomalyDetectorListener;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.runner.AnomalyDetectorRunner;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.estimator.MonitoringEstimator;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.estimator.MonitoringEstimatorFactory;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.service.InfrastructureMonitoring;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
 import org.inria.myriads.snoozenode.monitoring.comunicator.api.MonitoringCommunicator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +24,6 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(AnomalyDetectorService.class);
-    
     
     /** Local controller repository. */
     private LocalControllerRepository repository_;
@@ -105,11 +108,8 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
     private void startAnomalyDetectorRunner()
     {
         log_.debug("Start Anomaly detector");
-       //detection logic.
-      // AnomalyDetector anomalyDetector = AnomalyDetectorFactory.newAnomalyDetector();
-       // detection loop.
-      anomalyDetectorRunner_ = new AnomalyDetectorRunner(repository_, anomalyDetector_);
-      new Thread(anomalyDetectorRunner_, "AnomalyDetectorRunner").start(); 
+        anomalyDetectorRunner_ = new AnomalyDetectorRunner(repository_, anomalyDetector_, this);
+        new Thread(anomalyDetectorRunner_, "AnomalyDetectorRunner").start(); 
     }
 
     /**
@@ -118,7 +118,6 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
      * @throws InterruptedException 
      */
     public void stopService() 
-        throws InterruptedException
     {
         log_.debug("Stopping the anomaly detector service");
         anomalyDetectorRunner_.terminate();
@@ -131,7 +130,21 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
      * 
      */
     @Override
-    public synchronized void onAnomalyDetected() 
+    public synchronized void onAnomalyDetected(LocalControllerState state)
     {
+        log_.error("onAnomalydDetected received");
+        LocalControllerDataTransporter anomalyTransporter =
+                new LocalControllerDataTransporter(localController_.getId());
+        anomalyTransporter.setState(state);
+        try
+        {
+            communicator_.sendAnomalyData(anomalyTransporter);
+        }
+        catch (IOException exception)
+        {
+            log_.debug("Unable to send anomaly data to group manager.");
+            log_.debug(exception.getMessage());
+            stopService();
+        }
     }
 }

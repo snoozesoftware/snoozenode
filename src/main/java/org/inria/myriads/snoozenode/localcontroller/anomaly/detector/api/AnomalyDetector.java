@@ -6,10 +6,11 @@ import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 
 public interface AnomalyDetector
 {
     
-    void detectAnomaly(Map<String, Resource> hostResources, List<VirtualMachineMetaData> virtualMachines);
+    LocalControllerState detectAnomaly(Map<String, Resource> hostResources, List<VirtualMachineMetaData> virtualMachines);
     
 }

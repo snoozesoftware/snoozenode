@@ -11,6 +11,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MathUtils;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.AnomalyDetector;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.estimator.MonitoringEstimator;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.threshold.ThresholdCrossingDetector;
 import org.inria.myriads.snoozenode.util.ThresholdUtils;
@@ -61,21 +62,13 @@ public class SimpleAnomalyDetector implements AnomalyDetector
     }
     
     @Override
-    public void detectAnomaly(Map<String, Resource> hostResources, List<VirtualMachineMetaData> virtualMachines)
+    public LocalControllerState detectAnomaly(Map<String, Resource> hostResources, List<VirtualMachineMetaData> virtualMachines)
     {
         List<Double> virtualMachinesUtilization = computeVirtualMachinesUtilization(virtualMachines);
         Map<String, Double> hostEstimation = estimator_.estimateHostUtilization(hostResources);
         log_.debug("Total host utilization is " + hostEstimation);        
         log_.debug("Total virtual machines utilization is " + virtualMachinesUtilization);
-        boolean isDetected = startThresholdCrossingDetection(virtualMachinesUtilization);
-        if (isDetected)
-        {
-            log_.debug("over/under load detected ! ");
-        }
-        else
-        {
-            log_.debug("Nothing detected");
-        }
+        return startThresholdCrossingDetection(virtualMachinesUtilization);
     }
           
     /**
@@ -85,7 +78,7 @@ public class SimpleAnomalyDetector implements AnomalyDetector
      * @param monitoringData      The monitoring data
      * @return                    true if underloaded, false otherwise
      */
-    private boolean startThresholdCrossingDetection(List<Double> hostUtilization)
+    private LocalControllerState startThresholdCrossingDetection(List<Double> hostUtilization)
     {
         Guard.check(hostUtilization);
         log_.debug("Starting threshold crossing detection");
@@ -115,7 +108,7 @@ public class SimpleAnomalyDetector implements AnomalyDetector
         {
             log_.debug("OVERLOAD situation detected!");
 //            monitoringData.setState(LocalControllerState.OVERLOADED);
-            return true;
+            return LocalControllerState.OVERLOADED;
         }
                 
         boolean isUnderloaded = detectUnderloadSituation(cpuUtilization, 
@@ -126,10 +119,10 @@ public class SimpleAnomalyDetector implements AnomalyDetector
         {
             log_.debug("UNDERLOAD situation detected!");
 //            monitoringData.setState(LocalControllerState.UNDERLOADED);
-            return true;
+            return LocalControllerState.UNDERLOADED;
         }
         
-        return false;        
+        return LocalControllerState.STABLE;        
     }
     
     /**

@@ -78,6 +78,7 @@ public final class GreedyOverloadRelocation
         for (VirtualMachineMetaData metaData : virtualMachines)
         {            
             String virtualMachineId = metaData.getVirtualMachineLocation().getVirtualMachineId();
+            //estimation should be done the same way as LC did for detecting anomaly.
             List<Double> virtualMachineUsage = estimator_.estimateVirtualMachineResourceDemand(metaData);
             log_.debug(String.format("Estimated virtual machine %s resource demand: %s. Overload capacity: %s", 
                                       virtualMachineId,

@@ -84,7 +84,13 @@ public final class LocalControllerSummaryConsumer
                 LocalControllerDataTransporter monitoringData = dataQueue_.take();
                 List<AggregatedVirtualMachineData> virtualMachineMonitoringAggregatedData = monitoringData.getVirtualMachineAggregatedData();
                 List<AggregatedHostMonitoringData> hostMonitoringAggregatedData = monitoringData.getHostMonitoringAggregatedData();
-                if (virtualMachineMonitoringAggregatedData == null && hostMonitoringAggregatedData == null)
+                boolean isStable = monitoringData.getState().equals(LocalControllerState.STABLE);
+                
+                if (
+                        virtualMachineMonitoringAggregatedData == null && 
+                        hostMonitoringAggregatedData == null &&
+                        isStable
+                        )
                 {
                     log_.debug("Received heartbeat from localController " + monitoringData.getLocalControllerId());
                     continue;
@@ -92,9 +98,10 @@ public final class LocalControllerSummaryConsumer
                 String localControllerId = monitoringData.getLocalControllerId();
                 if (virtualMachineMonitoringAggregatedData != null)
                 {
+                    log_.debug("Treating virtual machines metrics");
                     repository_.addAggregatedMonitoringData(localControllerId, virtualMachineMonitoringAggregatedData);
                 }
-                
+                // treating host monitoring data
                 if (hostMonitoringAggregatedData != null)
                 {
                     log_.debug("Treating hosts metrics");
@@ -105,7 +112,6 @@ public final class LocalControllerSummaryConsumer
                     }
                 }
                 
-                boolean isStable = monitoringData.getState().equals(LocalControllerState.STABLE);                
                 if (!isStable)
                 {
                     log_.debug("Anomaly on local controller detected!");           

@@ -55,10 +55,20 @@ public class LocalControllerMemoryCommunicator implements MonitoringCommunicator
     }
 
     @Override
+    public void sendAnomalyData(Object data) throws IOException
+    {
+        log_.debug("sending anomaly data");
+        sender_.send(data);
+    }
+    
+    @Override
     public void close()
     {
        log_.debug("Closing the communicator");
        sender_.close();
     }
+
+
+
 
 }
