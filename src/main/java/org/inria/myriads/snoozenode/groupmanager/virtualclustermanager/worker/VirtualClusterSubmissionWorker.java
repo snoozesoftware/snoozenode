@@ -236,6 +236,10 @@ public final class VirtualClusterSubmissionWorker
                 groupManagerCandidates.add(groupManager);
             }
         }
+        for(VirtualMachineMetaData virtualMachine : virtualMachinesCopy)
+        {
+            log_.error(String.format("virtualMachine %s doesn't fit any GM", virtualMachine.getVirtualMachineLocation().getVirtualMachineId()));
+        }
         
         DispatchingPlan dispatchPlan = new DispatchingPlan(groupManagerCandidates);
                 
