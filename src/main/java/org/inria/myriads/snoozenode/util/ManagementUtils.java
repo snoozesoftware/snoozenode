@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.commons.lang.StringUtils;
 import org.inria.myriads.snoozecommon.communication.NodeRole;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.ListenSettings;
@@ -41,6 +42,8 @@ import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorSettings;
 import org.inria.myriads.snoozenode.configurator.networking.NetworkingSettings;
 import org.inria.myriads.snoozenode.heartbeat.message.HeartbeatMessage;
+import org.inria.myriads.snoozenode.idgenerator.IdGeneratorFactory;
+import org.inria.myriads.snoozenode.idgenerator.api.IdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,12 +159,11 @@ public final class ManagementUtils
                                                                    ) 
     {
         Guard.check(nodeConfiguration);
-        log_.debug("Creating local controller description from node parameters");
+        
         
         LocalControllerDescription localController = new LocalControllerDescription();
         
-        String id = UUID.randomUUID().toString();
-        localController.setId(id);
+        log_.debug("Creating local controller description from node parameters for " + localController.getHostname());
         localController.setStatus(LocalControllerStatus.ACTIVE);
         localController.setControlDataAddress(nodeConfiguration.getNetworking().getListen().getControlDataAddress());
         localController.setHypervisorSettings(nodeConfiguration.getHypervisor());
@@ -178,6 +180,14 @@ public final class ManagementUtils
                 resources.put(resource.getName(), resource);
             }
         }
+        IdGenerator idGenerator = IdGeneratorFactory.createIdGenerator(nodeConfiguration.getNode());
+        String id = idGenerator.generate(localController);
+        if (StringUtils.isEmpty(id))
+        {
+            id = UUID.randomUUID().toString();
+        }
+        localController.setId(id);
+        
         return localController;
     }
     

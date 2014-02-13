@@ -95,11 +95,14 @@ public class Static
                         virtualMachine.getVirtualMachineLocation().setGroupManagerControlDataAddress(address);
                         virtualMachine.getVirtualMachineLocation().setGroupManagerId(groupManager.getId());
                         groupManager.getVirtualMachines().add(virtualMachine);
-                        
-
                     }
-                    virtualMachine.setStatus(VirtualMachineStatus.ERROR);
-                    virtualMachine.setErrorCode(VirtualMachineErrorCode.NOT_ENOUGH_GROUP_MANAGER_CAPACITY);
+                    else
+                    {
+                        //unused since hasEnoughGroupManagerCapacity filled it by side effect.
+                        virtualMachine.setStatus(VirtualMachineStatus.ERROR);
+                        virtualMachine.setErrorCode(VirtualMachineErrorCode.NOT_ENOUGH_GROUP_MANAGER_CAPACITY);    
+                    }
+                    
                 }
             }
             

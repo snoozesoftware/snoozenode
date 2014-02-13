@@ -369,10 +369,10 @@ public final class VirtualClusterManager
         Guard.check(taskIdentifier);        
         
         VirtualClusterSubmissionResponse virtualClusterResponse = virtualClusterResponses_.get(taskIdentifier);
-        if (virtualClusterResponse != null)
-        {
-            virtualClusterResponses_.remove(taskIdentifier);
-        }
+//        if (virtualClusterResponse != null)
+//        {
+//            virtualClusterResponses_.remove(taskIdentifier);
+//        }
         
         return virtualClusterResponse;
     }

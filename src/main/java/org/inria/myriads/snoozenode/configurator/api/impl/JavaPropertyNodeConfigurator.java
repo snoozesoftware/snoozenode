@@ -72,6 +72,7 @@ import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Dispatchin
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfiguration;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Relocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
+import org.inria.myriads.snoozenode.idgenerator.enums.IdGeneration;
 import org.inria.myriads.snoozenode.monitoring.TransportProtocol;
 
 /**
@@ -267,6 +268,8 @@ public final class JavaPropertyNodeConfigurator
         String nodeRole = getProperty("node.role");
         nodeSettings.setRole(NodeRole.valueOf(nodeRole));    
         
+        String idGenerator = getProperty("node.idgenerator");
+        nodeSettings.setIdGenerator(IdGeneration.valueOf(idGenerator));
         int networkRxCapacity = Integer.valueOf(getProperty("node.networkCapacity.Rx"));
         int networkTxCapacity = Integer.valueOf(getProperty("node.networkCapacity.Tx"));
         nodeSettings.getNetworkCapacity().setRxBytes(networkRxCapacity);
