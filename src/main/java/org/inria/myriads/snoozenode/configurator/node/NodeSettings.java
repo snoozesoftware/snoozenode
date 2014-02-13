@@ -21,6 +21,7 @@ package org.inria.myriads.snoozenode.configurator.node;
 
 import org.inria.myriads.snoozecommon.communication.NodeRole;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
+import org.inria.myriads.snoozenode.idgenerator.enums.IdGeneration;
 
 /**
  * Node settings.
@@ -31,6 +32,9 @@ public final class NodeSettings
 {
     /** Node role (Bootstrap, Group manager, Node). */
     private NodeRole role_;
+    
+    /** Id generator.*/
+    private IdGeneration idGenerator_;
     
     /** Node network capacity. */
     private NetworkDemand networkCapacity_;
@@ -79,5 +83,21 @@ public final class NodeSettings
     public NetworkDemand getNetworkCapacity() 
     {
         return networkCapacity_;
+    }
+
+    /**
+     * @return the idGenerator
+     */
+    public IdGeneration getIdGenerator()
+    {
+        return idGenerator_;
+    }
+
+    /**
+     * @param idGenerator the idGenerator to set
+     */
+    public void setIdGenerator(IdGeneration idGenerator)
+    {
+        idGenerator_ = idGenerator;
     }
 }
