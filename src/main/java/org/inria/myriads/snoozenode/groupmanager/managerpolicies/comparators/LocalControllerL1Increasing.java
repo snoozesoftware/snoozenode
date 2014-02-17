@@ -26,7 +26,7 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MathUtils;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 
 /**
  * L1 norm based local controller sorting in increasing order.
@@ -37,14 +37,14 @@ public class LocalControllerL1Increasing
     implements Comparator<LocalControllerDescription> 
 {
     /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
+    private StaticDynamicResourceDemandEstimator estimator_;
     
     /**
      * Constructor.
      * 
      * @param estimator     The resource demand estimator
      */
-    public LocalControllerL1Increasing(ResourceDemandEstimator estimator)
+    public LocalControllerL1Increasing(StaticDynamicResourceDemandEstimator estimator)
     {
         Guard.check(estimator);
         estimator_ = estimator;

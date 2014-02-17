@@ -14,7 +14,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
@@ -43,7 +43,7 @@ public class Testvirtualclustermanagerworker extends TestCase
     public void testSplitVirtualMachines()
     {
        
-        ResourceDemandEstimator estimator = EasyMock.createMock(ResourceDemandEstimator.class);
+        StaticDynamicResourceDemandEstimator estimator = EasyMock.createMock(StaticDynamicResourceDemandEstimator.class);
         DispatchingPolicy dispatchingPolicy = EasyMock.createMock(DispatchingPolicy.class);
         GroupLeaderRepository repository =  EasyMock.createMock(GroupLeaderRepository.class);
         VirtualClusterSubmissionListener submissionListener = 

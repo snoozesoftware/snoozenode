@@ -29,7 +29,7 @@ import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPlan;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
 import org.slf4j.Logger;
@@ -48,7 +48,7 @@ public class RoundRobin
     private static final Logger log_ = LoggerFactory.getLogger(RoundRobin.class);
     
     /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
+    private StaticDynamicResourceDemandEstimator estimator_;
     
     /** Running index. */
     private int runningIndex_;
@@ -58,7 +58,7 @@ public class RoundRobin
      * 
      * @param estimator     The estimator
      */
-    public RoundRobin(ResourceDemandEstimator estimator) 
+    public RoundRobin(StaticDynamicResourceDemandEstimator estimator) 
     {
         log_.debug("Initializing the round robin virtual cluster dispatching policy");  
         estimator_ = estimator;

@@ -32,9 +32,11 @@ import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.ReconfigurationSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
+import org.inria.myriads.snoozenode.estimator.ResourceEstimatorFactory;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
+import org.inria.myriads.snoozenode.exception.ResourceDemandEstimatorException;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.EnergySaverFactory;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.saver.EnergySaver;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.MonitoringFactory;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.service.GroupManagerMonitoringService;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.service.LocalControllerMonitoringService;
@@ -85,7 +87,7 @@ public final class GroupManagerInit
     private GroupManagerDescription description_;
 
     /** Resource demand measure. */
-    private ResourceDemandEstimator estimator_;
+    private StaticDynamicResourceDemandEstimator estimator_;
      
     /** State machine. */
     private StateMachine stateMachine_;
@@ -189,12 +191,16 @@ public final class GroupManagerInit
     
     /**
      * Initializes the resource demand estimator.
+     * @throws ResourceDemandEstimatorException 
      */
-    private void initializeResourceDemandEstimator() 
-    {
-        estimator_ = new ResourceDemandEstimator(nodeConfiguration_.getEstimator(),
-                                                 nodeConfiguration_.getMonitoring().getThresholds(),
-                                                 nodeConfiguration_.getSubmission().getPackingDensity());      
+    private void initializeResourceDemandEstimator() throws ResourceDemandEstimatorException 
+    {     
+        estimator_ = ResourceEstimatorFactory.newResourceDemandEstimator(
+                nodeConfiguration_.getEstimator(),
+                nodeConfiguration_.getMonitoring(),
+                nodeConfiguration_.getHostMonitoringSettings(),
+                nodeConfiguration_.getSubmission().getPackingDensity()
+                );
     }
     
     /**

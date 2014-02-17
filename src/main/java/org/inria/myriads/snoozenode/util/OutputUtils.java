@@ -195,10 +195,11 @@ public final class OutputUtils
         log_.debug("-------------------");
         log_.debug("Estimation settings:");
         log_.debug("-------------------");
-        log_.debug(String.format("estimator.static: %s", 
-                                 configuration.getEstimator().isStatic())); 
-        log_.debug(String.format("estimator.sortNorm: %s",
-                                 configuration.getEstimator().getSortNorm()));
+//        log_.debug(String.format("estimator.static: %s", 
+//                                 configuration.getEstimator().isStatic())); 
+//        log_.debug(String.format("estimator.sortNorm: %s",
+//                                 configuration.getEstimator().getSortNorm()));
+        log_.debug(String.format("estimator.options %s", configuration.getEstimator().getOptions()));
         log_.debug(String.format("estimator.numberOfMonitoringEntries: %s",
                                  configuration.getEstimator().getNumberOfMonitoringEntries()));
         log_.debug(String.format("estimator.policy.cpu: %s",

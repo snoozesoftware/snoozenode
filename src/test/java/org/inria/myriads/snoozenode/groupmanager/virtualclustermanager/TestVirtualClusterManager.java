@@ -15,7 +15,7 @@ import org.inria.myriads.snoozecommon.globals.Globals;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupLeaderSchedulerSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Dispatching;
 
 
@@ -44,7 +44,7 @@ public class TestVirtualClusterManager extends TestCase
     {
         GroupLeaderRepository repository = EasyMock.createMock(GroupLeaderRepository.class);
         NodeConfiguration nodeConfiguration = EasyMock.createMock(NodeConfiguration.class);
-        ResourceDemandEstimator estimator = EasyMock.createMock(ResourceDemandEstimator.class);
+        StaticDynamicResourceDemandEstimator estimator = EasyMock.createMock(StaticDynamicResourceDemandEstimator.class);
         GroupLeaderSchedulerSettings groupLeaderScheduler = new GroupLeaderSchedulerSettings();
         groupLeaderScheduler.setDispatchingPolicy(Dispatching.FirstFit);
         

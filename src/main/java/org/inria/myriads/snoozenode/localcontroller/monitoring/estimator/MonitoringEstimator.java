@@ -70,6 +70,7 @@ public class MonitoringEstimator
     public List<Double> estimateVirtualMachineUtilization(VirtualMachineMetaData virtualMachineMetaData)
     {
         LRUCache<Long, VirtualMachineMonitoringData> usedCapacity = virtualMachineMetaData.getUsedCapacity();
+        
         List<Double> cpuUtilization = getUtilization(usedCapacity, Globals.CPU_UTILIZATION_INDEX);
         List<Double> memUtilization = getUtilization(usedCapacity, Globals.MEMORY_UTILIZATION_INDEX);        
         List<Double> rxUtilization = getUtilization(usedCapacity, Globals.NETWORK_RX_UTILIZATION_INDEX);

@@ -31,8 +31,10 @@ import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
+import org.inria.myriads.snoozenode.estimator.ResourceEstimatorFactory;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.exception.GroupLeaderInitException;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.exception.ResourceDemandEstimatorException;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.GroupLeaderPolicyFactory;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.AssignmentPolicy;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Assignment;
@@ -72,7 +74,7 @@ public final class GroupLeaderInit
     private AssignmentPolicy assignmentPolicy_;
 
     /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
+    private StaticDynamicResourceDemandEstimator estimator_;
 
     /** External notifier.*/
     private ExternalNotifier externalNotifier_;
@@ -135,12 +137,19 @@ public final class GroupLeaderInit
     
     /**
      * Initializes the resource demand estimator.
+     * @throws ResourceDemandEstimatorException 
      */
-    private void initializeResourceDemandEstimator() 
+    private void initializeResourceDemandEstimator() throws ResourceDemandEstimatorException 
     {
-        estimator_ = new ResourceDemandEstimator(nodeConfiguration_.getEstimator(),
-                                                 nodeConfiguration_.getMonitoring().getThresholds(),
-                                                 nodeConfiguration_.getSubmission().getPackingDensity());      
+//        estimator_ = new StaticDynamicResourceDemandEstimator(nodeConfiguration_.getEstimator(),
+//                                                 nodeConfiguration_.getMonitoring().getThresholds(),
+//                                                 nodeConfiguration_.getSubmission().getPackingDensity());      
+        estimator_ = ResourceEstimatorFactory.newResourceDemandEstimator(
+                nodeConfiguration_.getEstimator(),
+                nodeConfiguration_.getMonitoring(),
+                nodeConfiguration_.getHostMonitoringSettings(),
+                nodeConfiguration_.getSubmission().getPackingDensity()
+                );
     }
     
     /**
@@ -345,7 +354,7 @@ public final class GroupLeaderInit
      * 
      * @return  The resource demand estimator
      */
-    public ResourceDemandEstimator getResourceDemandEstimator() 
+    public StaticDynamicResourceDemandEstimator getResourceDemandEstimator() 
     {
         return estimator_;
     }

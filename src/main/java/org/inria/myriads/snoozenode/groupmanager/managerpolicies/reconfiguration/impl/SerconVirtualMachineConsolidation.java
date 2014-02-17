@@ -27,7 +27,7 @@ import java.util.Map;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.util.EstimatorUtils;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPolicy;
@@ -48,14 +48,14 @@ public final class SerconVirtualMachineConsolidation
     private static final Logger log_ = LoggerFactory.getLogger(SerconVirtualMachineConsolidation.class);
 
     /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
+    private StaticDynamicResourceDemandEstimator estimator_;
     
     /**
      * Constructor.
      * 
      * @param estimator    The resource demand estimator
      */
-    public SerconVirtualMachineConsolidation(ResourceDemandEstimator estimator)
+    public SerconVirtualMachineConsolidation(StaticDynamicResourceDemandEstimator estimator)
     {
         log_.debug("Initializing the Sercon VM consolidation algorithm");
         estimator_ = estimator;

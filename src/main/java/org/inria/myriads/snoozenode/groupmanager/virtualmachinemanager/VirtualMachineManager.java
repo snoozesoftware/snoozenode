@@ -36,7 +36,7 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.GroupManagerPolicyFactory;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineCommand;
@@ -74,7 +74,7 @@ public final class VirtualMachineManager
     private int numberOfMonitoringEntries_;
 
     /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
+    private StaticDynamicResourceDemandEstimator estimator_;
     
     /** External Notifier. */
     private ExternalNotifier externalNotifier_;
@@ -89,7 +89,7 @@ public final class VirtualMachineManager
      */
     public VirtualMachineManager(
                                  NodeConfiguration nodeConfiguration,
-                                 ResourceDemandEstimator estimator,
+                                 StaticDynamicResourceDemandEstimator estimator,
                                  GroupManagerRepository groupManagerRepository, 
                                  StateMachine stateMachine) 
     {

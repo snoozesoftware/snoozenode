@@ -25,7 +25,7 @@ import java.util.List;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.VirtualMachineRelocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.utility.RelocationUtility;
@@ -46,14 +46,14 @@ public final class GreedyUnderloadRelocation
     private static final Logger log_ = LoggerFactory.getLogger(GreedyUnderloadRelocation.class);
     
     /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
+    private StaticDynamicResourceDemandEstimator estimator_;
     
     /**
      * Constructor.
      * 
      * @param estimator     The resource demand estimator
      */
-    public GreedyUnderloadRelocation(ResourceDemandEstimator estimator)
+    public GreedyUnderloadRelocation(StaticDynamicResourceDemandEstimator estimator)
     {
         Guard.check(estimator);
         estimator_ = estimator;

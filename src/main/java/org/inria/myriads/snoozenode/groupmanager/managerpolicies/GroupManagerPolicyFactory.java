@@ -21,7 +21,7 @@ package org.inria.myriads.snoozenode.groupmanager.managerpolicies;
 
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfiguration;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Relocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
@@ -67,7 +67,7 @@ public final class GroupManagerPolicyFactory
      */
     @SuppressWarnings("unchecked")
     public static PlacementPolicy newVirtualMachinePlacement(GroupManagerSchedulerSettings schedulerSettings,
-                                                             ResourceDemandEstimator estimator) 
+                                                             StaticDynamicResourceDemandEstimator estimator) 
     {
         Guard.check(schedulerSettings, estimator);
        
@@ -95,7 +95,7 @@ public final class GroupManagerPolicyFactory
                 Class placementClass = PluginUtils.getClassFromDirectory(pluginsDirectory , placementPolicy);
                 log_.debug(String.format("instantiate the placement policy %s from the jar", placementPolicy));
                 Object placementObject =
-                        placementClass.getConstructor(ResourceDemandEstimator.class).newInstance(estimator);
+                        placementClass.getConstructor(StaticDynamicResourceDemandEstimator.class).newInstance(estimator);
                 placement = (PlacementPolicy) placementObject;
             }
             catch (Exception e)
@@ -118,7 +118,7 @@ public final class GroupManagerPolicyFactory
      * @return                       The selected reconfiguration policy
      */
     public static ReconfigurationPolicy newVirtualMachineReconfiguration(Reconfiguration reconfigurationPolicy,
-                                                                         ResourceDemandEstimator estimator) 
+                                                                         StaticDynamicResourceDemandEstimator estimator) 
     {
         Guard.check(reconfigurationPolicy);
         log_.debug(String.format("Selected virtual machine reconfiguration policy: %s", 
@@ -146,7 +146,7 @@ public final class GroupManagerPolicyFactory
      * @return                  The selected relocation policy
      */
     public static VirtualMachineRelocation newVirtualMachineRelocation(Relocation relocationPolicy,
-                                                                       ResourceDemandEstimator estimator) 
+                                                                       StaticDynamicResourceDemandEstimator estimator) 
     {
         Guard.check(relocationPolicy);
         log_.debug(String.format("Selecting the virtual machine relocation policy: %s", 

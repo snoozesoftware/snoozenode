@@ -25,7 +25,7 @@ import java.util.Comparator;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MathUtils;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 
 /**
  * Max norm based virtual machine sorting in decreasing order.
@@ -36,14 +36,14 @@ public final class VirtualMachineMaxDecreasing
     implements Comparator<VirtualMachineMetaData> 
 {    
     /** The resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
+    private StaticDynamicResourceDemandEstimator estimator_;
 
     /**
      * Constructor.
      * 
      * @param resourceDemandEstimator     The resource demand estimator
      */
-    public VirtualMachineMaxDecreasing(ResourceDemandEstimator resourceDemandEstimator) 
+    public VirtualMachineMaxDecreasing(StaticDynamicResourceDemandEstimator resourceDemandEstimator) 
     {
         Guard.check(resourceDemandEstimator);
         estimator_ = resourceDemandEstimator;

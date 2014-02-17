@@ -28,7 +28,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPlan;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
 import org.slf4j.Logger;
@@ -47,14 +47,14 @@ public class Static
     private static final Logger log_ = LoggerFactory.getLogger(Static.class);
     
     /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
+    private StaticDynamicResourceDemandEstimator estimator_;
     
     /** 
      * Constructor. 
      * 
      * @param estimator     The estimator
      */
-    public Static(ResourceDemandEstimator estimator) 
+    public Static(StaticDynamicResourceDemandEstimator estimator) 
     {
         log_.debug("Initializing the static virtual cluster dispatching policy");  
         estimator_ = estimator;

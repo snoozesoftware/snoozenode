@@ -37,7 +37,7 @@ public abstract class AnomalyDetector
         return settings_;
     }
     
-    /** Initialize the detector. Call after constructor and setters.*/
+    /** Initialize the detector. Called after constructor and setters.*/
     public abstract void initialize();
     
     /** Routines to detect an anomaly.*/

@@ -19,6 +19,9 @@
  */
 package org.inria.myriads.snoozenode.configurator.estimator;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
 
 /**
@@ -28,22 +31,29 @@ import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
  */
 public final class EstimatorSettings 
 {
+    
+    /** Name.*/
+    private String name_;
+    
     /** Policies. */
     private EstimatorPolicy policy_;
     
     /** Virtual machine demand measure. */
-    private SortNorm sortNorm_;
+//    private SortNorm sortNorm_;
 
     /** Number of monitoring entries. */
     private int numberOfMonitoringEntries_;
     
     /** Static estimations. */
-    private boolean isStatic_;
+//    private boolean isStatic_;
+    
+    private Map<String, String> options_;
     
     /** Constructor. */
     public EstimatorSettings()
     {
         policy_ = new EstimatorPolicy();
+        options_ = new HashMap<String, String>();
     }
     
     /**
@@ -51,20 +61,20 @@ public final class EstimatorSettings
      * 
      * @param sortNorm  The sort norm
      */
-    public void setSortNorm(SortNorm sortNorm) 
-    {
-        sortNorm_ = sortNorm;
-    }
+//    public void setSortNorm(SortNorm sortNorm) 
+//    {
+//        sortNorm_ = sortNorm;
+//    }
 
     /**
      * Returns the demand measure.
      * 
      * @return  The sort norm
      */
-    public SortNorm getSortNorm() 
-    {
-        return sortNorm_;
-    }
+//    public SortNorm getSortNorm() 
+//    {
+//        return sortNorm_;
+//    }
 
     /**
      * Sets the number of monitoring entries.
@@ -87,24 +97,56 @@ public final class EstimatorSettings
     }
 
     /**
+     * @return the name
+     */
+    public String getName()
+    {
+        return name_;
+    }
+
+    /**
+     * @param name the name to set
+     */
+    public void setName(String name)
+    {
+        name_ = name;
+    }
+
+    /**
+     * @return the options
+     */
+    public Map<String, String> getOptions()
+    {
+        return options_;
+    }
+
+    /**
+     * @param options the options to set
+     */
+    public void setOptions(Map<String, String> options)
+    {
+        options_ = options;
+    }
+
+    /**
      * Sets the used capacity flag.
      * 
      * @param isStatic  true if static estimations are desired, false otherwise
      */
-    public void setStatic(boolean isStatic) 
-    {
-        isStatic_ = isStatic;
-    }
+//    public void setStatic(boolean isStatic) 
+//    {
+//        isStatic_ = isStatic;
+//    }
 
     /**
      * Returns the static flag.
      * 
      * @return  true if static estimations are desired, false otherwise
      */
-    public boolean isStatic() 
-    {
-        return isStatic_;
-    }
+//    public boolean isStatic() 
+//    {
+//        return isStatic_;
+//    }
 
     /**
      * Returns the policy.

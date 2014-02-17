@@ -36,12 +36,12 @@ import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.RelocationSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.exception.GroupManagerInitException;
 import org.inria.myriads.snoozenode.groupmanager.anomaly.AnomalyResolver;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.EnergySaverFactory;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.util.EnergySaverUtils;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.wakeup.WakeupResources;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.GroupManagerPolicyFactory;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfiguration;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
@@ -113,7 +113,7 @@ public class GroupManagerStateMachine
      * @param externalNotifier          The external Notifier.
      */
     public GroupManagerStateMachine(NodeConfiguration nodeConfiguration,
-                                    ResourceDemandEstimator estimator,
+                                    StaticDynamicResourceDemandEstimator estimator,
                                     GroupManagerRepository repository,
                                     ExternalNotifier externalNotifier
                                     )
@@ -147,7 +147,7 @@ public class GroupManagerStateMachine
      * @return                       The anomaly resolver
      */
     private AnomalyResolver createAnomalyResolver(RelocationSettings relocation, 
-                                                  ResourceDemandEstimator estimator, 
+                                                  StaticDynamicResourceDemandEstimator estimator, 
                                                   GroupManagerRepository repository)
     {
         AnomalyResolver anomalyResolver = new AnomalyResolver(relocation, 
@@ -168,7 +168,7 @@ public class GroupManagerStateMachine
      * @return                             The virtual machine manager
      */
     private VirtualMachineManager createVirtualMachineManager(NodeConfiguration nodeConfiguration,
-                                                              ResourceDemandEstimator estimator,
+                                                              StaticDynamicResourceDemandEstimator estimator,
                                                               GroupManagerRepository repository)
     {
         

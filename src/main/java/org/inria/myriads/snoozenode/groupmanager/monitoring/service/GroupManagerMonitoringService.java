@@ -29,7 +29,7 @@ import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.consumer.GroupManagerMonitoringDataConsumer;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.producer.GroupManagerHeartbeatDataProducer;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.producer.GroupManagerSummaryProducer;
@@ -63,7 +63,7 @@ public final class GroupManagerMonitoringService
     private GroupManagerRepository repository_;
     
     /** Resource demand estimator.*/
-    private ResourceDemandEstimator estimator_; 
+    private StaticDynamicResourceDemandEstimator estimator_; 
     
     /** Blocking Queue.*/
     private BlockingQueue<GroupManagerDataTransporter> dataQueue_;
@@ -97,7 +97,7 @@ public final class GroupManagerMonitoringService
     public GroupManagerMonitoringService(
                                          String groupManagerId,
                                          GroupManagerRepository repository,
-                                         ResourceDemandEstimator estimator,
+                                         StaticDynamicResourceDemandEstimator estimator,
                                          DatabaseSettings databaseSettings,
                                          MonitoringSettings monitoringSettings,
                                          ExternalNotifierSettings monitoringExternalSettings

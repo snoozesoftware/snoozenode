@@ -587,16 +587,24 @@ public final class JavaPropertyNodeConfigurator
     private void setEstimatorSettings()
         throws NodeConfiguratorException
     {
-        EstimatorSettings estimatorSettings = nodeConfiguration_.getEstimator();       
-        String isStatic = getProperty("estimator.static");
-        estimatorSettings.setStatic(Boolean.valueOf(isStatic)); 
-                
-        String sortNorm = getProperty("estimator.sortNorm");
-        estimatorSettings.setSortNorm(SortNorm.valueOf(sortNorm)); 
+        EstimatorSettings estimatorSettings = nodeConfiguration_.getEstimator();
+        String name = getProperty("estimator");
+        estimatorSettings.setName(name);
+        
+        String optionsString = getProperty("estimator.options", "{}");
+        Map<String, String> options = umarshal(optionsString);
+        estimatorSettings.setOptions(options);
+        
+//        String isStatic = getProperty("estimator.static");
+//        estimatorSettings.setStatic(Boolean.valueOf(isStatic)); 
+//                
+//        String sortNorm = getProperty("estimator.sortNorm");
+//        estimatorSettings.setSortNorm(SortNorm.valueOf(sortNorm)); 
         
         String numberOfMonitoringEntries = getProperty("estimator.numberOfMonitoringEntries");
         estimatorSettings.setNumberOfMonitoringEntries(Integer.valueOf(numberOfMonitoringEntries));
-                
+
+        // TODO move this to monitoring.estimator
         String cpuDemandEstimator = getProperty("estimator.policy.cpu");
         estimatorSettings.getPolicy().setCPU(Estimator.valueOf(cpuDemandEstimator)); 
         

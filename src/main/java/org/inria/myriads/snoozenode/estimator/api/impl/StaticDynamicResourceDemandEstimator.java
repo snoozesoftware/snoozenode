@@ -17,9 +17,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.groupmanager.estimator;
+package org.inria.myriads.snoozenode.estimator.api.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +29,7 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupMa
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
 import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
+import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
@@ -37,7 +39,11 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MathUtils;
 import org.inria.myriads.snoozecommon.util.MonitoringUtils;
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
+import org.inria.myriads.snoozenode.configurator.estimator.HostEstimatorSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorSettings;
 import org.inria.myriads.snoozenode.configurator.submission.PackingDensity;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.exception.ResourceDemandEstimatorException;
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.CPUDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.MemoryDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.NetworkDemandEstimator;
@@ -46,6 +52,7 @@ import org.inria.myriads.snoozenode.groupmanager.estimator.api.impl.AverageMemor
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.impl.AverageNetworkDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.enums.Estimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.estimator.MonitoringEstimatorFactory;
 import org.inria.myriads.snoozenode.util.ThresholdUtils;
 import org.inria.myriads.snoozenode.util.UtilizationUtils;
 
@@ -57,10 +64,10 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Eugen Feller
  */
-public class ResourceDemandEstimator 
+public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimator
 {
     /** Define the logger. */
-    private static final Logger log_ = LoggerFactory.getLogger(ResourceDemandEstimator.class);
+    private static final Logger log_ = LoggerFactory.getLogger(StaticDynamicResourceDemandEstimator.class);
         
     /** CPU demand estimator. */
     private CPUDemandEstimator cpuDemandEstimator_;
@@ -70,24 +77,23 @@ public class ResourceDemandEstimator
      
     /** Network demand estimator. */
     private NetworkDemandEstimator networkDemandEstimator_;
-    
-    /** Monitoring thresholds. */
-    private MonitoringThresholds monitoringThresholds_;
-
+   
     /** hostEstimator.*/
-    Map<String, Estimator> hostEstimators_;
-    
-    /** Packing density. */
-    private PackingDensity packingDensity_;
-    
-    /** Sort norm. */
-    private SortNorm sortNorm_;
+    //Map<String, Estimator> hostEstimators_;
     
     /** Resource demand estimator settings. */
     private int numberOfMonitoringEntries_;
-
-    /** Consider static capacity. */
+    
+    private MonitoringThresholds monitoringThresholds_;
+    
+    /** Sort norm. (from options)*/
+    private SortNorm sortNorm_;
+    
+    /** Consider static capacity. (from options) */
     private boolean isStatic_;
+
+    private PackingDensity packingDensity_;
+    
     
     /**
      * Constructor.
@@ -96,21 +102,65 @@ public class ResourceDemandEstimator
      * @param monitoringThresholds      The monitoring thresholds
      * @param packingDensity            The packing density
      */
-    public ResourceDemandEstimator(EstimatorSettings estimatorSettings, 
-                                   MonitoringThresholds monitoringThresholds,
-                                   PackingDensity packingDensity)
+    public StaticDynamicResourceDemandEstimator()
     {
-        Guard.check(estimatorSettings, monitoringThresholds, packingDensity);
-        log_.debug("Initializing the resource demand estimator");
+        log_.debug("Building the static/dynamic resource demand estimator");
+        packingDensity_ = new PackingDensity();
+    }
+    
+    public void initialize() throws ResourceDemandEstimatorException
+    {
+        String sortNormString = estimatorSettings_.getOptions().get("sortNorm");
+        // TODO avoid this boilerplate code: 
+        if (sortNormString == null)
+        {
+            throw new ResourceDemandEstimatorException("sort norm is null");
+        }
+        sortNorm_ = SortNorm.valueOf(sortNormString);
+
+        String isStaticString = estimatorSettings_.getOptions().get("static");
+        if (isStaticString == null)
+        {
+            throw new ResourceDemandEstimatorException("static flag null");
+        }
+        isStatic_ = Boolean.valueOf(isStaticString);
         
-        monitoringThresholds_ = monitoringThresholds;
-        packingDensity_ = packingDensity;
-        sortNorm_ = estimatorSettings.getSortNorm();
-        isStatic_ = estimatorSettings.isStatic();
-        numberOfMonitoringEntries_ = estimatorSettings.getNumberOfMonitoringEntries();
-        cpuDemandEstimator_ = newVirtualMachineCpuDemandEstimator(estimatorSettings.getPolicy().getCPU());     
-        memoryDemandEstimator_ = newVirtualMachineMemoryDemandEstimator(estimatorSettings.getPolicy().getMemory());
-        networkDemandEstimator_ = newVirtualMachineNetworkDemandEstimator(estimatorSettings.getPolicy().getNetwork());
+        String packingCpuString = estimatorSettings_.getOptions().get("packingDensityCpu");
+        if (packingCpuString == null)
+        {
+            throw new ResourceDemandEstimatorException("packing density for CPU is missing");
+        }
+        packingDensity_.setMemory(Double.valueOf(packingCpuString));
+        
+        String packingMemString = estimatorSettings_.getOptions().get("packingDensityMemory");
+        if (packingMemString == null)
+        {
+            throw new ResourceDemandEstimatorException("packing density for CPU is missing");
+        }
+        packingDensity_.setCPU(Double.valueOf(packingMemString));
+        
+        String packingNetworkString = estimatorSettings_.getOptions().get("packingDensityNetwork");
+        if (packingNetworkString == null)
+        {
+            throw new ResourceDemandEstimatorException("packing density for CPU is missing");
+        }
+        packingDensity_.setNetwork(Double.valueOf(packingNetworkString));
+        
+//        isStatic_ = estimatorSettings_.isStatic();
+        monitoringThresholds_ = monitoringSettings_.getThresholds();
+        numberOfMonitoringEntries_ = estimatorSettings_.getNumberOfMonitoringEntries();
+        cpuDemandEstimator_ = newVirtualMachineCpuDemandEstimator(estimatorSettings_.getPolicy().getCPU());     
+        memoryDemandEstimator_ = newVirtualMachineMemoryDemandEstimator(estimatorSettings_.getPolicy().getMemory());
+        networkDemandEstimator_ = newVirtualMachineNetworkDemandEstimator(estimatorSettings_.getPolicy().getNetwork());
+        
+        for (HostMonitorSettings hostMonitorSetting : hostMonitoringSettings_.getHostMonitorSettings().values())
+        {
+            for (Resource resource : hostMonitorSetting.getResources())
+            {
+                HostEstimatorSettings hostEstimatorSettings = hostMonitorSetting.getEstimators().get(resource.getName());
+//                hostEstimators_.put(resource.getName(), MonitoringEstimatorFactory.newEstimator(hostEstimatorSettings));
+            }
+        }
     }
     
     /** 
@@ -299,6 +349,8 @@ public class ResourceDemandEstimator
     {
         List<Double> requestedCapacity = virtualMachine.getRequestedCapacity();
         requestedCapacity = applyPackingDensity(requestedCapacity, packingDensity_);
+        log_.debug("" + requestedCapacity);
+        log_.debug("" + packingDensity_.getCPU() + "- " + packingDensity_.getMemory() + "-" + packingDensity_.getNetwork());
         return requestedCapacity;
     }
     
@@ -444,7 +496,6 @@ public class ResourceDemandEstimator
      * @param virtualMachine     The virtual machine meta data
      * @return                   The estimated virtual machine monitoring data
      */
-    //MonitoringEstimator.estimateVMUtilization
     public ArrayList<Double> estimateVirtualMachineResourceDemand(VirtualMachineMetaData virtualMachine) 
     {              
         if (isStatic_)
@@ -460,6 +511,25 @@ public class ResourceDemandEstimator
                                                                    memoryUtilization, 
                                                                    networkUtilization);
         return estimates;
+    }
+    
+    /**
+     * Estimates virtual machine resource demands.
+     * 
+     * @param virtualMachine     The virtual machine meta data
+     * @return                   The estimated virtual machine monitoring data
+     */
+    public Map<String, Double> estimateHostResourceUtilization(Map<String, Resource> hostUtilizationHistory) 
+    {              
+        Map<String, Double> hostUtilization = new HashMap<String, Double>(); 
+
+        for (Resource resource : hostUtilizationHistory.values())
+        {
+            List<Double> history = new ArrayList<Double>(resource.getHistory().values());
+//            double estimation = hostEstimators_.get(resource.getName()).estimate(history);
+//            hostUtilization.put(resource.getName(), estimation);
+        }
+        return hostUtilization;
     }
     
     /**
