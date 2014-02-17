@@ -21,24 +21,40 @@ package org.inria.myriads.snoozenode.localcontroller.monitoring.api;
 
 import java.util.ArrayList;
 
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.HostMonitoringData;
+import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorSettings;
 import org.inria.myriads.snoozenode.exception.HostMonitoringException;
 
+
 /**
- * Interface to monitor the host.
- * 
- * @author Eugen Feller
+ * @author msimonin
+ *
  */
-public interface HostMonitor 
+/**
+ * @author msimonin
+ *
+ */
+public abstract class HostMonitor 
 {
+    
+    protected HostMonitorSettings settings_;
+    
+    protected LocalControllerDescription localController_;
+    
+    /**
+     * Initializes the host monitor (called after constructor and setter). 
+     * @throws HostMonitoringException 
+     */
+    public abstract void initialize() throws HostMonitoringException;
+    
     /**
      * Returns the total capacity.
      * 
      * @return                          The list of double values
      * @throws HostMonitoringException 
      */
-    ArrayList<Double> getTotalCapacity() 
-        throws HostMonitoringException;
+    public abstract ArrayList<Double> getTotalCapacity() throws HostMonitoringException;
 
     /**
      * 
@@ -47,5 +63,37 @@ public interface HostMonitor
      * 
      * @return
      */
-    HostMonitoringData getResourceData() throws HostMonitoringException;;
+    public abstract HostMonitoringData getResourceData() throws HostMonitoringException;
+
+    /**
+     * @return the hostMonitoringSettings
+     */
+    public HostMonitorSettings getSettings()
+    {
+        return settings_;
+    }
+
+    /**
+     * @param hostMonitoringSettings the hostMonitoringSettings to set
+     */
+    public void setSettings(HostMonitorSettings settings)
+    {
+        settings_ = settings;
+    }
+
+    /**
+     * @return the localController
+     */
+    public LocalControllerDescription getLocalController()
+    {
+        return localController_;
+    }
+
+    /**
+     * @param localController the localController to set
+     */
+    public void setLocalController(LocalControllerDescription localController)
+    {
+        localController_ = localController;
+    };
 }

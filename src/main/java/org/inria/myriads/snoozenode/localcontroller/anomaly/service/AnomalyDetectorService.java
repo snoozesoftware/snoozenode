@@ -4,11 +4,13 @@ import java.io.IOException;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyDetectorSettings;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
+import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitoringSettings;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.AnomalyDetectorFactory;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.AnomalyDetector;
-import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.AnomalyDetectorEstimator;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.listener.AnomalyDetectorListener;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.runner.AnomalyDetectorRunner;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
@@ -28,29 +30,28 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
     /** Local controller repository. */
     private LocalControllerRepository repository_;
     
-    /** Resource monitoring. */
-    private InfrastructureMonitoring monitoring_;
-    
     /** Local controller description. */
     private LocalControllerDescription localController_;
-    
-    /** Database Settings. */
-    private DatabaseSettings databaseSettings_;
 
-
+    /** Anomaly Detector Runner.*/
     private AnomalyDetectorRunner anomalyDetectorRunner_;
 
+    /** Monitoring estimator.*/
+    private MonitoringEstimator monitoringEstimator_;
 
-    private MonitoringEstimator estimator_;
-
-
+    /** Anomaly detector.*/
     private AnomalyDetector anomalyDetector_;
 
-
+    /** Communicator with upper level*/
     private MonitoringCommunicator communicator_;
 
+    /** Virtual machine estimator settings*/
+    private EstimatorSettings estimatorSettings_;
 
-    private boolean isStarted_;
+    /** host monitor monitoring settings.*/
+    private HostMonitoringSettings hostMonitoringSettings_;
+
+    private AnomalyDetectorSettings anomalyDetectorSettings_;
     
     /**
      * Constructor.
@@ -64,7 +65,10 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
             LocalControllerDescription localController,
             LocalControllerRepository repository,
             DatabaseSettings databaseSettings,
-            InfrastructureMonitoring monitoring
+            InfrastructureMonitoring monitoring,
+            EstimatorSettings estimatorSettings,
+            HostMonitoringSettings hostMonitoringSettings,
+            AnomalyDetectorSettings anomalyDetectorSettings
             )
     {
         Guard.check(localController, repository);
@@ -72,21 +76,21 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
         
         localController_ = localController;
         repository_ = repository;
-        databaseSettings_ = databaseSettings;
-        monitoring_ = monitoring;
+        estimatorSettings_ = estimatorSettings;
+        hostMonitoringSettings_ = hostMonitoringSettings;
+        anomalyDetectorSettings_ = anomalyDetectorSettings;
         
         // two steps first 
         // (1) the metrics estimator 
         // (2) the detector logic (based on this estimator)
-        estimator_ = MonitoringEstimatorFactory.newEstimator();
+        monitoringEstimator_ = new MonitoringEstimator(estimatorSettings_, hostMonitoringSettings_);
         
         anomalyDetector_ = 
                 AnomalyDetectorFactory.newAnomalyDetectorEstimator(
-                        estimator_,
-                        localController_
+                        monitoringEstimator_,
+                        localController_,
+                        anomalyDetectorSettings_
                         );
-                        
-        
     }
 
     /**

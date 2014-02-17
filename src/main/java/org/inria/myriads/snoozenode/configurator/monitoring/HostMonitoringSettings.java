@@ -38,6 +38,8 @@ public class HostMonitoringSettings
 
     public void add(HostMonitorType type, HostMonitorSettings hostMonitorSettings)
     {
+        System.out.println(type.toString());
+        System.out.println(hostMonitorSettings.getResources().size());
         hostMonitorSettings_.put(type, hostMonitorSettings);
     }
 

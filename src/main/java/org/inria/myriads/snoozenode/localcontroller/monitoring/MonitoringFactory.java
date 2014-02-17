@@ -22,14 +22,20 @@ package org.inria.myriads.snoozenode.localcontroller.monitoring;
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
+import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitoringSettings;
+import org.inria.myriads.snoozenode.exception.ConnectorException;
 import org.inria.myriads.snoozenode.exception.HostMonitoringException;
 import org.inria.myriads.snoozenode.exception.VirtualMachineMonitoringException;
+import org.inria.myriads.snoozenode.localcontroller.actuator.ActuatorFactory;
 import org.inria.myriads.snoozenode.localcontroller.connector.Connector;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.HostMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.VirtualMachineMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl.GangliaHostMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl.LibVirtHostMonitor;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl.LibVirtVirtualMachineHostMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl.LibVirtVirtualMachineMonitor;
 
 /**
@@ -68,15 +74,36 @@ public final class MonitoringFactory
      * @return                                 The host monitor
      * @throws HostMonitoringException         The monitoring exception
      */
-    public static HostMonitor newHostMonitoring(Connector connector, NetworkDemand networkCapacity) 
+    public static LibVirtHostMonitor newHostMonitoring(Connector connector, NetworkDemand networkCapacity) 
         throws HostMonitoringException
     {
         return new LibVirtHostMonitor(connector, networkCapacity);
     }
-
-    public static HostMonitor newHostMonitor(List<String> resourceNames, String address,
-            NetworkAddress contactAddress)
+    
+    public static HostMonitor newHostMonitor(
+            LocalControllerDescription localController,
+            HostMonitorSettings hostMonitorSettings) throws HostMonitoringException
     {
-        return new GangliaHostMonitor(resourceNames, address, contactAddress);
+        
+        HostMonitor hostMonitor = null;
+        
+        switch(hostMonitorSettings.getType())
+        {
+        case GANGLIA: 
+            hostMonitor = new GangliaHostMonitor();
+            break;
+            
+        case HYPERVISOR:
+            hostMonitor = new LibVirtVirtualMachineHostMonitor();
+            break;
+        }
+
+        hostMonitor.setSettings(hostMonitorSettings);
+        hostMonitor.setLocalController(localController);
+        hostMonitor.initialize();
+        return hostMonitor;
     }
+
+
+    
 }

@@ -1,12 +1,14 @@
-package org.inria.myriads.snoozenode.localcontroller.monitoring.estimator.api.impl;
+package org.inria.myriads.snoozenode.estimator.api.impl;
 
 import java.util.List;
 
-import org.inria.myriads.snoozenode.localcontroller.monitoring.estimator.MonitoringEstimator;
+import org.inria.myriads.snoozenode.estimator.api.Estimator;
 
-public class AverageEstimator extends MonitoringEstimator
+
+
+public class AverageEstimator implements Estimator
 {
-
+ 
     @Override
     public double estimate(List<Double> values)
     {

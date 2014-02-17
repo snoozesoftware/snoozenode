@@ -151,14 +151,12 @@
 	</logger> 
 	
 	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>
   </logger> 
 
-	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl">
-		<level value="WARN"/>
+	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl.LibVirtVirtualMachineHostMonitor">
 		<appender-ref ref="FA"/>
-	</logger> 
+  </logger> 
 							
 	<logger name="org.inria.myriads.snoozenode.groupmanager.virtualnetworkmanager">
 		<level value="WARN"/>
@@ -171,7 +169,6 @@
 	</logger>
 	
 	<logger name="org.inria.myriads.snoozenode.util">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger>
 	

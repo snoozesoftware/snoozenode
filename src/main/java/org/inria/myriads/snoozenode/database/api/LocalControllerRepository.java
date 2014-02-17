@@ -138,5 +138,15 @@ public interface LocalControllerRepository
      */
     List<VirtualMachineMetaData> getLastVirtualMachineMetaData(long pastTimestamp);
 
+    
+    /**
+     * 
+     * Gets the host monitoring values.
+     * 
+     * @param numberOfMonitoringEntries
+     * @return
+     */
+    Map<String, Resource> getHostMonitoringValues(int numberOfMonitoringEntries);
+
 
 }

@@ -1,10 +1,13 @@
 package org.inria.myriads.snoozenode.configurator.monitoring;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
+import org.inria.myriads.snoozenode.configurator.estimator.HostEstimatorSettings;
 
 /**
  * @author msimonin
@@ -14,22 +17,27 @@ public class HostMonitorSettings
 {
     /** Type of monitor.*/
     private HostMonitorType type_;
-    
-    /** Contact address.*/
-    private NetworkAddress contactAddress_;
-    
+        
     /** Resources monitored by this monitor.*/
     private List<Resource> resources_;
     
+    /**  estimators.*/
+    private Map<String, HostEstimatorSettings> estimators_;
+    
     /** Interval.*/
     private int interval_;
+    
+    
+    /** Options.*/
+    private Map<String, String> options_;
 
     /**
      * 
      */
     public HostMonitorSettings()
     {
-        resources_ = new ArrayList<Resource>(); 
+        resources_ = new ArrayList<Resource>();
+        estimators_ = new HashMap<String, HostEstimatorSettings>();
     }
 
     /**
@@ -48,22 +56,7 @@ public class HostMonitorSettings
         type_ = type;
     }
 
-    /**
-     * @return the contactAddress
-     */
-    public NetworkAddress getContactAddress()
-    {
-        return contactAddress_;
-    }
-
-    /**
-     * @param contactAddress the contactAddress to set
-     */
-    public void setContactAddress(NetworkAddress contactAddress)
-    {
-        contactAddress_ = contactAddress;
-    }
-
+   
     /**
      * @return the resources
      */
@@ -84,7 +77,11 @@ public class HostMonitorSettings
     {
         resources_.add(resource);
     }
-
+    
+    public void add(String resourceName, HostEstimatorSettings hostEstimatorSettings)
+    {
+        estimators_.put(resourceName, hostEstimatorSettings);
+    }
     /**
      * @return the interval
      */
@@ -100,6 +97,39 @@ public class HostMonitorSettings
     {
         interval_ = interval;
     }
+
+    /**
+     * @return the estimators
+     */
+    public Map<String, HostEstimatorSettings> getEstimators()
+    {
+        return estimators_;
+    }
+
+    /**
+     * @param estimators the estimators to set
+     */
+    public void setEstimators(Map<String, HostEstimatorSettings> estimators)
+    {
+        estimators_ = estimators;
+    }
+
+    /**
+     * @return the options
+     */
+    public Map<String, String> getOptions()
+    {
+        return options_;
+    }
+
+    /**
+     * @param options the options to set
+     */
+    public void setOptions(Map<String, String> options)
+    {
+        options_ = options;
+    }
+
     
     
     

@@ -287,8 +287,8 @@ public final class OutputUtils
             HostMonitorSettings hostMonitorSetting = h.getValue();
             log_.debug(String.format("localController.hostmonitor..interval: %s",
                     hostMonitorSetting.getInterval()));
-            log_.debug(String.format("localController.hostmonitor..contactAddress: %s",
-                    hostMonitorSetting.getContactAddress()));
+            log_.debug(String.format("localController.hostmonitor..options: %s",
+                    hostMonitorSetting.getOptions()));
             log_.debug(String.format("localController.hostmonitor..type: %s",
                     hostMonitorSetting.getType()));
             for (Resource resource : hostMonitorSetting.getResources())

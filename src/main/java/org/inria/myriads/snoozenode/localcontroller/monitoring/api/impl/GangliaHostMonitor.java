@@ -30,7 +30,7 @@ import org.w3c.dom.Element;
  * @author msimonin
  *
  */
-public class GangliaHostMonitor implements HostMonitor
+public class GangliaHostMonitor extends HostMonitor
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(GangliaHostMonitor.class);
@@ -38,35 +38,45 @@ public class GangliaHostMonitor implements HostMonitor
     /** List of monitored resources.*/
     List<String> resourceNames_;
         
-    /** Hostname.*/
-    private String hostname_;
-    
     private NetworkAddress address_;
     
-    /** Socket to gmond. */
-    private Socket clientSocket_;
-    
     /** socket Address. */
-    private InetSocketAddress socketAddress_; 
+    private InetSocketAddress socketAddress_;
 
-    /**
-     * @param resourceName
-     * @param interval
-     * @param hostname
-     * @param address
-     * @param clientSocket
-     */
-    public GangliaHostMonitor(List<String> resourceNames,  String hostname, NetworkAddress address)
+    private String hostname_;
+
+    public GangliaHostMonitor()
     {
-        log_.debug("Initialized Gmond host monitor with parameters : ");
-        log_.debug(String.format("hostname = %s , port = %s , metrics = %s",
-                hostname, address.getPort(),  resourceNames));
+        log_.debug("Building a new Ganaglia host monitor");
+        resourceNames_ = new ArrayList<String>();
+    }
+    
+    @Override
+    public void initialize() throws HostMonitoringException
+    {
+        for (Resource resource :settings_.getResources())
+        {
+            log_.debug("Adding " + resource.getName() + "to the resources list");
+            resourceNames_.add(resource.getName());
+        }
         
-        resourceNames_ = resourceNames;
-        hostname_ = hostname;
-        address_ = address;
+        String address = settings_.getOptions().get("hostname");
+        if (address == null)
+        {
+            throw new HostMonitoringException("address options is missing");
+        }
         
-        log_.debug("Gmond host monitor initialized");
+        String port = settings_.getOptions().get("port");    
+        if (port == null)
+        {
+            throw new HostMonitoringException("address options is missing");
+        }
+        address_ = new NetworkAddress();
+        address_.setAddress(address);
+        address_.setPort(Integer.valueOf(port));
+        hostname_= address_.getAddress();
+        
+        
     }
     
     public HostMonitoringData getResourceData() 
@@ -76,10 +86,10 @@ public class GangliaHostMonitor implements HostMonitor
         try{
             log_.debug("Connecting to ganglia daemon");
             socketAddress_ = new InetSocketAddress(address_.getAddress(), address_.getPort());
-            clientSocket_ = new Socket();
-            clientSocket_.connect(socketAddress_);
+            Socket clientSocket = new Socket();
+            clientSocket.connect(socketAddress_);
             
-            InputStream input = clientSocket_.getInputStream();
+            InputStream input = clientSocket.getInputStream();
             String gangliaString = IOUtils.toString(input, "UTF-8");
             
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -89,7 +99,10 @@ public class GangliaHostMonitor implements HostMonitor
             HashMap<String, Double> monitoring = new HashMap<String, Double>();
             for (String resourceName : resourceNames_)
             {
+                log_.debug("Getting resource for " + resourceName);
+                
                 String expression = "//HOST[@NAME='" + hostname_ + "']/METRIC[@NAME='" +  resourceName + "']";
+                log_.debug("XPATH : " + expression);
                 Element element = (Element) xPath.compile(expression).evaluate(xmlDocument, XPathConstants.NODE);
                 if (element != null)
                 {
@@ -97,10 +110,14 @@ public class GangliaHostMonitor implements HostMonitor
                     log_.debug("Adding " + value + " to the local resource monitoring set");
                     monitoring.put(resourceName, value);
                 }
+                else
+                {
+                    log_.debug("Unable to fetch resource " + resourceName);
+                }
             }
             resource.setUsedCapacity(monitoring);
             log_.debug("Closing socket");
-            clientSocket_.close();
+            clientSocket.close();
             log_.debug("Returning resource");
         }
         catch(Exception exception)
@@ -117,6 +134,7 @@ public class GangliaHostMonitor implements HostMonitor
         // TODO Auto-generated method stub
         return null;
     }
+
 
 
 }

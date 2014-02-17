@@ -177,7 +177,8 @@ public final class ManagementUtils
             // for each resource managed by this monitor.
             for (Resource resource : monitors.getResources())
             {
-                resources.put(resource.getName(), resource);
+                Resource resourceCopy = new Resource(resource, 0);
+                resources.put(resourceCopy.getName(), resourceCopy);
             }
         }
         IdGenerator idGenerator = IdGeneratorFactory.createIdGenerator(nodeConfiguration.getNode());

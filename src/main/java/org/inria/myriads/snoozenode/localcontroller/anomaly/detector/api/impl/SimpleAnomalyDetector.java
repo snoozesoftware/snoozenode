@@ -10,6 +10,7 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MathUtils;
+import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyDetectorSettings;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.AnomalyDetector;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.estimator.MonitoringEstimator;
@@ -22,41 +23,42 @@ import org.slf4j.LoggerFactory;
 import com.google.common.primitives.Doubles;
 
 /**
+ * 
+ * This detector detects if one of the vm metric exceed its max threshold 
+ * and send an alert. 
+ * 
+ * 
  * @author msimonin
  *
  */
-public class SimpleAnomalyDetector implements AnomalyDetector
+public class SimpleAnomalyDetector extends AnomalyDetector
 {
 
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(SimpleAnomalyDetector.class);
     
-    /** Node parameters. */
-    private MonitoringThresholds monitoringThresholds_;
-
-    /** Total capacity. */
+    /** Total Capacity.*/ 
     private List<Double> totalCapacity_;
     
-    /** Monitoring estimator.*/
-    private MonitoringEstimator estimator_;
-
-    private LocalControllerDescription localController_;
+    /** monitoring Thresholds*/
+    private MonitoringThresholds monitoringThresholds_;
     
+
     /**
      * Constructor.
      * 
      * @param monitoringThresholds  The monitoring thresholds
      * @param totalCapacity         The total local controller capacity
      */
-    public SimpleAnomalyDetector(
-                        MonitoringEstimator estimator,
-                        LocalControllerDescription localController
-            )
+    public SimpleAnomalyDetector()
     {
-        Guard.check(estimator, localController);
         log_.debug("Initializing the simple threshold crossing detector");
-        estimator_ = estimator;
-        localController_ = localController;
+    }
+    
+
+    @Override
+    public void initialize()
+    {
         monitoringThresholds_ = localController_.getThresholds();
         totalCapacity_ = localController_.getTotalCapacity();
     }
@@ -65,7 +67,7 @@ public class SimpleAnomalyDetector implements AnomalyDetector
     public LocalControllerState detectAnomaly(Map<String, Resource> hostResources, List<VirtualMachineMetaData> virtualMachines)
     {
         List<Double> virtualMachinesUtilization = computeVirtualMachinesUtilization(virtualMachines);
-        Map<String, Double> hostEstimation = estimator_.estimateHostUtilization(hostResources);
+        Map<String, Double> hostEstimation = monitoringEstimator_.estimateHostUtilization(hostResources);
         log_.debug("Total host utilization is " + hostEstimation);        
         log_.debug("Total virtual machines utilization is " + virtualMachinesUtilization);
         return startThresholdCrossingDetection(virtualMachinesUtilization);
@@ -107,7 +109,6 @@ public class SimpleAnomalyDetector implements AnomalyDetector
         if (isOverloaded)
         {
             log_.debug("OVERLOAD situation detected!");
-//            monitoringData.setState(LocalControllerState.OVERLOADED);
             return LocalControllerState.OVERLOADED;
         }
                 
@@ -118,7 +119,6 @@ public class SimpleAnomalyDetector implements AnomalyDetector
         if (isUnderloaded)
         {
             log_.debug("UNDERLOAD situation detected!");
-//            monitoringData.setState(LocalControllerState.UNDERLOADED);
             return LocalControllerState.UNDERLOADED;
         }
         
@@ -195,11 +195,15 @@ public class SimpleAnomalyDetector implements AnomalyDetector
         for (VirtualMachineMetaData virtualMachine : virtualMachines)
         {
             
-            List<Double> virtualMachineEstimation = estimator_.estimateVirtualMachineUtilization(virtualMachine);
+            List<Double> virtualMachineEstimation = monitoringEstimator_.estimateVirtualMachineUtilization(virtualMachine);
             virtualMachinesUtilization = MathUtils.addVectors(virtualMachineEstimation, virtualMachinesUtilization);
         }
         return virtualMachinesUtilization;
     }
+
+
+
+
     
 
 

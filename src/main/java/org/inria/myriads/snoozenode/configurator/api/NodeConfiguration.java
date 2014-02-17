@@ -22,6 +22,7 @@ package org.inria.myriads.snoozenode.configurator.api;
 import java.io.Serializable;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorSettings;
+import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyDetectorSettings;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.energymanagement.EnergyManagementSettings;
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
@@ -97,6 +98,9 @@ public class NodeConfiguration
     /** HostMonitoring settings.*/
     private HostMonitoringSettings hostMonitoringSettings_;
     
+    /** anomaly detector settings.*/
+    private AnomalyDetectorSettings  anomalyDetectorSettings_;
+    
     /** Empty constructor. */
     public NodeConfiguration()
     {
@@ -116,6 +120,7 @@ public class NodeConfiguration
         imageRepositorySettings_ = new ImageRepositorySettings();
         provisionerSettings_ = new ProvisionerSettings();
         hostMonitoringSettings_ = new HostMonitoringSettings();
+        anomalyDetectorSettings_ = new AnomalyDetectorSettings();
     }
 
     /**
@@ -292,5 +297,13 @@ public class NodeConfiguration
     public HostMonitoringSettings getHostMonitoringSettings()
     {
         return hostMonitoringSettings_;
+    }
+
+    /**
+     * @return the anomalyDetectorSettings
+     */
+    public AnomalyDetectorSettings getAnomalyDetectorSettings()
+    {
+        return anomalyDetectorSettings_;
     }
 }

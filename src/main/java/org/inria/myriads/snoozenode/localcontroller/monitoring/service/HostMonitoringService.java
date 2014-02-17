@@ -40,6 +40,7 @@ import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorType;
 import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitoringSettings;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
+import org.inria.myriads.snoozenode.exception.HostMonitoringException;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.consumer.HostMonitorDataConsumer;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.consumer.VirtualMachineMonitorDataConsumer;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.listener.HostMonitoringListener;
@@ -134,7 +135,7 @@ public final class HostMonitoringService
         startHostMonitorDataProducer();
     }
 
-    private void startHostMonitorDataProducer()
+    private void startHostMonitorDataProducer() throws HostMonitoringException
     {
         log_.debug("Starting the host monitoring data consumer");
         HostMonitoringSettings hostMonitoringSettings = nodeConfiguration_.getHostMonitoringSettings();
@@ -149,7 +150,7 @@ public final class HostMonitoringService
                                 producerId,
                                 dataQueue_,
                                 monitor.getValue(), 
-                                localController_.getId(),
+                                localController_,
                                 this);
                 new Thread(dataProducer, "HostMonitorDataProducer-" + monitor.getValue()).start();
                 producerThreads_.put(monitor.getKey(), dataProducer);

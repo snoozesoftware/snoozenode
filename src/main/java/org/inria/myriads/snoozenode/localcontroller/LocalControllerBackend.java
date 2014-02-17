@@ -61,6 +61,7 @@ import org.inria.myriads.snoozenode.localcontroller.imagemanager.api.ImageManage
 import org.inria.myriads.snoozenode.localcontroller.monitoring.MonitoringFactory;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.HostMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.VirtualMachineMonitor;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl.LibVirtHostMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.service.HostMonitoringService;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.service.InfrastructureMonitoring;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.service.VirtualMachineMonitoringService;
@@ -476,8 +477,11 @@ public final class LocalControllerBackend
                     localControllerDescription_,
                     localControllerRepository_, 
                     nodeConfiguration_.getDatabase(),
-                    resourceMonitoring_
-                    );
+                    resourceMonitoring_, 
+                    nodeConfiguration_.getEstimator(),
+                    nodeConfiguration_.getHostMonitoringSettings(),
+                    nodeConfiguration_.getAnomalyDetectorSettings()
+                   );
         }
         anomalyDetectorService_.startService(communicator);
     }

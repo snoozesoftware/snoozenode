@@ -14,7 +14,6 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.AnomalyDetector;
-import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.AnomalyDetectorEstimator;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.listener.AnomalyDetectorListener;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.runner.AnomalyDetectorRunner;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
@@ -51,6 +50,9 @@ public class AnomalyDetectorRunner implements Runnable
     
     /** anomalyDetectorEstimator*/
     private AnomalyDetector anomalyDetector_;
+
+    /** number of monitoring entries to take into account.*/
+    private int numberOfMonitoringEntries_;
     
 
     /**
@@ -66,10 +68,13 @@ public class AnomalyDetectorRunner implements Runnable
     {
         Guard.check(repository);
         log_.debug("Initializing the anomaly detector");
-        repository_ = repository;
+        
+        repository_ = repository; 
         lockObject_ = new Object();
-        interval_ = 10000; //TODO remove hard coded.
         anomalyDetector_ = anomalyDetector;
+        numberOfMonitoringEntries_ = anomalyDetector_.getSettings().getNumberOfMonitoringEntries();
+        log_.debug("anomaly interval " + anomalyDetector_.getSettings().getInterval());
+        interval_ = anomalyDetector_.getSettings().getInterval(); 
         listener_ = listener;
     }
     
@@ -85,8 +90,8 @@ public class AnomalyDetectorRunner implements Runnable
                 log_.debug("Anomaly detector waked up");
                 if (pastTimestamp > 0)
                 {
-                    Map<String, Resource> hostResources = repository_.getLastHostMonitoringValues(pastTimestamp);
-                    List<VirtualMachineMetaData> virtualMachines = repository_.getLastVirtualMachineMetaData(pastTimestamp);
+                    Map<String, Resource> hostResources = repository_.getHostMonitoringValues(numberOfMonitoringEntries_);
+                    List<VirtualMachineMetaData> virtualMachines = repository_.getVirtualMachines(numberOfMonitoringEntries_);
                     
                     //logic to extract in this class
                     LocalControllerState state = anomalyDetector_.detectAnomaly(hostResources, virtualMachines);

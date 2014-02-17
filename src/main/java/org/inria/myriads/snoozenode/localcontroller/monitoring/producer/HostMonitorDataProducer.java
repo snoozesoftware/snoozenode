@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.HostMonitoringData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorSettings;
+import org.inria.myriads.snoozenode.exception.HostMonitoringException;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.MonitoringFactory;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.HostMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.VirtualMachineMonitor;
@@ -46,9 +48,6 @@ public class HostMonitorDataProducer extends Thread
 
     /** Is suspended*/
     private boolean isSuspended_;
-
-    /** Host aggregated data.*/
-    private AggregatedHostMonitoringData aggregatedData_;
     
     /** Aggregates current datas.*/
     private ArrayList<HostMonitoringData> monitoringData_;
@@ -58,16 +57,11 @@ public class HostMonitorDataProducer extends Thread
 
     private BlockingQueue<AggregatedHostMonitoringData> dataQueue_;
 
-    private long beforeSleepTime_;
-
     private int interval_;
 
     private Object lockObject_;
 
     private String localControllerId_;
-
-    /** Contact address.*/
-    private NetworkAddress contactAddress_;
 
     /** host monitoring service.*/
     private HostMonitoringService hostMonitoringService_;
@@ -76,13 +70,12 @@ public class HostMonitorDataProducer extends Thread
             String id,
             BlockingQueue<AggregatedHostMonitoringData> dataQueue, 
             HostMonitorSettings hostMonitorSettings,
-            String localControllerId,
+            LocalControllerDescription localController,
             HostMonitoringService hostMonitoringService
-            )
+            ) throws HostMonitoringException
     {
         id_ = id;
-        contactAddress_ = hostMonitorSettings.getContactAddress();
-        localControllerId_ = localControllerId;
+        localControllerId_ = localController.getId();
         dataQueue_ = dataQueue;
         hostMonitoringService_ = hostMonitoringService; 
         // TODO what to do with this historySize ?
@@ -92,14 +85,8 @@ public class HostMonitorDataProducer extends Thread
         isTerminated_ = false;
         lockObject_ = new Object();
         monitoringData_ = new ArrayList<HostMonitoringData>();
-        aggregatedData_ = new AggregatedHostMonitoringData();
         
-        List<String> resourceNames = new ArrayList<String>();
-        for (Resource resource : hostMonitorSettings.getResources())
-        {
-            resourceNames.add(resource.getName());
-        }
-        monitor_ = MonitoringFactory.newHostMonitor(resourceNames, contactAddress_.getAddress(), contactAddress_);
+        monitor_ = MonitoringFactory.newHostMonitor(localController, hostMonitorSettings);
     }
 
 
@@ -115,6 +102,8 @@ public class HostMonitorDataProducer extends Thread
         {
             while (true)
             {            
+   
+                doSleep(interval_);       
                 
                 if (isTerminated_)
                 {
@@ -123,6 +112,11 @@ public class HostMonitorDataProducer extends Thread
                 // Get the resource managed by this monitor.
                 log_.debug("Get resource data");
                 HostMonitoringData resourceData = monitor_.getResourceData();
+                if (resourceData == null)
+                {
+                    //skipping null resource data.
+                    continue;
+                }
                 log_.debug("got resource");
                 if (!isSuspended_)
                 {
@@ -139,15 +133,14 @@ public class HostMonitorDataProducer extends Thread
                         AggregatedHostMonitoringData data = createAggregatedHostData(monitoringData_);
                         dataQueue_.put(data);
                         monitoringData_.clear();
-                    } else
-                    {
-                        log_.debug("Aggregating resource");
-                        monitoringData_.add(resourceData);
-                    }
+                    } 
+
+                    log_.debug("Aggregating resource");
+                    monitoringData_.add(resourceData);
+                
                 }
                 
-                beforeSleepTime_ = System.nanoTime();      
-                doSleep(interval_);       
+                
             }
         }
         catch (Exception exception) 

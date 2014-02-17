@@ -28,7 +28,7 @@ import org.inria.myriads.snoozecommon.guard.Guard;
  * 
  * @author Eugen Feller
  */
-public final class VirtualMachineInformation 
+public class VirtualMachineInformation 
 {
     /** Cpu time in nanoseconds. */
     private long cpuTime_;
@@ -63,6 +63,19 @@ public final class VirtualMachineInformation
         networkTraffic_ = networkTraffic;
     }
     
+    
+    
+    /**
+     * 
+     */
+    public VirtualMachineInformation()
+    {
+        super();
+        // TODO Auto-generated constructor stub
+    }
+
+
+
     /**
      * Returns the CPU time.
      * 
@@ -101,5 +114,45 @@ public final class VirtualMachineInformation
     public List<NetworkTrafficInformation> getNetworkTraffic() 
     {
         return networkTraffic_;
+    }
+
+
+
+    /**
+     * @param cpuTime the cpuTime to set
+     */
+    public void setCpuTime(long cpuTime)
+    {
+        cpuTime_ = cpuTime;
+    }
+
+
+
+    /**
+     * @param memoryUsage the memoryUsage to set
+     */
+    public void setMemoryUsage(long memoryUsage)
+    {
+        memoryUsage_ = memoryUsage;
+    }
+
+
+
+    /**
+     * @param networkTraffic the networkTraffic to set
+     */
+    public void setNetworkTraffic(List<NetworkTrafficInformation> networkTraffic)
+    {
+        networkTraffic_ = networkTraffic;
+    }
+
+
+
+    /**
+     * @param numberOfVirtualCpus the numberOfVirtualCpus to set
+     */
+    public void setNumberOfVirtualCpus(int numberOfVirtualCpus)
+    {
+        numberOfVirtualCpus_ = numberOfVirtualCpus;
     }
 }

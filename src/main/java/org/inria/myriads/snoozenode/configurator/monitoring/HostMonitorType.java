@@ -3,5 +3,7 @@ package org.inria.myriads.snoozenode.configurator.monitoring;
 public enum HostMonitorType
 {
     /** Ganglia.*/
-    GANGLIA
+    GANGLIA,
+    /** underlying hypervisor*/
+   HYPERVISOR
 }

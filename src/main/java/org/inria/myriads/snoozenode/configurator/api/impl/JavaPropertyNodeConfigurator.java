@@ -25,8 +25,13 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.NodeRole;
 import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
@@ -39,6 +44,7 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.wakeup.Wakeu
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.NetworkUtils;
 import org.inria.myriads.snoozecommon.util.StringUtils;
+import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyDetectorSettings;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfigurator;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
@@ -47,6 +53,7 @@ import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSav
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.ShutdownDriver;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.SuspendDriver;
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
+import org.inria.myriads.snoozenode.configurator.estimator.HostEstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.faulttolerance.FaultToleranceSettings;
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
 import org.inria.myriads.snoozenode.configurator.imagerepository.DiskHostingType;
@@ -122,10 +129,49 @@ public final class JavaPropertyNodeConfigurator
         setImageRepositorySettings();
         setProvisionerSettings();
         setHostMonitoringSettings();
+        setAnomalyDetectorSettings();
         
         fileInput.close();
     }
     
+
+
+    private void setAnomalyDetectorSettings() throws NodeConfiguratorException
+    {
+        AnomalyDetectorSettings anomalyDetectorSettings = nodeConfiguration_.getAnomalyDetectorSettings();
+        String name = getProperty("localController.anomaly.detector");
+        anomalyDetectorSettings.setName(name);
+        
+        String numberOfEntries = getProperty("localController.anomaly.detector.numberOfMonitoringEntries");
+        anomalyDetectorSettings.setNumberOfMonitoringEntries(Integer.valueOf(numberOfEntries));
+        
+        String interval = getProperty("localController.anomaly.detector.interval");
+        anomalyDetectorSettings.setInterval(Integer.valueOf(interval));
+        
+        String options = getProperty("localController.anomaly.detector.options");
+        Map<String, String> map = umarshal(options);
+        anomalyDetectorSettings.setOptions(map);
+        
+    }
+
+
+
+    private Map<String, String> umarshal(String options) throws NodeConfiguratorException
+    {
+        Map<String,String> map = new HashMap<String,String>();
+        ObjectMapper mapper = new ObjectMapper();
+        try
+        {
+            map = mapper.readValue(options, 
+                    new TypeReference<HashMap<String,String>>(){});
+        }
+        catch (IOException e)
+        {
+            throw new NodeConfiguratorException(e.getMessage());
+        }
+        return map;
+    }
+
 
 
     private void setHostMonitoringSettings() throws NodeConfiguratorException
@@ -140,11 +186,11 @@ public final class JavaPropertyNodeConfigurator
             // type
             HostMonitorType type = HostMonitorType.valueOf(hostMonitor);
             hostMonitorSettings.setType(type);
-            //network address (contact address)
-            String hostname = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "hostname"));
-            String port = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "port"));
-            NetworkAddress contactAddress = NetworkUtils.createNetworkAddress(hostname, Integer.valueOf(port));
-            hostMonitorSettings.setContactAddress(contactAddress);
+            
+            String options = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "options"));
+            Map<String, String> map = umarshal(options);
+            hostMonitorSettings.setOptions(map);
+            
             // default numberOfMonitoringEntries
             String defaultNumberOfMonitoringEntries = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "numberOfMonitoringEntries"), "10");
             //default interval 
@@ -152,8 +198,9 @@ public final class JavaPropertyNodeConfigurator
             hostMonitorSettings.setInterval(Integer.valueOf(defaultInterval));
             //default threshold
             String stringDefaultThresholds = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "thresholds"), "0,1,1"); 
-            //List<Double> defaultThresholds = StringUtils.convertStringToDoubleArray(stringDefaultThresholds, separator);
-            
+            // default estimator
+            String stringDefaultEstimator =  getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "estimator"), "average"); 
+
             // published metrics
             String stringPublished = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "published"));
             String[] published = stringPublished.split(separator);
@@ -168,9 +215,10 @@ public final class JavaPropertyNodeConfigurator
                  
                 String stringLocalThresholds = 
                          getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "thresholds", resourceName), stringDefaultThresholds);
-                if (stringLocalThresholds == null)
-                    stringLocalThresholds = stringDefaultThresholds;
                  
+                String stringLocalEstimator = 
+                        getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "estimator", resourceName), stringDefaultThresholds);
+                
                 List<Double> thresholds = StringUtils.convertStringToDoubleArray(stringLocalThresholds, separator);
                  
                 Resource resource = new Resource(localNumberOfMonitoringEntries);
@@ -178,6 +226,8 @@ public final class JavaPropertyNodeConfigurator
                 resource.setThresholds(thresholds);
                 //register the resource settings.
                 hostMonitorSettings.add(resource);
+                //register the estimator
+                hostMonitorSettings.add(resourceName, new HostEstimatorSettings(stringDefaultEstimator));
             }
             //register the host monitor setting (and all its resource)
             hostMonitoringSettings.add(type, hostMonitorSettings);

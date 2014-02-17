@@ -67,13 +67,16 @@ public class ResourceDemandEstimator
     
     /** Memory demand estimator. */
     private MemoryDemandEstimator memoryDemandEstimator_;
-    
+     
     /** Network demand estimator. */
     private NetworkDemandEstimator networkDemandEstimator_;
     
     /** Monitoring thresholds. */
     private MonitoringThresholds monitoringThresholds_;
 
+    /** hostEstimator.*/
+    Map<String, Estimator> hostEstimators_;
+    
     /** Packing density. */
     private PackingDensity packingDensity_;
     
@@ -274,7 +277,7 @@ public class ResourceDemandEstimator
      * @param packingDensity            The packing density
      * @return                          The new capacity vector
      */
-    public List<Double> applyPackingDensity(List<Double> requestedCapacity, PackingDensity packingDensity)
+    private List<Double> applyPackingDensity(List<Double> requestedCapacity, PackingDensity packingDensity)
     {        
         double cpu = UtilizationUtils.getCpuUtilization(requestedCapacity) * packingDensity.getCPU();
         double memory = UtilizationUtils.getMemoryUtilization(requestedCapacity) * packingDensity.getMemory();
@@ -334,6 +337,7 @@ public class ResourceDemandEstimator
     public boolean hasEnoughLocalControllerCapacity(VirtualMachineMetaData virtualMachine, 
                                                     LocalControllerDescription localController)
     {                   
+        //Monitoring estimator
         List<Double> virtualMachineCapacity = computeVirtualMachineCapacity(virtualMachine);
         List<Double> localControllerCapacity = computeLocalControllerCapacity(localController);
         List<Double> newLocalControllerCapacity = MathUtils.addVectors(virtualMachineCapacity, 
@@ -422,7 +426,7 @@ public class ResourceDemandEstimator
                capacity = MathUtils.addVectors(computeRequestedVirtualMachineCapacity(virtualMachine), capacity);
                continue;
            }
-           
+           //MonitoringEstimator.estimateVmUtilization.
            ArrayList<Double> estimatedData = estimateVirtualMachineResourceDemand(virtualMachine);
            log_.debug(String.format("Estimated virtual machine %s resource demand is %s", 
                                      virtualMachineId,
@@ -440,6 +444,7 @@ public class ResourceDemandEstimator
      * @param virtualMachine     The virtual machine meta data
      * @return                   The estimated virtual machine monitoring data
      */
+    //MonitoringEstimator.estimateVMUtilization
     public ArrayList<Double> estimateVirtualMachineResourceDemand(VirtualMachineMetaData virtualMachine) 
     {              
         if (isStatic_)

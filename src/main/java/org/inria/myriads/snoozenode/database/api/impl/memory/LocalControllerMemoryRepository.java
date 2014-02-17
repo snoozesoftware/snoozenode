@@ -274,6 +274,7 @@ public final class LocalControllerMemoryRepository
     
     }
 
+
     @Override
     public Map<String, Resource> getLastHostMonitoringValues(long pastTimestamp)
     {
@@ -289,6 +290,7 @@ public final class LocalControllerMemoryRepository
         return hostResourcesCopy;
     }
 
+
     @Override
     public List<VirtualMachineMetaData> getLastVirtualMachineMetaData(long pastTimestamp)
     {
@@ -300,6 +302,22 @@ public final class LocalControllerMemoryRepository
             virtualMachines.add(virtualMachineCopied);
         }
         return virtualMachines;
+    }
+
+
+    @Override
+    public Map<String, Resource> getHostMonitoringValues(int numberOfMonitoringEntries)
+    {
+        log_.debug(String.format("Getting the last host monitoring %d values", numberOfMonitoringEntries));
+        Map<String, Resource> hostResourcesCopy = new HashMap<String, Resource>();
+        for (Entry<String, Resource> resourceSet  : hostResources_.entrySet())
+        {
+            Resource resource = resourceSet.getValue();
+            // creating new resource.
+            Resource resourceCopy = new Resource(resource, numberOfMonitoringEntries);
+            hostResourcesCopy.put(resourceSet.getKey(), resourceCopy);
+        }
+        return hostResourcesCopy;
     }
     
 }
