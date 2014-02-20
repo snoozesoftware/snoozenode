@@ -32,6 +32,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
@@ -104,7 +105,7 @@ public final class VirtualMachineSubmissionWorker
                                           GroupManagerRepository repository,
                                           PlacementPolicy placementPolicy,
                                           StateMachine stateMachine,
-                                          StaticDynamicResourceDemandEstimator estimator,
+                                          ResourceDemandEstimator estimator,
                                           VirtualMachineManagerListener managerListener,
                                           ExternalNotifier externalNotifier
                                           )

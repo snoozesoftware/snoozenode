@@ -17,48 +17,47 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators;
+package org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators.api.impl;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MathUtils;
-import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators.api.SnoozeComparator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * L1 norm based virtual machine sorting in increasing order.
  * 
- * @author Eugen Feller
+ * @author Matthieu Simonin
  */
-public final class VirtualMachineL1Increasing
-    implements Comparator<VirtualMachineMetaData> 
+public final class VirtualMachinesL1
+   extends SnoozeComparator<VirtualMachineMetaData>
 {
-    /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
-
+    
+    /** Define the logger. */
+    private static final Logger log_ = LoggerFactory.getLogger(VirtualMachinesL1.class);
+    
     /**
-     * Consturctor.
+     * Constructor.
      * 
      * @param estimator     The resource demand estimator
      */
-    public VirtualMachineL1Increasing(ResourceDemandEstimator estimator) 
+    public VirtualMachinesL1() 
     {
-        Guard.check(estimator);
-        estimator_ = estimator;
+        log_.debug("Building a L1 virtual machines comparator");
     }
 
-    /**
-     * Compares two virtual machines.
-     *  
-     * @param firstVirtualMachine       First virtual machine
-     * @param secondVirtualMachine      Second virtual machine
-     * @return                         -1, 0, 1
-     */
-    public int compare(VirtualMachineMetaData firstVirtualMachine, 
-                       VirtualMachineMetaData secondVirtualMachine)
+    
+    @Override
+    public void initialize()
+    {
+        log_.debug("Initializing a new L1 virtual machines comparator");
+    }
+    
+    @Override
+    protected int internalCompare(VirtualMachineMetaData firstVirtualMachine, VirtualMachineMetaData secondVirtualMachine)
     {
         Guard.check(firstVirtualMachine, secondVirtualMachine);
         ArrayList<Double> estunatedDemand1 = estimator_.estimateVirtualMachineResourceDemand(firstVirtualMachine);

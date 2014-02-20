@@ -147,8 +147,7 @@ public final class GroupLeaderInit
         estimator_ = ResourceEstimatorFactory.newResourceDemandEstimator(
                 nodeConfiguration_.getEstimator(),
                 nodeConfiguration_.getMonitoring(),
-                nodeConfiguration_.getHostMonitoringSettings(),
-                nodeConfiguration_.getSubmission().getPackingDensity()
+                nodeConfiguration_.getHostMonitoringSettings()
                 );
     }
     

@@ -36,7 +36,7 @@ public final class EstimatorSettings
     private String name_;
     
     /** Policies. */
-    private EstimatorPolicy policy_;
+//    private EstimatorPolicy policy_;
     
     /** Virtual machine demand measure. */
 //    private SortNorm sortNorm_;
@@ -52,7 +52,7 @@ public final class EstimatorSettings
     /** Constructor. */
     public EstimatorSettings()
     {
-        policy_ = new EstimatorPolicy();
+//        policy_ = new EstimatorPolicy();
         options_ = new HashMap<String, String>();
     }
     
@@ -153,8 +153,8 @@ public final class EstimatorSettings
      * 
      * @return  The policy
      */
-    public EstimatorPolicy getPolicy() 
-    {
-        return policy_;
-    }
+//    public EstimatorPolicy getPolicy() 
+//    {
+//        return policy_;
+//    }
 }

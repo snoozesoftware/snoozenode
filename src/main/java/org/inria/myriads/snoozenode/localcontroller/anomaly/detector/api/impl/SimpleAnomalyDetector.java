@@ -4,23 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
 import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MathUtils;
-import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyDetectorSettings;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.AnomalyDetector;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.estimator.MonitoringEstimator;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.threshold.ThresholdCrossingDetector;
 import org.inria.myriads.snoozenode.util.ThresholdUtils;
 import org.inria.myriads.snoozenode.util.UtilizationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.primitives.Doubles;
 
 /**
  * 
@@ -67,7 +61,7 @@ public class SimpleAnomalyDetector extends AnomalyDetector
     public LocalControllerState detectAnomaly(Map<String, Resource> hostResources, List<VirtualMachineMetaData> virtualMachines)
     {
         List<Double> virtualMachinesUtilization = computeVirtualMachinesUtilization(virtualMachines);
-        Map<String, Double> hostEstimation = monitoringEstimator_.estimateHostUtilization(hostResources);
+        Map<String, Double> hostEstimation = monitoringEstimator_.estimateHostResourceUtilization(hostResources);
         log_.debug("Total host utilization is " + hostEstimation);        
         log_.debug("Total virtual machines utilization is " + virtualMachinesUtilization);
         return startThresholdCrossingDetection(virtualMachinesUtilization);
@@ -195,7 +189,7 @@ public class SimpleAnomalyDetector extends AnomalyDetector
         for (VirtualMachineMetaData virtualMachine : virtualMachines)
         {
             
-            List<Double> virtualMachineEstimation = monitoringEstimator_.estimateVirtualMachineUtilization(virtualMachine);
+            List<Double> virtualMachineEstimation = monitoringEstimator_.estimateVirtualMachineResourceDemand(virtualMachine);
             virtualMachinesUtilization = MathUtils.addVectors(virtualMachineEstimation, virtualMachinesUtilization);
         }
         return virtualMachinesUtilization;

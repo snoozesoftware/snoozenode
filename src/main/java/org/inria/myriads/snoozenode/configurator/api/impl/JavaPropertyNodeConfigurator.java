@@ -58,6 +58,7 @@ import org.inria.myriads.snoozenode.configurator.faulttolerance.FaultToleranceSe
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
 import org.inria.myriads.snoozenode.configurator.imagerepository.DiskHostingType;
 import org.inria.myriads.snoozenode.configurator.imagerepository.ImageRepositorySettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.EstimatorPolicySettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorType;
 import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitoringSettings;
@@ -547,7 +548,21 @@ public final class JavaPropertyNodeConfigurator
             MonitoringThresholds monitoringThresholds = new MonitoringThresholds(cpuThresholds,
                                                                                  memoryUtilizationThresholds,
                                                                                  networkUtilizationThresholds);
+            
             monitoringSettings.setThresholds(monitoringThresholds);
+            
+            
+            // estimators.
+            String cpuDemandEstimator = getProperty("monitoring.estimator.cpu"); 
+            String memoryDemandEstimator = getProperty("monitoring.estimator.memory");
+            String networkDemandEstimator = getProperty("monitoring.estimator.network");
+            
+            EstimatorPolicySettings policySettings = new EstimatorPolicySettings();
+            policySettings.setCpuEstimatorName(cpuDemandEstimator);
+            policySettings.setMemoryEstimatorName(memoryDemandEstimator);
+            policySettings.setNetworkEstimatorName(networkDemandEstimator);
+            
+            monitoringSettings.setEstimatorPolicy(policySettings);
         }    
     /**
      * Sets the utilization settings.
@@ -605,14 +620,14 @@ public final class JavaPropertyNodeConfigurator
         estimatorSettings.setNumberOfMonitoringEntries(Integer.valueOf(numberOfMonitoringEntries));
 
         // TODO move this to monitoring.estimator
-        String cpuDemandEstimator = getProperty("estimator.policy.cpu");
-        estimatorSettings.getPolicy().setCPU(Estimator.valueOf(cpuDemandEstimator)); 
-        
-        String memoryDemandEstimator = getProperty("estimator.policy.memory");
-        estimatorSettings.getPolicy().setMemory(Estimator.valueOf(memoryDemandEstimator));
-        
-        String networkDemandEstimator = getProperty("estimator.policy.network");
-        estimatorSettings.getPolicy().setNetwork(Estimator.valueOf(networkDemandEstimator));
+//        String cpuDemandEstimator = getProperty("estimator.policy.cpu");
+//        estimatorSettings.getPolicy().setCPU(Estimator.valueOf(cpuDemandEstimator)); 
+//        
+//        String memoryDemandEstimator = getProperty("estimator.policy.memory");
+//        estimatorSettings.getPolicy().setMemory(Estimator.valueOf(memoryDemandEstimator));
+//        
+//        String networkDemandEstimator = getProperty("estimator.policy.network");
+//        estimatorSettings.getPolicy().setNetwork(Estimator.valueOf(networkDemandEstimator));
     }
     
     /**

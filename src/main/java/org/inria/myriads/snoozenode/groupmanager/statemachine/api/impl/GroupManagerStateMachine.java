@@ -36,6 +36,7 @@ import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.RelocationSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.exception.GroupManagerInitException;
 import org.inria.myriads.snoozenode.groupmanager.anomaly.AnomalyResolver;
@@ -113,7 +114,7 @@ public class GroupManagerStateMachine
      * @param externalNotifier          The external Notifier.
      */
     public GroupManagerStateMachine(NodeConfiguration nodeConfiguration,
-                                    StaticDynamicResourceDemandEstimator estimator,
+                                    ResourceDemandEstimator estimator,
                                     GroupManagerRepository repository,
                                     ExternalNotifier externalNotifier
                                     )
@@ -147,7 +148,7 @@ public class GroupManagerStateMachine
      * @return                       The anomaly resolver
      */
     private AnomalyResolver createAnomalyResolver(RelocationSettings relocation, 
-                                                  StaticDynamicResourceDemandEstimator estimator, 
+                                                  ResourceDemandEstimator estimator, 
                                                   GroupManagerRepository repository)
     {
         AnomalyResolver anomalyResolver = new AnomalyResolver(relocation, 
@@ -168,7 +169,7 @@ public class GroupManagerStateMachine
      * @return                             The virtual machine manager
      */
     private VirtualMachineManager createVirtualMachineManager(NodeConfiguration nodeConfiguration,
-                                                              StaticDynamicResourceDemandEstimator estimator,
+                                                              ResourceDemandEstimator estimator,
                                                               GroupManagerRepository repository)
     {
         

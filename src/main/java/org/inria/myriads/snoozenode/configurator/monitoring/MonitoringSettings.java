@@ -20,6 +20,7 @@
 package org.inria.myriads.snoozenode.configurator.monitoring;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
+import org.inria.myriads.snoozenode.configurator.estimator.EstimatorPolicy;
 
 /**
  * Monitoring settings.
@@ -39,6 +40,9 @@ public final class MonitoringSettings
     
     /** Monitoring thresholds. */
     private MonitoringThresholds thresholds_;
+    
+    /** Monitoring estimator.*/
+    private EstimatorPolicySettings estimatorPolicy_;
      
     /**
      * Sets the number of monitoring entries.
@@ -118,5 +122,21 @@ public final class MonitoringSettings
     public MonitoringThresholds getThresholds()
     {
         return thresholds_;
+    }
+
+    /**
+     * @return the estimatorPolicy
+     */
+    public EstimatorPolicySettings getEstimatorPolicy()
+    {
+        return estimatorPolicy_;
+    }
+
+    /**
+     * @param estimatorPolicy the estimatorPolicy to set
+     */
+    public void setEstimatorPolicy(EstimatorPolicySettings estimatorPolicy)
+    {
+        estimatorPolicy_ = estimatorPolicy;
     }
 }

@@ -24,16 +24,15 @@ import java.util.Map;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.groupmanager.estimator.api.NetworkDemandEstimator;
+import org.inria.myriads.snoozenode.groupmanager.estimator.api.VirtualMachineMonitoringEstimator;
 import org.inria.myriads.snoozenode.util.UtilizationUtils;
 
 /**
- * Sample network demand estimator.
- * 
- * @author Eugen Feller
+ * Sample network demand estimator.NetworkDemandEstimator
  */
-public final class AverageNetworkDemandEstimator 
-    implements NetworkDemandEstimator
+
+public final class AverageTxDemandEstimator 
+    implements VirtualMachineMonitoringEstimator
 {    
     /**
      * Estimates the network demand.
@@ -41,7 +40,7 @@ public final class AverageNetworkDemandEstimator
      * @param virtualMachineHistory     The virtual machine history data
      * @return                          The network demand estimate
      */
-    public NetworkDemand estimate(Map<Long, VirtualMachineMonitoringData> virtualMachineHistory) 
+    public double estimate(Map<Long, VirtualMachineMonitoringData> virtualMachineHistory) 
     {
         Guard.check(virtualMachineHistory);      
         double rxUtilization = 0;
@@ -49,14 +48,14 @@ public final class AverageNetworkDemandEstimator
         
         for (VirtualMachineMonitoringData monitoringData : virtualMachineHistory.values())
         {
-            rxUtilization += UtilizationUtils.getNetworkRxUtilization(monitoringData.getUsedCapacity());
+//            rxUtilization += UtilizationUtils.getNetworkRxUtilization(monitoringData.getUsedCapacity());
             txUtilization += UtilizationUtils.getNetworkTxUtilization(monitoringData.getUsedCapacity());
         }
         
-        rxUtilization = rxUtilization / virtualMachineHistory.size();
+//        rxUtilization = rxUtilization / virtualMachineHistory.size();
         txUtilization = txUtilization / virtualMachineHistory.size();
         
-        NetworkDemand networkDemand = new NetworkDemand(rxUtilization, txUtilization);
-        return networkDemand;
+//        NetworkDemand networkDemand = new NetworkDemand(rxUtilization, txUtilization);
+        return txUtilization;
     }
 }

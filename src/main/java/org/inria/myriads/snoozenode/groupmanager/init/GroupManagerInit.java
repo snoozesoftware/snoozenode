@@ -33,6 +33,7 @@ import org.inria.myriads.snoozenode.configurator.scheduler.ReconfigurationSettin
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.estimator.ResourceEstimatorFactory;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.exception.ResourceDemandEstimatorException;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.EnergySaverFactory;
@@ -87,7 +88,7 @@ public final class GroupManagerInit
     private GroupManagerDescription description_;
 
     /** Resource demand measure. */
-    private StaticDynamicResourceDemandEstimator estimator_;
+    private ResourceDemandEstimator estimator_;
      
     /** State machine. */
     private StateMachine stateMachine_;
@@ -198,8 +199,7 @@ public final class GroupManagerInit
         estimator_ = ResourceEstimatorFactory.newResourceDemandEstimator(
                 nodeConfiguration_.getEstimator(),
                 nodeConfiguration_.getMonitoring(),
-                nodeConfiguration_.getHostMonitoringSettings(),
-                nodeConfiguration_.getSubmission().getPackingDensity()
+                nodeConfiguration_.getHostMonitoringSettings()
                 );
     }
     

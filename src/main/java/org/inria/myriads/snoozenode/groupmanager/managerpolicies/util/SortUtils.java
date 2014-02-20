@@ -26,6 +26,7 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDes
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.comparators.GroupManagerL1Decreasing;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators.LocalControllerL1Decreasing;
@@ -61,22 +62,22 @@ public final class SortUtils
      * @param estimator            The resource estimator
      */
     public static void sortVirtualMachinesIncreasing(List<VirtualMachineMetaData> virtualMachines,
-                                                     StaticDynamicResourceDemandEstimator estimator) 
+                                                     ResourceDemandEstimator estimator) 
     {
         Guard.check(virtualMachines, estimator);
-        log_.debug(String.format("Sorting virtual machines in increasing order according to %s norm!", 
-                                 estimator.getSortNorm()));
-        
-        switch (estimator.getSortNorm())
-        {
-            case L1 : 
-                Collections.sort(virtualMachines, new VirtualMachineL1Increasing(estimator));
-                break;
-                        
-            default:
-                log_.debug("Unknown virtual machine demand measure selected!");
-                break;
-        }
+//        log_.debug(String.format("Sorting virtual machines in increasing order according to %s norm!", 
+//                                 estimator.getSortNorm()));
+        estimator.sortVirtualMachines(virtualMachines, false);
+//        switch (estimator.getSortNorm())
+//        {
+//            case L1 : 
+//                Collections.sort(virtualMachines, new VirtualMachineL1Increasing(estimator));
+//                break;
+//                        
+//            default:
+//                log_.debug("Unknown virtual machine demand measure selected!");
+//                break;
+//        }
     }
     
     /**
@@ -109,30 +110,30 @@ public final class SortUtils
      * @param estimator          The estimator
      */
     public static void sortVirtualMachinesDecreasing(List<VirtualMachineMetaData> virtualMachines,  
-                                                     StaticDynamicResourceDemandEstimator estimator)
+                                                     ResourceDemandEstimator estimator)
     {
         Guard.check(virtualMachines, estimator);
-        log_.debug(String.format("Sorting virtual machines in decreasing order according to %s norm!", 
-                                 estimator.getSortNorm()));
-        
-        switch (estimator.getSortNorm())
-        {
-            case L1 : 
-                Collections.sort(virtualMachines, new VirtualMachineL1Decreasing(estimator));
-                break;
-            
-            case Euclid :
-                Collections.sort(virtualMachines, new VirtualMachineEuclidDecreasing(estimator));
-                break;
-            
-            case Max :
-                Collections.sort(virtualMachines, new VirtualMachineMaxDecreasing(estimator));
-                break;
-            
-            default:
-                log_.debug("Unknown virtual machine demand measure selected!");
-                break;
-        }
+//        log_.debug(String.format("Sorting virtual machines in decreasing order according to %s norm!", 
+//                                 estimator.getSortNorm()));
+        estimator.sortVirtualMachines(virtualMachines, true);
+//        switch (estimator.getSortNorm())
+//        {
+//            case L1 : 
+//                Collections.sort(virtualMachines, new VirtualMachineL1Decreasing(estimator));
+//                break;
+//            
+//            case Euclid :
+//                Collections.sort(virtualMachines, new VirtualMachineEuclidDecreasing(estimator));
+//                break;
+//            
+//            case Max :
+//                Collections.sort(virtualMachines, new VirtualMachineMaxDecreasing(estimator));
+//                break;
+//            
+//            default:
+//                log_.debug("Unknown virtual machine demand measure selected!");
+//                break;
+//        }
     }
 
     /**
@@ -142,22 +143,22 @@ public final class SortUtils
      * @param estimator             The estimator
      */
     public static void sortLocalControllersIncreasing(List<LocalControllerDescription> localControllers,
-                                                      StaticDynamicResourceDemandEstimator estimator)
+                                                      ResourceDemandEstimator estimator)
     {
         Guard.check(localControllers, estimator);
-        log_.debug(String.format("Sorting local controllers in increasing order according to %s norm!", 
-                                  estimator.getSortNorm()));
-        
-        switch (estimator.getSortNorm())
-        {
-            case L1 : 
-                Collections.sort(localControllers, new LocalControllerL1Increasing(estimator));
-                break;
-            
-            default:
-                log_.debug("Unknown local controller demand measure selected!");
-                break;
-        }
+//        log_.debug(String.format("Sorting local controllers in increasing order according to %s norm!", 
+//                                  estimator.getSortNorm()));
+        estimator.sortLocalControllers(localControllers, false);
+//        switch (estimator.getSortNorm())
+//        {
+//            case L1 : 
+//                Collections.sort(localControllers, new LocalControllerL1Increasing(estimator));
+//                break;
+//            
+//            default:
+//                log_.debug("Unknown local controller demand measure selected!");
+//                break;
+//        }
     }
     
     /**
@@ -167,21 +168,23 @@ public final class SortUtils
      * @param estimator             The estimator
      */
     public static void sortLocalControllersDecreasing(List<LocalControllerDescription> localControllers,
-                                                      StaticDynamicResourceDemandEstimator estimator)
+                                                      ResourceDemandEstimator estimator)
     {
         Guard.check(localControllers, estimator);
-        log_.debug(String.format("Sorting local controllers in decreasing order according to %s norm!", 
-                                  estimator.getSortNorm()));
+//        log_.debug(String.format("Sorting local controllers in decreasing order according to %s norm!", 
+//                                  estimator.getSortNorm()));
         
-        switch (estimator.getSortNorm())
-        {
-            case L1 : 
-                Collections.sort(localControllers, new LocalControllerL1Decreasing(estimator));
-                break;
-            
-            default:
-                log_.debug("Unknown local controller demand measure selected!");
-                break;
-        }
+          estimator.sortLocalControllers(localControllers, true);
+          
+//        switch (estimator.getSortNorm())
+//        {
+//            case L1 : 
+//                Collections.sort(localControllers, new LocalControllerL1Decreasing(estimator));
+//                break;
+//            
+//            default:
+//                log_.debug("Unknown local controller demand measure selected!");
+//                break;
+//        }
     }    
 }

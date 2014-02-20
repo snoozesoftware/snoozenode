@@ -101,7 +101,7 @@ public final class LocalControllerSummaryConsumer
                     log_.debug("Treating virtual machines metrics");
                     repository_.addAggregatedMonitoringData(localControllerId, virtualMachineMonitoringAggregatedData);
                 }
-                // treating host monitoring data
+
                 if (hostMonitoringAggregatedData != null)
                 {
                     log_.debug("Treating hosts metrics");

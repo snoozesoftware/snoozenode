@@ -35,24 +35,17 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.Ne
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
-import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MathUtils;
 import org.inria.myriads.snoozecommon.util.MonitoringUtils;
-import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.estimator.HostEstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorSettings;
 import org.inria.myriads.snoozenode.configurator.submission.PackingDensity;
+import org.inria.myriads.snoozenode.estimator.ResourceEstimatorFactory;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.exception.ResourceDemandEstimatorException;
-import org.inria.myriads.snoozenode.groupmanager.estimator.api.CPUDemandEstimator;
-import org.inria.myriads.snoozenode.groupmanager.estimator.api.MemoryDemandEstimator;
-import org.inria.myriads.snoozenode.groupmanager.estimator.api.NetworkDemandEstimator;
-import org.inria.myriads.snoozenode.groupmanager.estimator.api.impl.AverageCPUDemandEstimator;
-import org.inria.myriads.snoozenode.groupmanager.estimator.api.impl.AverageMemoryDemandEstimator;
-import org.inria.myriads.snoozenode.groupmanager.estimator.api.impl.AverageNetworkDemandEstimator;
-import org.inria.myriads.snoozenode.groupmanager.estimator.enums.Estimator;
+import org.inria.myriads.snoozenode.groupmanager.estimator.api.HostMonitoringEstimator;
+import org.inria.myriads.snoozenode.groupmanager.estimator.api.VirtualMachineMonitoringEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.estimator.MonitoringEstimatorFactory;
 import org.inria.myriads.snoozenode.util.ThresholdUtils;
 import org.inria.myriads.snoozenode.util.UtilizationUtils;
 
@@ -70,16 +63,19 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
     private static final Logger log_ = LoggerFactory.getLogger(StaticDynamicResourceDemandEstimator.class);
         
     /** CPU demand estimator. */
-    private CPUDemandEstimator cpuDemandEstimator_;
+    private VirtualMachineMonitoringEstimator cpuDemandEstimator_;
     
     /** Memory demand estimator. */
-    private MemoryDemandEstimator memoryDemandEstimator_;
+    private VirtualMachineMonitoringEstimator memoryDemandEstimator_;
      
-    /** Network demand estimator. */
-    private NetworkDemandEstimator networkDemandEstimator_;
-   
+    /** Rx demand estimator. */
+    private VirtualMachineMonitoringEstimator rxDemandEstimator_;
+    
+    /** Rx demand estimator. */
+    private VirtualMachineMonitoringEstimator txDemandEstimator_;
+    
     /** hostEstimator.*/
-    //Map<String, Estimator> hostEstimators_;
+    Map<String, HostMonitoringEstimator> hostEstimators_;
     
     /** Resource demand estimator settings. */
     private int numberOfMonitoringEntries_;
@@ -106,8 +102,10 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
     {
         log_.debug("Building the static/dynamic resource demand estimator");
         packingDensity_ = new PackingDensity();
+        hostEstimators_ = new HashMap<String, HostMonitoringEstimator>();
     }
     
+    @Override
     public void initialize() throws ResourceDemandEstimatorException
     {
         String sortNormString = estimatorSettings_.getOptions().get("sortNorm");
@@ -146,48 +144,26 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
         }
         packingDensity_.setNetwork(Double.valueOf(packingNetworkString));
         
-//        isStatic_ = estimatorSettings_.isStatic();
         monitoringThresholds_ = monitoringSettings_.getThresholds();
         numberOfMonitoringEntries_ = estimatorSettings_.getNumberOfMonitoringEntries();
-        cpuDemandEstimator_ = newVirtualMachineCpuDemandEstimator(estimatorSettings_.getPolicy().getCPU());     
-        memoryDemandEstimator_ = newVirtualMachineMemoryDemandEstimator(estimatorSettings_.getPolicy().getMemory());
-        networkDemandEstimator_ = newVirtualMachineNetworkDemandEstimator(estimatorSettings_.getPolicy().getNetwork());
+        
+        // TODO move this to super class ?
+        cpuDemandEstimator_ = ResourceEstimatorFactory.newVirtualMachineDemandCpuEstimator(monitoringSettings_.getEstimatorPolicy().getCpuEstimatorName());
+        memoryDemandEstimator_ = ResourceEstimatorFactory.newVirtualMachineDemandMemEstimator(monitoringSettings_.getEstimatorPolicy().getMemoryEstimatorName());
+        rxDemandEstimator_ = ResourceEstimatorFactory.newVirtualMachineDemandRxEstimator(monitoringSettings_.getEstimatorPolicy().getNetworkEstimatorName());
+        txDemandEstimator_ = ResourceEstimatorFactory.newVirtualMachineDemandTxEstimator(monitoringSettings_.getEstimatorPolicy().getNetworkEstimatorName());
         
         for (HostMonitorSettings hostMonitorSetting : hostMonitoringSettings_.getHostMonitorSettings().values())
         {
             for (Resource resource : hostMonitorSetting.getResources())
             {
                 HostEstimatorSettings hostEstimatorSettings = hostMonitorSetting.getEstimators().get(resource.getName());
-//                hostEstimators_.put(resource.getName(), MonitoringEstimatorFactory.newEstimator(hostEstimatorSettings));
+                HostEstimatorSettings estimatorSetting = hostMonitorSetting.getEstimators().get(resource.getName());                
+                hostEstimators_.put(resource.getName(), ResourceEstimatorFactory.newHostMonitoringEstimator(estimatorSetting));
             }
         }
     }
     
-    /** 
-     * Creates a new cpu demand estimator.
-     * 
-     * @param demandEstimator   The desired demand estimator
-     * @return                  The selected CPU demand estimator.
-     */
-    private CPUDemandEstimator newVirtualMachineCpuDemandEstimator(Estimator demandEstimator)
-    {
-        log_.debug("Creating a new CPU demand estimator");
-        
-        CPUDemandEstimator cpuDemandEstimator = null;     
-        switch (demandEstimator)
-        {        
-            case average :
-                log_.debug("Selecting average CPU demand estimator");
-                cpuDemandEstimator = new AverageCPUDemandEstimator();
-                break;
-                
-            default : 
-                log_.equals(String.format("Unknown CPU demand estimator selected: %s", demandEstimator));
-                break;
-        }
-        
-        return cpuDemandEstimator;
-    }
     
     /**
      * Returns the group manager capacity.
@@ -268,57 +244,6 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
         return false;
     } 
     
-    /**
-     * Creates a new network demand estimator.
-     * 
-     * @param demandEstimator   The desired demand estimator
-     * @return                  The selected CPU demand estimator.
-     */
-    private NetworkDemandEstimator newVirtualMachineNetworkDemandEstimator(Estimator demandEstimator)
-    {
-        log_.debug("Creating a new network demand estimator");
-        
-        NetworkDemandEstimator networkDemandEstimator = null;     
-        switch (demandEstimator)
-        {        
-            case average :
-                log_.debug("Selecting the average network demand estimator");
-                networkDemandEstimator = new AverageNetworkDemandEstimator();
-                break;
-                
-            default : 
-                log_.equals(String.format("Unknown network demand estimator selected: %s", demandEstimator));
-                break;
-        }
-        
-        return networkDemandEstimator;
-    }
-    
-    /**
-     * Creates a new memory demand estimator.
-     * 
-     * @param demandEstimator   The desired demand estimator
-     * @return                  The selected CPU demand estimator.
-     */
-    private MemoryDemandEstimator newVirtualMachineMemoryDemandEstimator(Estimator demandEstimator)
-    {
-        log_.debug("Creating a new memory demand estimator");
-        
-        MemoryDemandEstimator memoryDemandEstimator = null;     
-        switch (demandEstimator)
-        {        
-            case average :
-                log_.debug("Selecting average memory demand estimator");
-                memoryDemandEstimator = new AverageMemoryDemandEstimator();
-                break;
-                
-            default : 
-                log_.equals(String.format("Unknown memory demand estimator selected: %s", demandEstimator));
-                break;
-        }
-        
-        return memoryDemandEstimator;
-    }
 
     /**
      * Creates new requested capacity.
@@ -478,7 +403,6 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
                capacity = MathUtils.addVectors(computeRequestedVirtualMachineCapacity(virtualMachine), capacity);
                continue;
            }
-           //MonitoringEstimator.estimateVmUtilization.
            ArrayList<Double> estimatedData = estimateVirtualMachineResourceDemand(virtualMachine);
            log_.debug(String.format("Estimated virtual machine %s resource demand is %s", 
                                      virtualMachineId,
@@ -486,7 +410,7 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
            capacity = MathUtils.addVectors(estimatedData, capacity);
        }
        
-       log_.debug(String.format("Local controller capacity is: %s", capacity));
+       log_.debug(String.format("Local controller utilization is: %s", capacity));
        return capacity;
     }
     
@@ -506,10 +430,13 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
         Map<Long, VirtualMachineMonitoringData> virtualMachineHistory = virtualMachine.getUsedCapacity();
         double cpuUtilization = cpuDemandEstimator_.estimate(virtualMachineHistory);
         double memoryUtilization = memoryDemandEstimator_.estimate(virtualMachineHistory);
-        NetworkDemand networkUtilization = networkDemandEstimator_.estimate(virtualMachineHistory);       
+        //NetworkDemand networkUtilization = networkDemandEstimator_.estimate(virtualMachineHistory);
+        double rxUtilization = rxDemandEstimator_.estimate(virtualMachineHistory);
+        double txUtilization = txDemandEstimator_.estimate(virtualMachineHistory);
         ArrayList<Double> estimates = MathUtils.createCustomVector(cpuUtilization, 
                                                                    memoryUtilization, 
-                                                                   networkUtilization);
+                                                                   rxUtilization,
+                                                                   txUtilization);
         return estimates;
     }
     
@@ -519,15 +446,16 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
      * @param virtualMachine     The virtual machine meta data
      * @return                   The estimated virtual machine monitoring data
      */
+    @Override
     public Map<String, Double> estimateHostResourceUtilization(Map<String, Resource> hostUtilizationHistory) 
     {              
         Map<String, Double> hostUtilization = new HashMap<String, Double>(); 
 
         for (Resource resource : hostUtilizationHistory.values())
         {
-            List<Double> history = new ArrayList<Double>(resource.getHistory().values());
-//            double estimation = hostEstimators_.get(resource.getName()).estimate(history);
-//            hostUtilization.put(resource.getName(), estimation);
+            log_.debug(String.format("Computing estimation for resource %s and history %s ", resource.getName(), resource.getHistory()));
+            double estimation = hostEstimators_.get(resource.getName()).estimate(resource);
+            hostUtilization.put(resource.getName(), estimation);
         }
         return hostUtilization;
     }

@@ -27,6 +27,7 @@ import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.consumer.LocalControllerSummaryConsumer;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.receiver.GroupManagerSummaryReceiver;
@@ -124,7 +125,7 @@ public final class MonitoringFactory
         newGroupManagerMonitoringService(
                                          String groupManagerId,
                                          GroupManagerRepository repository,
-                                         StaticDynamicResourceDemandEstimator estimator,
+                                         ResourceDemandEstimator estimator,
                                          DatabaseSettings databaseSettings,
                                          MonitoringSettings monitoringSettings,
                                          ExternalNotifierSettings monitoringExternalSettings)

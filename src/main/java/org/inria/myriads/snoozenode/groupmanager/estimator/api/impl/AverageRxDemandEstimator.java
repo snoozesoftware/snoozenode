@@ -21,36 +21,41 @@ package org.inria.myriads.snoozenode.groupmanager.estimator.api.impl;
 
 import java.util.Map;
 
+import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.VirtualMachineMonitoringEstimator;
 import org.inria.myriads.snoozenode.util.UtilizationUtils;
 
 /**
- * Average memory demand estimator.
- * 
- * @author Eugen Feller
+ * Sample network demand estimator.NetworkDemandEstimator
  */
-public final class AverageMemoryDemandEstimator 
+
+public final class AverageRxDemandEstimator 
     implements VirtualMachineMonitoringEstimator
 {    
     /**
-     * Estimates the memory demand.
+     * Estimates the network demand.
      * 
      * @param virtualMachineHistory     The virtual machine history data
-     * @return                          The memory demand estimate
+     * @return                          The network demand estimate
      */
     public double estimate(Map<Long, VirtualMachineMonitoringData> virtualMachineHistory) 
     {
-        Guard.check(virtualMachineHistory);
+        Guard.check(virtualMachineHistory);      
+        double rxUtilization = 0;
+        double txUtilization = 0;
         
-        double memoryUtilization = 0;
         for (VirtualMachineMonitoringData monitoringData : virtualMachineHistory.values())
         {
-            memoryUtilization += UtilizationUtils.getMemoryUtilization(monitoringData.getUsedCapacity());
+            rxUtilization += UtilizationUtils.getNetworkRxUtilization(monitoringData.getUsedCapacity());
+           // txUtilization += UtilizationUtils.getNetworkTxUtilization(monitoringData.getUsedCapacity());
         }
         
-        memoryUtilization = memoryUtilization / virtualMachineHistory.size();
-        return memoryUtilization;
+        rxUtilization = rxUtilization / virtualMachineHistory.size();
+        //txUtilization = txUtilization / virtualMachineHistory.size();
+        
+        //NetworkDemand networkDemand = new NetworkDemand(rxUtilization, txUtilization);
+        return rxUtilization;
     }
 }

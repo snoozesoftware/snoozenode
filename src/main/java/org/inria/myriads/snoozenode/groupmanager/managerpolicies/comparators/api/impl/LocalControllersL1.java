@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators;
+package org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators.api.impl;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -28,27 +28,36 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MathUtils;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators.api.SnoozeComparator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * L1 norm based local controller sorting in decreasing order.
  * 
  * @author Eugen Feller
  */
-public class LocalControllerL1Decreasing
-    implements Comparator<LocalControllerDescription> 
+public class LocalControllersL1 extends SnoozeComparator<LocalControllerDescription>
 {
-    /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
+    
+    /** Define the logger. */
+    private static final Logger log_ = LoggerFactory.getLogger(LocalControllersL1.class);
     
     /**
      * Constructor.
      * 
      * @param estimator     The resource demand estimator
      */
-    public LocalControllerL1Decreasing(ResourceDemandEstimator estimator)
+    public LocalControllersL1()
     {
-        Guard.check(estimator);
-        estimator_ = estimator;
+        log_.debug("Building a new L1 local controllers comparator");
+    }
+    
+    
+    @Override
+    public void initialize()
+    {
+        log_.debug("Initializing a new L1 local controllers comparator");
     }
     
     /**
@@ -58,12 +67,11 @@ public class LocalControllerL1Decreasing
      * @param localController2   Second virtual machine
      * @return                   -1, 0, 1
      */
-    public final int compare(LocalControllerDescription localController1, 
+    @Override
+    protected int internalCompare(LocalControllerDescription localController1, 
                              LocalControllerDescription localController2)
     {
-        Guard.check(localController1, localController2);
-        
-        ArrayList<Double> utilization1 = estimator_.computeLocalControllerCapacity(localController1);
+        ArrayList<Double>utilization1 = estimator_.computeLocalControllerCapacity(localController1);                
         ArrayList<Double> utilization2 = estimator_.computeLocalControllerCapacity(localController2);  
         
         double value1 = MathUtils.computeL1Norm(utilization1);
@@ -71,10 +79,10 @@ public class LocalControllerL1Decreasing
         
         if (value1 < value2) 
         {
-            return 1;
+            return -1;
         } else if (value1 > value2) 
         {
-            return -1;
+            return 1;
         }
 
         LocalControllerStatus status1 = localController1.getStatus();
@@ -89,4 +97,6 @@ public class LocalControllerL1Decreasing
         
         return 0;
     }
+
+
 }

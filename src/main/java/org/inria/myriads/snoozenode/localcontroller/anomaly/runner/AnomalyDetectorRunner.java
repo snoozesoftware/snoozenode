@@ -95,6 +95,7 @@ public class AnomalyDetectorRunner implements Runnable
                     
                     //logic to extract in this class
                     LocalControllerState state = anomalyDetector_.detectAnomaly(hostResources, virtualMachines);
+                    
                     if (!state.equals(LocalControllerState.STABLE))
                     {
                         listener_.onAnomalyDetected(state);

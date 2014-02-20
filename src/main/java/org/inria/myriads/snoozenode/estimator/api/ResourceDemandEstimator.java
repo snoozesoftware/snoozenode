@@ -1,9 +1,20 @@
 package org.inria.myriads.snoozenode.estimator.api;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
-import org.inria.myriads.snoozenode.configurator.submission.PackingDensity;
+import org.inria.myriads.snoozenode.estimator.comparator.ComparatorFactory;
+import org.inria.myriads.snoozenode.exception.ResourceDemandEstimatorException;
 
 /**
  * @author msimonin
@@ -18,7 +29,43 @@ public abstract class ResourceDemandEstimator
     
     protected HostMonitoringSettings hostMonitoringSettings_;
     
-    protected PackingDensity packingDensity_;    
+
+    
+    public abstract void initialize() throws ResourceDemandEstimatorException ;
+    
+    public abstract boolean hasEnoughLocalControllerCapacity(VirtualMachineMetaData virtualMachine, 
+            LocalControllerDescription localController);
+    
+    public abstract ArrayList<Double> computeLocalControllerCapacity(LocalControllerDescription localController);
+    
+    public abstract GroupManagerSummaryInformation generateGroupManagerSummaryInformation(
+            ArrayList<LocalControllerDescription> localControllers);
+    
+    public abstract ArrayList<Double> estimateVirtualMachineResourceDemand(VirtualMachineMetaData firstVirtualMachine);
+    
+    public abstract Map<String, Double> estimateHostResourceUtilization(Map<String, Resource> hostUtilizationHistory);
+    
+    public abstract List<Double> computeMaxAllowedCapacity(LocalControllerDescription sourceLocalController);
+    
+    // TODO not abstract ?
+    public abstract int getNumberOfMonitoringEntries();
+    
+    public void sortVirtualMachines(List<VirtualMachineMetaData> virtualMachines, boolean decreasing)
+    {
+        Collections.sort(virtualMachines, ComparatorFactory.newVirtualMachinesComparator(estimatorSettings_, this, decreasing));
+    }
+    
+    public void sortLocalControllers(List<LocalControllerDescription> localControllers, boolean decreasing)
+    {
+        Collections.sort(localControllers, ComparatorFactory.newLocalControllersComparator(estimatorSettings_, this, decreasing));
+    }
+    
+    public void sortGroupManagers(List<GroupManagerDescription> groupManagers, boolean decreasing)
+    {
+        Collections.sort(groupManagers, ComparatorFactory.newGroupManagersComparator(estimatorSettings_, this, decreasing));
+    }
+    
+
     
     /**
      * @return the estimatorSettings
@@ -34,22 +81,6 @@ public abstract class ResourceDemandEstimator
     public void setEstimatorSettings(EstimatorSettings estimatorSettings)
     {
         estimatorSettings_ = estimatorSettings;
-    }
-
-    /**
-     * @return the packingDensity
-     */
-    public PackingDensity getPackingDensity()
-    {
-        return packingDensity_;
-    }
-
-    /**
-     * @param packingDensity the packingDensity to set
-     */
-    public void setPackingDensity(PackingDensity packingDensity)
-    {
-        packingDensity_ = packingDensity;
     }
 
     /**
@@ -83,6 +114,14 @@ public abstract class ResourceDemandEstimator
     {
         monitoringSettings_ = monitoringSettings;
     }
+
+    
+
+    
+    
+       
+    
+    
     
     
 }

@@ -191,7 +191,13 @@ public final class OutputUtils
         log_.debug(String.format("monitoring.thresholds.memory: %s",
                                  configuration.getMonitoring().getThresholds().getMemory()));
         log_.debug(String.format("monitoring.thresholds.network: %s",
-                                 configuration.getMonitoring().getThresholds().getNetwork())); 
+                                 configuration.getMonitoring().getThresholds().getNetwork()));
+        log_.debug(String.format("monitoring.estimator.cpu: %s",
+                configuration.getMonitoring().getEstimatorPolicy().getCpuEstimatorName()));
+        log_.debug(String.format("monitoring.estimator.mem: %s",
+                configuration.getMonitoring().getEstimatorPolicy().getMemoryEstimatorName()));
+        log_.debug(String.format("monitoring.estimator.network: %s",
+                configuration.getMonitoring().getEstimatorPolicy().getNetworkEstimatorName()));
         log_.debug("-------------------");
         log_.debug("Estimation settings:");
         log_.debug("-------------------");
@@ -202,12 +208,12 @@ public final class OutputUtils
         log_.debug(String.format("estimator.options %s", configuration.getEstimator().getOptions()));
         log_.debug(String.format("estimator.numberOfMonitoringEntries: %s",
                                  configuration.getEstimator().getNumberOfMonitoringEntries()));
-        log_.debug(String.format("estimator.policy.cpu: %s",
-                                 configuration.getEstimator().getPolicy().getCPU()));
-        log_.debug(String.format("estimator.policy.cpu: %s",
-                                 configuration.getEstimator().getPolicy().getMemory()));
-        log_.debug(String.format("estimator.policy.memory: %s",
-                                 configuration.getEstimator().getPolicy().getNetwork()));
+//        log_.debug(String.format("estimator.policy.cpu: %s",
+//                                 configuration.getEstimator().getPolicy().getCPU()));
+//        log_.debug(String.format("estimator.policy.cpu: %s",
+//                                 configuration.getEstimator().getPolicy().getMemory()));
+//        log_.debug(String.format("estimator.policy.memory: %s",
+//                                 configuration.getEstimator().getPolicy().getNetwork()));
         log_.debug("--------------------------------");
         log_.debug("Group leader scheduler settings:");
         log_.debug("--------------------------------");

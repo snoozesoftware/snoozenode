@@ -21,6 +21,7 @@ package org.inria.myriads.snoozenode.groupmanager.managerpolicies;
 
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfiguration;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Relocation;
@@ -67,7 +68,7 @@ public final class GroupManagerPolicyFactory
      */
     @SuppressWarnings("unchecked")
     public static PlacementPolicy newVirtualMachinePlacement(GroupManagerSchedulerSettings schedulerSettings,
-                                                             StaticDynamicResourceDemandEstimator estimator) 
+                                                             ResourceDemandEstimator estimator) 
     {
         Guard.check(schedulerSettings, estimator);
        
@@ -118,7 +119,7 @@ public final class GroupManagerPolicyFactory
      * @return                       The selected reconfiguration policy
      */
     public static ReconfigurationPolicy newVirtualMachineReconfiguration(Reconfiguration reconfigurationPolicy,
-                                                                         StaticDynamicResourceDemandEstimator estimator) 
+                                                                         ResourceDemandEstimator estimator) 
     {
         Guard.check(reconfigurationPolicy);
         log_.debug(String.format("Selected virtual machine reconfiguration policy: %s", 
@@ -146,7 +147,7 @@ public final class GroupManagerPolicyFactory
      * @return                  The selected relocation policy
      */
     public static VirtualMachineRelocation newVirtualMachineRelocation(Relocation relocationPolicy,
-                                                                       StaticDynamicResourceDemandEstimator estimator) 
+                                                                       ResourceDemandEstimator estimator) 
     {
         Guard.check(relocationPolicy);
         log_.debug(String.format("Selecting the virtual machine relocation policy: %s", 

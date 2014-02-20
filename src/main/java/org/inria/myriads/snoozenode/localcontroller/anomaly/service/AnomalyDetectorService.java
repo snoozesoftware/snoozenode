@@ -9,13 +9,14 @@ import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitoringSettings;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
+import org.inria.myriads.snoozenode.estimator.ResourceEstimatorFactory;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.exception.ResourceDemandEstimatorException;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.AnomalyDetectorFactory;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.AnomalyDetector;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.listener.AnomalyDetectorListener;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.runner.AnomalyDetectorRunner;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.estimator.MonitoringEstimator;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.estimator.MonitoringEstimatorFactory;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.service.InfrastructureMonitoring;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
 import org.inria.myriads.snoozenode.monitoring.comunicator.api.MonitoringCommunicator;
@@ -37,7 +38,7 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
     private AnomalyDetectorRunner anomalyDetectorRunner_;
 
     /** Monitoring estimator.*/
-    private MonitoringEstimator monitoringEstimator_;
+    private ResourceDemandEstimator monitoringEstimator_;
 
     /** Anomaly detector.*/
     private AnomalyDetector anomalyDetector_;
@@ -60,6 +61,7 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
      * @param repository            The local controller repository
      * @param monitoring            The infrastructure monitoring
      * @param databaseSettings      The database settings
+     * @throws ResourceDemandEstimatorException 
      */
     public AnomalyDetectorService(
             LocalControllerDescription localController,
@@ -69,7 +71,7 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
             EstimatorSettings estimatorSettings,
             HostMonitoringSettings hostMonitoringSettings,
             AnomalyDetectorSettings anomalyDetectorSettings
-            )
+            ) throws ResourceDemandEstimatorException
     {
         Guard.check(localController, repository);
         log_.debug("Initializing anomaly detector service");
@@ -83,7 +85,11 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
         // two steps first 
         // (1) the metrics estimator 
         // (2) the detector logic (based on this estimator)
-        monitoringEstimator_ = new MonitoringEstimator(estimatorSettings_, hostMonitoringSettings_);
+        //monitoringEstimator_ = new MonitoringEstimator(estimatorSettings_, hostMonitoringSettings_);
+        monitoringEstimator_ = ResourceEstimatorFactory.newResourceDemandEstimator(
+                estimatorSettings,
+                monitoring.getMonitoringSettings(),
+                hostMonitoringSettings);
         
         anomalyDetector_ = 
                 AnomalyDetectorFactory.newAnomalyDetectorEstimator(

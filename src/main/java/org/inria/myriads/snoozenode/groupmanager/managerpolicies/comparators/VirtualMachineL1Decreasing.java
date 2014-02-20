@@ -25,6 +25,7 @@ import java.util.Comparator;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MathUtils;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 
 /**
@@ -36,14 +37,14 @@ public final class VirtualMachineL1Decreasing
     implements Comparator<VirtualMachineMetaData> 
 {
     /** Resource demand estimator. */
-    private StaticDynamicResourceDemandEstimator estimator_;
+    private ResourceDemandEstimator estimator_;
 
     /**
      * Consturctor.
      * 
      * @param estimator     The resource demand estimator
      */
-    public VirtualMachineL1Decreasing(StaticDynamicResourceDemandEstimator estimator) 
+    public VirtualMachineL1Decreasing(ResourceDemandEstimator estimator) 
     {
         Guard.check(estimator);
         estimator_ = estimator;

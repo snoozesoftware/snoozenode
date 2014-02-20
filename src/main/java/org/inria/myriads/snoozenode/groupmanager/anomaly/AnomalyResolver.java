@@ -30,6 +30,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.scheduler.RelocationSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.exception.AnomalyResolverException;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.GroupManagerPolicyFactory;
@@ -89,7 +90,7 @@ public final class AnomalyResolver
      * @param externalNotifier           The external notifier
      */
     public AnomalyResolver(RelocationSettings relocationPolicies,
-                           StaticDynamicResourceDemandEstimator resourceDemandEstimator,
+                           ResourceDemandEstimator resourceDemandEstimator,
                            GroupManagerRepository groupManagerRepository,
                            StateMachine stateMachine,
                            ExternalNotifier externalNotifier

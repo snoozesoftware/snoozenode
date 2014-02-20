@@ -29,6 +29,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
@@ -51,14 +52,14 @@ public final class RoundRobin implements PlacementPolicy
     private int runningIndex_;
 
     /** Resource demand estimator. */
-    private StaticDynamicResourceDemandEstimator estimator_;
+    private ResourceDemandEstimator estimator_;
 
     /**
      * Constructor.
      * 
      * @param estimator     The estimator
      */
-    public RoundRobin(StaticDynamicResourceDemandEstimator estimator)
+    public RoundRobin(ResourceDemandEstimator estimator)
     {
         Guard.check(estimator);
         log_.debug("Initializing round robin virtual machine placement policy");

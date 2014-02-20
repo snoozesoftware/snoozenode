@@ -29,6 +29,7 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.transport.GroupManagerDataTransporter;
 import org.slf4j.Logger;
@@ -50,7 +51,7 @@ public final class GroupManagerSummaryProducer
     private GroupManagerRepository repository_;
 
     /** Resource demand estimator. */
-    private StaticDynamicResourceDemandEstimator estimator_;
+    private ResourceDemandEstimator estimator_;
     
     /** Lock object. */
     private Object lockObject_;
@@ -77,7 +78,7 @@ public final class GroupManagerSummaryProducer
      */
     public GroupManagerSummaryProducer(GroupManagerRepository repository, 
                                        NetworkAddress groupLeaderAddress,
-                                       StaticDynamicResourceDemandEstimator estimator,
+                                       ResourceDemandEstimator estimator,
                                        MonitoringSettings monitoringSettings,
                                        ExternalNotifierSettings monitoringExternalSettings,
                                        BlockingQueue<GroupManagerDataTransporter> dataQueue
