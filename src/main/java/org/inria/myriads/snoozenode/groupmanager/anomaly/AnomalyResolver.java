@@ -19,32 +19,12 @@
  */
 package org.inria.myriads.snoozenode.groupmanager.anomaly;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
-import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
-import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.scheduler.RelocationSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
-import org.inria.myriads.snoozenode.exception.AnomalyResolverException;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.GroupManagerPolicyFactory;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.VirtualMachineRelocation;
-import org.inria.myriads.snoozenode.groupmanager.migration.MigrationPlanEnforcer;
-import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationPlanListener;
+import org.inria.myriads.snoozenode.groupmanager.anomaly.listener.AnomalyResolverListener;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
-import org.inria.myriads.snoozenode.message.SystemMessage;
-import org.inria.myriads.snoozenode.message.SystemMessageType;
-import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
-import org.inria.snoozenode.external.notifier.ExternalNotificationType;
-import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,33 +33,24 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Eugen Feller
  */
-public final class AnomalyResolver 
-    implements MigrationPlanListener
+public abstract class AnomalyResolver 
+    implements AnomalyResolverListener
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(AnomalyResolver.class);
     
-    /** Overload relocation policy. */
-    private VirtualMachineRelocation overloadRelocationPolicy_;
-
-    /** Underload relocation policy. */
-    private VirtualMachineRelocation underloadRelocationPolicy_;
-    
-    /** The group manager repository. */
-    private GroupManagerRepository groupManagerRepository_;
-
-    /** Anomaly local controller. */
-    private LocalControllerDescription anomalyLocalController_;
-    
     /** State machine. */
-    private StateMachine stateMachine_;
+    protected StateMachine stateMachine_;
     
-    /** Number of monitoring entries. */
-    private int numberOfMonitoringEntries_;
+    /** RelocationSettings.*/
+    protected RelocationSettings relocationSettings_;
     
-    /** External Notifier.*/
-    private ExternalNotifier externalNotifier_;
+    /** Estimator. */
+    protected ResourceDemandEstimator estimator_;
     
+    /** GroupManager Repository.*/
+    protected GroupManagerRepository repository_;
+
     /**
      * Constructor.
      * 
@@ -89,192 +60,110 @@ public final class AnomalyResolver
      * @param stateMachine               The state machine
      * @param externalNotifier           The external notifier
      */
-    public AnomalyResolver(RelocationSettings relocationPolicies,
-                           ResourceDemandEstimator resourceDemandEstimator,
-                           GroupManagerRepository groupManagerRepository,
-                           StateMachine stateMachine,
-                           ExternalNotifier externalNotifier
-                            )
+    public AnomalyResolver()
     {
-        Guard.check(relocationPolicies, resourceDemandEstimator, groupManagerRepository, stateMachine);
-        log_.debug("Initializing the anomaly resolver");
-        
-        overloadRelocationPolicy_ = 
-            GroupManagerPolicyFactory.newVirtualMachineRelocation(relocationPolicies.getOverloadPolicy(),
-                                                                  resourceDemandEstimator);
-        underloadRelocationPolicy_ = 
-            GroupManagerPolicyFactory.newVirtualMachineRelocation(relocationPolicies.getUnderloadPolicy(),
-                                                                  resourceDemandEstimator);      
-        numberOfMonitoringEntries_ = resourceDemandEstimator.getNumberOfMonitoringEntries();
-        groupManagerRepository_ = groupManagerRepository;
-        stateMachine_ = stateMachine;
-        externalNotifier_ = externalNotifier;
-    }
-    /**
-     * Computes the relocation plan.
-     * 
-     * @param localControllerState          The local controller state
-     * @param anomalyLocalController        The anomaly local controller description
-     * @param destinationLocalControllers   The destination local controller descriptions
-     * @return                              The migration plan
-     */
-    private ReconfigurationPlan computeRelocationPlan(LocalControllerState localControllerState, 
-                                                LocalControllerDescription anomalyLocalController, 
-                                                List<LocalControllerDescription> destinationLocalControllers)
-    {
-        Guard.check(localControllerState, anomalyLocalController, destinationLocalControllers);
-        log_.debug(String.format("Computing migration plan for %s local controller: %s", 
-                                 localControllerState, anomalyLocalController.getId()));
-        
-        ReconfigurationPlan relocationPlan = null;
-        switch (localControllerState)
-        {                
-            case OVERLOADED:
-                relocationPlan = overloadRelocationPolicy_.relocateVirtualMachines(anomalyLocalController,
-                                                                                   destinationLocalControllers);
-                break;
-                
-            case UNDERLOADED:
-                relocationPlan = underloadRelocationPolicy_.relocateVirtualMachines(anomalyLocalController,
-                                                                                    destinationLocalControllers);
-                break;
-            default:
-                log_.error(String.format("Unsupported state: %s", localControllerState));
-                break;     
-        }
-        
-        return relocationPlan;
     }
     
     /**
-     * Returns the destination local controller descriptions.
-     * 
-     * @param state     The lcoal controller state
-     * @return          The local controller descriptions
+     * Specific initialization here.
+     * Called just after constructor in the factory.
      */
-    private List<LocalControllerDescription> getDestinationLocalControllers(LocalControllerState state)
-    {
-        log_.debug(String.format("Returning %s local controllers", state));
-        
-        List<LocalControllerDescription> destination;
-        if (state.equals(LocalControllerState.OVERLOADED))
-        {
-            log_.debug("Getting all local controllers (including PASSIVE)");
-            destination = groupManagerRepository_.getLocalControllerDescriptions(numberOfMonitoringEntries_, 
-                                                                                 false,
-                                                                                 true);
-            return destination;
-        }
-        
-        log_.debug("Getting all local controllers (excluding PASSIVE)");
-        destination = groupManagerRepository_.getLocalControllerDescriptions(numberOfMonitoringEntries_,
-                                                                             true,
-                                                                             true);
-        return destination;
-    }
-       
+    public abstract void initialize();
+    
     /**
      * Called to resolve anomaly.
      * 
      * @param localControllerId     The anomaly local controller identifier
-     * @param state                 The local controller state
+     * @param anomaly                 The local controller state
      * @throws Exception            The exception
      */
-    public synchronized void resolveAnomaly(String localControllerId, LocalControllerState state)
-        throws Exception
+    public abstract void resolveAnomaly(LocalControllerDescription localController, Object anomaly) throws Exception;
+
+
+    /**
+     * 
+     * Gets the number of monitoring entries to consider.
+     * By default global settings are applied.
+     * 
+     * @return
+     */
+    public int getNumberOfMonitoringEntries()
     {
-        Guard.check(localControllerId, state);
-        log_.debug("Starting anomaly resolution");
-               
-        LocalControllerDescription anomalyLocalController = 
-            groupManagerRepository_.getLocalControllerDescription(localControllerId, 
-                                                                  numberOfMonitoringEntries_,
-                                                                  true);
-        ExternalNotifierUtils.send(
-                externalNotifier_,
-                ExternalNotificationType.SYSTEM,
-                new SystemMessage(SystemMessageType.LC_ANOMALY, anomalyLocalController),
-                "groupmanager." + groupManagerRepository_.getGroupManagerId()
-                );
-        
-        if (anomalyLocalController == null)
-        {
-            throw new AnomalyResolverException("Local controller description is not available!");
-        }
-               
-        List<LocalControllerDescription> destinationControllers = getDestinationLocalControllers(state);
-        if (destinationControllers == null)
-        {
-            throw new AnomalyResolverException("Destination local controller descriptions are not available!");
-        }
-        
-        ReconfigurationPlan migrationPlan = 
-                computeRelocationPlan(state, anomalyLocalController, destinationControllers);  
-        if (migrationPlan == null)
-        {
-            throw new AnomalyResolverException("Migration plan is not available!");
-        }
-                
-        if (migrationPlan.getMapping().size() > 0)
-        {
-            log_.debug(String.format("%s relocation started!", state));
-        }
-        
-        List<LocalControllerDescription> passiveLocalControllers = getPassiveLocalControllers(migrationPlan);
-        if (passiveLocalControllers.size() > 0)
-        {
-            log_.debug("Migration plan has PASSIVE local controllers!");
-            boolean isWokenUp = stateMachine_.onWakeupLocalControllers(passiveLocalControllers);
-            if (!isWokenUp)
-            {
-                throw new AnomalyResolverException("Failed to wakeup local controllers!");
-            }
-        }
-        
-        if (state.equals(LocalControllerState.UNDERLOADED))
-        {
-            anomalyLocalController_ = anomalyLocalController;
-        }
-        
-        MigrationPlanEnforcer migrationPlanExecutor = 
-                new MigrationPlanEnforcer(groupManagerRepository_, this, externalNotifier_);
-        migrationPlanExecutor.enforceMigrationPlan(migrationPlan);
+        return estimator_.getNumberOfMonitoringEntries();
     }
     
     /**
      * Called when migration plan was enforced.
      */
-    public void onMigrationPlanEnforced()
+    public void onAnomalyResolved(LocalControllerDescription anomalyLocalController)
     {
-        log_.debug("Entering on migration plan enforced!");
-        stateMachine_.onAnomalyResolved(anomalyLocalController_);
+        stateMachine_.onAnomalyResolved(anomalyLocalController);
     }
-    
+
     /**
-     * Checking migration plan for passive local controllers.
-     * 
-     * @param migrationPlan     The migration plan
-     * @return                  The list of passive local controllers
+     * @return the stateMachine
      */
-    private List<LocalControllerDescription> getPassiveLocalControllers(ReconfigurationPlan migrationPlan) 
+    public StateMachine getStateMachine()
     {
-        log_.debug("Checking for passive local controllers in the migration plan");
-        
-        Map<VirtualMachineMetaData, LocalControllerDescription> mapping = migrationPlan.getMapping();
-        Map<String, LocalControllerDescription> passiveControllers = 
-            new HashMap<String, LocalControllerDescription>();
-        for (LocalControllerDescription localController : mapping.values())
-        {
-            String localControllerId = localController.getId();
-            LocalControllerStatus status = localController.getStatus();
-            if (status.equals(LocalControllerStatus.PASSIVE))
-            {
-                passiveControllers.put(localControllerId, localController);
-            }
-        }
-        
-        List<LocalControllerDescription> localControllers = 
-            new ArrayList<LocalControllerDescription>(passiveControllers.values());
-        return localControllers;
+        return stateMachine_;
     }
+
+    /**
+     * @param stateMachine the stateMachine to set
+     */
+    public void setStateMachine(StateMachine stateMachine)
+    {
+        stateMachine_ = stateMachine;
+    }
+
+    /**
+     * @return the relocationSettings
+     */
+    public RelocationSettings getRelocationSettings()
+    {
+        return relocationSettings_;
+    }
+
+    /**
+     * @param relocationSettings the relocationSettings to set
+     */
+    public void setRelocationSettings(RelocationSettings relocationSettings)
+    {
+        relocationSettings_ = relocationSettings;
+    }
+
+    /**
+     * @return the estimator
+     */
+    public ResourceDemandEstimator getEstimator()
+    {
+        return estimator_;
+    }
+
+    /**
+     * @param estimator the estimator to set
+     */
+    public void setEstimator(ResourceDemandEstimator estimator)
+    {
+        estimator_ = estimator;
+    }
+
+    /**
+     * @return the repository
+     */
+    public GroupManagerRepository getRepository()
+    {
+        return repository_;
+    }
+
+    /**
+     * @param repository the repository to set
+     */
+    public void setRepository(GroupManagerRepository repository)
+    {
+        repository_ = repository;
+    }
+
+
+    
 }

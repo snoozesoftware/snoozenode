@@ -50,7 +50,7 @@ public class AlwaysAnomalyDetector extends AnomalyDetector
     }
     
     @Override
-    public LocalControllerState detectAnomaly(Map<String, Resource> hostResources, List<VirtualMachineMetaData> virtualMachines)
+    public Object detectAnomaly(Map<String, Resource> hostResources, List<VirtualMachineMetaData> virtualMachines)
     {
         return LocalControllerState.OVERLOADED;
     }

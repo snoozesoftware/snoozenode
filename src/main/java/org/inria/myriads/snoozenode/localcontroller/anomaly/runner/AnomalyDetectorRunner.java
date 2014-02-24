@@ -94,12 +94,12 @@ public class AnomalyDetectorRunner implements Runnable
                     List<VirtualMachineMetaData> virtualMachines = repository_.getVirtualMachines(numberOfMonitoringEntries_);
                     
                     //logic to extract in this class
-                    LocalControllerState state = anomalyDetector_.detectAnomaly(hostResources, virtualMachines);
-                    
-                    if (!state.equals(LocalControllerState.STABLE))
+                    Object anomaly = anomalyDetector_.detectAnomaly(hostResources, virtualMachines);
+                    if (anomaly != null)
                     {
-                        listener_.onAnomalyDetected(state);
+                        listener_.onAnomalyDetected(anomaly);
                     }
+                    
                 }
                 
                 pastTimestamp = new Timestamp(System.currentTimeMillis()).getTime();

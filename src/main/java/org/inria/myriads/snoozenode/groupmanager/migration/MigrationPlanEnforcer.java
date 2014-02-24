@@ -40,13 +40,6 @@ import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationLis
 import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationPlanListener;
 import org.inria.myriads.snoozenode.groupmanager.migration.watchdog.MigrationWatchdog;
 import org.inria.myriads.snoozenode.groupmanager.migration.worker.MigrationWorker;
-import org.inria.myriads.snoozenode.message.ManagementMessage;
-import org.inria.myriads.snoozenode.message.ManagementMessageType;
-import org.inria.myriads.snoozenode.message.SystemMessage;
-import org.inria.myriads.snoozenode.message.SystemMessageType;
-import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
-import org.inria.snoozenode.external.notifier.ExternalNotificationType;
-import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,9 +70,6 @@ public final class MigrationPlanEnforcer
     private int numberOfMigrations_;
     
     
-    /** External Sender. */
-    private ExternalNotifier externalNotifier_;
-    
     /**
      * Constructor.
      * 
@@ -89,13 +79,11 @@ public final class MigrationPlanEnforcer
      */
     public MigrationPlanEnforcer(
                                 GroupManagerRepository groupManagerRepository, 
-                                MigrationPlanListener listener,
-                                ExternalNotifier externalNotifier
+                                MigrationPlanListener listener
                                  )
     {
         Guard.check(groupManagerRepository);
         log_.debug("Initializing the migration plan enforcer");
-        externalNotifier_ = externalNotifier;
         groupManagerRepository_ = groupManagerRepository;
         listener_ = listener;
         finishedMigrations_ = new ArrayList<MigrationRequest>();
@@ -240,25 +228,25 @@ public final class MigrationPlanEnforcer
                 {
                     log_.error("Exception during migration processing", exception);
                     
-                    ExternalNotifierUtils.send(
-                            externalNotifier_,
-                            ExternalNotificationType.MANAGEMENT,
-                            new ManagementMessage(ManagementMessageType.ERROR , finishedMigration),
-                            groupManagerRepository_.getGroupManagerId() + "." +
-                            finishedMigration.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
-                            finishedMigration.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
-                            "MIGRATION"
-                            );
+//                    ExternalNotifierUtils.send(
+//                            externalNotifier_,
+//                            ExternalNotificationType.MANAGEMENT,
+//                            new ManagementMessage(ManagementMessageType.ERROR , finishedMigration),
+//                            groupManagerRepository_.getGroupManagerId() + "." +
+//                            finishedMigration.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
+//                            finishedMigration.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
+//                            "MIGRATION"
+//                            );
                 }
-                ExternalNotifierUtils.send(
-                        externalNotifier_,
-                        ExternalNotificationType.MANAGEMENT,
-                        new ManagementMessage(ManagementMessageType.PROCESSED , finishedMigration),
-                        groupManagerRepository_.getGroupManagerId() + "." +
-                        finishedMigration.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
-                        finishedMigration.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
-                        "MIGRATION"
-                        );
+//                ExternalNotifierUtils.send(
+//                        externalNotifier_,
+//                        ExternalNotificationType.MANAGEMENT,
+//                        new ManagementMessage(ManagementMessageType.PROCESSED , finishedMigration),
+//                        groupManagerRepository_.getGroupManagerId() + "." +
+//                        finishedMigration.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
+//                        finishedMigration.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
+//                        "MIGRATION"
+//                        );
                 
             }
             
@@ -325,15 +313,15 @@ public final class MigrationPlanEnforcer
             migrationRequest.getDestinationVirtualMachineLocation().getLocalControllerControlDataAddress().getAddress(),
             migrationRequest.getDestinationVirtualMachineLocation().getLocalControllerControlDataAddress().getPort()));
                 
-        ExternalNotifierUtils.send(
-                externalNotifier_,
-                ExternalNotificationType.MANAGEMENT,
-                new ManagementMessage(ManagementMessageType.PENDING , migrationRequest),
-                groupManagerRepository_.getGroupManagerId() + "." +
-                migrationRequest.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
-                migrationRequest.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
-                "MIGRATION"
-                );
+//        ExternalNotifierUtils.send(
+//                externalNotifier_,
+//                ExternalNotificationType.MANAGEMENT,
+//                new ManagementMessage(ManagementMessageType.PENDING , migrationRequest),
+//                groupManagerRepository_.getGroupManagerId() + "." +
+//                migrationRequest.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
+//                migrationRequest.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
+//                "MIGRATION"
+//                );
         
         MigrationWorker migrationThread = new MigrationWorker(migrationRequest);
         MigrationWatchdog watchdogThread = new MigrationWatchdog(migrationRequest, this);      
@@ -377,13 +365,13 @@ public final class MigrationPlanEnforcer
                                  migrationPlan.getNumberOfReleasedNodes()));
         
         log_.debug(String.format("Number of migrations: %s", numberOfMigrations_));
-        
-        ExternalNotifierUtils.send(
-                externalNotifier_,
-                ExternalNotificationType.SYSTEM,
-                new SystemMessage(SystemMessageType.RECONFIGURATION, migrationPlan),
-                "groupmanager." + groupManagerRepository_.getGroupManagerId()
-                );
+//        
+//        ExternalNotifierUtils.send(
+//                externalNotifier_,
+//                ExternalNotificationType.SYSTEM,
+//                new SystemMessage(SystemMessageType.RECONFIGURATION, migrationPlan),
+//                "groupmanager." + groupManagerRepository_.getGroupManagerId()
+//                );
         
         Map<VirtualMachineMetaData, LocalControllerDescription> mapping = migrationPlan.getMapping();
         for (Map.Entry<VirtualMachineMetaData, LocalControllerDescription> entry : mapping.entrySet())

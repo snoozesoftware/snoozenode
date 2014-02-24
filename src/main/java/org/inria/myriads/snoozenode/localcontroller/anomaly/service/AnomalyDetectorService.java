@@ -140,12 +140,13 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
      * 
      */
     @Override
-    public synchronized void onAnomalyDetected(LocalControllerState state)
+    public synchronized void onAnomalyDetected(Object anomaly)
     {
         log_.error("onAnomalydDetected received");
         LocalControllerDataTransporter anomalyTransporter =
                 new LocalControllerDataTransporter(localController_.getId());
-        anomalyTransporter.setState(state);
+        anomalyTransporter.setState(LocalControllerState.ANOMALY);
+        anomalyTransporter.setAnomaly(anomaly);
         try
         {
             communicator_.sendAnomalyData(anomalyTransporter);
@@ -157,4 +158,6 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
             stopService();
         }
     }
+
+
 }

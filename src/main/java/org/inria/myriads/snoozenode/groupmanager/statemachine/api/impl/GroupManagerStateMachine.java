@@ -40,6 +40,8 @@ import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.exception.GroupManagerInitException;
 import org.inria.myriads.snoozenode.groupmanager.anomaly.AnomalyResolver;
+import org.inria.myriads.snoozenode.groupmanager.anomaly.AnomalyResolverFactory;
+import org.inria.myriads.snoozenode.groupmanager.anomaly.UnderOverloadAnomalyResolver;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.EnergySaverFactory;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.util.EnergySaverUtils;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.wakeup.WakeupResources;
@@ -126,7 +128,7 @@ public class GroupManagerStateMachine
         repository_ = repository;
         externalNotifier_ = externalNotifier;
         // Migration plan enforcer
-        migrationPlanEnforcer_ = new MigrationPlanEnforcer(repository, this, externalNotifier_);
+        migrationPlanEnforcer_ = new MigrationPlanEnforcer(repository, this);
         // Wakeup 
         wakeupResources_ = createWakeupResources(energyManagementSettings_, repository);
         // Virtual machine manager
@@ -151,12 +153,20 @@ public class GroupManagerStateMachine
                                                   ResourceDemandEstimator estimator, 
                                                   GroupManagerRepository repository)
     {
-        AnomalyResolver anomalyResolver = new AnomalyResolver(relocation, 
-                                                              estimator, 
-                                                              repository, 
-                                                              this,
-                                                              externalNotifier_
-                                                              );
+        // TODO Factory method
+        AnomalyResolver anomalyResolver = AnomalyResolverFactory.newAnomalyresolver(
+                relocation,
+                estimator,
+                repository_,
+                this
+                );
+        
+//        AnomalyResolver anomalyResolver = new UnderOverloadAnomalyResolver(relocation, 
+//                                                              estimator, 
+//                                                              repository, 
+//                                                              this,
+//                                                              externalNotifier_
+//                                                              );
         return anomalyResolver;
     }
     
@@ -388,18 +398,25 @@ public class GroupManagerStateMachine
      * @param state                The local controller state           
      */
     @Override
-    public void resolveAnomaly(String localControllerId, LocalControllerState state) 
+    public void resolveAnomaly(String localControllerId, Object anomaly) 
     {
-        log_.debug(String.format("Starting to resolve ANOMALY (%s) situation!", state));
+        //log_.debug(String.format("Starting to resolve ANOMALY (%s) situation!", state));
+        log_.debug(String.format("Starting to resolve ANOMALY"));
         
         if (!changeState(SystemState.RELOCATION))
         {
             return;
         }
+        int numberOfMonitoringEntries = anomalyResolver_.getNumberOfMonitoringEntries();
+
+        LocalControllerDescription anomalyLocalController = 
+                repository_.getLocalControllerDescription(localControllerId, numberOfMonitoringEntries, true);
+        //repository_.getLocalControllerDescriptions(numberOfMonitoringEntries, isActiveOnly, withVirtualMachines)
         
         try 
         {
-            anomalyResolver_.resolveAnomaly(localControllerId, state);
+            //anomalyResolver_.resolveAnomaly(localControllerId, state);
+            anomalyResolver_.resolveAnomaly(anomalyLocalController, anomaly);
         } 
         catch (Exception exception) 
         {

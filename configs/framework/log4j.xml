@@ -159,6 +159,10 @@
 		<appender-ref ref="FA"/>
   </logger> 
 							
+	<logger name="org.inria.myriads.snoozenode.groupmanager.anomaly">
+		<appender-ref ref="FA"/>
+  </logger> 
+
 	<logger name="org.inria.myriads.snoozenode.groupmanager.virtualnetworkmanager">
 		<level value="WARN"/>
 		<appender-ref ref="FA"/>

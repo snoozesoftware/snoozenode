@@ -64,7 +64,12 @@ public class SimpleAnomalyDetector extends AnomalyDetector
         Map<String, Double> hostEstimation = monitoringEstimator_.estimateHostResourceUtilization(hostResources);
         log_.debug("Total host utilization is " + hostEstimation);        
         log_.debug("Total virtual machines utilization is " + virtualMachinesUtilization);
-        return startThresholdCrossingDetection(virtualMachinesUtilization);
+        LocalControllerState state = startThresholdCrossingDetection(virtualMachinesUtilization);
+        if (state.equals(LocalControllerState.STABLE))
+        {
+            return state;
+        }
+        return null;
     }
           
     /**

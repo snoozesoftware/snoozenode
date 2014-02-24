@@ -114,8 +114,8 @@ public final class LocalControllerSummaryConsumer
                 
                 if (!isStable)
                 {
-                    log_.debug("Anomaly on local controller detected!");           
-                    stateMachine_.resolveAnomaly(localControllerId, monitoringData.getState());
+                    log_.debug("Anomaly on local controller detected!");
+                    stateMachine_.resolveAnomaly(localControllerId, monitoringData.getAnomaly());
                 }
             }
         }

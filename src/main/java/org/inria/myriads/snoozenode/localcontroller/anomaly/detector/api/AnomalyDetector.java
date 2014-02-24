@@ -36,7 +36,7 @@ public abstract class AnomalyDetector
     public abstract void initialize();
     
     /** Routines to detect an anomaly.*/
-    public abstract LocalControllerState detectAnomaly(Map<String, Resource> hostResources, List<VirtualMachineMetaData> virtualMachines);
+    public abstract Object detectAnomaly(Map<String, Resource> hostResources, List<VirtualMachineMetaData> virtualMachines);
    
     /**
      * @return the localController

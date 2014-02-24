@@ -35,9 +35,7 @@ public final class LocalControllerDataTransporter
     /** Default serial. */
     private static final long serialVersionUID = 1L;
 
-    /** Local controller state. */
-    private LocalControllerState state_ = LocalControllerState.STABLE;
-    
+
     /** Local controller identifier. */
     private String localControllerId_;
         
@@ -46,6 +44,12 @@ public final class LocalControllerDataTransporter
     
     /** Host monitoring data.*/
     private List<AggregatedHostMonitoringData> hostMonitoringAggregatedData_;
+
+    /** Local controller state. */
+    private LocalControllerState state_ = LocalControllerState.STABLE;
+    
+    /** Anomaly Object*/
+    private Object anomaly_;
     
     /**
      * Constructor.
@@ -136,5 +140,21 @@ public final class LocalControllerDataTransporter
     public void setHostMonitoringAggregatedData(List<AggregatedHostMonitoringData> hostMonitoringAggregatedData)
     {
         hostMonitoringAggregatedData_ = hostMonitoringAggregatedData;
+    }
+
+    /**
+     * @return the anomaly
+     */
+    public Object getAnomaly()
+    {
+        return anomaly_;
+    }
+
+    /**
+     * @param anomaly the anomaly to set
+     */
+    public void setAnomaly(Object anomaly)
+    {
+        anomaly_ = anomaly;
     }
 }

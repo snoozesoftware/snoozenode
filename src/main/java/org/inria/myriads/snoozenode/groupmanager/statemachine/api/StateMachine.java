@@ -43,9 +43,9 @@ public interface StateMachine
      * Resolves anomaly.
      * 
      * @param localControllerId      The aggregated local controller identifier
-     * @param state                  The local controller state
+     * @param object                  The local controller state
      */
-    void resolveAnomaly(String localControllerId, LocalControllerState state);
+    void resolveAnomaly(String localControllerId, Object object);
     
     /**
      * Starts the reconfiguration process.
