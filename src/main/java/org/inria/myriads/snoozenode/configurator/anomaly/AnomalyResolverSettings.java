@@ -29,18 +29,14 @@ import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
  * 
  * @author Eugen Feller
  */
-public final class AnomalyDetectorSettings 
+public final class AnomalyResolverSettings 
 {
    
-    /** Enable the service.*/
-    private boolean isEnabled;
-    
     /** Name of the detector (class).*/
     private String name_;
     
     /** Number of monitoring entries to take into account.*/
     private int numberOfMonitoringEntries_;
-    
     
     /** Loop interval.*/
     private int interval_;
@@ -52,7 +48,7 @@ public final class AnomalyDetectorSettings
     /**
      * 
      */
-    public AnomalyDetectorSettings()
+    public AnomalyResolverSettings()
     {
         super();
     }
@@ -119,22 +115,6 @@ public final class AnomalyDetectorSettings
     public void setInterval(int interval)
     {
         interval_ = interval;
-    }
-
-    /**
-     * @return the isEnabled
-     */
-    public boolean isEnabled()
-    {
-        return isEnabled;
-    }
-
-    /**
-     * @param isEnabled the isEnabled to set
-     */
-    public void setEnabled(boolean isEnabled)
-    {
-        this.isEnabled = isEnabled;
     }
 
     

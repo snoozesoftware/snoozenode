@@ -866,8 +866,7 @@ public final class GroupManagerMemoryRepository
             log_.error("Failed to remove virtual machine meta data mapping");
             return false;
         }
-        //send to external here : management/groupmanager.gmid.vm.vmid.migration(Metadata)
-        return true;
+       return true;
     }
 
     /**

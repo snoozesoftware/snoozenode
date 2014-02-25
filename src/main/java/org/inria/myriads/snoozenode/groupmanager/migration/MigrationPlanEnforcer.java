@@ -40,6 +40,12 @@ import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationLis
 import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationPlanListener;
 import org.inria.myriads.snoozenode.groupmanager.migration.watchdog.MigrationWatchdog;
 import org.inria.myriads.snoozenode.groupmanager.migration.worker.MigrationWorker;
+import org.inria.myriads.snoozenode.message.ManagementMessage;
+import org.inria.myriads.snoozenode.message.ManagementMessageType;
+import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
+import org.inria.myriads.snoozenode.util.OutputUtils;
+import org.inria.snoozenode.external.notifier.ExternalNotificationType;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +74,9 @@ public final class MigrationPlanEnforcer
 
     /** Number of migrations. */
     private int numberOfMigrations_;
+
+    /** External notifier.*/
+    private ExternalNotifier externalNotifier_;
     
     
     /**
@@ -78,12 +87,14 @@ public final class MigrationPlanEnforcer
      * @param externalNotifier           External notifier.
      */
     public MigrationPlanEnforcer(
+                                ExternalNotifier externalNotifier,
                                 GroupManagerRepository groupManagerRepository, 
                                 MigrationPlanListener listener
                                  )
     {
         Guard.check(groupManagerRepository);
         log_.debug("Initializing the migration plan enforcer");
+        externalNotifier_ = externalNotifier;
         groupManagerRepository_ = groupManagerRepository;
         listener_ = listener;
         finishedMigrations_ = new ArrayList<MigrationRequest>();
@@ -172,6 +183,7 @@ public final class MigrationPlanEnforcer
             throw new MigrationPlanEnforcerException("Virtual machine meta data is invalid!");
         }
         
+        log_.debug("Metadata after migration : " + OutputUtils.toString(metaData));
         boolean isStarted = startVirtualMachineMonitoring(destinationAddress, metaData);       
         
         if (!isStarted)
@@ -228,25 +240,25 @@ public final class MigrationPlanEnforcer
                 {
                     log_.error("Exception during migration processing", exception);
                     
-//                    ExternalNotifierUtils.send(
-//                            externalNotifier_,
-//                            ExternalNotificationType.MANAGEMENT,
-//                            new ManagementMessage(ManagementMessageType.ERROR , finishedMigration),
-//                            groupManagerRepository_.getGroupManagerId() + "." +
-//                            finishedMigration.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
-//                            finishedMigration.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
-//                            "MIGRATION"
-//                            );
+                    ExternalNotifierUtils.send(
+                            externalNotifier_,
+                            ExternalNotificationType.MANAGEMENT,
+                            new ManagementMessage(ManagementMessageType.ERROR , finishedMigration),
+                            groupManagerRepository_.getGroupManagerId() + "." +
+                            finishedMigration.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
+                            finishedMigration.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
+                            "MIGRATION"
+                            );
                 }
-//                ExternalNotifierUtils.send(
-//                        externalNotifier_,
-//                        ExternalNotificationType.MANAGEMENT,
-//                        new ManagementMessage(ManagementMessageType.PROCESSED , finishedMigration),
-//                        groupManagerRepository_.getGroupManagerId() + "." +
-//                        finishedMigration.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
-//                        finishedMigration.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
-//                        "MIGRATION"
-//                        );
+                ExternalNotifierUtils.send(
+                        externalNotifier_,
+                        ExternalNotificationType.MANAGEMENT,
+                        new ManagementMessage(ManagementMessageType.PROCESSED , finishedMigration),
+                        groupManagerRepository_.getGroupManagerId() + "." +
+                        finishedMigration.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
+                        finishedMigration.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
+                        "MIGRATION"
+                        );
                 
             }
             

@@ -14,20 +14,30 @@ import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.impl.Si
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * @author msimonin
+ *
+ */
 public class AnomalyDetectorFactory
 {
 
+    /** Define the logger. */
+    final static Logger log_ = LoggerFactory.getLogger(AnomalyDetectorFactory.class);
+    
+    /**
+     *  Hide Constructor. 
+     */
+    private AnomalyDetectorFactory()
+    {
+                
+    }
 
     public static AnomalyDetector newAnomalyDetectorEstimator(
             ResourceDemandEstimator estimator,
             LocalControllerDescription localController,
             AnomalyDetectorSettings anomalyDetectorSettings
             )
-    {
-        
-        /** Define the logger. */
-        final Logger log_ = LoggerFactory.getLogger(AnomalyDetectorFactory.class);
-        
+    {        
         String classURI = anomalyDetectorSettings.getName();
         ClassLoader classLoader = AnomalyDetectorFactory.class.getClassLoader();
         

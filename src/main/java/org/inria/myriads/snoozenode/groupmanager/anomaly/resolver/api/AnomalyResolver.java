@@ -17,14 +17,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.groupmanager.anomaly;
+package org.inria.myriads.snoozenode.groupmanager.anomaly.resolver.api;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyResolverSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.RelocationSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.exception.NodeConfiguratorException;
 import org.inria.myriads.snoozenode.groupmanager.anomaly.listener.AnomalyResolverListener;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
+import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,14 +48,20 @@ public abstract class AnomalyResolver
     /** State machine. */
     protected StateMachine stateMachine_;
     
-    /** RelocationSettings.*/
-    protected RelocationSettings relocationSettings_;
+    /** Anomaly Resolver Settings.*/
+    protected AnomalyResolverSettings anomalyResolverSettings_;
     
     /** Estimator. */
     protected ResourceDemandEstimator estimator_;
     
     /** GroupManager Repository.*/
     protected GroupManagerRepository repository_;
+    
+    /** Options.*/
+    protected Map<String, String> options_;
+    
+    /** TODO remove it (make it static)*/
+    protected ExternalNotifier externalNotifier_;
 
     /**
      * Constructor.
@@ -62,6 +74,7 @@ public abstract class AnomalyResolver
      */
     public AnomalyResolver()
     {
+        options_ = new HashMap<String, String>();
     }
     
     /**
@@ -69,6 +82,17 @@ public abstract class AnomalyResolver
      * Called just after constructor in the factory.
      */
     public abstract void initialize();
+    
+    
+    /**
+     * 
+     * Tells the state machine if the anomaly resolver is ready to resolve
+     * 
+     * @param localControllerId
+     * @param anomalyObject
+     * @return
+     */
+    public abstract boolean readyToResolve(String localControllerId, Object anomalyObject);
     
     /**
      * Called to resolve anomaly.
@@ -80,6 +104,10 @@ public abstract class AnomalyResolver
     public abstract void resolveAnomaly(LocalControllerDescription localController, Object anomaly) throws Exception;
 
 
+    
+    
+    
+    
     /**
      * 
      * Gets the number of monitoring entries to consider.
@@ -117,22 +145,6 @@ public abstract class AnomalyResolver
     }
 
     /**
-     * @return the relocationSettings
-     */
-    public RelocationSettings getRelocationSettings()
-    {
-        return relocationSettings_;
-    }
-
-    /**
-     * @param relocationSettings the relocationSettings to set
-     */
-    public void setRelocationSettings(RelocationSettings relocationSettings)
-    {
-        relocationSettings_ = relocationSettings;
-    }
-
-    /**
      * @return the estimator
      */
     public ResourceDemandEstimator getEstimator()
@@ -162,6 +174,54 @@ public abstract class AnomalyResolver
     public void setRepository(GroupManagerRepository repository)
     {
         repository_ = repository;
+    }
+
+    /**
+     * @return the options
+     */
+    public Map<String, String> getOptions()
+    {
+        return options_;
+    }
+
+    /**
+     * @param options the options to set
+     */
+    public void setOptions(Map<String, String> options)
+    {
+        options_ = options;
+    }
+
+    /**
+     * @return the anomalyResolverSettings
+     */
+    public AnomalyResolverSettings getAnomalyResolverSettings()
+    {
+        return anomalyResolverSettings_;
+    }
+
+    /**
+     * @param anomalyResolverSettings the anomalyResolverSettings to set
+     */
+    public void setAnomalyResolverSettings(AnomalyResolverSettings anomalyResolverSettings)
+    {
+        anomalyResolverSettings_ = anomalyResolverSettings;
+    }
+
+    /**
+     * @return the externalNotifier
+     */
+    public ExternalNotifier getExternalNotifier()
+    {
+        return externalNotifier_;
+    }
+
+    /**
+     * @param externalNotifier the externalNotifier to set
+     */
+    public void setExternalNotifier(ExternalNotifier externalNotifier)
+    {
+        externalNotifier_ = externalNotifier;
     }
 
 

@@ -17,11 +17,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation;
+package org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api;
 
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
 
 /**
@@ -29,8 +30,10 @@ import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration
  * 
  * @author Eugen Feller
  */
-public interface VirtualMachineRelocation 
+public abstract class VirtualMachineRelocation 
 {
+    
+    protected ResourceDemandEstimator estimator_;
     /**
      * Relocates virtual machines.
      * 
@@ -38,6 +41,30 @@ public interface VirtualMachineRelocation
      * @param destinationLocalControllers   The destination local controller candidates
      * @return                              The migration plan
      */
-    ReconfigurationPlan relocateVirtualMachines(LocalControllerDescription sourceLocalController, 
+    public abstract ReconfigurationPlan relocateVirtualMachines(LocalControllerDescription sourceLocalController, 
                                           List<LocalControllerDescription> destinationLocalControllers);
+    
+    
+    public abstract void initialize();
+
+
+    /**
+     * @return the estimator
+     */
+    public ResourceDemandEstimator getEstimator()
+    {
+        return estimator_;
+    }
+
+
+    /**
+     * @param estimator the estimator to set
+     */
+    public void setEstimator(ResourceDemandEstimator estimator)
+    {
+        estimator_ = estimator;
+    }
+    
+    
+    
 }

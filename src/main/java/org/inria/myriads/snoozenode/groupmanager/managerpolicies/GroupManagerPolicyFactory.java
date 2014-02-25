@@ -19,10 +19,15 @@
  */
 package org.inria.myriads.snoozenode.groupmanager.managerpolicies;
 
+import java.lang.reflect.InvocationTargetException;
+
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
+import org.inria.myriads.snoozenode.groupmanager.anomaly.AnomalyResolverFactory;
+import org.inria.myriads.snoozenode.groupmanager.anomaly.resolver.api.AnomalyResolver;
+import org.inria.myriads.snoozenode.groupmanager.anomaly.resolver.api.impl.UnderOverloadAnomalyResolver;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfiguration;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Relocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
@@ -30,9 +35,10 @@ import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.impl.
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.impl.RoundRobin;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPolicy;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.impl.SerconVirtualMachineConsolidation;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.VirtualMachineRelocation;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.impl.GreedyOverloadRelocation;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.impl.GreedyUnderloadRelocation;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.VirtualMachineRelocation;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.impl.GreedyOverloadRelocation;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.impl.GreedyUnderloadRelocation;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.impl.NoOperation;
 import org.inria.myriads.snoozenode.util.PluginUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,35 +145,32 @@ public final class GroupManagerPolicyFactory
         return reconfiguration;
     }
     
-    /**
-     * Creates a new virtual machine relocation policy.
-     * 
-     * @param relocationPolicy  The desired relocation policy
-     * @param estimator         The resource demand estimator
-     * @return                  The selected relocation policy
-     */
-    public static VirtualMachineRelocation newVirtualMachineRelocation(Relocation relocationPolicy,
-                                                                       ResourceDemandEstimator estimator) 
+    public static VirtualMachineRelocation newVirtualMachineRelocation(
+            String policy,
+            ResourceDemandEstimator estimator)
     {
-        Guard.check(relocationPolicy);
-        log_.debug(String.format("Selecting the virtual machine relocation policy: %s", 
-                                 relocationPolicy));
+        // create using reflection.
+        String classURI = policy;
+        ClassLoader classLoader = GroupManagerPolicyFactory.class.getClassLoader();
         
-        VirtualMachineRelocation relocation = null;
-        switch (relocationPolicy) 
+        VirtualMachineRelocation relocationPolicy = null;
+        try
         {
-            case GreedyUnderloadRelocation :
-                relocation = new GreedyUnderloadRelocation(estimator);
-                break;
+            Class<?> relocationClass = classLoader.loadClass(classURI);
+            Object relocationObject;
+            relocationObject = relocationClass.getConstructor().newInstance();
+            relocationPolicy = (VirtualMachineRelocation) relocationObject;
+            log_.debug("Sucessfully created anomaly resolver" + classURI);
             
-            case GreedyOverloadRelocation :
-                relocation = new GreedyOverloadRelocation(estimator);
-                break;
-              
-            default :
-                log_.error("Unknown virtual machine relocation policy selected!");
         }
-        
-        return relocation;
+        catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+                | InvocationTargetException | NoSuchMethodException | SecurityException | ClassNotFoundException e)
+        {
+            e.printStackTrace();
+            relocationPolicy = new NoOperation();
+        }
+        relocationPolicy.setEstimator(estimator);
+        relocationPolicy.initialize();
+        return relocationPolicy;
     }
 }

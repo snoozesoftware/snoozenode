@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.impl;
+package org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.impl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,10 +25,8 @@ import java.util.List;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.VirtualMachineRelocation;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.VirtualMachineRelocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.utility.RelocationUtility;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.util.SortUtils;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
@@ -41,23 +39,25 @@ import org.slf4j.LoggerFactory;
  * @author Eugen Feller
  */
 public final class GreedyUnderloadRelocation 
-    implements VirtualMachineRelocation 
+    extends VirtualMachineRelocation 
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(GreedyUnderloadRelocation.class);
-    
-    /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
+
     
     /**
      * Constructor.
      * 
      * @param estimator     The resource demand estimator
      */
-    public GreedyUnderloadRelocation(ResourceDemandEstimator estimator)
+    public GreedyUnderloadRelocation()
     {
-        Guard.check(estimator);
-        estimator_ = estimator;
+    }
+    
+    @Override
+    public void initialize()
+    {
+        
     }
     
     /**
@@ -85,4 +85,6 @@ public final class GreedyUnderloadRelocation
                                                              LocalControllerState.UNDERLOADED);
         return reconfigurationPlan;
     }
+
+
 }

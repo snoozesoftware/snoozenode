@@ -29,6 +29,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.Vi
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineSubmissionResponse;
 import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyResolverSettings;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.energymanagement.EnergyManagementSettings;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSavingAction;
@@ -39,9 +40,10 @@ import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.exception.GroupManagerInitException;
-import org.inria.myriads.snoozenode.groupmanager.anomaly.AnomalyResolver;
+import org.inria.myriads.snoozenode.exception.NodeConfiguratorException;
 import org.inria.myriads.snoozenode.groupmanager.anomaly.AnomalyResolverFactory;
-import org.inria.myriads.snoozenode.groupmanager.anomaly.UnderOverloadAnomalyResolver;
+import org.inria.myriads.snoozenode.groupmanager.anomaly.resolver.api.AnomalyResolver;
+import org.inria.myriads.snoozenode.groupmanager.anomaly.resolver.api.impl.UnderOverloadAnomalyResolver;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.EnergySaverFactory;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.util.EnergySaverUtils;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.wakeup.WakeupResources;
@@ -83,7 +85,7 @@ public class GroupManagerStateMachine
     /** Reconfiguration policy. */
     private ReconfigurationPolicy reconfiguration_;
         
-    /** Anomaly resolver. */
+    /** Anomaly resolver. */ 
     private MigrationPlanEnforcer migrationPlanEnforcer_;
 
     /** Virtual machine manager. */
@@ -128,15 +130,15 @@ public class GroupManagerStateMachine
         repository_ = repository;
         externalNotifier_ = externalNotifier;
         // Migration plan enforcer
-        migrationPlanEnforcer_ = new MigrationPlanEnforcer(repository, this);
+        migrationPlanEnforcer_ = new MigrationPlanEnforcer(externalNotifier_, repository, this);
         // Wakeup 
         wakeupResources_ = createWakeupResources(energyManagementSettings_, repository);
         // Virtual machine manager
         virtualMachineManager_ = createVirtualMachineManager(nodeConfiguration, estimator, repository);
         // Anomaly
-        GroupManagerSchedulerSettings schedulerSettings = nodeConfiguration.getGroupManagerScheduler();
-        anomalyResolver_ = createAnomalyResolver(schedulerSettings.getRelocationSettings(), estimator, repository);
+        anomalyResolver_ = createAnomalyResolver(nodeConfiguration.getAnomalyResolverSettings(), estimator, repository);
         // Reconfiguration
+        GroupManagerSchedulerSettings schedulerSettings = nodeConfiguration.getGroupManagerScheduler();
         Reconfiguration reconfiguration = schedulerSettings.getReconfigurationSettings().getPolicy();
         reconfiguration_ = GroupManagerPolicyFactory.newVirtualMachineReconfiguration(reconfiguration, estimator);  
     }
@@ -149,24 +151,19 @@ public class GroupManagerStateMachine
      * @param repository             The group manager repository
      * @return                       The anomaly resolver
      */
-    private AnomalyResolver createAnomalyResolver(RelocationSettings relocation, 
+    private AnomalyResolver createAnomalyResolver(AnomalyResolverSettings anomalyResolverSettings, 
                                                   ResourceDemandEstimator estimator, 
-                                                  GroupManagerRepository repository)
+                                                  GroupManagerRepository repository) 
     {
         // TODO Factory method
         AnomalyResolver anomalyResolver = AnomalyResolverFactory.newAnomalyresolver(
-                relocation,
+                externalNotifier_,
+                anomalyResolverSettings,
                 estimator,
                 repository_,
                 this
                 );
         
-//        AnomalyResolver anomalyResolver = new UnderOverloadAnomalyResolver(relocation, 
-//                                                              estimator, 
-//                                                              repository, 
-//                                                              this,
-//                                                              externalNotifier_
-//                                                              );
         return anomalyResolver;
     }
     
@@ -403,6 +400,15 @@ public class GroupManagerStateMachine
         //log_.debug(String.format("Starting to resolve ANOMALY (%s) situation!", state));
         log_.debug(String.format("Starting to resolve ANOMALY"));
         
+        
+        // test if the anomaly resolver will handle this anomaly.
+        boolean resolve = anomalyResolver_.readyToResolve(localControllerId, anomaly);
+        if (!resolve)
+        {
+            log_.debug("Skipping anomaly for now");
+            return;
+        }
+        
         if (!changeState(SystemState.RELOCATION))
         {
             return;
@@ -410,12 +416,9 @@ public class GroupManagerStateMachine
         int numberOfMonitoringEntries = anomalyResolver_.getNumberOfMonitoringEntries();
 
         LocalControllerDescription anomalyLocalController = 
-                repository_.getLocalControllerDescription(localControllerId, numberOfMonitoringEntries, true);
-        //repository_.getLocalControllerDescriptions(numberOfMonitoringEntries, isActiveOnly, withVirtualMachines)
-        
+                repository_.getLocalControllerDescription(localControllerId, numberOfMonitoringEntries, true);        
         try 
         {
-            //anomalyResolver_.resolveAnomaly(localControllerId, state);
             anomalyResolver_.resolveAnomaly(anomalyLocalController, anomaly);
         } 
         catch (Exception exception) 

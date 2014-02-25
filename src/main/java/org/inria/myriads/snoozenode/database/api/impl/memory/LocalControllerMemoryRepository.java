@@ -38,6 +38,7 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedHostMonitoringData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
+import org.inria.myriads.snoozenode.util.OutputUtils;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,6 +104,7 @@ public final class LocalControllerMemoryRepository
         virtualMachineMetaData.setIsAssigned(true);
         virtualMachineMetaData_.put(virtualMachineId, virtualMachineMetaData);
         log_.debug("Virtual machine meta data added!");
+        log_.debug("Added metadata : " + OutputUtils.toString(virtualMachineMetaData));
         
         return true;
     }

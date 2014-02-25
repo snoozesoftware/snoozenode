@@ -23,18 +23,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 
-import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
-import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.listener.VirtualMachineMonitoringListener;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.service.InfrastructureMonitoring;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.threshold.ThresholdCrossingDetector;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
-import org.inria.myriads.snoozenode.monitoring.comunicator.MonitoringCommunicatorFactory;
 import org.inria.myriads.snoozenode.monitoring.comunicator.api.MonitoringCommunicator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,9 +51,6 @@ public final class VirtualMachineMonitorDataConsumer
 
     /** Virtual machine monitoring callback. */
     private VirtualMachineMonitoringListener callback_;
-    
-    /** Thhreshold crossing detector. */
-    private ThresholdCrossingDetector crossingDetector_;
     
     /** Local controller identifier. */
     private String localControllerId_;
@@ -93,12 +86,10 @@ public final class VirtualMachineMonitorDataConsumer
     {
         
         log_.debug("Initializing virtual machine monitoring consumer");
-        MonitoringThresholds monitoringThresholds = infrastructureMonitoring.getMonitoringSettings().getThresholds();
         localControllerId_ = localController.getId();
         dataQueue_ = dataQueue;
         callback_ = callback;
         repository_ = repository;
-        crossingDetector_ = new ThresholdCrossingDetector(monitoringThresholds, localController.getTotalCapacity());
         communicator_  = communicator;
     }
    
@@ -147,24 +138,12 @@ public final class VirtualMachineMonitorDataConsumer
         LocalControllerDataTransporter localControllerData = 
             new LocalControllerDataTransporter(localControllerId, clonedData);
         
-       // boolean isDetected = crossingDetector_.detectThresholdCrossing(localControllerData);
-        boolean isDetected = false;
-        
         log_.debug("Sending aggregated local controller summary information to group mananger");
         try
         {
-            if (!isDetected)
-            {
-                repository_.addAggregatedVirtualMachineData(clonedData);
-                communicator_.sendRegularData(localControllerData);
-                log_.debug("No threshold crossing detected! Node seems stable for now!");
-            }
-            else
-            {
-                //send directly to GM to take into account the treshold crossing. 
-                // hack ? we use the heartbeat message for that.
-                communicator_.sendHeartbeatData(localControllerData);
-            }
+            repository_.addAggregatedVirtualMachineData(clonedData);
+            communicator_.sendRegularData(localControllerData);
+            log_.debug("No threshold crossing detected! Node seems stable for now!");
         }
         catch (IOException exception)
         {
@@ -222,8 +201,6 @@ public final class VirtualMachineMonitorDataConsumer
         terminate();
     }
     
-
-
     /**
      * Terminates the consumer.
      * @throws InterruptedException 
@@ -235,7 +212,4 @@ public final class VirtualMachineMonitorDataConsumer
         communicator_.close();
 
     }
-
-    
-
 }

@@ -45,6 +45,7 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.NetworkUtils;
 import org.inria.myriads.snoozecommon.util.StringUtils;
 import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyDetectorSettings;
+import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyResolverSettings;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfigurator;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
@@ -131,6 +132,7 @@ public final class JavaPropertyNodeConfigurator
         setProvisionerSettings();
         setHostMonitoringSettings();
         setAnomalyDetectorSettings();
+        setAnomalyResolverSettings();
         
         fileInput.close();
     }
@@ -140,6 +142,10 @@ public final class JavaPropertyNodeConfigurator
     private void setAnomalyDetectorSettings() throws NodeConfiguratorException
     {
         AnomalyDetectorSettings anomalyDetectorSettings = nodeConfiguration_.getAnomalyDetectorSettings();
+        
+        boolean  isEnabled = Boolean.valueOf(getProperty("localController.anomaly.detector.enable", "false"));
+        anomalyDetectorSettings.setEnabled(isEnabled);
+        
         String name = getProperty("localController.anomaly.detector");
         anomalyDetectorSettings.setName(name);
         
@@ -152,6 +158,21 @@ public final class JavaPropertyNodeConfigurator
         String options = getProperty("localController.anomaly.detector.options");
         Map<String, String> map = umarshal(options);
         anomalyDetectorSettings.setOptions(map);
+        
+    }
+    
+    private void setAnomalyResolverSettings() throws NodeConfiguratorException
+    {
+        AnomalyResolverSettings anomalyResolverSettings = nodeConfiguration_.getAnomalyResolverSettings();
+        String name = getProperty("groupManager.anomaly.resolver");
+        anomalyResolverSettings.setName(name);
+        
+        String numberOfEntries = getProperty("groupManager.anomaly.resolver.numberOfMonitoringEntries");
+        anomalyResolverSettings.setNumberOfMonitoringEntries(Integer.valueOf(numberOfEntries));
+        
+        String options = getProperty("groupManager.anomaly.resolver.options");
+        Map<String, String> map = umarshal(options);
+        anomalyResolverSettings.setOptions(map);
         
     }
 
@@ -661,11 +682,11 @@ public final class JavaPropertyNodeConfigurator
         String pluginsDirectory = getProperty("groupManagerScheduler.pluginsDirectory");
         groupManager.setPluginsDirectory(pluginsDirectory);
         
-        String overloadPolicy = getProperty("groupManagerScheduler.relocation.overloadPolicy");
-        groupManager.getRelocationSettings().setOverloadPolicy(Relocation.valueOf(overloadPolicy));
-                
-        String underloadPolicy = getProperty("groupManagerScheduler.relocation.underloadPolicy");   
-        groupManager.getRelocationSettings().setUnderloadPolicy(Relocation.valueOf(underloadPolicy));
+//        String overloadPolicy = getProperty("groupManagerScheduler.relocation.overloadPolicy");
+//        groupManager.getRelocationSettings().setOverloadPolicy(Relocation.valueOf(overloadPolicy));
+//                
+//        String underloadPolicy = getProperty("groupManagerScheduler.relocation.underloadPolicy");   
+//        groupManager.getRelocationSettings().setUnderloadPolicy(Relocation.valueOf(underloadPolicy));
         
         String isEnabled = getProperty("groupManagerScheduler.reconfiguration.enabled"); 
         groupManager.getReconfigurationSettings().setEnabled(Boolean.valueOf(isEnabled));

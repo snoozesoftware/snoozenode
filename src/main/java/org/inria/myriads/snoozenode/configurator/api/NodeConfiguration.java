@@ -23,6 +23,7 @@ import java.io.Serializable;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorSettings;
 import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyDetectorSettings;
+import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyResolverSettings;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.energymanagement.EnergyManagementSettings;
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
@@ -43,6 +44,14 @@ import org.inria.myriads.snoozenode.configurator.submission.SubmissionSettings;
  * Node parameters class.
  * 
  * @author Eugen Feller
+ */
+/**
+ * @author msimonin
+ *
+ */
+/**
+ * @author msimonin
+ *
  */
 public class NodeConfiguration 
     implements Serializable
@@ -101,6 +110,9 @@ public class NodeConfiguration
     /** anomaly detector settings.*/
     private AnomalyDetectorSettings  anomalyDetectorSettings_;
     
+    /** anomaly resolver settings.*/
+    private AnomalyResolverSettings anomalyResolverSettings_;
+    
     /** Empty constructor. */
     public NodeConfiguration()
     {
@@ -121,6 +133,7 @@ public class NodeConfiguration
         provisionerSettings_ = new ProvisionerSettings();
         hostMonitoringSettings_ = new HostMonitoringSettings();
         anomalyDetectorSettings_ = new AnomalyDetectorSettings();
+        anomalyResolverSettings_ = new AnomalyResolverSettings();
     }
 
     /**
@@ -305,5 +318,13 @@ public class NodeConfiguration
     public AnomalyDetectorSettings getAnomalyDetectorSettings()
     {
         return anomalyDetectorSettings_;
+    }
+
+    /**
+     * @return the anomalyResolverSettings
+     */
+    public AnomalyResolverSettings getAnomalyResolverSettings()
+    {
+        return anomalyResolverSettings_;
     }
 }

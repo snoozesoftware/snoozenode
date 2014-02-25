@@ -35,6 +35,7 @@ import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyDetectorSettings;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSavingAction;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.ShutdownDriver;
@@ -470,7 +471,13 @@ public final class LocalControllerBackend
     
     private void startAnomalyDetector(MonitoringCommunicator communicator) throws Exception
     {
-        
+        AnomalyDetectorSettings anomalySettings = nodeConfiguration_.getAnomalyDetectorSettings();
+        if (!anomalySettings.isEnabled())
+        {
+            log_.debug("The anomaly detection is disabled");
+            return;
+        }
+
         if (anomalyDetectorService_ == null)
         {
             anomalyDetectorService_ = new AnomalyDetectorService(

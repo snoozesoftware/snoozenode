@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.groupmanager.anomaly;
+package org.inria.myriads.snoozenode.groupmanager.anomaly.resolver.api.impl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,19 +31,16 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.scheduler.RelocationSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.exception.AnomalyResolverException;
+import org.inria.myriads.snoozenode.exception.NodeConfiguratorException;
+import org.inria.myriads.snoozenode.groupmanager.anomaly.resolver.api.AnomalyResolver;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.GroupManagerPolicyFactory;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.VirtualMachineRelocation;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.VirtualMachineRelocation;
 import org.inria.myriads.snoozenode.groupmanager.migration.MigrationPlanEnforcer;
 import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationPlanListener;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
-import org.inria.myriads.snoozenode.message.SystemMessage;
-import org.inria.myriads.snoozenode.message.SystemMessageType;
-import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
-import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,8 +64,14 @@ public final class UnderOverloadAnomalyResolver extends AnomalyResolver implemen
     /** Anomaly local controller. */
     private LocalControllerDescription anomalyLocalController_;
 
+    /** 
+     * Number of monitoring entries to consider in estimation 
+     * (overrides resourceDemandEstimator)
+     **/
     private int numberOfMonitoringEntries_;
-    
+
+    private int count_;
+
     /**
      * Constructor.
      */
@@ -77,35 +80,26 @@ public final class UnderOverloadAnomalyResolver extends AnomalyResolver implemen
         
     }
     
-    /**
-     * Constructor.
-     * 
-     * @param relocationPolicies         The relocation parameters
-     * @param resourceDemandEstimator    The resource demand estimator
-     * @param groupManagerRepository     The group manager repository
-     * @param stateMachine               The state machine
-     * @param externalNotifier           The external notifier
-     */
-    public UnderOverloadAnomalyResolver(RelocationSettings relocationPolicies,
-                           ResourceDemandEstimator resourceDemandEstimator,
-                           GroupManagerRepository groupManagerRepository,
-                           StateMachine stateMachine,
-                           ExternalNotifier externalNotifier
-                            )
-    {
-        Guard.check(relocationPolicies, resourceDemandEstimator, groupManagerRepository, stateMachine);
-        log_.debug("Initializing the anomaly resolver");
-    }
-    
     
     @Override
-    public void initialize()
+    public void initialize() 
     {
+        String overloadPolicy = options_.get("overloadpolicy");
+        if (overloadPolicy == null)
+        {
+//            throw new NodeConfiguratorException("Unable to find mandatory option : overloadpolicy");
+        }
         overloadRelocationPolicy_ = 
-                GroupManagerPolicyFactory.newVirtualMachineRelocation(relocationSettings_.getOverloadPolicy(),
+                GroupManagerPolicyFactory.newVirtualMachineRelocation(overloadPolicy,
                                                                       estimator_);
+        String underloadPolicy = options_.get("underloadpolicy");
+        if (underloadPolicy == null)
+        {
+//            throw new NodeConfiguratorException("Unable to find mandatory option : overloadpolicy");
+        }
+        
         underloadRelocationPolicy_ = 
-                GroupManagerPolicyFactory.newVirtualMachineRelocation(relocationSettings_.getUnderloadPolicy(),
+                GroupManagerPolicyFactory.newVirtualMachineRelocation(overloadPolicy,
                                                                       estimator_);
         // TODO get it from the options.
         numberOfMonitoringEntries_ = estimator_.getNumberOfMonitoringEntries();
@@ -173,7 +167,8 @@ public final class UnderOverloadAnomalyResolver extends AnomalyResolver implemen
                                                                              true);
         return destination;
     }
-       
+
+    
     /**
      * Called to resolve anomaly.
      * 
@@ -231,7 +226,7 @@ public final class UnderOverloadAnomalyResolver extends AnomalyResolver implemen
         }
         
         MigrationPlanEnforcer migrationPlanExecutor = 
-                new MigrationPlanEnforcer(repository_, this);
+                new MigrationPlanEnforcer(externalNotifier_, repository_, this);
         migrationPlanExecutor.enforceMigrationPlan(migrationPlan);
     }
     
@@ -270,6 +265,13 @@ public final class UnderOverloadAnomalyResolver extends AnomalyResolver implemen
         List<LocalControllerDescription> localControllers = 
             new ArrayList<LocalControllerDescription>(passiveControllers.values());
         return localControllers;
+    }
+
+
+    @Override
+    public synchronized boolean readyToResolve(String anomalyLocalControllerId, Object anomalyObject)
+    {
+        return true;
     }
    
 

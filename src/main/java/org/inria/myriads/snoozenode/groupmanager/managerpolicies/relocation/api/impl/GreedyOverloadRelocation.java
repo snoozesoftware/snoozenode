@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.impl;
+package org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.impl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +29,7 @@ import org.inria.myriads.snoozecommon.util.MathUtils;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.VirtualMachineRelocation;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.VirtualMachineRelocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.utility.RelocationUtility;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.util.SortUtils;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
@@ -43,26 +43,29 @@ import org.slf4j.LoggerFactory;
  * @author Eugen Feller
  */
 public final class GreedyOverloadRelocation 
-    implements VirtualMachineRelocation 
+    extends VirtualMachineRelocation 
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(GreedyOverloadRelocation.class);
     
-    /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
-
     /**
      * Constructor.
      * 
      * @param estimator     The resource demand estimator
      */
-    public GreedyOverloadRelocation(ResourceDemandEstimator estimator)
+    public GreedyOverloadRelocation()
     {
-        Guard.check(estimator);
         log_.debug("Initializing the least loaded server relocation policy");       
-        estimator_ = estimator;
     }
 
+    
+
+    @Override
+    public void initialize()
+    {
+        
+    }
+    
     /**
      * Compute migration candidates.
      * 
@@ -79,7 +82,6 @@ public final class GreedyOverloadRelocation
         for (VirtualMachineMetaData metaData : virtualMachines)
         {            
             String virtualMachineId = metaData.getVirtualMachineLocation().getVirtualMachineId();
-            //estimation should be done the same way as LC did for detecting anomaly.
             List<Double> virtualMachineUsage = estimator_.estimateVirtualMachineResourceDemand(metaData);
             log_.debug(String.format("Estimated virtual machine %s resource demand: %s. Overload capacity: %s", 
                                       virtualMachineId,
@@ -182,4 +184,5 @@ public final class GreedyOverloadRelocation
         
         return newVector;
     }
+
 }
