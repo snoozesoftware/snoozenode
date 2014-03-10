@@ -19,6 +19,10 @@ public final class PluginUtils
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(PluginUtils.class);
     
+    
+    public static String pluginsDirectory_ = ".";
+    
+    
     /**
      * Hide the consturctor.
      */
@@ -78,4 +82,12 @@ public final class PluginUtils
       
       return classLoaded;
     }
+
+
+    public static Class getClassFromPluginsDirectory(String classURI) throws MalformedURLException, ClassNotFoundException
+    {
+        return getClassFromDirectory(pluginsDirectory_, classURI);
+    }
+
+
 }

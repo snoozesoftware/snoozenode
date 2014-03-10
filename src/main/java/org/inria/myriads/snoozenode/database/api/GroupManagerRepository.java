@@ -33,19 +33,6 @@ import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.Aggrega
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 
 /**
- * Group manager repisitory interface.
- * 
- * @author Eugen Feller
- */
-/**
- * @author msimonin
- *
- */
-/**
- * @author msimonin
- *
- */
-/**
  * @author msimonin
  *
  */

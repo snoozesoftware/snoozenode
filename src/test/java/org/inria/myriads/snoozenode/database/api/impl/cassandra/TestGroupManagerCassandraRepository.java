@@ -3,12 +3,15 @@ package org.inria.myriads.snoozenode.database.api.impl.cassandra;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import junit.framework.TestCase;
 
 import me.prettyprint.cassandra.serializers.BooleanSerializer;
+import me.prettyprint.cassandra.serializers.DoubleSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.service.CassandraHostConfigurator;
@@ -26,19 +29,26 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.localcontroller.HostResources;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
+import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorSettings;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.HostMonitoringData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
+import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.globals.Globals;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraUtils;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.JsonSerializer;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedHostMonitoringData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.primitives.Doubles;
 
 
 
@@ -112,6 +122,9 @@ public class TestGroupManagerCassandraRepository extends TestCase
         localControllerDescription.getControlDataAddress().setAddress("127.0.0.1");
         localControllerDescription.getControlDataAddress().setPort(5000);
         localControllerDescription.getTotalCapacity().add(1d);
+        createResource(localControllerDescription, "testResource");
+        
+       
         
         // Add
         repository_.addLocalControllerDescription(localControllerDescription);
@@ -130,7 +143,8 @@ public class TestGroupManagerCassandraRepository extends TestCase
             .addColumnName("totalCapacity")
             .addColumnName("groupManager")
             .addColumnName("hypervisorSettings")
-            .addColumnName("wakeupSettings");
+            .addColumnName("wakeupSettings")
+            .addColumnName("resources");
             
         @SuppressWarnings("unchecked")
         ArrayList<Double> totalCapacity = 
@@ -143,6 +157,10 @@ public class TestGroupManagerCassandraRepository extends TestCase
         HypervisorSettings hypervisorSettings = 
          (HypervisorSettings) columnFamily.getValue("hypervisorSettings", new JsonSerializer(HypervisorSettings.class));
         
+        @SuppressWarnings("unchecked")
+        HostResources Rresources = (HostResources) columnFamily.getValue("resources", new JsonSerializer(HostResources.class));  
+                
+        
         assertEquals("1234", columnFamily.getString("groupManager"));
         assertTrue(isAssigned);
         assertEquals(localControllerDescription.getControlDataAddress().getAddress(), controlDataAddress.getAddress());
@@ -150,7 +168,10 @@ public class TestGroupManagerCassandraRepository extends TestCase
         assertEquals(localControllerDescription.getTotalCapacity(), totalCapacity);
         assertEquals(localControllerDescription.getHypervisorSettings().getDriver(), 
                 hypervisorSettings.getDriver()); 
+        assertNotNull(Rresources);
+        assertNotNull(Rresources.getResources());
         
+        assertEquals("testResource", Rresources.getResources().get("testResource").getName());
         
         columnFamily =
                 new HColumnFamilyImpl<String, String>(
@@ -167,6 +188,19 @@ public class TestGroupManagerCassandraRepository extends TestCase
         
     }
     
+    private void createResource(LocalControllerDescription localControllerDescription, String resourceName)
+    {
+        HostResources hostResources = localControllerDescription.getHostResources();
+        Resource r = new Resource();
+        r.setName(resourceName);
+        r.setThresholds(Doubles.asList(1d,1d));
+        r.setTotal(100);
+
+        Map<String, Resource> resources = hostResources.getResources();
+        resources.put(resourceName, r);
+    }
+
+
     /**
      * Gets a Local controller description.
      */
@@ -182,6 +216,9 @@ public class TestGroupManagerCassandraRepository extends TestCase
             localControllerDescription.getControlDataAddress().setPort(5000);
             localControllerDescription.getTotalCapacity().add(1d);
             localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);
+            createResource(localControllerDescription, "test_cpu");
+            createResource(localControllerDescription, "test_mem");
+            
             repository_.addLocalControllerDescription(localControllerDescription);
         }
         
@@ -189,7 +226,9 @@ public class TestGroupManagerCassandraRepository extends TestCase
         LocalControllerDescription retrievedDescription = repository_.getLocalControllerDescription("lc5", 0, false);
         assertNotNull(retrievedDescription);
         assertEquals("lc5", retrievedDescription.getId());
-        
+        Map<String, Resource> resources = retrievedDescription.getHostResources().getResources();
+        assertNotNull(resources);
+        assertEquals(2, resources.size());
     }
     
     /**
@@ -376,6 +415,9 @@ public class TestGroupManagerCassandraRepository extends TestCase
         localControllerDescription.getControlDataAddress().setPort(5000);
         localControllerDescription.getTotalCapacity().add(1d);
         localControllerDescription.setStatus(LocalControllerStatus.ACTIVE);
+        createResource(localControllerDescription, "test_cpu", 10);
+        createResource(localControllerDescription, "test_mem", 10);
+        
         
         repository_.addLocalControllerDescription(localControllerDescription);
         
@@ -426,9 +468,25 @@ public class TestGroupManagerCassandraRepository extends TestCase
         assertEquals(2, retrievedDescription.getVirtualMachineMetaData().size());
         assertEquals(5, retrievedDescription.getVirtualMachineMetaData().get("test-vm").getUsedCapacity().size());
         assertEquals(1, retrievedDescription.getVirtualMachineMetaData().get("test-vm").getRequestedCapacity().size());
+       
     }
     
     
+    private void createResource(LocalControllerDescription localControllerDescription, String resourceName, int numberOfEntries)
+    {
+        createResource(localControllerDescription, resourceName);
+        Map<String, Resource> resources = localControllerDescription.getHostResources().getResources();
+        for (Resource resource : resources.values())
+        {
+            LRUCache<Long, Double> history = resource.getHistory();
+            for (int i = 0; i < numberOfEntries; i++)
+            {
+                history.put(Long.valueOf(i), Double.valueOf(i));
+            }
+        }
+    }
+
+
     /**
      * Gets a Local controller description.
      * Two vm assigned (test-vm) with 10 monitoring datas.
@@ -884,7 +942,6 @@ public class TestGroupManagerCassandraRepository extends TestCase
         repository_.addAggregatedMonitoringData("lc1", aggregatedDatas);
         
         // check the repository
-        
         SliceQuery<String, Long, Object> query = HFactory.createSliceQuery(keyspace_, StringSerializer.get(),
                 LongSerializer.get(), new JsonSerializer(VirtualMachineMonitoringData.class)).
                 setKey("test-vm")
@@ -907,6 +964,63 @@ public class TestGroupManagerCassandraRepository extends TestCase
         {
             assertTrue(retrievedDescription.getUsedCapacity().containsKey(Long.valueOf(i)));
         }
+    }
+    
+    /**
+     * Test add aggregated host monitoring data.
+     */
+    public void testAddAggregatedHostMonitoringData()
+    {
+        LocalControllerDescription localControllerDescription = new LocalControllerDescription();
+        
+        localControllerDescription.setId("lc1");
+        localControllerDescription.setHostname("mafalda");
+        localControllerDescription.getControlDataAddress().setAddress("127.0.0.1");
+        localControllerDescription.getControlDataAddress().setPort(5000);
+        localControllerDescription.getTotalCapacity().add(1d);
+        // Add the resources declaration.
+        createResource(localControllerDescription, "test_cpu");
+        createResource(localControllerDescription, "test_mem");
+        
+        // Add
+        repository_.addLocalControllerDescription(localControllerDescription);
+        
+        AggregatedHostMonitoringData hostMonitoringData = new AggregatedHostMonitoringData();
+        List<HostMonitoringData> monitoringDatas = hostMonitoringData.getMonitoringData();
+        hostMonitoringData.setLocalControllerId("lc1");
+        List<String> resourceNames = Arrays.asList("test_cpu", "test_mem");
+        for (int i = 0 ; i<10; i++)
+        {
+            HostMonitoringData monitoringData = new HostMonitoringData();
+            monitoringData.setTimeStamp(Long.valueOf(i));
+            HashMap<String, Double> usedCapacity = monitoringData.getUsedCapacity();
+            for (String resourceName : resourceNames)
+            {
+                usedCapacity.put(resourceName, 1d);
+            }
+            monitoringDatas.add(monitoringData);
+            
+        }
+        repository_.addAggregatedHostMonitoringData("lc1", hostMonitoringData);
+        // check the repository
+        
+        SliceQuery<String, Long, Double> query = HFactory.createSliceQuery(keyspace_, StringSerializer.get(),
+                LongSerializer.get(), DoubleSerializer.get())
+                .setKey("lc1|test_cpu")
+                .setColumnFamily(CassandraUtils.LOCALCONTROLLERS_MONITORING_CF)
+                .setRange(null, null , true, 10);
+        
+        QueryResult<ColumnSlice<Long, Double>> columns = query.execute();
+        
+        Resource resource = new Resource();
+        
+        for (HColumn<Long, Double> col : columns.get().getColumns())
+        {
+            resource.getHistory().put(col.getName(), col.getValue());
+            
+        }
+        assertEquals(10, resource.getHistory().size());
+
     }
     
     /**

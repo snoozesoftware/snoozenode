@@ -77,7 +77,6 @@ public final class GroupManagerPolicyFactory
                                                              ResourceDemandEstimator estimator) 
     {
         Guard.check(schedulerSettings, estimator);
-       
         
         PlacementPolicy placement = null;
         String placementPolicy = schedulerSettings.getPlacementPolicy();
@@ -97,18 +96,17 @@ public final class GroupManagerPolicyFactory
             try
             {
                 log_.debug("Loading a custom placement policy");
-
-                String pluginsDirectory = schedulerSettings.getPluginsDirectory();
-                Class placementClass = PluginUtils.getClassFromDirectory(pluginsDirectory , placementPolicy);
+                Class<?> placementClass = PluginUtils.getClassFromPluginsDirectory(placementPolicy);
                 log_.debug(String.format("instantiate the placement policy %s from the jar", placementPolicy));
                 Object placementObject =
-                        placementClass.getConstructor(StaticDynamicResourceDemandEstimator.class).newInstance(estimator);
+                        placementClass.getConstructor(ResourceDemandEstimator.class).newInstance(estimator);
                 placement = (PlacementPolicy) placementObject;
             }
             catch (Exception e)
             {
                 log_.error("Unable to load the placement policy from the plugin directory");
-                e.printStackTrace();
+//                e.printStackTrace();
+                log_.error(e.getMessage());
                 log_.debug("Back to default placement policy");
                 placement = new FirstFit(estimator);
             }                

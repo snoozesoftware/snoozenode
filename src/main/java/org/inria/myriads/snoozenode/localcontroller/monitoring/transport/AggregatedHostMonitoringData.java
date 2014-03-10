@@ -1,6 +1,7 @@
 package org.inria.myriads.snoozenode.localcontroller.monitoring.transport;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.HostMonitoringData;
@@ -28,6 +29,7 @@ public class AggregatedHostMonitoringData implements Serializable
     public AggregatedHostMonitoringData()
     {
         super();
+        monitoringData_ = new ArrayList<HostMonitoringData>();
     }
 
     /**

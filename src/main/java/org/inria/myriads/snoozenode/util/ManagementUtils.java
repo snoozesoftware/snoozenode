@@ -22,12 +22,14 @@ package org.inria.myriads.snoozenode.util;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
 import org.inria.myriads.snoozecommon.communication.NodeRole;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.ListenSettings;
+import org.inria.myriads.snoozecommon.communication.localcontroller.HostResources;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
 import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
@@ -170,7 +172,7 @@ public final class ManagementUtils
         localController.setWakeupSettings(nodeConfiguration.getEnergyManagement().getDrivers().getWakeup());
         localController.setTotalCapacity(totalCapacity);
         localController.setThresholds(thresholds);
-        HashMap<String, Resource> resources = localController.getHostResources();
+        Map<String, Resource> resources = localController.getHostResources().getResources();
         // for each monitor.
         for (HostMonitorSettings  monitors: nodeConfiguration.getHostMonitoringSettings().getHostMonitorSettings().values())
         {

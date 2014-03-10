@@ -143,7 +143,6 @@ public final class VirtualMachineMonitorDataConsumer
         {
             repository_.addAggregatedVirtualMachineData(clonedData);
             communicator_.sendRegularData(localControllerData);
-            log_.debug("No threshold crossing detected! Node seems stable for now!");
         }
         catch (IOException exception)
         {

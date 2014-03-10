@@ -86,7 +86,6 @@ public final class GroupLeaderMemoryRepository
         ipAddressPool_ = generateAddressPool(virtualMachineSubnets);
         maxCapacity_ = maxCapacity;
         groupManagerDescriptions_ = new HashMap<String, GroupManagerDescription>();
-        
     }
 
     /**

@@ -42,6 +42,7 @@ import org.inria.myriads.snoozenode.message.SystemMessage;
 import org.inria.myriads.snoozenode.message.SystemMessageType;
 import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
+import org.inria.myriads.snoozenode.util.OutputUtils;
 import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
@@ -204,10 +205,11 @@ public final class GroupManagerBackend
             {
                 heartbeatListener_.terminate();
             }
-            
+
             if (groupManagerInit_ != null)
             {
-                groupManagerInit_.getRepository().fillGroupManagerDescription(groupManagerDescription_);
+                // not needed ? 
+                // groupManagerInit_.getRepository().fillGroupManagerDescription(groupManagerDescription_);
                 groupManagerInit_.stopServices();
             }
         } 
@@ -237,6 +239,7 @@ public final class GroupManagerBackend
         
         try 
         {       
+            log_.debug(OutputUtils.toString(groupManagerDescription_));
             groupLeaderInit_ = new GroupLeaderInit(nodeConfiguration_, groupManagerDescription_, externalNotifier_);
         }   
         catch (Exception exception) 

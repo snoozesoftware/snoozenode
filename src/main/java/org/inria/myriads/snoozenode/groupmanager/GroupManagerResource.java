@@ -47,6 +47,7 @@ import org.inria.myriads.snoozenode.groupmanager.statemachine.VirtualMachineComm
 import org.inria.myriads.snoozenode.groupmanager.virtualmachinediscovery.VirtualMachineDiscovery;
 import org.inria.myriads.snoozenode.message.ManagementMessage;
 import org.inria.myriads.snoozenode.message.ManagementMessageType;
+import org.inria.myriads.snoozenode.util.OutputUtils;
 import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
@@ -264,10 +265,11 @@ public final class GroupManagerResource extends ServerResource
         {
             return false;
         }
-        
+        log_.debug(OutputUtils.toString(backend_.getGroupManagerDescription()));
         boolean isAdded = backend_.getGroupManagerInit()
                                   .getRepository()
                                   .addLocalControllerDescription(localController);
+        log_.debug(OutputUtils.toString(backend_.getGroupManagerDescription()));
         return isAdded;
     }
     

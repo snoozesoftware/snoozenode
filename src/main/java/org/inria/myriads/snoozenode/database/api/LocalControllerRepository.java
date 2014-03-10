@@ -110,7 +110,7 @@ public interface LocalControllerRepository
     /**
      * Get the host monitoring datas.
      */
-    HashMap<String, Resource> getHostResources();
+    Map<String, Resource> getHostResources();
 
     /**
      * 

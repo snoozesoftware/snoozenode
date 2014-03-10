@@ -28,6 +28,7 @@ import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.energymanagement.EnergyManagementSettings;
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.faulttolerance.FaultToleranceSettings;
+import org.inria.myriads.snoozenode.configurator.globals.GlobalsSettings;
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
 import org.inria.myriads.snoozenode.configurator.imagerepository.ImageRepositorySettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitoringSettings;
@@ -113,6 +114,9 @@ public class NodeConfiguration
     /** anomaly resolver settings.*/
     private AnomalyResolverSettings anomalyResolverSettings_;
     
+    /** Global settings.*/
+    private GlobalsSettings globalSettings_;
+    
     /** Empty constructor. */
     public NodeConfiguration()
     {
@@ -134,6 +138,7 @@ public class NodeConfiguration
         hostMonitoringSettings_ = new HostMonitoringSettings();
         anomalyDetectorSettings_ = new AnomalyDetectorSettings();
         anomalyResolverSettings_ = new AnomalyResolverSettings();
+        globalSettings_ = new GlobalsSettings();
     }
 
     /**
@@ -326,5 +331,13 @@ public class NodeConfiguration
     public AnomalyResolverSettings getAnomalyResolverSettings()
     {
         return anomalyResolverSettings_;
+    }
+
+    /**
+     * @return the globalSettings
+     */
+    public GlobalsSettings getGlobalsSettings()
+    {
+        return globalSettings_;
     }
 }

@@ -56,6 +56,7 @@ import org.inria.myriads.snoozenode.configurator.energymanagement.enums.SuspendD
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.estimator.HostEstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.faulttolerance.FaultToleranceSettings;
+import org.inria.myriads.snoozenode.configurator.globals.GlobalsSettings;
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
 import org.inria.myriads.snoozenode.configurator.imagerepository.DiskHostingType;
 import org.inria.myriads.snoozenode.configurator.imagerepository.ImageRepositorySettings;
@@ -133,10 +134,22 @@ public final class JavaPropertyNodeConfigurator
         setHostMonitoringSettings();
         setAnomalyDetectorSettings();
         setAnomalyResolverSettings();
+        setGlobalsSettings();
         
         fileInput.close();
     }
     
+
+
+    private void setGlobalsSettings() throws NodeConfiguratorException
+    {
+       GlobalsSettings globals = nodeConfiguration_.getGlobalsSettings();
+       
+       String pluginsDirectory = getProperty("globals.pluginsDirectory", "/usr/share/snoozenode/plugins");
+       globals.setPluginsDirectory(pluginsDirectory);
+        
+    }
+
 
 
     private void setAnomalyDetectorSettings() throws NodeConfiguratorException

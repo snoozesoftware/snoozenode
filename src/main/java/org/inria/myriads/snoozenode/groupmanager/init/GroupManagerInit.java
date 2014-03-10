@@ -325,7 +325,7 @@ public final class GroupManagerInit
         NetworkAddress address = groupLeader.getListenSettings().getControlDataAddress();
         log_.debug(String.format("Joining group leader %s with control data port: %s",
                                  address.getAddress(), address.getPort()));
-
+        
         repository_.fillGroupManagerDescription(description_);
         
         GroupManagerAPI communicator = CommunicatorFactory.newGroupManagerCommunicator(address);

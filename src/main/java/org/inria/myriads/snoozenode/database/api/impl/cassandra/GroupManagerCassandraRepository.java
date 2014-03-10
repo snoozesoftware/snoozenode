@@ -19,6 +19,7 @@ import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraU
 import org.inria.myriads.snoozenode.database.api.impl.memory.GroupManagerMemoryRepository;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedHostMonitoringData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
+import org.inria.myriads.snoozenode.util.OutputUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +60,8 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         super(hosts, ttlGroupManager, ttlVirtualMachine);
         log_.debug("Initializing the group manager memory repository");
         legacyIpAddresses_ = new ArrayList<String>();
-        groupManagerCache_ = new GroupManagerMemoryRepository(groupManager, 0);
+        GroupManagerDescription copyGroupManager = new GroupManagerDescription(groupManager,0);
+        groupManagerCache_ = new GroupManagerMemoryRepository(copyGroupManager, 0);
     }
 
 
@@ -105,8 +107,8 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
     {   
 
         log_.debug("Adding localController Description to the cassandra cluster");
-             
         boolean isAdded = addLocalControllerDescriptionCassandra(groupManagerCache_.getGroupManagerId(), description);
+        
         // add vms
         if (!isAdded)
         {
@@ -123,10 +125,9 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
                      
         //update_cache();
         description.setIsAssigned(true);
+        
         groupManagerCache_.addLocalControllerDescription(description);
-        
-        log_.debug("Local controller description added successfully !!");
-        
+        log_.debug("after caching \n" +  OutputUtils.toString(groupManagerCache_.getGroupManager()));
         return true;
     }
     
@@ -275,6 +276,14 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
     {
         addAggregatedMonitoringDataCassandra(localControllerId, aggregatedData);
     }
+    
+    @Override
+    public void addAggregatedHostMonitoringData(String localControllerId,
+            AggregatedHostMonitoringData hostMonitoringData)
+    {
+        addAggregatedHostMonitoringDataCassandra(localControllerId, hostMonitoringData);
+    }
+    
     
     @Override
     public ArrayList<String> getLegacyIpAddresses()
@@ -538,7 +547,10 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
         LocalControllerDescription localController = 
                 groupManagerCache_.getLocalControllerDescription(localControllerId, 0, withVirtualMachines);
         
-        
+        if (numberOfMonitoringEntries > 0)
+        {
+            fillWithHostMonitoringData(localController, numberOfMonitoringEntries);
+        }
         // cassandra request.
         if (withVirtualMachines && numberOfMonitoringEntries > 0)
         {
@@ -603,11 +615,5 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
     }
 
 
-    @Override
-    public void addAggregatedHostMonitoringData(String localControllerId,
-            AggregatedHostMonitoringData hostMonitoringData)
-    {
-        // TODO Auto-generated method stub
-        
-    }
+  
 }

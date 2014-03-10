@@ -1,6 +1,7 @@
 package org.inria.myriads.snoozenode.localcontroller.anomaly.detector;
 
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
@@ -11,6 +12,7 @@ import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDema
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.AnomalyDetector;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.impl.SimpleAnomalyDetector;
+import org.inria.myriads.snoozenode.util.PluginUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,12 +41,10 @@ public class AnomalyDetectorFactory
             )
     {        
         String classURI = anomalyDetectorSettings.getName();
-        ClassLoader classLoader = AnomalyDetectorFactory.class.getClassLoader();
-        
         AnomalyDetector anomalyDetector = null;
         try
         {
-            Class<?> anomalyClass = classLoader.loadClass(classURI);
+            Class<?> anomalyClass = PluginUtils.getClassFromPluginsDirectory(classURI);
             Object anomalyDetectorObject;
             anomalyDetectorObject = anomalyClass.getConstructor().newInstance();
             anomalyDetector = (AnomalyDetector) anomalyDetectorObject;
@@ -52,7 +52,7 @@ public class AnomalyDetectorFactory
             
         }
         catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-                | InvocationTargetException | NoSuchMethodException | SecurityException | ClassNotFoundException e)
+                | InvocationTargetException | NoSuchMethodException | SecurityException | ClassNotFoundException | MalformedURLException e)
         {
             e.printStackTrace();
             anomalyDetector = new SimpleAnomalyDetector();

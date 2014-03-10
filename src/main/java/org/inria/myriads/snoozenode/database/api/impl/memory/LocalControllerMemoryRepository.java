@@ -58,7 +58,7 @@ public final class LocalControllerMemoryRepository
     private ExternalNotifier externalNotifier_;
     
     /** Host Resources to monitor. */
-    private HashMap<String, Resource> hostResources_;
+    private Map<String, Resource> hostResources_;
     
     /** 
      * Virtual machine meta data map. 
@@ -78,7 +78,7 @@ public final class LocalControllerMemoryRepository
     {
         log_.debug("Initializing the local controller in-memory repository");
         virtualMachineMetaData_ = new HashMap<String, VirtualMachineMetaData>();
-        hostResources_ = localController.getHostResources();
+        hostResources_ = localController.getHostResources().getResources();
         externalNotifier_ = externalNotifier;
     }
     
@@ -241,7 +241,7 @@ public final class LocalControllerMemoryRepository
     }
 
     @Override
-    public HashMap<String, Resource> getHostResources()
+    public Map<String, Resource> getHostResources()
     {
         return hostResources_;
     }

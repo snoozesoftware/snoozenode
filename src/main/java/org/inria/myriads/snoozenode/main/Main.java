@@ -43,6 +43,7 @@ import org.inria.myriads.snoozenode.main.applications.BootstrapApplication;
 import org.inria.myriads.snoozenode.main.applications.GroupManagerApplication;
 import org.inria.myriads.snoozenode.main.applications.LocalControllerApplication;
 import org.inria.myriads.snoozenode.util.OutputUtils;
+import org.inria.myriads.snoozenode.util.PluginUtils;
 import org.restlet.Application;
 import org.restlet.Component;
 import org.restlet.Context;
@@ -214,6 +215,8 @@ public final class Main
         
         Application application = null;
         NodeRole nodeRole = nodeConfiguration.getNode().getRole();
+        
+        PluginUtils.pluginsDirectory_ = nodeConfiguration.getGlobalsSettings().getPluginsDirectory(); 
         
         switch (nodeRole) 
         {

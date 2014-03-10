@@ -27,6 +27,7 @@ import java.util.Map.Entry;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.localcontroller.HostResources;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
 import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
@@ -176,7 +177,7 @@ public final class GroupManagerMemoryRepository
     {   
         Guard.check(groupManager);
         log_.debug("Adding possible virtual machine meta data to group manager description");
-        //it should be a copy ?  
+        //it should be a copy ?
         groupManager.setLocalControllers(
                 (HashMap<String, LocalControllerDescription>) localControllerDescriptions_.clone());   
     }
@@ -436,7 +437,8 @@ public final class GroupManagerMemoryRepository
     {
         Guard.check(hostMonitoringData);
         LocalControllerDescription localController = localControllerDescriptions_.get(localControllerId);
-        HashMap<String, Resource> hostResources = localController.getHostResources();
+        Map<String, Resource> hostResources = localController.getHostResources().getResources();
+        
         for (HostMonitoringData  monitoringData : hostMonitoringData.getMonitoringData())
         {
             log_.debug("treating new ts");

@@ -21,10 +21,12 @@ package org.inria.myriads.snoozenode.localcontroller;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
+import org.inria.myriads.snoozecommon.communication.localcontroller.HostResources;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerLocation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
@@ -420,8 +422,10 @@ public final class LocalControllerBackend
             localControllerRepository_.updateVirtualMachineMetaData(groupManagerDescription);
         localControllerDescription_.setVirtualMachineMetaData(metaData);
         
-        HashMap<String, Resource> hostResources = localControllerRepository_.getHostResources();
-        localControllerDescription_.setHostResources(hostResources);
+        Map<String, Resource> hostResources = localControllerRepository_.getHostResources();
+        HostResources resources = new HostResources();
+        resources.setResources(hostResources);
+        localControllerDescription_.setHostResources(resources);
         log_.debug(String.format("Update local controller location with : \n" +
                                  "localControllerId  : %s \n" + 
                                  "groupManagerId : %s \n" + 
