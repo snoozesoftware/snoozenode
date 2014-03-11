@@ -43,24 +43,24 @@ import org.slf4j.LoggerFactory;
  * @author Eugen Feller
  */
 public final class Static 
-    implements PlacementPolicy 
+    extends PlacementPolicy 
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(Static.class);
-    
-    /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
     
     /**
      * Constructor.
      * 
      * @param estimator     The estimator
      */
-    public Static(ResourceDemandEstimator estimator) 
+    public Static() 
     {
-        Guard.check(estimator);
+    }
+    
+    @Override
+    public void initialize()
+    {
         log_.debug("Initializing static virtual machine placement policy");
-        estimator_ = estimator;
     }
     
     /**
@@ -125,4 +125,6 @@ public final class Static
         PlacementPlan placementPlan = new PlacementPlan(usedLocalControllers, unassignedVirtualMachines);
         return placementPlan;
     }
+
+
 }

@@ -53,10 +53,10 @@ public class TestStatic extends TestCase
     public void setUp()
     {
       estimator_ = EasyMock.createMock(StaticDynamicResourceDemandEstimator.class);
-      staticPlacement_ = new Static(estimator_);
+      staticPlacement_ = new Static();
+      staticPlacement_.setEstimator(estimator_);
       virtualMachines_ = new ArrayList<VirtualMachineMetaData>();
       localControllers_ = new ArrayList<LocalControllerDescription>();
-
     }
     
     /**

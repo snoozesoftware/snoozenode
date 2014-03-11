@@ -23,14 +23,22 @@ import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 
 /**
  * Placement policy interface.
  * 
  * @author Eugen Feller
  */
-public interface PlacementPolicy 
+public abstract class PlacementPolicy 
 {
+    
+    /** Resource demand estimator.*/
+    protected ResourceDemandEstimator estimator_;
+    
+    /** Initialize.*/
+    public abstract void initialize();
+    
     /**
      * Places the virtual machines.
      * 
@@ -38,6 +46,24 @@ public interface PlacementPolicy
      * @param localControllers      The local controllers
      * @return                      The placement plan
      */
-    PlacementPlan place(List<VirtualMachineMetaData> virtualMachines, 
+    public abstract PlacementPlan place(List<VirtualMachineMetaData> virtualMachines, 
                         List<LocalControllerDescription> localControllers);
+
+    /**
+     * @return the estimator
+     */
+    public ResourceDemandEstimator getEstimator()
+    {
+        return estimator_;
+    }
+
+    /**
+     * @param estimator the estimator to set
+     */
+    public void setEstimator(ResourceDemandEstimator estimator)
+    {
+        estimator_ = estimator;
+    }
+    
+   
 }

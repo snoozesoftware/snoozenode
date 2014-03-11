@@ -84,12 +84,12 @@ public final class GroupManagerPolicyFactory
         if (placementPolicy.toLowerCase().equals("firstfit")) 
         {
             log_.debug("Loading the first fit placement policy");
-            placement = new FirstFit(estimator);
+            placement = new FirstFit();
         }
         else if (placementPolicy.toLowerCase().equals("roundrobin"))
         {
             log_.debug("Loading the round robin placement policy");
-            placement = new RoundRobin(estimator);
+            placement = new RoundRobin();
         }
         else
         {
@@ -99,7 +99,7 @@ public final class GroupManagerPolicyFactory
                 Class<?> placementClass = PluginUtils.getClassFromPluginsDirectory(placementPolicy);
                 log_.debug(String.format("instantiate the placement policy %s from the jar", placementPolicy));
                 Object placementObject =
-                        placementClass.getConstructor(ResourceDemandEstimator.class).newInstance(estimator);
+                        placementClass.getConstructor().newInstance();
                 placement = (PlacementPolicy) placementObject;
             }
             catch (Exception e)
@@ -107,10 +107,12 @@ public final class GroupManagerPolicyFactory
                 log_.error("Unable to load the placement policy from the plugin directory");
                 log_.error(e.getMessage());
                 log_.debug("Back to default placement policy");
-                placement = new FirstFit(estimator);
+                placement = new FirstFit();
             }                
         }
         
+        placement.setEstimator(estimator);
+        placement.initialize();
         return placement;
     }
     

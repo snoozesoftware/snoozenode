@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Eugen Feller
  */
-public final class RoundRobin implements PlacementPolicy
+public final class RoundRobin extends PlacementPolicy
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(RoundRobin.class);
@@ -51,21 +51,23 @@ public final class RoundRobin implements PlacementPolicy
     /** Running index variable. */
     private int runningIndex_;
 
-    /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
 
     /**
      * Constructor.
      * 
      * @param estimator     The estimator
      */
-    public RoundRobin(ResourceDemandEstimator estimator)
+    public RoundRobin()
     {
-        Guard.check(estimator);
-        log_.debug("Initializing round robin virtual machine placement policy");
-        estimator_ = estimator;
     }
 
+    
+    @Override
+    public void initialize()
+    {
+        log_.debug("Initializing round robin virtual machine placement policy");
+    }
+    
     /**
      * Places a single virtual machine.
      * 
@@ -133,4 +135,6 @@ public final class RoundRobin implements PlacementPolicy
         PlacementPlan placementPlan = new PlacementPlan(usedLocalControllers, unassignedVirtualMachines);
         return placementPlan;
     }
+
+
 }

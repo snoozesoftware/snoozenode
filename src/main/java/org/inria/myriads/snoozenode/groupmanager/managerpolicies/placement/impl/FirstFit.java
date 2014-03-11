@@ -46,24 +46,24 @@ import org.slf4j.LoggerFactory;
  * @author Eugen Feller
  */
 public final class FirstFit 
-    implements PlacementPolicy 
+    extends PlacementPolicy 
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(FirstFit.class);
-    
-    /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
     
     /**
      * Constructor.
      * 
      * @param estimator     The estimator
      */
-    public FirstFit(ResourceDemandEstimator estimator) 
+    public FirstFit() 
     {
-        Guard.check(estimator);
+    }
+    
+    @Override
+    public void initialize()
+    {
         log_.debug("Initializing first-fit virtual machine placement policy");
-        estimator_ = estimator;
     }
     
     /**
@@ -121,4 +121,6 @@ public final class FirstFit
         PlacementPlan placementPlan = new PlacementPlan(usedLocalControllers, unassignedVirtualMachines);
         return placementPlan;
     }
+
+
 }

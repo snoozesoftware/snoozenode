@@ -118,7 +118,9 @@ public final class VirtualMachineSubmissionWorker
         stateMachine_ = stateMachine;
         managerListener_ = managerListener;
     
-        staticPlacementPolicy_ = new Static(estimator);
+        staticPlacementPolicy_ = new Static();
+        staticPlacementPolicy_.setEstimator(estimator);
+        staticPlacementPolicy_.initialize();
         externalNotifier_ = externalNotifier;
     }
     
