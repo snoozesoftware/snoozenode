@@ -22,19 +22,45 @@ package org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguratio
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 
 /**
- * Reconfiguration policy interface.
- * 
- * @author Eugen Feller
+ * @author Eugen Feller, msimonin
+ *
  */
-public interface ReconfigurationPolicy 
+public abstract class ReconfigurationPolicy 
 {
+
+    protected ResourceDemandEstimator estimator_;
+    
+    /**
+     * Initializes the reconfiguration policy. 
+     */
+    public abstract void initialize();
+    
     /**
      * Reconfigures local controllers.
      * 
      * @param localControllerDescriptions     The local controller descriptions
      * @return                                The migration plan
      */
-    ReconfigurationPlan reconfigure(List<LocalControllerDescription> localControllerDescriptions);
+    public abstract ReconfigurationPlan reconfigure(List<LocalControllerDescription> localControllerDescriptions);
+
+    /**
+     * @return the estimator
+     */
+    public ResourceDemandEstimator getEstimator()
+    {
+        return estimator_;
+    }
+
+    /**
+     * @param estimator the estimator to set
+     */
+    public void setEstimator(ResourceDemandEstimator estimator)
+    {
+        estimator_ = estimator;
+    }
+    
+    
 }

@@ -139,7 +139,7 @@ public class GroupManagerStateMachine
         anomalyResolver_ = createAnomalyResolver(nodeConfiguration.getAnomalyResolverSettings(), estimator, repository);
         // Reconfiguration
         GroupManagerSchedulerSettings schedulerSettings = nodeConfiguration.getGroupManagerScheduler();
-        Reconfiguration reconfiguration = schedulerSettings.getReconfigurationSettings().getPolicy();
+        String reconfiguration = schedulerSettings.getReconfigurationSettings().getPolicy();
         reconfiguration_ = GroupManagerPolicyFactory.newVirtualMachineReconfiguration(reconfiguration, estimator);  
     }
     

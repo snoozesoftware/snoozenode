@@ -19,7 +19,6 @@
  */
 package org.inria.myriads.snoozenode.configurator.scheduler;
 
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfiguration;
 
 /**
  * Reconfiguration settings.
@@ -29,7 +28,7 @@ import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfigu
 public class ReconfigurationSettings 
 {
     /** Selected policy. */
-    private Reconfiguration policy_;
+    private String policy_;
     
     /** Enabled or not. */
     private boolean isEnabled_;
@@ -82,7 +81,7 @@ public class ReconfigurationSettings
      * 
      * @param reconfigurationPolicy  The reconfiguration policy
      */
-    public void setPolicy(Reconfiguration reconfigurationPolicy) 
+    public void setPolicy(String reconfigurationPolicy) 
     {
         policy_ = reconfigurationPolicy;
     }
@@ -92,7 +91,7 @@ public class ReconfigurationSettings
      * 
      * @return The reconfiguration policy
      */
-    public Reconfiguration getPolicy() 
+    public String getPolicy() 
     {
         return policy_;
     }

@@ -105,7 +105,6 @@ public final class GroupManagerPolicyFactory
             catch (Exception e)
             {
                 log_.error("Unable to load the placement policy from the plugin directory");
-//                e.printStackTrace();
                 log_.error(e.getMessage());
                 log_.debug("Back to default placement policy");
                 placement = new FirstFit(estimator);
@@ -122,7 +121,7 @@ public final class GroupManagerPolicyFactory
      * @param estimator              The resource demand estimator
      * @return                       The selected reconfiguration policy
      */
-    public static ReconfigurationPolicy newVirtualMachineReconfiguration(Reconfiguration reconfigurationPolicy,
+    public static ReconfigurationPolicy newVirtualMachineReconfiguration(String reconfigurationPolicy,
                                                                          ResourceDemandEstimator estimator) 
     {
         Guard.check(reconfigurationPolicy);
@@ -130,15 +129,28 @@ public final class GroupManagerPolicyFactory
                                  reconfigurationPolicy));
         
         ReconfigurationPolicy reconfiguration = null;
-        switch (reconfigurationPolicy) 
+        
+        if (reconfigurationPolicy.equals("sercon"))
         {
-            case Sercon :
-                reconfiguration = new SerconVirtualMachineConsolidation(estimator);
-                break;
-              
-            default :
-                log_.error("Unknown virtual machine reconfiguration policy selected!");
+            reconfiguration = new SerconVirtualMachineConsolidation();
         }
+        else
+        {
+            try
+            {
+                log_.debug(String.format("Loading custom reconfiguration policy %s", reconfigurationPolicy));
+                Object reconfigurationPolicyObject = PluginUtils.createFromFQN(reconfigurationPolicy);
+                reconfiguration = (ReconfigurationPolicy) reconfigurationPolicyObject;
+            }
+            catch(Exception exception)
+            {
+                log_.error(String.format("Unable to load the custom reconfiguration policy %s", reconfigurationPolicy));
+                reconfiguration = new SerconVirtualMachineConsolidation();
+            }
+        }
+        
+        reconfiguration.setEstimator(estimator);
+        reconfiguration.initialize();
         
         return reconfiguration;
     }

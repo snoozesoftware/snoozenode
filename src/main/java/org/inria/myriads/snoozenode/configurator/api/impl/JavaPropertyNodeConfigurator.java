@@ -715,7 +715,7 @@ public final class JavaPropertyNodeConfigurator
         groupManager.getReconfigurationSettings().setEnabled(Boolean.valueOf(isEnabled));
         
         String policy = getProperty("groupManagerScheduler.reconfiguration.policy"); 
-        groupManager.getReconfigurationSettings().setPolicy(Reconfiguration.valueOf(policy));
+        groupManager.getReconfigurationSettings().setPolicy(policy);
         
         String interval = getProperty("groupManagerScheduler.reconfiguration.interval");
         groupManager.getReconfigurationSettings().setInterval(interval);
