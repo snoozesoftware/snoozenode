@@ -30,8 +30,6 @@ public final class GroupManagerSchedulerSettings
     /** Placement policy. */
     private String placementPolicy_;
     
-    /** Plugins directory. */
-    private String pluginsDirectory_;
     
     /** Relocation parameters. */
     private RelocationSettings relocation_;
@@ -85,24 +83,5 @@ public final class GroupManagerSchedulerSettings
     public String getPlacementPolicy() 
     {
         return placementPolicy_;
-    }
-
-    /**
-     * 
-     * Gets the plugin directory.
-     * 
-     * @return  the plugin directory String.
-     */
-    public String getPluginsDirectory()
-    {
-        return pluginsDirectory_;
-    }
-
-    /**
-     * @param pluginsDirectory the pluginsDirectory to set
-     */
-    public void setPluginsDirectory(String pluginsDirectory)
-    {
-        pluginsDirectory_ = pluginsDirectory;
     }
 }

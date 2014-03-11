@@ -132,6 +132,12 @@ public interface StateMachine
      */
     void onAnomalyResolved(LocalControllerDescription anomalyLocalController);
 
+    
+    /**
+     * Called on anomaly resolved.
+     */
+    void onAnomalyResolved();
+    
     /**
      * 
      * Resizes a virtual Machine.
@@ -140,6 +146,7 @@ public interface StateMachine
      * @return                  True if everything is ok, false otherwise.
      */
     VirtualMachineMetaData resizeVirtualMachine(ResizeRequest resizeRequest);
+
 
     
     

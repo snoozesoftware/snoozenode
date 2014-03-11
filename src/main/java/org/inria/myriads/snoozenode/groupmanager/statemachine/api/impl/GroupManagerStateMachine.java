@@ -397,10 +397,8 @@ public class GroupManagerStateMachine
     @Override
     public void resolveAnomaly(String localControllerId, Object anomaly) 
     {
-        //log_.debug(String.format("Starting to resolve ANOMALY (%s) situation!", state));
         log_.debug(String.format("Starting to resolve ANOMALY"));
-        
-        
+    
         // test if the anomaly resolver will handle this anomaly.
         boolean resolve = anomalyResolver_.readyToResolve(localControllerId, anomaly);
         if (!resolve)
@@ -534,6 +532,16 @@ public class GroupManagerStateMachine
         setIdle();
     }
 
+    /**
+     * Called on anomaly resolved.
+     * 
+     */
+    @Override
+    public void onAnomalyResolved() 
+    {   
+        setIdle();
+        log_.debug("Anomaly resoved (no power saving)");
+    }
     /**
      * Returns virtual machine submission response.
      * 

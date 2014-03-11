@@ -32,6 +32,7 @@ import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
 import org.inria.myriads.snoozenode.estimator.ResourceEstimatorFactory;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.exception.GroupLeaderInitException;
 import org.inria.myriads.snoozenode.exception.ResourceDemandEstimatorException;
@@ -74,7 +75,7 @@ public final class GroupLeaderInit
     private AssignmentPolicy assignmentPolicy_;
 
     /** Resource demand estimator. */
-    private StaticDynamicResourceDemandEstimator estimator_;
+    private ResourceDemandEstimator estimator_;
 
     /** External notifier.*/
     private ExternalNotifier externalNotifier_;
@@ -353,7 +354,7 @@ public final class GroupLeaderInit
      * 
      * @return  The resource demand estimator
      */
-    public StaticDynamicResourceDemandEstimator getResourceDemandEstimator() 
+    public ResourceDemandEstimator getResourceDemandEstimator() 
     {
         return estimator_;
     }

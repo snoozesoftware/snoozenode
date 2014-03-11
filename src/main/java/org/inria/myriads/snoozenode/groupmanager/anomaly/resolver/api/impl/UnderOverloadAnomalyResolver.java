@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Anomaly resolver.
  * 
- * @author Eugen Feller
+ * @author Eugen Feller, Matthieu simonin
  */
 public final class UnderOverloadAnomalyResolver extends AnomalyResolver implements MigrationPlanListener
 {
@@ -101,6 +101,7 @@ public final class UnderOverloadAnomalyResolver extends AnomalyResolver implemen
         underloadRelocationPolicy_ = 
                 GroupManagerPolicyFactory.newVirtualMachineRelocation(overloadPolicy,
                                                                       estimator_);
+        
         // TODO get it from the options.
         numberOfMonitoringEntries_ = estimator_.getNumberOfMonitoringEntries();
     }
@@ -182,7 +183,7 @@ public final class UnderOverloadAnomalyResolver extends AnomalyResolver implemen
         Guard.check(anomalyLocalController, anomalyObject);
         log_.debug("Starting anomaly resolution");
               
-        // Deserialize here
+        // Cast here
         LocalControllerState anomaly = (LocalControllerState) anomalyObject;
         log_.debug("The anomaly is " + String.valueOf(anomaly));
        

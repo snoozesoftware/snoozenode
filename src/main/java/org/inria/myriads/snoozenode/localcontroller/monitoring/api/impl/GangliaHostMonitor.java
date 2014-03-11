@@ -7,7 +7,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -47,7 +46,7 @@ public class GangliaHostMonitor extends HostMonitor
 
     public GangliaHostMonitor()
     {
-        log_.debug("Building a new Ganaglia host monitor");
+        log_.debug("Building a new Ganglia host monitor");
         resourceNames_ = new ArrayList<String>();
     }
     

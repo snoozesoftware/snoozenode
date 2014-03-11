@@ -148,16 +148,17 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
         numberOfMonitoringEntries_ = estimatorSettings_.getNumberOfMonitoringEntries();
         
         // TODO move this to super class ?
+        // Monitoring estimator.
         cpuDemandEstimator_ = ResourceEstimatorFactory.newVirtualMachineDemandCpuEstimator(monitoringSettings_.getEstimatorPolicy().getCpuEstimatorName());
         memoryDemandEstimator_ = ResourceEstimatorFactory.newVirtualMachineDemandMemEstimator(monitoringSettings_.getEstimatorPolicy().getMemoryEstimatorName());
         rxDemandEstimator_ = ResourceEstimatorFactory.newVirtualMachineDemandRxEstimator(monitoringSettings_.getEstimatorPolicy().getNetworkEstimatorName());
         txDemandEstimator_ = ResourceEstimatorFactory.newVirtualMachineDemandTxEstimator(monitoringSettings_.getEstimatorPolicy().getNetworkEstimatorName());
         
+        // HostMonitoring estimator.
         for (HostMonitorSettings hostMonitorSetting : hostMonitoringSettings_.getHostMonitorSettings().values())
         {
             for (Resource resource : hostMonitorSetting.getResources())
             {
-                HostEstimatorSettings hostEstimatorSettings = hostMonitorSetting.getEstimators().get(resource.getName());
                 HostEstimatorSettings estimatorSetting = hostMonitorSetting.getEstimators().get(resource.getName());                
                 hostEstimators_.put(resource.getName(), ResourceEstimatorFactory.newHostMonitoringEstimator(estimatorSetting));
             }

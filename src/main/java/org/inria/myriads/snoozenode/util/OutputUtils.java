@@ -286,8 +286,8 @@ public final class OutputUtils
         log_.debug("HostMonitor Settings");
         log_.debug("-----------------------");
         HostMonitoringSettings hostMonitoringSettings = configuration.getHostMonitoringSettings();
-        HashMap<HostMonitorType, HostMonitorSettings> hostMonitorSettings = hostMonitoringSettings.getHostMonitorSettings();
-        for (Entry<HostMonitorType, HostMonitorSettings> h : hostMonitorSettings.entrySet())
+        HashMap<String, HostMonitorSettings> hostMonitorSettings = hostMonitoringSettings.getHostMonitorSettings();
+        for (Entry<String, HostMonitorSettings> h : hostMonitorSettings.entrySet())
         {
             log_.debug(String.format("localController.hostmonitor.type: %s",
                     h.getKey()));
@@ -297,7 +297,7 @@ public final class OutputUtils
             log_.debug(String.format("localController.hostmonitor..options: %s",
                     hostMonitorSetting.getOptions()));
             log_.debug(String.format("localController.hostmonitor..type: %s",
-                    hostMonitorSetting.getType()));
+                    hostMonitorSetting.getName()));
             for (Resource resource : hostMonitorSetting.getResources())
             {
                 log_.debug(String.format("localController.hostmonitor.monitored: %s",

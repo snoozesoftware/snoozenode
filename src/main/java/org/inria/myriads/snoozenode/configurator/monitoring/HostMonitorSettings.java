@@ -16,7 +16,7 @@ import org.inria.myriads.snoozenode.configurator.estimator.HostEstimatorSettings
 public class HostMonitorSettings
 {
     /** Type of monitor.*/
-    private HostMonitorType type_;
+    private String name_;
         
     /** Resources monitored by this monitor.*/
     private List<Resource> resources_;
@@ -43,17 +43,17 @@ public class HostMonitorSettings
     /**
      * @return the type
      */
-    public HostMonitorType getType()
+    public String getName()
     {
-        return type_;
+        return name_;
     }
 
     /**
      * @param type the type to set
      */
-    public void setType(HostMonitorType type)
+    public void setName(String type)
     {
-        type_ = type;
+        name_ = type;
     }
 
    

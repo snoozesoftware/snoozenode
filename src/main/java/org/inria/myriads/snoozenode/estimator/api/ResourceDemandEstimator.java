@@ -29,12 +29,13 @@ public abstract class ResourceDemandEstimator
     
     protected HostMonitoringSettings hostMonitoringSettings_;
     
-
-    
     public abstract void initialize() throws ResourceDemandEstimatorException ;
     
     public abstract boolean hasEnoughLocalControllerCapacity(VirtualMachineMetaData virtualMachine, 
             LocalControllerDescription localController);
+   
+    public abstract boolean hasEnoughGroupManagerCapacity(VirtualMachineMetaData virtualMachine,
+            GroupManagerDescription groupManager);
     
     public abstract ArrayList<Double> computeLocalControllerCapacity(LocalControllerDescription localController);
     
@@ -114,14 +115,4 @@ public abstract class ResourceDemandEstimator
     {
         monitoringSettings_ = monitoringSettings;
     }
-
-    
-
-    
-    
-       
-    
-    
-    
-    
 }

@@ -213,28 +213,38 @@ public final class JavaPropertyNodeConfigurator
     {
         String separator = ",";
         HostMonitoringSettings hostMonitoringSettings = nodeConfiguration_.getHostMonitoringSettings();
-        String stringHostMonitorTypes = getProperty("localController.hostmonitor.type");
+        
+        // default interval
+        String interval = getProperty("localController.hostmonitor.interval");
+        
+        // default estimator
+        String estimator = getProperty("localController.hostmonitor.estimator");
+        
+        // default numberOfMonitoringEntries
+        String numberOfMonitoringEntries = getProperty("localController.hostmonitor.numberOfMonitoringEntries");
+        
+        String stringHostMonitorTypes = getProperty("localController.hostmonitor");
+        
         String hostMonitors[] = stringHostMonitorTypes.split(separator);
         for (String hostMonitor : hostMonitors)
         {
             HostMonitorSettings hostMonitorSettings = new HostMonitorSettings();
-            // type
-            HostMonitorType type = HostMonitorType.valueOf(hostMonitor);
-            hostMonitorSettings.setType(type);
+            String hostMonitorName = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase()));
+            hostMonitorSettings.setName(hostMonitorName);
             
             String options = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "options"));
             Map<String, String> map = umarshal(options);
             hostMonitorSettings.setOptions(map);
             
             // default numberOfMonitoringEntries
-            String defaultNumberOfMonitoringEntries = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "numberOfMonitoringEntries"), "10");
+            String defaultNumberOfMonitoringEntries = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "numberOfMonitoringEntries"), numberOfMonitoringEntries);
             //default interval 
-            String defaultInterval = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "interval"), "3000");
+            String defaultInterval = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "interval"), interval);
             hostMonitorSettings.setInterval(Integer.valueOf(defaultInterval));
             //default threshold
             String stringDefaultThresholds = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "thresholds"), "0,1,1"); 
             // default estimator
-            String stringDefaultEstimator =  getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "estimator"), "average"); 
+            String stringDefaultEstimator =  getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "estimator"), estimator); 
 
             // published metrics
             String stringPublished = getProperty(buildHostMonitorProperty("localController.hostmonitor", hostMonitor.toLowerCase(), "published"));
@@ -265,7 +275,7 @@ public final class JavaPropertyNodeConfigurator
                 hostMonitorSettings.add(resourceName, new HostEstimatorSettings(stringDefaultEstimator));
             }
             //register the host monitor setting (and all its resource)
-            hostMonitoringSettings.add(type, hostMonitorSettings);
+            hostMonitoringSettings.add(hostMonitor, hostMonitorSettings);
         }
     }
 
@@ -692,8 +702,8 @@ public final class JavaPropertyNodeConfigurator
         String placementPolicy = getProperty("groupManagerScheduler.placementPolicy");   
         groupManager.setPlacementPolicy(String.valueOf(placementPolicy));
         
-        String pluginsDirectory = getProperty("groupManagerScheduler.pluginsDirectory");
-        groupManager.setPluginsDirectory(pluginsDirectory);
+//        String pluginsDirectory = getProperty("groupManagerScheduler.pluginsDirectory");
+//        groupManager.setPluginsDirectory(pluginsDirectory);
         
 //        String overloadPolicy = getProperty("groupManagerScheduler.relocation.overloadPolicy");
 //        groupManager.getRelocationSettings().setOverloadPolicy(Relocation.valueOf(overloadPolicy));

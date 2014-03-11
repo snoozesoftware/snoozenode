@@ -20,6 +20,7 @@
 package org.inria.myriads.snoozenode.groupmanager.leaderpolicies;
 
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.AssignmentPolicy;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.impl.RandomLocalController;
@@ -83,24 +84,24 @@ public final class GroupLeaderPolicyFactory
      * Assign a virtual cluster to group managers.
      * 
      * @param dispatchingPolicy     The virtual cluster dispatching policy
-     * @param demandEstimator       The resource demand estimator
+     * @param estimator       The resource demand estimator
      * @return                      The virtual cluster mapping
      */
     public static DispatchingPolicy newVirtualClusterPlacement(Dispatching dispatchingPolicy,
-                                                               StaticDynamicResourceDemandEstimator demandEstimator)
+                                                               ResourceDemandEstimator estimator)
     {
-        Guard.check(dispatchingPolicy, demandEstimator);
+        Guard.check(dispatchingPolicy, estimator);
         log_.debug(String.format("Selected virtual cluster dispatching policy: %s", dispatchingPolicy));
         
         DispatchingPolicy assignmentPolicy = null;
         switch (dispatchingPolicy) 
         {
             case FirstFit :              
-                assignmentPolicy = new FirstFit(demandEstimator);
+                assignmentPolicy = new FirstFit(estimator);
                 break;
  
             case RoundRobin :            
-                assignmentPolicy = new RoundRobin(demandEstimator);            
+                assignmentPolicy = new RoundRobin(estimator);            
                 break;
                 
             default:

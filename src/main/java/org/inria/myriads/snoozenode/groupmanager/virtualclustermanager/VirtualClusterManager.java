@@ -49,6 +49,7 @@ import org.inria.myriads.snoozeimages.communication.rest.api.ImagesRepositoryAPI
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupLeaderSchedulerSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.GroupLeaderPolicyFactory;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
@@ -84,7 +85,7 @@ public final class VirtualClusterManager
     private NodeConfiguration nodeConfiguration_;
 
     /** Resource demand estimator. */
-    private StaticDynamicResourceDemandEstimator estimator_;
+    private ResourceDemandEstimator estimator_;
 
     /** Group leader repository. */
     private GroupLeaderRepository repository_;
@@ -101,7 +102,7 @@ public final class VirtualClusterManager
      */
     public VirtualClusterManager(NodeConfiguration nodeConfiguration,
                                  GroupLeaderRepository repository,
-                                 StaticDynamicResourceDemandEstimator estimator)
+                                 ResourceDemandEstimator estimator)
     {
         log_.debug("Initializing the virtual cluster manager");
         

@@ -42,6 +42,7 @@ import org.inria.myriads.snoozecommon.globals.Globals;
 import org.inria.myriads.snoozecommon.util.TimeUtils;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.exception.DispatchPlanException;
 import org.inria.myriads.snoozenode.exception.MissingGroupManagerException;
@@ -104,7 +105,7 @@ public final class VirtualClusterSubmissionWorker
                                           NodeConfiguration nodeConfiguration, 
                                           DispatchingPolicy dispatchingPolicy, 
                                           GroupLeaderRepository repository,
-                                          StaticDynamicResourceDemandEstimator estimator,
+                                          ResourceDemandEstimator estimator,
                                           VirtualClusterSubmissionListener submissionListener)
     {
         log_.debug("Initializing the virtual cluster submission");

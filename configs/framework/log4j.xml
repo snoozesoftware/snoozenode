@@ -137,6 +137,10 @@
 		<appender-ref ref="FA"/>
 	</logger>
 
+	<logger name="org.inria.myriads.snoozenode.estimator">
+		<appender-ref ref="FA"/>
+  </logger>
+
 	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring.consumer">
 		<level value="WARN"/>
 		<appender-ref ref="FA"/>
@@ -153,7 +157,6 @@
 	</logger> 
 	
 	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>
   </logger> 
 
@@ -184,6 +187,10 @@
 	
 	<logger name="org.inria.myriads.snoozenode">
 		<level value="DEBUG"/>
+		<appender-ref ref="FA"/>
+  </logger>
+
+	<logger name="org.inria.myriads.snooze.plugins">
 		<appender-ref ref="FA"/>
 	</logger>
 </log4j:configuration>

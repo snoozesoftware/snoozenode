@@ -68,7 +68,7 @@ public final class HostMonitoringService
     private static final Logger log_ = LoggerFactory.getLogger(HostMonitoringService.class);
     
     /** Keeps track of the monitoring threads. */
-    private Map<HostMonitorType, HostMonitorDataProducer> producerThreads_;
+    private Map<String, HostMonitorDataProducer> producerThreads_;
     
     /** Data queue. */
     private BlockingQueue<AggregatedHostMonitoringData> dataQueue_;
@@ -117,7 +117,7 @@ public final class HostMonitoringService
         nodeConfiguration_ = nodeConfiguration;
         hostMonitoringSettings_ = nodeConfiguration.getHostMonitoringSettings();
         dataQueue_ = new LinkedBlockingQueue<AggregatedHostMonitoringData>();
-        producerThreads_ = Collections.synchronizedMap(new HashMap<HostMonitorType, HostMonitorDataProducer>());
+        producerThreads_ = Collections.synchronizedMap(new HashMap<String, HostMonitorDataProducer>());
     }
 
     /**
@@ -135,25 +135,33 @@ public final class HostMonitoringService
         startHostMonitorDataProducer();
     }
 
-    private void startHostMonitorDataProducer() throws HostMonitoringException
+    private void startHostMonitorDataProducer() 
     {
         log_.debug("Starting the host monitoring data consumer");
         HostMonitoringSettings hostMonitoringSettings = nodeConfiguration_.getHostMonitoringSettings();
-        for ( Entry<HostMonitorType, HostMonitorSettings> monitor : hostMonitoringSettings.getHostMonitorSettings().entrySet())
+        for ( Entry<String, HostMonitorSettings> monitor : hostMonitoringSettings.getHostMonitorSettings().entrySet())
         {
             HostMonitorDataProducer producer = producerThreads_.get(monitor.getKey());
             if (producer == null)
             {
                 String producerId = UUID.randomUUID().toString();
-                HostMonitorDataProducer dataProducer = 
-                        new HostMonitorDataProducer(
-                                producerId,
-                                dataQueue_,
-                                monitor.getValue(), 
-                                localController_,
-                                this);
+                HostMonitorDataProducer dataProducer;
+                try
+                {
+                    dataProducer = new HostMonitorDataProducer(
+                            producerId,
+                            dataQueue_,
+                            monitor.getValue(), 
+                            localController_,
+                            this);
+                
                 new Thread(dataProducer, "HostMonitorDataProducer-" + monitor.getValue()).start();
                 producerThreads_.put(monitor.getKey(), dataProducer);
+                }
+                catch (HostMonitoringException e)
+                {
+                    log_.error("Unable to start the producer, removing it");
+                }
             }
             else
             {
