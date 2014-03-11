@@ -684,10 +684,10 @@ public final class JavaPropertyNodeConfigurator
     {
         GroupLeaderSchedulerSettings groupLeader = nodeConfiguration_.getGroupLeaderScheduler();
         String assignmentPolicy = getProperty("groupLeaderScheduler.assignmentPolicy"); 
-        groupLeader.setAssignmentPolicy(Assignment.valueOf(assignmentPolicy));
+        groupLeader.setAssignmentPolicy(assignmentPolicy);
         
         String dispatchingPolicy = getProperty("groupLeaderScheduler.dispatchingPolicy");
-        groupLeader.setDispatchingPolicy(Dispatching.valueOf(dispatchingPolicy));
+        groupLeader.setDispatchingPolicy(dispatchingPolicy);
     }
 
     /**
@@ -701,15 +701,6 @@ public final class JavaPropertyNodeConfigurator
         GroupManagerSchedulerSettings groupManager = nodeConfiguration_.getGroupManagerScheduler();
         String placementPolicy = getProperty("groupManagerScheduler.placementPolicy");   
         groupManager.setPlacementPolicy(String.valueOf(placementPolicy));
-        
-//        String pluginsDirectory = getProperty("groupManagerScheduler.pluginsDirectory");
-//        groupManager.setPluginsDirectory(pluginsDirectory);
-        
-//        String overloadPolicy = getProperty("groupManagerScheduler.relocation.overloadPolicy");
-//        groupManager.getRelocationSettings().setOverloadPolicy(Relocation.valueOf(overloadPolicy));
-//                
-//        String underloadPolicy = getProperty("groupManagerScheduler.relocation.underloadPolicy");   
-//        groupManager.getRelocationSettings().setUnderloadPolicy(Relocation.valueOf(underloadPolicy));
         
         String isEnabled = getProperty("groupManagerScheduler.reconfiguration.enabled"); 
         groupManager.getReconfigurationSettings().setEnabled(Boolean.valueOf(isEnabled));

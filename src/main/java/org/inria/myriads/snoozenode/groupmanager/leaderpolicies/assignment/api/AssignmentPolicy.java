@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment;
+package org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.api;
 
 import java.util.List;
 
@@ -27,9 +27,9 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 /**
  * Local controller assignment policy.
  * 
- * @author Eugen Feller
+ * @author Eugen Feller, Matthieu Simonin
  */
-public interface AssignmentPolicy 
+public abstract class AssignmentPolicy 
 {
     /** 
      * Assigns local controller to group manager.
@@ -38,6 +38,12 @@ public interface AssignmentPolicy
      * @param groupManager     The group manager descriptions
      * @return                 The group manager description
      */ 
-    GroupManagerDescription assign(LocalControllerDescription localController,
+    public abstract GroupManagerDescription assign(LocalControllerDescription localController,
                                    List<GroupManagerDescription> groupManager);
+    
+    /**
+    * Initialize.
+    */
+    public abstract void initialize();
+    
 }

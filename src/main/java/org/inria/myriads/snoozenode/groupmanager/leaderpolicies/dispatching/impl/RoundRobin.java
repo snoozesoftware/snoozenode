@@ -43,13 +43,11 @@ import org.slf4j.LoggerFactory;
  * @author Eugen Feller
  */
 public class RoundRobin 
-    implements DispatchingPolicy 
+    extends DispatchingPolicy 
 {
     /** Logger. */
     private static final Logger log_ = LoggerFactory.getLogger(RoundRobin.class);
     
-    /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
     
     /** Running index. */
     private int runningIndex_;
@@ -59,12 +57,17 @@ public class RoundRobin
      * 
      * @param estimator     The estimator
      */
-    public RoundRobin(ResourceDemandEstimator estimator) 
+    public RoundRobin() 
     {
-        log_.debug("Initializing the round robin virtual cluster dispatching policy");  
-        estimator_ = estimator;
-        runningIndex_ = 0;
+        log_.debug("Creating the round robin virtual cluster dispatching policy");  
     }
+    
+    public void initialize()
+    {
+        log_.debug("Initializing the round robin virtual cluster dispatching policy");
+        runningIndex_ = 0;   
+    }
+    
     
     /**
      * Assigns a virtual cluster.

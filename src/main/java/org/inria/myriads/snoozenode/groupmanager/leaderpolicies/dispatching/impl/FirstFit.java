@@ -42,23 +42,25 @@ import org.slf4j.LoggerFactory;
  * @author Eugen Feller
  */
 public final class FirstFit 
-    implements DispatchingPolicy 
+    extends DispatchingPolicy 
 {
     /** Logger. */
     private static final Logger log_ = LoggerFactory.getLogger(FirstFit.class);
 
-    /** Estimator.*/
-    private ResourceDemandEstimator estimator_;
     
     /** 
      * Constructor. 
      * 
      * @param estimator     The estimator
      */
-    public FirstFit(ResourceDemandEstimator estimator) 
+    public FirstFit() 
     {
-        log_.debug("Initializing the first-fit virtual cluster dispatching policy");  
-        estimator_ = estimator;
+        log_.debug("Creating the first-fit virtual cluster dispatching policy");  
+    }
+    
+    public void initialize()
+    {
+        log_.debug("Initializing the first-fit virtual cluster dispatching policy");
     }
     
     /**

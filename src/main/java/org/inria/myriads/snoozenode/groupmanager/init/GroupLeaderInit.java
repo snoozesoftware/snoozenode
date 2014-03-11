@@ -37,7 +37,7 @@ import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDema
 import org.inria.myriads.snoozenode.exception.GroupLeaderInitException;
 import org.inria.myriads.snoozenode.exception.ResourceDemandEstimatorException;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.GroupLeaderPolicyFactory;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.AssignmentPolicy;
+import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.api.AssignmentPolicy;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Assignment;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.MonitoringFactory;
 import org.inria.myriads.snoozenode.groupmanager.virtualclustermanager.VirtualClusterManager;
@@ -220,7 +220,7 @@ public final class GroupLeaderInit
     private void initializeLocalControllerAssignmentPolicy() 
         throws GroupLeaderInitException
     {
-        Assignment policy = nodeConfiguration_.getGroupLeaderScheduler().getAssignmentPolicy();
+        String policy = nodeConfiguration_.getGroupLeaderScheduler().getAssignmentPolicy();
         assignmentPolicy_ = GroupLeaderPolicyFactory.newLocalControllerAssignment(policy);
         if (assignmentPolicy_ == null)
         {
@@ -285,23 +285,6 @@ public final class GroupLeaderInit
         AssignedGroupManager lookup = groupLeaderRepository_.getAssignedGroupManager(contactInformation);
         
         return lookup;
-        // We don't need this anymore since we got the LCs in the GL repo
-//        for (GroupManagerDescription groupManager : groupManagers)
-//        {
-//            NetworkAddress groupManagerAddress = groupManager.getListenSettings().getControlDataAddress();
-//            GroupManagerAPI groupManagerCommunicator = 
-//                CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress);
-//            String localControllerId = groupManagerCommunicator.hasLocalController(contactInformation);
-//            if (localControllerId != null)
-//            {
-//                AssignedGroupManager lookup = new AssignedGroupManager();
-//                lookup.setLocalControllerId(localControllerId);
-//                lookup.setGroupManager(groupManager);
-//                return lookup;
-//            }
-//        }
-        
-//        return null;
     }
     
     /** 

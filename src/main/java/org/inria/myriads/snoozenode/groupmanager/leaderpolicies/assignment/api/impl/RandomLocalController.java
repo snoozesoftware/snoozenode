@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.impl;
+package org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.api.impl;
 
 import java.util.List;
 import java.util.Random;
@@ -25,7 +25,7 @@ import java.util.Random;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.AssignmentPolicy;
+import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.api.AssignmentPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * @author Eugen Feller
  */
 public final class RandomLocalController 
-    implements AssignmentPolicy 
+    extends AssignmentPolicy 
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(RandomLocalController.class);
@@ -46,8 +46,15 @@ public final class RandomLocalController
     /** Constructor. */
     public RandomLocalController() 
     {
-        log_.debug("Initializing random local controller assignment policy");
+        log_.debug("Creating random local controller assignment policy");
         random_ = new Random();
+    }
+    
+    
+    @Override
+    public void initialize()
+    {
+        log_.debug("Initializing random local controller assignment policy");
     }
     
     /** 
@@ -83,4 +90,6 @@ public final class RandomLocalController
     {
         return random_.nextInt(size);
     }
+
+
 }

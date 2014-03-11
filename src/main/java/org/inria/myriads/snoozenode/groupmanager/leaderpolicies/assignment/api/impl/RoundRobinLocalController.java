@@ -17,14 +17,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.impl;
+package org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.api.impl;
 
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.AssignmentPolicy;
+import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.api.AssignmentPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public final class RoundRobinLocalController 
-    implements AssignmentPolicy 
+    extends AssignmentPolicy 
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(RoundRobinLocalController.class);
@@ -45,6 +45,12 @@ public final class RoundRobinLocalController
     
     /** Constructor. */
     public RoundRobinLocalController() 
+    {
+        log_.debug("Creating round robin local controller assignment policy");
+    }
+    
+    @Override
+    public void initialize()
     {
         log_.debug("Initializing round robin local controller assignment policy");
     }
@@ -73,4 +79,6 @@ public final class RoundRobinLocalController
         runningIndex_++;
         return groupManagerDescription;
     }
+
+
 }

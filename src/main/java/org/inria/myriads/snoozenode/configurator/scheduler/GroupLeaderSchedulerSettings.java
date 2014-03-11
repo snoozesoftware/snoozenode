@@ -30,17 +30,17 @@ import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Dispatchin
 public final class GroupLeaderSchedulerSettings 
 {
     /** Local controller assignment policy. */
-    private Assignment assignmentPolicy_;
+    private String assignmentPolicy_;
 
     /** Virtual cluster dispatching policy. */
-    private Dispatching dispatchingPolicy_;
+    private String dispatchingPolicy_;
 
     /**
      * Sets the virtual cluster dispatching policy.
      * 
      * @param dispatchingPolicy    The virtual cluster dispatching policy
      */
-    public void setDispatchingPolicy(Dispatching dispatchingPolicy) 
+    public void setDispatchingPolicy(String dispatchingPolicy) 
     {
         dispatchingPolicy_ = dispatchingPolicy;
     }
@@ -50,7 +50,7 @@ public final class GroupLeaderSchedulerSettings
      * 
      * @return  The virtual cluster dispatch policy
      */
-    public Dispatching getDispatchingPolicy() 
+    public String getDispatchingPolicy() 
     {
         return dispatchingPolicy_;
     }
@@ -60,7 +60,7 @@ public final class GroupLeaderSchedulerSettings
      * 
      * @return  The local controller assignment policy
      */
-    public Assignment getAssignmentPolicy() 
+    public String getAssignmentPolicy() 
     {
         return assignmentPolicy_;
     }
@@ -70,7 +70,7 @@ public final class GroupLeaderSchedulerSettings
      * 
      * @param assignmentPolicy   The local controller assignment plicy
      */
-    public void setAssignmentPolicy(Assignment assignmentPolicy) 
+    public void setAssignmentPolicy(String assignmentPolicy) 
     {
         assignmentPolicy_ = assignmentPolicy;
     }

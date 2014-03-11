@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * @author Eugen Feller
  */
 public class Static 
-    implements DispatchingPolicy 
+    extends DispatchingPolicy 
 {
     /** Logger. */
     private static final Logger log_ = LoggerFactory.getLogger(Static.class);
@@ -60,6 +60,11 @@ public class Static
         log_.debug("Initializing the static virtual cluster dispatching policy");  
         estimator_ = estimator;
     }
+    
+    @Override
+    public void initialize()
+    {
+    }     
     
     /**
      * Assigns a virtual cluster.
@@ -117,5 +122,7 @@ public class Static
         DispatchingPlan dispatchPlan = new DispatchingPlan(groupManagerCandidates);
         return dispatchPlan;
 
-    }        
+    }
+
+   
 }

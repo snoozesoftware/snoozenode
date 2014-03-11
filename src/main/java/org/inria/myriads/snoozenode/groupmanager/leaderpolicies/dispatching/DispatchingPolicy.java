@@ -23,14 +23,19 @@ import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 
 /**
  * Virtual cluster dispatching policy.
  * 
  * @author Eugen Feller
  */
-public interface DispatchingPolicy 
+public abstract class DispatchingPolicy 
 {
+    
+    /** Resource Demand Estimator.*/
+    protected ResourceDemandEstimator estimator_;
+    
     /**
      * Dispatches a virtual cluster.
      * 
@@ -38,6 +43,27 @@ public interface DispatchingPolicy
      * @param groupManagers     The group managers
      * @return                  The dispatch plan
      */
-    DispatchingPlan dispatch(List<VirtualMachineMetaData> virtualMachines,
+    public abstract DispatchingPlan dispatch(List<VirtualMachineMetaData> virtualMachines,
                              List<GroupManagerDescription> groupManagers);
+    
+    /**
+     * Initializes.
+     */
+    public abstract void initialize();
+
+    /**
+     * @return the estimator
+     */
+    public ResourceDemandEstimator getEstimator()
+    {
+        return estimator_;
+    }
+
+    /**
+     * @param estimator the estimator to set
+     */
+    public void setEstimator(ResourceDemandEstimator estimator)
+    {
+        estimator_ = estimator;
+    }
 }
