@@ -1,27 +1,19 @@
 package org.inria.myriads.snoozenode.estimator;
 
-import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
-
-import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.estimator.HostEstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
-import org.inria.myriads.snoozenode.configurator.submission.PackingDensity;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.exception.ResourceDemandEstimatorException;
-import org.inria.myriads.snoozenode.groupmanager.anomaly.resolver.api.AnomalyResolver;
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.HostMonitoringEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.VirtualMachineMonitoringEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.impl.AverageCPUDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.impl.AverageHostMonitoringEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.impl.AverageMemoryDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.impl.AverageRxDemandEstimator;
-import org.inria.myriads.snoozenode.groupmanager.estimator.api.impl.AverageTxDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.enums.Estimator;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
 import org.inria.myriads.snoozenode.util.PluginUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +32,7 @@ public final class ResourceEstimatorFactory
         String estimatorName = estimatorSettings.getName();
         ResourceDemandEstimator resourceDemandEstimator = null;
         
-        if (estimatorName.equals("StaticDynamic"))
+        if (estimatorName.equals("staticdynamic"))
         {
             log_.debug("Loading StaticDynamic resource demand estimator");
             resourceDemandEstimator = new StaticDynamicResourceDemandEstimator();    
@@ -104,12 +96,12 @@ public final class ResourceEstimatorFactory
         VirtualMachineMonitoringEstimator memDemandEstimator = null;
         if (estimatorName.equals("average"))
         {
-            log_.debug("Selecting average CPU demand estimator");
+            log_.debug("Selecting average Memory demand estimator");
             memDemandEstimator = new AverageMemoryDemandEstimator();
         }
         else
         {
-            log_.debug(String.format("Selecting a custom CPU estimator : %s; trying to load it from plugin directory", estimatorName));
+            log_.debug(String.format("Selecting a custom memory estimator : %s; trying to load it from plugin directory", estimatorName));
             log_.debug(String.format(
                     "Loading custom resource demand estimator : %s, trying to load it form plugins directory ",
                     estimatorName));           
@@ -136,12 +128,12 @@ public final class ResourceEstimatorFactory
         VirtualMachineMonitoringEstimator rxDemandEstimator = null;
         if (estimatorName.equals("average"))
         {
-            log_.debug("Selecting average CPU demand estimator");
+            log_.debug("Selecting average Rx demand estimator");
             rxDemandEstimator = new AverageRxDemandEstimator();
         }
         else
         {
-            log_.debug(String.format("Selecting a custom CPU estimator : %s; trying to load it from plugin directory", estimatorName));
+            log_.debug(String.format("Selecting a custom Rx estimator : %s; trying to load it from plugin directory", estimatorName));
             log_.debug(String.format(
                     "Loading custom resource demand estimator : %s, trying to load it form plugins directory ",
                     estimatorName));           
@@ -165,12 +157,12 @@ public final class ResourceEstimatorFactory
         VirtualMachineMonitoringEstimator txDemandEstimator = null;
         if (estimatorName.equals("average"))
         {
-            log_.debug("Selecting average CPU demand estimator");
+            log_.debug("Selecting average Tx demand estimator");
             txDemandEstimator = new AverageRxDemandEstimator();
         }
         else
         {
-            log_.debug(String.format("Selecting a custom CPU estimator : %s; trying to load it from plugin directory", estimatorName));
+            log_.debug(String.format("Selecting a custom Tx estimator : %s; trying to load it from plugin directory", estimatorName));
             log_.debug(String.format(
                     "Loading custom resource demand estimator : %s, trying to load it form plugins directory ",
                     estimatorName));           
@@ -192,19 +184,30 @@ public final class ResourceEstimatorFactory
     {   
         log_.debug("Creating a new Host monitoring estimator");
         String estimatorName = estimatorSetting.getEstimatorName();
-        Estimator estimator = Estimator.valueOf(estimatorName);
+        
         HostMonitoringEstimator hostEstimator = null;
-        switch(estimator)
+        if (estimatorName.equals("average"))
         {
-        case average :
-               log_.debug("Selecting average host monitoting estimator");
-               hostEstimator = new AverageHostMonitoringEstimator();
-               break;
-        default : 
-            log_.equals(String.format("Unknown host monitoring estimator selected: %s", estimatorName));
             hostEstimator = new AverageHostMonitoringEstimator();
-            break;
         }
+        else
+        {
+            try
+            {
+                log_.debug(String.format("Selecting a custom Host estimator : %s; trying to load it from plugin directory", estimatorName));
+                log_.debug(String.format(
+                        "Loading custom Host estimator : %s, trying to load it form plugins directory ",
+                        estimatorName));  
+                Object hostEstimatorObject = PluginUtils.createFromFQN(estimatorName);
+                hostEstimator = (HostMonitoringEstimator) hostEstimatorObject;
+            }
+            catch (Exception e)
+            {
+                log_.error("Unable to create the custom estimator, falling back to default");
+                hostEstimator = new AverageHostMonitoringEstimator();
+            }
+        }
+        
         return hostEstimator;
     }
 
