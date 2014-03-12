@@ -39,25 +39,30 @@ public class AnomalyDetectorFactory
             LocalControllerDescription localController,
             AnomalyDetectorSettings anomalyDetectorSettings
             )
-    {        
+    {     
         String classURI = anomalyDetectorSettings.getName();
+        
         AnomalyDetector anomalyDetector = null;
-        try
+        if (classURI.equals("simple"))
         {
-            Class<?> anomalyClass = PluginUtils.getClassFromPluginsDirectory(classURI);
-            Object anomalyDetectorObject;
-            anomalyDetectorObject = anomalyClass.getConstructor().newInstance();
-            anomalyDetector = (AnomalyDetector) anomalyDetectorObject;
-            log_.debug("Sucessfully created anomaly detector " + classURI);
-            
-        }
-        catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-                | InvocationTargetException | NoSuchMethodException | SecurityException | ClassNotFoundException | MalformedURLException e)
-        {
-            e.printStackTrace();
+            log_.debug("Loading the simple anomaly detector");
             anomalyDetector = new SimpleAnomalyDetector();
         }
-        
+        else
+        {
+            Object anomalyDetectorObject;
+            try
+            {
+                log_.debug("Loading custom anomaly detector");
+                anomalyDetectorObject = PluginUtils.createFromFQN(classURI);
+                anomalyDetector = (AnomalyDetector) anomalyDetectorObject;
+            }
+            catch (Exception e)
+            {
+                log_.error("Unable to load the custom anomaly detector");
+                anomalyDetector = new SimpleAnomalyDetector();
+            }
+        }
         anomalyDetector.setSettings(anomalyDetectorSettings);
         anomalyDetector.setLocalController(localController);
         anomalyDetector.setMonitoringEstimator(estimator);
