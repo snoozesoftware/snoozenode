@@ -28,7 +28,6 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.VirtualMachineRelocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.utility.RelocationUtility;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.util.SortUtils;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +47,6 @@ public final class GreedyUnderloadRelocation
     /**
      * Constructor.
      * 
-     * @param estimator     The resource demand estimator
      */
     public GreedyUnderloadRelocation()
     {
@@ -76,8 +74,9 @@ public final class GreedyUnderloadRelocation
                 
         List<VirtualMachineMetaData> candidatevirtualMachines = 
             new ArrayList<VirtualMachineMetaData>(sourceLocalController.getVirtualMachineMetaData().values());
-        SortUtils.sortVirtualMachinesDecreasing(candidatevirtualMachines, estimator_);
-        SortUtils.sortLocalControllersDecreasing(destinationLocalControllers, estimator_);
+        estimator_.sortVirtualMachines(candidatevirtualMachines, true);
+        estimator_.sortLocalControllers(destinationLocalControllers, true);
+        
         ReconfigurationPlan reconfigurationPlan = 
                 RelocationUtility.computeReconfigurationPlan(candidatevirtualMachines,
                                                              destinationLocalControllers, 

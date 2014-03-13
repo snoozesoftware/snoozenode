@@ -20,14 +20,10 @@
 package org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators.api.impl;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
-import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MathUtils;
-import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators.api.SnoozeComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +42,6 @@ public class LocalControllersL1 extends SnoozeComparator<LocalControllerDescript
     /**
      * Constructor.
      * 
-     * @param estimator     The resource demand estimator
      */
     public LocalControllersL1()
     {

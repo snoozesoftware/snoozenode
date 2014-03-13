@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozenode.configurator.estimator.HostEstimatorSettings;
 
@@ -73,11 +72,22 @@ public class HostMonitorSettings
         resources_ = resources;
     }
 
+    /**
+     * @param resource  resource.
+     */
     public void add(Resource resource)
     {
         resources_.add(resource);
     }
     
+    
+    /**
+     * 
+     * Adds a host monitor.
+     * 
+     * @param resourceName          The resource name
+     * @param hostEstimatorSettings The hostEstimatorSettings.
+     */
     public void add(String resourceName, HostEstimatorSettings hostEstimatorSettings)
     {
         estimators_.put(resourceName, hostEstimatorSettings);

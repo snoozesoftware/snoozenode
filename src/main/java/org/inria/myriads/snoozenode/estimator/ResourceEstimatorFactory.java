@@ -13,17 +13,42 @@ import org.inria.myriads.snoozenode.groupmanager.estimator.api.impl.AverageCPUDe
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.impl.AverageHostMonitoringEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.impl.AverageMemoryDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.impl.AverageRxDemandEstimator;
-import org.inria.myriads.snoozenode.groupmanager.estimator.enums.Estimator;
 import org.inria.myriads.snoozenode.util.PluginUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 
+ * Factory to create resource demand estimator.
+ * 
+ * @author msimonin
+ *
+ */
 public final class ResourceEstimatorFactory
 {
 
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(ResourceEstimatorFactory.class);
     
+    
+    /**
+     * Hide Constructor.
+     */
+    private ResourceEstimatorFactory()
+    {
+        throw new UnsupportedOperationException();
+    }
+    
+    /**
+     * 
+     * create a new resource demand estimator.
+     * 
+     * @param estimatorSettings         The estimator Settings.
+     * @param monitoringSettings        The monitoring settings.
+     * @param hostMonitoringsettings    The host monitoring settings.
+     * @return  a resource demand estimator implementation
+     * @throws ResourceDemandEstimatorException The exception.
+     */
     public static ResourceDemandEstimator newResourceDemandEstimator(
             EstimatorSettings estimatorSettings, 
             MonitoringSettings monitoringSettings, 
@@ -47,7 +72,7 @@ public final class ResourceEstimatorFactory
                 Object estimatorObject  = PluginUtils.createFromFQN(estimatorName);
                 resourceDemandEstimator = (ResourceDemandEstimator) estimatorObject;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 log_.error("Unable to create the custom estimator, falling back to default");
                 resourceDemandEstimator = new StaticDynamicResourceDemandEstimator();
@@ -60,6 +85,13 @@ public final class ResourceEstimatorFactory
         return resourceDemandEstimator;
     }
 
+    /**
+     * 
+     * Creates a Cpu estimator.
+     * 
+     * @param estimatorName     The estimator name.
+     * @return  A VirtualMachineMonitoringEstimator implementation.
+     */
     public static VirtualMachineMonitoringEstimator newVirtualMachineDemandCpuEstimator(String estimatorName)
     {
         log_.debug("Creating a new CPU demand estimator");
@@ -71,7 +103,8 @@ public final class ResourceEstimatorFactory
         }
         else
         {
-            log_.debug(String.format("Selecting a custom CPU estimator : %s; trying to load it from plugin directory", estimatorName));
+            log_.debug(String.format(
+                    "Selecting a custom CPU estimator : %s; trying to load it from plugin directory", estimatorName));
             log_.debug(String.format(
                     "Loading custom resource demand estimator : %s, trying to load it form plugins directory ",
                     estimatorName));           
@@ -80,7 +113,7 @@ public final class ResourceEstimatorFactory
                 Object estimatorObject  = PluginUtils.createFromFQN(estimatorName);
                 cpuDemandEstimator = (VirtualMachineMonitoringEstimator) estimatorObject;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 log_.error("Unable to create the custom estimator, falling back to default");
                 cpuDemandEstimator = new AverageCPUDemandEstimator();
@@ -89,7 +122,14 @@ public final class ResourceEstimatorFactory
         }        
         return cpuDemandEstimator;
     }
-    
+
+    /**
+     * 
+     * Creates a Mem estimator.
+     * 
+     * @param estimatorName     The estimator name.
+     * @return  A VirtualMachineMonitoringEstimator implementation.
+     */
     public static VirtualMachineMonitoringEstimator newVirtualMachineDemandMemEstimator(String estimatorName)
     {
         log_.debug("Creating a new mem demand estimator");
@@ -101,7 +141,9 @@ public final class ResourceEstimatorFactory
         }
         else
         {
-            log_.debug(String.format("Selecting a custom memory estimator : %s; trying to load it from plugin directory", estimatorName));
+            log_.debug(
+                    String.format("Selecting a custom memory estimator : %s; trying to load it from plugin directory", 
+                            estimatorName));
             log_.debug(String.format(
                     "Loading custom resource demand estimator : %s, trying to load it form plugins directory ",
                     estimatorName));           
@@ -110,7 +152,7 @@ public final class ResourceEstimatorFactory
                 Object estimatorObject  = PluginUtils.createFromFQN(estimatorName);
                 memDemandEstimator = (VirtualMachineMonitoringEstimator) estimatorObject;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 log_.error("Unable to create the custom estimator, falling back to default");
                 memDemandEstimator = new AverageMemoryDemandEstimator();
@@ -121,6 +163,13 @@ public final class ResourceEstimatorFactory
         return memDemandEstimator;
     }
 
+    /**
+     * 
+     * Creates a Rx estimator.
+     * 
+     * @param estimatorName     The estimator name.
+     * @return  A VirtualMachineMonitoringEstimator implementation.
+     */
     public static VirtualMachineMonitoringEstimator newVirtualMachineDemandRxEstimator(String estimatorName)
     {
         log_.debug("Creating a new rx demand estimator");
@@ -133,7 +182,10 @@ public final class ResourceEstimatorFactory
         }
         else
         {
-            log_.debug(String.format("Selecting a custom Rx estimator : %s; trying to load it from plugin directory", estimatorName));
+            log_.debug(
+                    String.format("Selecting a custom Rx estimator : %s; trying to load it from plugin directory",
+                            estimatorName));
+            
             log_.debug(String.format(
                     "Loading custom resource demand estimator : %s, trying to load it form plugins directory ",
                     estimatorName));           
@@ -142,7 +194,7 @@ public final class ResourceEstimatorFactory
                 Object estimatorObject  = PluginUtils.createFromFQN(estimatorName);
                 rxDemandEstimator = (VirtualMachineMonitoringEstimator) estimatorObject;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 log_.error("Unable to create the custom estimator, falling back to default");
                 rxDemandEstimator = new AverageRxDemandEstimator();
@@ -151,6 +203,13 @@ public final class ResourceEstimatorFactory
         return rxDemandEstimator;
     }
     
+    /**
+     * 
+     * Creates a Tx estimator.
+     * 
+     * @param estimatorName     The estimator name.
+     * @return  A VirtualMachineMonitoringEstimator implementation.
+     */
     public static VirtualMachineMonitoringEstimator newVirtualMachineDemandTxEstimator(String estimatorName)
     {
         log_.debug("Creating a new Tx demand estimator");
@@ -162,7 +221,10 @@ public final class ResourceEstimatorFactory
         }
         else
         {
-            log_.debug(String.format("Selecting a custom Tx estimator : %s; trying to load it from plugin directory", estimatorName));
+            log_.debug(
+                    String.format("Selecting a custom Tx estimator : %s; trying to load it from plugin directory", 
+                            estimatorName));
+            
             log_.debug(String.format(
                     "Loading custom resource demand estimator : %s, trying to load it form plugins directory ",
                     estimatorName));           
@@ -171,7 +233,7 @@ public final class ResourceEstimatorFactory
                 Object estimatorObject  = PluginUtils.createFromFQN(estimatorName);
                 txDemandEstimator = (VirtualMachineMonitoringEstimator) estimatorObject;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 log_.error("Unable to create the custom estimator, falling back to default");
                 txDemandEstimator = new AverageRxDemandEstimator();
@@ -180,6 +242,13 @@ public final class ResourceEstimatorFactory
         return txDemandEstimator;
     }
 
+    /**
+     * 
+     * Creates a Host monitoring estimator.
+     * 
+     * @param estimatorSetting     estimatorSetting.
+     * @return  A VirtualMachineMonitoringEstimator implementation.
+     */
     public static HostMonitoringEstimator newHostMonitoringEstimator(HostEstimatorSettings estimatorSetting)
     {   
         log_.debug("Creating a new Host monitoring estimator");
@@ -194,7 +263,10 @@ public final class ResourceEstimatorFactory
         {
             try
             {
-                log_.debug(String.format("Selecting a custom Host estimator : %s; trying to load it from plugin directory", estimatorName));
+                log_.debug(String.format(
+                                "Selecting a custom Host estimator : %s; trying to load it from plugin directory", 
+                                estimatorName));
+                
                 log_.debug(String.format(
                         "Loading custom Host estimator : %s, trying to load it form plugins directory ",
                         estimatorName));  

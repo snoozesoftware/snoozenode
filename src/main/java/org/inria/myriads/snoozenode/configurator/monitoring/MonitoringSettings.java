@@ -20,7 +20,6 @@
 package org.inria.myriads.snoozenode.configurator.monitoring;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
-import org.inria.myriads.snoozenode.configurator.estimator.EstimatorPolicy;
 
 /**
  * Monitoring settings.

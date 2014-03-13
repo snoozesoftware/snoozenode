@@ -54,9 +54,6 @@ public final class LocalControllerMemoryRepository
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(LocalControllerMemoryRepository.class);
     
-    /** external notifier.*/
-    private ExternalNotifier externalNotifier_;
-    
     /** Host Resources to monitor. */
     private Map<String, Resource> hostResources_;
     
@@ -67,19 +64,21 @@ public final class LocalControllerMemoryRepository
      * Value: Virtual machine meta data
      */
     private HashMap<String, VirtualMachineMetaData> virtualMachineMetaData_;
-    
+       
     /**
+     * 
      * Local controller memory repository constructor.
      * 
-     * @param externalNotifier      The external notifier.
-     * 
+     * @param localController   The localController description
+     * @param externalNotifier  The external notifier.
      */
-    public LocalControllerMemoryRepository(LocalControllerDescription localController, ExternalNotifier externalNotifier)
+    public LocalControllerMemoryRepository(
+            LocalControllerDescription localController, 
+            ExternalNotifier externalNotifier)
     {
         log_.debug("Initializing the local controller in-memory repository");
         virtualMachineMetaData_ = new HashMap<String, VirtualMachineMetaData>();
         hostResources_ = localController.getHostResources().getResources();
-        externalNotifier_ = externalNotifier;
     }
     
     /**
@@ -223,7 +222,7 @@ public final class LocalControllerMemoryRepository
     {
         for (AggregatedHostMonitoringData monitorData : aggregatedData)
         {
-            for ( HostMonitoringData  monitoringData : monitorData.getMonitoringData())
+            for (HostMonitoringData  monitoringData : monitorData.getMonitoringData())
             {
                 for (Entry<String, Double> m: monitoringData.getUsedCapacity().entrySet())
                 {
@@ -258,52 +257,25 @@ public final class LocalControllerMemoryRepository
                 VirtualMachineMetaData virtualMachine = virtualMachineMetaData_.get(virtualMachineId);
                 if (virtualMachine == null)
                 {
-                    log_.error(String.format("The virtual machine %s doesn't exist in the repo ...skipping", virtualMachineId));
+                    log_.error(String.format(
+                            "The virtual machine %s doesn't exist in the repo ...skipping", virtualMachineId));
                     continue;
                 }
                 log_.debug("Adding used Capacity to the vm");
                 for (VirtualMachineMonitoringData  virtualMachineMonitoring : aggregatedData.getMonitoringData())
                 {
-                    virtualMachine.getUsedCapacity().put(virtualMachineMonitoring.getTimeStamp(), virtualMachineMonitoring);
+                    virtualMachine.getUsedCapacity().put(
+                            virtualMachineMonitoring.getTimeStamp(),
+                            virtualMachineMonitoring);
                 }
             }
         }
-        catch(Exception exception)
+        catch (Exception exception)
         {
             log_.error("Unable to update the repository");
             exception.printStackTrace();
         }
     
-    }
-
-
-    @Override
-    public Map<String, Resource> getLastHostMonitoringValues(long pastTimestamp)
-    {
-        log_.debug(String.format("Getting the last host monitoring value (since %d)", pastTimestamp));
-        Map<String, Resource> hostResourcesCopy = new HashMap<String, Resource>();
-        for (Entry<String, Resource> resourceSet  : hostResources_.entrySet())
-        {
-            Resource resource = resourceSet.getValue();
-            // creating new resource.
-            Resource resourceCopy = new Resource(resource, pastTimestamp);
-            hostResourcesCopy.put(resourceSet.getKey(), resourceCopy);
-        }
-        return hostResourcesCopy;
-    }
-
-
-    @Override
-    public List<VirtualMachineMetaData> getLastVirtualMachineMetaData(long pastTimestamp)
-    {
-        log_.debug(String.format("Getting the last virtual machine monitoring value (since %d)", pastTimestamp));
-        List<VirtualMachineMetaData> virtualMachines = new ArrayList<VirtualMachineMetaData>();
-        for (Entry<String, VirtualMachineMetaData> virtualMachineSet : virtualMachineMetaData_.entrySet())
-        {
-            VirtualMachineMetaData virtualMachineCopied = new VirtualMachineMetaData(virtualMachineSet.getValue(), pastTimestamp);
-            virtualMachines.add(virtualMachineCopied);
-        }
-        return virtualMachines;
     }
 
 

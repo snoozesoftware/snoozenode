@@ -80,7 +80,7 @@ public final class GroupLeaderPolicyFactory
                 Object assignementPolicyObject = PluginUtils.createFromFQN(localControllerAssignmentPolicy);
                 assignmentPolicy = (AssignmentPolicy) assignementPolicyObject;
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 log_.error("Unable to create custom virtual cluster placement policy, falling back to default");
                 assignmentPolicy = new RoundRobinLocalController();
@@ -125,7 +125,7 @@ public final class GroupLeaderPolicyFactory
                 Object assignementPolicyObject = PluginUtils.createFromFQN(dispatchingPolicy);
                 assignmentPolicy = (DispatchingPolicy) assignementPolicyObject;
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 log_.error("Unable to create custom virtual cluster placement policy, falling back to default");
                 assignmentPolicy = new FirstFit();

@@ -221,6 +221,7 @@ public final class DatabaseFactory
     /**
      * Returns the local controller repository.
      * 
+     * @param localController   The local controller description.
      * @param type              The database type.
      * @param externalNotifier  The external notifier.
      * @return                  The local controller repository.

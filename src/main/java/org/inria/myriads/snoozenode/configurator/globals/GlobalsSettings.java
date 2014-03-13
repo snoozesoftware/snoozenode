@@ -1,5 +1,12 @@
 package org.inria.myriads.snoozenode.configurator.globals;
 
+/**
+ * 
+ * Globals settings.
+ * 
+ * @author msimonin
+ *
+ */
 public class GlobalsSettings 
 {
     /** plugin directory.*/
@@ -21,7 +28,7 @@ public class GlobalsSettings
     }
 
     /**
-     * @param pluginDirectory the pluginDirectory to set
+     * @param pluginsDirectory the pluginDirectory to set
      */
     public void setPluginsDirectory(String pluginsDirectory)
     {

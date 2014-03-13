@@ -252,7 +252,7 @@ public final class CassandraUtils
      */
     public static void unassignNodes(Keyspace keyspace, String columnFamily)
     {
-        log_.debug("Unassign all the rows from " + keyspace.getKeyspaceName() + " / " + columnFamily );
+        log_.debug("Unassign all the rows from " + keyspace.getKeyspaceName() + " / " + columnFamily);
 
         RowIterator rowIterator = new RowIterator();
         rowIterator
@@ -302,9 +302,9 @@ public final class CassandraUtils
      * 
      * Create the key of the monitoring column family.
      * 
-     * @param localControllerId
-     * @param key
-     * @return
+     * @param localControllerId     The localController Id.
+     * @param key                   The key to concatenate.
+     * @return  id | key
      */
     public static String createHostResourceKey(String localControllerId, String key)
     {

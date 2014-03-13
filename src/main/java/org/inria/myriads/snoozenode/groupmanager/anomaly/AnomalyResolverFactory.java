@@ -1,7 +1,5 @@
 package org.inria.myriads.snoozenode.groupmanager.anomaly;
 
-import java.lang.reflect.InvocationTargetException;
-
 import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyResolverSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
@@ -13,14 +11,18 @@ import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AnomalyResolverFactory
+/**
+ * @author msimonin
+ *
+ */
+public final class AnomalyResolverFactory
 {
     
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(AnomalyResolverFactory.class);
     
     /**
-     * Hide Constructor
+     * Hide Constructor.
      */
     private AnomalyResolverFactory()
     {
@@ -28,6 +30,17 @@ public class AnomalyResolverFactory
     }
 
     
+    /**
+     * 
+     * Creates a new anomaly resolver.
+     * 
+     * @param externalNotifier              External notifier
+     * @param anomalyResolverSettings       Anomaly resolver settings.
+     * @param estimator                     The estimator.
+     * @param repository                    The repository
+     * @param groupManagerStateMachine      The group manager state machine.
+     * @return  The anomaly resolver implementation
+     */
     public static AnomalyResolver newAnomalyresolver(
             ExternalNotifier externalNotifier,
             AnomalyResolverSettings anomalyResolverSettings,
@@ -50,7 +63,7 @@ public class AnomalyResolverFactory
                 Object anomalyResolverObject = PluginUtils.createFromFQN(anomalyResolverName);
                 anomalyResolver = (AnomalyResolver) anomalyResolverObject;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 log_.error("Unable to load the custom anomaly resolver, falling back to default");
                 anomalyResolver = new UnderOverloadAnomalyResolver();

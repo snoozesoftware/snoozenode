@@ -66,11 +66,6 @@ public abstract class AnomalyResolver
     /**
      * Constructor.
      * 
-     * @param relocationPolicies         The relocation parameters
-     * @param resourceDemandEstimator    The resource demand estimator
-     * @param groupManagerRepository     The group manager repository
-     * @param stateMachine               The state machine
-     * @param externalNotifier           The external notifier
      */
     public AnomalyResolver()
     {
@@ -86,19 +81,19 @@ public abstract class AnomalyResolver
     
     /**
      * 
-     * Tells the state machine if the anomaly resolver is ready to resolve
+     * Tells the state machine if the anomaly resolver is ready to resolve.
      * 
-     * @param localControllerId
-     * @param anomalyObject
-     * @return
+     * @param localControllerId         The local controller id
+     * @param anomalyObject             The anomaly object.
+     * @return  true iff the resolver is ready to resolve.
      */
     public abstract boolean readyToResolve(String localControllerId, Object anomalyObject);
     
     /**
      * Called to resolve anomaly.
      * 
-     * @param localControllerId     The anomaly local controller identifier
-     * @param anomaly                 The local controller state
+     * @param localController       The anomaly local controller
+     * @param anomaly               The local controller state
      * @throws Exception            The exception
      */
     public abstract void resolveAnomaly(LocalControllerDescription localController, Object anomaly) throws Exception;
@@ -113,16 +108,14 @@ public abstract class AnomalyResolver
      * Gets the number of monitoring entries to consider.
      * By default global settings are applied.
      * 
-     * @return
+     * @return  the number of monitoring entries.
      */
     public int getNumberOfMonitoringEntries()
     {
         return estimator_.getNumberOfMonitoringEntries();
     }
     
-    /**
-     * Called when migration plan was enforced.
-     */
+    @Override
     public void onAnomalyResolved(LocalControllerDescription anomalyLocalController)
     {
         stateMachine_.onAnomalyResolved(anomalyLocalController);

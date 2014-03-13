@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
-import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
@@ -102,13 +101,15 @@ public interface LocalControllerRepository
      * 
      * Add aggregated metric data in the repository.
      * 
-     * @param aggregatedData
+     * @param aggregatedData    The aggregated data.
      */
     void addAggregatedHostMonitoringData(List<AggregatedHostMonitoringData> aggregatedData);
 
     
     /**
      * Get the host monitoring datas.
+     * 
+     * @return The host resources.
      */
     Map<String, Resource> getHostResources();
 
@@ -116,35 +117,16 @@ public interface LocalControllerRepository
      * 
      * Adds the vm monitoring data.
      * 
-     * @param clonedData
+     * @param clonedData    the aggregated datas to add.
      */
     void addAggregatedVirtualMachineData(ArrayList<AggregatedVirtualMachineData> clonedData);
-
-    /**
-     * 
-     * Get the monitoring since a given timestamp.
-     * 
-     * @param pastTimestamp
-     * @return
-     */
-    Map<String, Resource> getLastHostMonitoringValues(long pastTimestamp);
-
-    /**
-     * 
-     * Gets the virtual machine metadata with the latest monitoring datas.
-     * 
-     * @param pastTimestamp
-     * @return
-     */
-    List<VirtualMachineMetaData> getLastVirtualMachineMetaData(long pastTimestamp);
-
     
     /**
      * 
      * Gets the host monitoring values.
      * 
-     * @param numberOfMonitoringEntries
-     * @return
+     * @param numberOfMonitoringEntries     The wanted number of monitoring values.
+     * @return  The host resources.
      */
     Map<String, Resource> getHostMonitoringValues(int numberOfMonitoringEntries);
 

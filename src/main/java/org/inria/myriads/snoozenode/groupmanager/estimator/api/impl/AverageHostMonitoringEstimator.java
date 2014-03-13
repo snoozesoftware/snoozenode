@@ -4,6 +4,10 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.HostMonitoringEstimator;
 
+/**
+ * @author msimonin
+ *
+ */
 public class AverageHostMonitoringEstimator implements HostMonitoringEstimator 
 {
 

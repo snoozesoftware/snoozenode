@@ -62,13 +62,14 @@ public final class VirtualMachineMonitorDataConsumer
     private MonitoringCommunicator communicator_;
     
     /** Repository.*/
-    LocalControllerRepository repository_;
+    private LocalControllerRepository repository_;
     
     /**
      * Constructor.
      * 
      * @param localController           The local controller description
-     * @param groupManagerAddress       The group manager address
+     * @param repository                The local controller repository
+     * @param communicator              The communicator
      * @param dataQueue                 The data queue
      * @param infrastructureMonitoring  The infrastructure monitoring
      * @param callback                  The monitoring service callback
@@ -202,7 +203,6 @@ public final class VirtualMachineMonitorDataConsumer
     
     /**
      * Terminates the consumer.
-     * @throws InterruptedException 
      */
     public void terminate() 
     {

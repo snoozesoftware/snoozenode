@@ -24,20 +24,12 @@ import java.lang.reflect.InvocationTargetException;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
-import org.inria.myriads.snoozenode.groupmanager.anomaly.AnomalyResolverFactory;
-import org.inria.myriads.snoozenode.groupmanager.anomaly.resolver.api.AnomalyResolver;
-import org.inria.myriads.snoozenode.groupmanager.anomaly.resolver.api.impl.UnderOverloadAnomalyResolver;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfiguration;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Relocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.impl.FirstFit;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.impl.RoundRobin;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPolicy;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.impl.SerconVirtualMachineConsolidation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.VirtualMachineRelocation;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.impl.GreedyOverloadRelocation;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.impl.GreedyUnderloadRelocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.impl.NoOperation;
 import org.inria.myriads.snoozenode.util.PluginUtils;
 import org.slf4j.Logger;
@@ -72,7 +64,6 @@ public final class GroupManagerPolicyFactory
      * @param estimator                 Resource demand estimator.
      * @return  The placement policy.
      */
-    @SuppressWarnings("unchecked")
     public static PlacementPolicy newVirtualMachinePlacement(GroupManagerSchedulerSettings schedulerSettings,
                                                              ResourceDemandEstimator estimator) 
     {
@@ -144,7 +135,7 @@ public final class GroupManagerPolicyFactory
                 Object reconfigurationPolicyObject = PluginUtils.createFromFQN(reconfigurationPolicy);
                 reconfiguration = (ReconfigurationPolicy) reconfigurationPolicyObject;
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 log_.error(String.format("Unable to load the custom reconfiguration policy %s", reconfigurationPolicy));
                 reconfiguration = new SerconVirtualMachineConsolidation();
@@ -157,6 +148,14 @@ public final class GroupManagerPolicyFactory
         return reconfiguration;
     }
     
+    /**
+     * 
+     * Creates a new virtual machine relocation.
+     * 
+     * @param policy            The relocation policy
+     * @param estimator         The estimator.
+     * @return  The virtual machine relocation implementation.
+     */
     public static VirtualMachineRelocation newVirtualMachineRelocation(
             String policy,
             ResourceDemandEstimator estimator)

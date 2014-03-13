@@ -10,7 +10,14 @@ import org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators.api
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators.api.impl.LocalControllersL1;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators.api.impl.VirtualMachinesL1;
 
-public class ComparatorFactory
+/**
+ * 
+ * Comparator Factory.
+ * 
+ * @author msimonin
+ *
+ */
+public final class ComparatorFactory
 {
     /** Hide constructor. */
     private ComparatorFactory()
@@ -18,6 +25,15 @@ public class ComparatorFactory
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * 
+     * Creates a new virtual machine comparator.
+     * 
+     * @param estimatorSettings     Estimator Settings
+     * @param estimator             The estimator.
+     * @param decreasing            True iff decreasing order.
+     * @return  A comparator.
+     */
     public static SnoozeComparator<VirtualMachineMetaData> newVirtualMachinesComparator(
             EstimatorSettings estimatorSettings, 
             ResourceDemandEstimator estimator,
@@ -30,6 +46,15 @@ public class ComparatorFactory
         return comparator;
     }
 
+    /**
+     * 
+     * Creates a new local controller comparator.
+     * 
+     * @param estimatorSettings     Estimator Settings
+     * @param estimator             The estimator
+     * @param decreasing            True iff decreasing order.
+     * @return  A comparator.
+     */
     public static SnoozeComparator<LocalControllerDescription> newLocalControllersComparator(
             EstimatorSettings estimatorSettings,
             ResourceDemandEstimator estimator,
@@ -42,6 +67,15 @@ public class ComparatorFactory
         return comparator;
     }
 
+    /**
+     * 
+     * Creates a group manager comparator.
+     * 
+     * @param estimatorSettings     Estimator Settings.
+     * @param estimator             The estimator.
+     * @param decreasing            True iff decreasing.
+     * @return  A comparator.
+     */
     public static SnoozeComparator<GroupManagerDescription> newGroupManagersComparator(
             EstimatorSettings estimatorSettings,
             ResourceDemandEstimator estimator,

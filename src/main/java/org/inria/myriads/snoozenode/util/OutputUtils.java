@@ -33,7 +33,6 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MonitoringUtils;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorSettings;
-import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorType;
 import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitoringSettings;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.slf4j.Logger;

@@ -29,11 +29,8 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.util.SortUtils;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +39,7 @@ import org.slf4j.LoggerFactory;
  * Implements the round-robin virtual machine placement policy.
  * 
  * @author Eugen Feller
+ * @author Matthieu Simonin
  */
 public final class RoundRobin extends PlacementPolicy
 {
@@ -55,7 +53,6 @@ public final class RoundRobin extends PlacementPolicy
     /**
      * Constructor.
      * 
-     * @param estimator     The estimator
      */
     public RoundRobin()
     {
@@ -84,8 +81,8 @@ public final class RoundRobin extends PlacementPolicy
 
         Map<String, LocalControllerDescription> targetLocalControllers = 
                 new HashMap<String, LocalControllerDescription>();
-        List<VirtualMachineMetaData> unassignedVirtualMachines = new ArrayList<VirtualMachineMetaData>();      
-        SortUtils.sortLocalControllersDecreasing(localControllers, estimator_);
+        List<VirtualMachineMetaData> unassignedVirtualMachines = new ArrayList<VirtualMachineMetaData>();
+        estimator_.sortLocalControllers(localControllers, true);
 
         for (VirtualMachineMetaData virtualMachine : virtualMachines)
         {

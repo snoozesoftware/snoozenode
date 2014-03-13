@@ -20,6 +20,7 @@
 package org.inria.myriads.snoozenode.groupmanager.managerpolicies.comparators.api.impl;
 
 import java.util.ArrayList;
+
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MathUtils;
@@ -42,7 +43,6 @@ public final class VirtualMachinesL1
     /**
      * Constructor.
      * 
-     * @param estimator     The resource demand estimator
      */
     public VirtualMachinesL1() 
     {
@@ -57,7 +57,9 @@ public final class VirtualMachinesL1
     }
     
     @Override
-    protected int internalCompare(VirtualMachineMetaData firstVirtualMachine, VirtualMachineMetaData secondVirtualMachine)
+    protected int internalCompare(
+            VirtualMachineMetaData firstVirtualMachine,
+            VirtualMachineMetaData secondVirtualMachine)
     {
         Guard.check(firstVirtualMachine, secondVirtualMachine);
         ArrayList<Double> estunatedDemand1 = estimator_.estimateVirtualMachineResourceDemand(firstVirtualMachine);

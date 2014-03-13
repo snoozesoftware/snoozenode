@@ -659,13 +659,22 @@ public class CassandraRepository
         }
     }
     
-    protected void fillWithHostMonitoringData(LocalControllerDescription localControllerDescription, int numberOfMonitoringEntries)
+    /**
+     * 
+     * Fills the description with the host monitoring resources.
+     * 
+     * @param localControllerDescription    The local controller description.
+     * @param numberOfMonitoringEntries     The number of monitoring entries to retrieve.
+     */
+    protected void fillWithHostMonitoringData(
+            LocalControllerDescription localControllerDescription, 
+            int numberOfMonitoringEntries)
     {
         log_.debug("Gets the host monitoring datas from the cassandra cluster");
         String localControllerId = localControllerDescription.getId();
         Map<String, Resource> hostResources = localControllerDescription.getHostResources().getResources();
         List<String> keys = new ArrayList<String>();
-        for (  String key : hostResources.keySet())
+        for (String key : hostResources.keySet())
         {
             String resourceKey = CassandraUtils.createHostResourceKey(localControllerId, key);
             keys.add(resourceKey);
@@ -966,7 +975,7 @@ public class CassandraRepository
      * 
      * 
      * @param localControllerId     The localControllerId.
-     * @param aggregatedData        The aggregated datas.
+     * @param hostMonitoringData    The aggregated datas.
      */
     protected void addAggregatedHostMonitoringDataCassandra(
             String localControllerId,
@@ -990,14 +999,16 @@ public class CassandraRepository
         for (HostMonitoringData  hostMonitoring: hostMonitoringData.getMonitoringData())
         {
             long timestamp = hostMonitoring.getTimeStamp();
-            for ( Entry<String, Double>  monitoringData: hostMonitoring.getUsedCapacity().entrySet() )
+            for (Entry<String, Double>  monitoringData: hostMonitoring.getUsedCapacity().entrySet())
             {
                 String resourceName = monitoringData.getKey();
                 double resourceValue = monitoringData.getValue();
                 //push to cassandra in localcontrollers_monitorings column family
                 // id = lcid | resourcename
                 
-                mutator.addInsertion(localControllerId + "|" + resourceName, CassandraUtils.LOCALCONTROLLERS_MONITORING_CF, 
+                mutator.addInsertion(
+                        CassandraUtils.createHostResourceKey(localControllerId, resourceName),
+                        CassandraUtils.LOCALCONTROLLERS_MONITORING_CF,
                         HFactory.createColumn(
                                 timestamp,
                                 resourceValue,

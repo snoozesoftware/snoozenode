@@ -43,7 +43,6 @@ import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSav
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.ShutdownDriver;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.SuspendDriver;
 import org.inria.myriads.snoozenode.configurator.imagerepository.ImageRepositorySettings;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.configurator.provisioner.ProvisionerSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
@@ -64,7 +63,6 @@ import org.inria.myriads.snoozenode.localcontroller.imagemanager.api.ImageManage
 import org.inria.myriads.snoozenode.localcontroller.monitoring.MonitoringFactory;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.HostMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.VirtualMachineMonitor;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl.LibVirtHostMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.service.HostMonitoringService;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.service.InfrastructureMonitoring;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.service.VirtualMachineMonitoringService;
@@ -101,7 +99,7 @@ public final class LocalControllerBackend
     /** Monitoring management of virtual machines. */
     private VirtualMachineMonitoringService virtualMachineMonitoringService_;
     
-    /** Anomaly detector service*/
+    /** Anomaly detector service. */
     private AnomalyDetectorService anomalyDetectorService_;
     
     /** Monitoring management of the host.*/
@@ -208,7 +206,6 @@ public final class LocalControllerBackend
     private void initializeDatabase()
     {
         DatabaseType type = nodeConfiguration_.getDatabase().getType();
-        ExternalNotifierSettings externalNotifierSettings = nodeConfiguration_.getExternalNotifier();
         localControllerRepository_ = DatabaseFactory.newLocalControllerRepository(
                 localControllerDescription_, 
                 type,
@@ -275,7 +272,8 @@ public final class LocalControllerBackend
     {
         ArrayList<Double> totalCapacity = resourceMonitoring_.getHostMonitor().getTotalCapacity();
         MonitoringThresholds thresholds = resourceMonitoring_.getMonitoringSettings().getThresholds();
-        localControllerDescription_ =  ManagementUtils.createLocalController(nodeConfiguration_, totalCapacity, thresholds);
+        localControllerDescription_ =  
+                ManagementUtils.createLocalController(nodeConfiguration_, totalCapacity, thresholds);
     }
 
     /**
@@ -300,11 +298,13 @@ public final class LocalControllerBackend
     }
     
     
+    
     /**
+     * 
      * Starts the host monitoring service.
      * 
-     * @param groupManager  The group manager description
-     * @throws Exception    The exception
+     * @param communicator  The communicator.
+     * @throws Exception    The exception.
      */
     private void startHostMonitoringService(MonitoringCommunicator communicator) 
         throws Exception
@@ -473,6 +473,13 @@ public final class LocalControllerBackend
         startAnomalyDetector(communicator);
     }
     
+    /**
+     * 
+     * Starts anomaly detector.
+     * 
+     * @param communicator  The communicator.
+     * @throws Exception    The exception.
+     */
     private void startAnomalyDetector(MonitoringCommunicator communicator) throws Exception
     {
         AnomalyDetectorSettings anomalySettings = nodeConfiguration_.getAnomalyDetectorSettings();

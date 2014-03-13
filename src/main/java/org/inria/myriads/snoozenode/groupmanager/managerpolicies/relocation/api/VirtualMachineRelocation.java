@@ -33,6 +33,7 @@ import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration
 public abstract class VirtualMachineRelocation 
 {
     
+    /** Resource demand estimator.*/
     protected ResourceDemandEstimator estimator_;
     /**
      * Relocates virtual machines.
@@ -45,6 +46,10 @@ public abstract class VirtualMachineRelocation
                                           List<LocalControllerDescription> destinationLocalControllers);
     
     
+    
+    /**
+     * Initializes the virtual machine relocation.
+     */
     public abstract void initialize();
 
 
@@ -64,7 +69,5 @@ public abstract class VirtualMachineRelocation
     {
         estimator_ = estimator;
     }
-    
-    
     
 }

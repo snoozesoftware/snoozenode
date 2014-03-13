@@ -27,32 +27,19 @@ import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
-import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
-import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
-import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
-import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorSettings;
-import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorType;
 import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitoringSettings;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.exception.HostMonitoringException;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.consumer.HostMonitorDataConsumer;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.consumer.VirtualMachineMonitorDataConsumer;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.listener.HostMonitoringListener;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.listener.VirtualMachineMonitoringListener;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.producer.HostHeartbeatDataProducer;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.producer.HostMonitorDataProducer;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.producer.VirtualMachineHeartbeatDataProducer;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.producer.VirtualMachineMonitorDataProducer;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedHostMonitoringData;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.inria.myriads.snoozenode.monitoring.comunicator.api.MonitoringCommunicator;
-import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,9 +78,6 @@ public final class HostMonitoringService
     /** Database Settings. */
     private NodeConfiguration nodeConfiguration_;
 
-    private HostMonitoringSettings hostMonitoringSettings_;
-
-    
     /**
      * Constructor.
      * 
@@ -115,16 +99,17 @@ public final class HostMonitoringService
         repository_ = repository;
         monitoring_ = monitoring;
         nodeConfiguration_ = nodeConfiguration;
-        hostMonitoringSettings_ = nodeConfiguration.getHostMonitoringSettings();
+        nodeConfiguration.getHostMonitoringSettings();
         dataQueue_ = new LinkedBlockingQueue<AggregatedHostMonitoringData>();
         producerThreads_ = Collections.synchronizedMap(new HashMap<String, HostMonitorDataProducer>());
     }
 
     /**
+     * 
      * Starts the host monitor service.
      * 
-     * @param groupManagerAddress      The group manager address
-     * @throws Exception               The exception
+     * @param communicator  The communicator.
+     * @throws Exception    The exception
      */
     public synchronized void startService(MonitoringCommunicator communicator) 
         throws Exception
@@ -135,11 +120,14 @@ public final class HostMonitoringService
         startHostMonitorDataProducer();
     }
 
+    /**
+     * Starts the producers.
+     */
     private void startHostMonitorDataProducer() 
     {
         log_.debug("Starting the host monitoring data consumer");
         HostMonitoringSettings hostMonitoringSettings = nodeConfiguration_.getHostMonitoringSettings();
-        for ( Entry<String, HostMonitorSettings> monitor : hostMonitoringSettings.getHostMonitorSettings().entrySet())
+        for (Entry<String, HostMonitorSettings> monitor : hostMonitoringSettings.getHostMonitorSettings().entrySet())
         {
             HostMonitorDataProducer producer = producerThreads_.get(monitor.getKey());
             if (producer == null)
@@ -172,12 +160,10 @@ public final class HostMonitoringService
     }
 
     /**
-     * Starts the host monitor consumer.
-     * 
-     * @param groupManagerAddress      The group manager address
-     * @throws Exception               The exception
+     * @param communicator  The communicator.
+     * @throws Exception    The exception.
      */
-    private synchronized void startHostMonitorDataConsumer(MonitoringCommunicator communicator) 
+    private synchronized void startHostMonitorDataConsumer(MonitoringCommunicator communicator)
         throws Exception
     {
         Guard.check(communicator);
@@ -207,21 +193,11 @@ public final class HostMonitoringService
         new Thread(heartbeatProducer_, "HostHeartbeatDataProducer").start();
     }
 
+    
     /**
-     * Start monitoring of a virtual machine.
+     * Suspend the monitoring of a virtual machine.
      * 
-     * @param virtualMachineMetaData   The virtual machine identifier
-     * @return                         true if added, false otherwise
-     */
-    public synchronized boolean start() 
-    {
-       return true;
-    }
-
-    /**
-     * Halts the monitoring of a virtual machine.
-     * 
-     * @param virtualMachineId     The virtual machine identifier
+     * @param monitorId     The virtual machine identifier
      * @return                     true if everything ok, false otherwise
      */
     public synchronized boolean suspend(String monitorId)
@@ -266,7 +242,7 @@ public final class HostMonitoringService
     /**
      * Stops monitoring of a monitor.
      * 
-     * @param virtualMachineId     The virtual machine identifier
+     * @param monitorId            The monitor identifier identifier
      * @return                     true if everyhting ok, false otherwise
      */
     public synchronized boolean stop(String monitorId)
@@ -311,12 +287,6 @@ public final class HostMonitoringService
         
     }
     
-
-    public boolean restart()
-    {
-        return true;
-    }
-    
     /**
      * Returns the amount of active virtual machines.
      * 
@@ -328,12 +298,7 @@ public final class HostMonitoringService
         return producerThreads_.size();
     }
     
-    /**
-     * Drops virtual machine meta data.
-     * 
-     * @param location    The virtual machine location
-     * @return            true if everything ok, false otherwise
-     */
+
     @Override
     public synchronized boolean onMonitoringFailure(String monitorId) 
     {

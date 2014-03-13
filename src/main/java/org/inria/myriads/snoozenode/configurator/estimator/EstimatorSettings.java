@@ -22,60 +22,31 @@ package org.inria.myriads.snoozenode.configurator.estimator;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
-
 /**
  * Estimator settings.
  * 
  * @author Eugen Feller
+ * @author Matthieu Simonin
  */
 public final class EstimatorSettings 
 {
     
     /** Name.*/
     private String name_;
-    
-    /** Policies. */
-//    private EstimatorPolicy policy_;
-    
-    /** Virtual machine demand measure. */
-//    private SortNorm sortNorm_;
+     
 
     /** Number of monitoring entries. */
     private int numberOfMonitoringEntries_;
     
-    /** Static estimations. */
-//    private boolean isStatic_;
-    
+    /** Options : key, values. */
     private Map<String, String> options_;
     
     /** Constructor. */
     public EstimatorSettings()
     {
-//        policy_ = new EstimatorPolicy();
         options_ = new HashMap<String, String>();
     }
     
-    /**
-     * Sets the sort norm.
-     * 
-     * @param sortNorm  The sort norm
-     */
-//    public void setSortNorm(SortNorm sortNorm) 
-//    {
-//        sortNorm_ = sortNorm;
-//    }
-
-    /**
-     * Returns the demand measure.
-     * 
-     * @return  The sort norm
-     */
-//    public SortNorm getSortNorm() 
-//    {
-//        return sortNorm_;
-//    }
-
     /**
      * Sets the number of monitoring entries.
      * 
@@ -127,34 +98,5 @@ public final class EstimatorSettings
     {
         options_ = options;
     }
-
-    /**
-     * Sets the used capacity flag.
-     * 
-     * @param isStatic  true if static estimations are desired, false otherwise
-     */
-//    public void setStatic(boolean isStatic) 
-//    {
-//        isStatic_ = isStatic;
-//    }
-
-    /**
-     * Returns the static flag.
-     * 
-     * @return  true if static estimations are desired, false otherwise
-     */
-//    public boolean isStatic() 
-//    {
-//        return isStatic_;
-//    }
-
-    /**
-     * Returns the policy.
-     * 
-     * @return  The policy
-     */
-//    public EstimatorPolicy getPolicy() 
-//    {
-//        return policy_;
-//    }
+    
 }

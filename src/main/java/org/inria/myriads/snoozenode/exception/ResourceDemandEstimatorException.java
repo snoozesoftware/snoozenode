@@ -1,9 +1,16 @@
 package org.inria.myriads.snoozenode.exception;
 
+/**
+ * @author msimonin
+ *
+ */
 public class ResourceDemandEstimatorException extends Exception
 {
 
     
+    /** Serial Id.*/
+    private static final long serialVersionUID = 1L;
+
     /**
      * Empty Constructor.
      */
@@ -12,7 +19,7 @@ public class ResourceDemandEstimatorException extends Exception
     }
     
     /**
-     * @param message
+     * @param message   The message.
      */
     public ResourceDemandEstimatorException(String message)
     {

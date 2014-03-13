@@ -29,12 +29,9 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.util.EstimatorUtils;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.util.SortUtils;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.inria.myriads.snoozenode.util.OutputUtils;
 import org.slf4j.Logger;
@@ -44,6 +41,7 @@ import org.slf4j.LoggerFactory;
  * Implements the first-fit virtual machine placement policy.
  * 
  * @author Eugen Feller
+ * @author Matthieu Simonin
  */
 public final class FirstFit 
     extends PlacementPolicy 
@@ -54,7 +52,6 @@ public final class FirstFit
     /**
      * Constructor.
      * 
-     * @param estimator     The estimator
      */
     public FirstFit() 
     {
@@ -80,7 +77,7 @@ public final class FirstFit
         Guard.check(virtualMachines, localControllers);    
         log_.debug(String.format("Placing %d virtual machine", virtualMachines.size()));
                
-        SortUtils.sortLocalControllersDecreasing(localControllers, estimator_);
+        estimator_.sortLocalControllers(localControllers, true);
         OutputUtils.printLocalControllers(localControllers);
                 
         Map<String, LocalControllerDescription> targetLocalControllers =  

@@ -45,6 +45,13 @@ public class HostMonitoringSettings
         hostMonitorSettings_ = hostMonitorSettings;
     }
 
+    /**
+     * 
+     * Adds a monitor.
+     * 
+     * @param name                      The monitor name.                 
+     * @param hostMonitorSettings       The monitor settings.
+     */
     public void add(String name, HostMonitorSettings hostMonitorSettings)
     {
         System.out.println(name.toString());

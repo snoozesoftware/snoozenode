@@ -27,7 +27,6 @@ import java.util.Map.Entry;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
-import org.inria.myriads.snoozecommon.communication.localcontroller.HostResources;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
 import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
@@ -449,7 +448,7 @@ public final class GroupManagerMemoryRepository
                 //iterate over all metric collected.
                 String metricName = used.getKey();
                 double metricValue = used.getValue();
-                log_.debug("Treating " + metricName + " with value "+ metricValue );
+                log_.debug("Treating " + metricName + " with value " + metricValue);
                 Resource hostResource = hostResources.get(metricName);
                 if (hostResource == null)
                 {

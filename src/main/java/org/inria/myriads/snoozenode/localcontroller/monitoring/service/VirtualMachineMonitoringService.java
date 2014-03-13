@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
@@ -106,11 +105,13 @@ public final class VirtualMachineMonitoringService
         producerThreads_ = Collections.synchronizedMap(new HashMap<String, VirtualMachineMonitorDataProducer>());
     }
 
+
     /**
-     * Starts the virtual machine monitor service.
      * 
-     * @param groupManagerAddress      The group manager address
-     * @throws Exception               The exception
+     * Start the service.
+     * 
+     * @param communicator The communicator.
+     * @throws Exception    The exception
      */
     public synchronized void startService(MonitoringCommunicator communicator) 
         throws Exception
@@ -120,11 +121,10 @@ public final class VirtualMachineMonitoringService
         //startHeartbeatProducer();
     }
 
+   
     /**
-     * Starts the virtual machine data consumer.
-     * 
-     * @param groupManagerAddress      The group manager address
-     * @throws Exception               The exception
+     * @param communicator  The communicator.
+     * @throws Exception    The exception.
      */
     private synchronized void startVirtualMachineMonitorDataConsumer(MonitoringCommunicator communicator) 
         throws Exception
@@ -140,19 +140,6 @@ public final class VirtualMachineMonitoringService
                                                                      databaseSettings_,
                                                                      this);
         new Thread(monitorDataConsumer_, "VirtualMachineMonitorDataConsumer").start(); 
-    }
-
-    /**
-     * Starts the heartbeat producer.
-     */
-    private synchronized void startHeartbeatProducer()
-    {
-        log_.debug("Starting the virtual machine heartbeat producer");
-        heartbeatProducer_ = 
-            new VirtualMachineHeartbeatDataProducer(localController_.getId(), 
-                                                    monitoring_.getMonitoringSettings().getInterval(), 
-                                                    dataQueue_);
-        new Thread(heartbeatProducer_, "VirtualMachineHeartbeatDataProducer").start();
     }
 
     /**
@@ -175,7 +162,9 @@ public final class VirtualMachineMonitoringService
                    
         ManagementUtils.setVirtualMachineRunning(virtualMachineMetaData, localController_);
         virtualMachineMetaData.setUsedCapacity(
-                new LRUCache<Long, VirtualMachineMonitoringData>(databaseSettings_.getNumberOfEntriesPerVirtualMachine())
+                new LRUCache<Long, VirtualMachineMonitoringData>(
+                        databaseSettings_.getNumberOfEntriesPerVirtualMachine()
+                        )
                 );
         boolean isAdded = repository_.addVirtualMachineMetaData(virtualMachineMetaData);
         if (!isAdded)
@@ -273,11 +262,6 @@ public final class VirtualMachineMonitoringService
     {
         log_.debug("Stopping the virtual machine monitoring service");
         
-//        if (heartbeatProducer_ != null)
-//        {
-//            log_.debug("Terminating the heartbeat data producer");
-//            heartbeatProducer_.terminate();
-//        }
         
         if (monitorDataConsumer_ != null)
         {

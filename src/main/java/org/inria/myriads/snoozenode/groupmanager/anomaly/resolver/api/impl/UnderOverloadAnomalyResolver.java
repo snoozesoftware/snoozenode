@@ -28,20 +28,14 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.configurator.scheduler.RelocationSettings;
-import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
-import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.exception.AnomalyResolverException;
-import org.inria.myriads.snoozenode.exception.NodeConfiguratorException;
 import org.inria.myriads.snoozenode.groupmanager.anomaly.resolver.api.AnomalyResolver;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.GroupManagerPolicyFactory;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.VirtualMachineRelocation;
 import org.inria.myriads.snoozenode.groupmanager.migration.MigrationPlanEnforcer;
 import org.inria.myriads.snoozenode.groupmanager.migration.listener.MigrationPlanListener;
-import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
-import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,12 +59,10 @@ public final class UnderOverloadAnomalyResolver extends AnomalyResolver implemen
     private LocalControllerDescription anomalyLocalController_;
 
     /** 
-     * Number of monitoring entries to consider in estimation 
+     * Number of monitoring entries to consider in estimation.
      * (overrides resourceDemandEstimator)
      **/
     private int numberOfMonitoringEntries_;
-
-    private int count_;
 
     /**
      * Constructor.
@@ -170,13 +162,7 @@ public final class UnderOverloadAnomalyResolver extends AnomalyResolver implemen
     }
 
     
-    /**
-     * Called to resolve anomaly.
-     * 
-     * @param localControllerId     The anomaly local controller identifier
-     * @param anomaly                 The local controller state
-     * @throws Exception            The exception
-     */
+    @Override
     public synchronized void resolveAnomaly(LocalControllerDescription anomalyLocalController, Object anomalyObject)
         throws Exception
     {

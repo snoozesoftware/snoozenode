@@ -21,16 +21,16 @@ package org.inria.myriads.snoozenode.groupmanager.estimator.api.impl;
 
 import java.util.Map;
 
-import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.groupmanager.estimator.api.VirtualMachineMonitoringEstimator;
 import org.inria.myriads.snoozenode.util.UtilizationUtils;
 
-/**
- * Sample network demand estimator.NetworkDemandEstimator
- */
 
+/**
+ * @author msimonin
+ *
+ */
 public final class AverageTxDemandEstimator 
     implements VirtualMachineMonitoringEstimator
 {    

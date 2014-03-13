@@ -21,9 +21,6 @@ package org.inria.myriads.snoozenode.configurator.anomaly;
 
 import java.util.Map;
 
-import org.inria.myriads.snoozenode.configurator.estimator.EstimatorPolicy;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
-
 /**
  * Estimator settings.
  * 
@@ -93,8 +90,9 @@ public final class AnomalyResolverSettings
         return numberOfMonitoringEntries_;
     }
 
+
     /**
-     * @param integer the numberOfMonitoringEntries to set
+     * @param numberOfMonitoringEntries Number of monitoring entries.
      */
     public void setNumberOfMonitoringEntries(int numberOfMonitoringEntries)
     {

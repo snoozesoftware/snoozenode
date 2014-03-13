@@ -19,29 +19,20 @@
  */
 package org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.impl;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
-import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozecommon.util.MathUtils;
-import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.VirtualMachineRelocation;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.utility.RelocationUtility;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.util.SortUtils;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
-import org.inria.myriads.snoozenode.util.OutputUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Moderate loaded server relocation policy.
  * 
- * @author Eugen Feller
+ * 
+ * @author Matthieu Simonin
  */
 public final class NoOperation 
     extends VirtualMachineRelocation 
@@ -49,6 +40,9 @@ public final class NoOperation
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(NoOperation.class);
     
+    /**
+     * Constructor.
+     */
     public NoOperation()
     {
     }

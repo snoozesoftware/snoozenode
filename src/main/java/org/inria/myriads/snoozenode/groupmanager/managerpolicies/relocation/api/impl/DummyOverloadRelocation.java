@@ -24,14 +24,9 @@ import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
-import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozecommon.util.MathUtils;
-import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.VirtualMachineRelocation;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.utility.RelocationUtility;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.util.SortUtils;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 import org.inria.myriads.snoozenode.util.OutputUtils;
 import org.slf4j.Logger;
@@ -41,6 +36,7 @@ import org.slf4j.LoggerFactory;
  * Moderate loaded server relocation policy.
  * 
  * @author Eugen Feller
+ * @author Matthieu Simonin
  */
 public final class DummyOverloadRelocation 
     extends VirtualMachineRelocation 
@@ -51,7 +47,6 @@ public final class DummyOverloadRelocation
     /**
      * Constructor.
      * 
-     * @param estimator     The resource demand estimator
      */
     public DummyOverloadRelocation()
     {
@@ -70,7 +65,6 @@ public final class DummyOverloadRelocation
      * Compute migration candidates.
      * 
      * @param virtualMachines       The virtual machines
-     * @param overloadCapacity      The overload capacity
      * @return                      The migration candidates
      */
     private List<VirtualMachineMetaData> getMigrationCandidates(List<VirtualMachineMetaData> virtualMachines)
@@ -99,12 +93,13 @@ public final class DummyOverloadRelocation
         
         List<VirtualMachineMetaData> virtualMachines = 
             new ArrayList<VirtualMachineMetaData>(sourceLocalController.getVirtualMachineMetaData().values());
-        SortUtils.sortVirtualMachinesIncreasing(virtualMachines, estimator_);
+        estimator_.sortVirtualMachines(virtualMachines, false);
+        
         OutputUtils.printVirtualMachines(virtualMachines);
                             
         List<VirtualMachineMetaData> migrationCandidates = getMigrationCandidates(virtualMachines);
         
-        SortUtils.sortLocalControllersIncreasing(destinationLocalControllers, estimator_);
+        estimator_.sortLocalControllers(destinationLocalControllers, false);
         ReconfigurationPlan reconfigurationPlan = 
                 RelocationUtility.computeReconfigurationPlan(migrationCandidates,  
                                                              destinationLocalControllers, 

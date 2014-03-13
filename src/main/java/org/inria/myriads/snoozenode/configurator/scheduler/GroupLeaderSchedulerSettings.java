@@ -19,9 +19,6 @@
  */
 package org.inria.myriads.snoozenode.configurator.scheduler;
 
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Assignment;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Dispatching;
-
 /**
  * Group leader scheduler settings.
  * 

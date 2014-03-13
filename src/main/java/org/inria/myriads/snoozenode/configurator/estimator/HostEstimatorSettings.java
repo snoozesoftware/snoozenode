@@ -1,10 +1,29 @@
 package org.inria.myriads.snoozenode.configurator.estimator;
 
+
+/**
+ * 
+ * Host Estimator Settings.
+ * 
+ * @author msimonin
+ *
+ */
 public final class HostEstimatorSettings
 {
-    private String estimatorName_;
     
-
+    
+    /** Estimator name.*/ 
+    private String estimatorName_;
+   
+    
+    /**
+     * @param estimatorName     The estimator name.
+     */
+    public HostEstimatorSettings(String estimatorName)
+    {
+        estimatorName_ = estimatorName;
+    }
+    
     /**
      * @return the estimatorName
      */
@@ -21,15 +40,8 @@ public final class HostEstimatorSettings
         estimatorName_ = estimatorName;
     }
 
-  
 
-    /**
-     * @param estimatorName
-     */
-    public HostEstimatorSettings(String estimatorName)
-    {
-        estimatorName_ = estimatorName;
-    }
+  
     
     
 }

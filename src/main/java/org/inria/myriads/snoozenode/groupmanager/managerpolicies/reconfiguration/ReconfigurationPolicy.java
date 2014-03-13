@@ -31,6 +31,7 @@ import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 public abstract class ReconfigurationPolicy 
 {
 
+    /** Resource demand estimator.*/
     protected ResourceDemandEstimator estimator_;
     
     /**

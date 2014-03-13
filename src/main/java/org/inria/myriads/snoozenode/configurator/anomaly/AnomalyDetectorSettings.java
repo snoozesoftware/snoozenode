@@ -21,9 +21,6 @@ package org.inria.myriads.snoozenode.configurator.anomaly;
 
 import java.util.Map;
 
-import org.inria.myriads.snoozenode.configurator.estimator.EstimatorPolicy;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
-
 /**
  * Estimator settings.
  * 
@@ -33,7 +30,7 @@ public final class AnomalyDetectorSettings
 {
    
     /** Enable the service.*/
-    private boolean isEnabled;
+    private boolean isEnabled_;
     
     /** Name of the detector (class).*/
     private String name_;
@@ -97,8 +94,12 @@ public final class AnomalyDetectorSettings
         return numberOfMonitoringEntries_;
     }
 
+
     /**
-     * @param integer the numberOfMonitoringEntries to set
+     * 
+     * Sets the number of monitoring entries.
+     * 
+     * @param numberOfMonitoringEntries number of monitoring entries
      */
     public void setNumberOfMonitoringEntries(int numberOfMonitoringEntries)
     {
@@ -126,7 +127,7 @@ public final class AnomalyDetectorSettings
      */
     public boolean isEnabled()
     {
-        return isEnabled;
+        return isEnabled_;
     }
 
     /**
@@ -134,7 +135,7 @@ public final class AnomalyDetectorSettings
      */
     public void setEnabled(boolean isEnabled)
     {
-        this.isEnabled = isEnabled;
+        this.isEnabled_ = isEnabled;
     }
 
     

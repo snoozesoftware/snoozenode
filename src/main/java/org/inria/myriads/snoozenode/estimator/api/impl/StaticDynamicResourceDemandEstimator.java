@@ -75,11 +75,12 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
     private VirtualMachineMonitoringEstimator txDemandEstimator_;
     
     /** hostEstimator.*/
-    Map<String, HostMonitoringEstimator> hostEstimators_;
+    private Map<String, HostMonitoringEstimator> hostEstimators_;
     
     /** Resource demand estimator settings. */
     private int numberOfMonitoringEntries_;
     
+    /** Monitoring thresholds. */
     private MonitoringThresholds monitoringThresholds_;
     
     /** Sort norm. (from options)*/
@@ -88,15 +89,13 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
     /** Consider static capacity. (from options) */
     private boolean isStatic_;
 
+    /** packing density.*/
     private PackingDensity packingDensity_;
     
     
+
     /**
      * Constructor.
-     * 
-     * @param estimatorSettings         The estimator settings
-     * @param monitoringThresholds      The monitoring thresholds
-     * @param packingDensity            The packing density
      */
     public StaticDynamicResourceDemandEstimator()
     {
@@ -440,13 +439,7 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
                                                                    txUtilization);
         return estimates;
     }
-    
-    /**
-     * Estimates virtual machine resource demands.
-     * 
-     * @param virtualMachine     The virtual machine meta data
-     * @return                   The estimated virtual machine monitoring data
-     */
+
     @Override
     public Map<String, Double> estimateHostResourceUtilization(Map<String, Resource> hostUtilizationHistory) 
     {              
@@ -454,7 +447,11 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
 
         for (Resource resource : hostUtilizationHistory.values())
         {
-            log_.debug(String.format("Computing estimation for resource %s and history %s ", resource.getName(), resource.getHistory()));
+            log_.debug(
+                    String.format(
+                            "Computing estimation for resource %s and history %s ",
+                            resource.getName(),
+                            resource.getHistory()));
             double estimation = hostEstimators_.get(resource.getName()).estimate(resource);
             hostUtilization.put(resource.getName(), estimation);
         }
