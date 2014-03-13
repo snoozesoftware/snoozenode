@@ -19,19 +19,18 @@
  */
 package org.inria.myriads.snoozenode.groupmanager.managerpolicies;
 
+import java.lang.reflect.InvocationTargetException;
+
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfiguration;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Relocation;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.impl.FirstFit;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.impl.RoundRobin;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPolicy;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.impl.SerconVirtualMachineConsolidation;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.VirtualMachineRelocation;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.impl.GreedyOverloadRelocation;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.impl.GreedyUnderloadRelocation;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.VirtualMachineRelocation;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.relocation.api.impl.NoOperation;
 import org.inria.myriads.snoozenode.util.PluginUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,12 +64,10 @@ public final class GroupManagerPolicyFactory
      * @param estimator                 Resource demand estimator.
      * @return  The placement policy.
      */
-    @SuppressWarnings("unchecked")
     public static PlacementPolicy newVirtualMachinePlacement(GroupManagerSchedulerSettings schedulerSettings,
                                                              ResourceDemandEstimator estimator) 
     {
         Guard.check(schedulerSettings, estimator);
-       
         
         PlacementPolicy placement = null;
         String placementPolicy = schedulerSettings.getPlacementPolicy();
@@ -78,34 +75,35 @@ public final class GroupManagerPolicyFactory
         if (placementPolicy.toLowerCase().equals("firstfit")) 
         {
             log_.debug("Loading the first fit placement policy");
-            placement = new FirstFit(estimator);
+            placement = new FirstFit();
         }
         else if (placementPolicy.toLowerCase().equals("roundrobin"))
         {
             log_.debug("Loading the round robin placement policy");
-            placement = new RoundRobin(estimator);
+            placement = new RoundRobin();
         }
         else
         {
             try
             {
                 log_.debug("Loading a custom placement policy");
-                String pluginsDirectory = schedulerSettings.getPluginsDirectory();
-                Class placementClass = PluginUtils.getClassFromDirectory(pluginsDirectory , placementPolicy);
+                Class<?> placementClass = PluginUtils.getClassFromPluginsDirectory(placementPolicy);
                 log_.debug(String.format("instantiate the placement policy %s from the jar", placementPolicy));
                 Object placementObject =
-                        placementClass.getConstructor(ResourceDemandEstimator.class).newInstance(estimator);
+                        placementClass.getConstructor().newInstance();
                 placement = (PlacementPolicy) placementObject;
             }
             catch (Exception e)
             {
                 log_.error("Unable to load the placement policy from the plugin directory");
-                e.printStackTrace();
+                log_.error(e.getMessage());
                 log_.debug("Back to default placement policy");
-                placement = new FirstFit(estimator);
+                placement = new FirstFit();
             }                
         }
         
+        placement.setEstimator(estimator);
+        placement.initialize();
         return placement;
     }
     
@@ -116,7 +114,7 @@ public final class GroupManagerPolicyFactory
      * @param estimator              The resource demand estimator
      * @return                       The selected reconfiguration policy
      */
-    public static ReconfigurationPolicy newVirtualMachineReconfiguration(Reconfiguration reconfigurationPolicy,
+    public static ReconfigurationPolicy newVirtualMachineReconfiguration(String reconfigurationPolicy,
                                                                          ResourceDemandEstimator estimator) 
     {
         Guard.check(reconfigurationPolicy);
@@ -124,48 +122,66 @@ public final class GroupManagerPolicyFactory
                                  reconfigurationPolicy));
         
         ReconfigurationPolicy reconfiguration = null;
-        switch (reconfigurationPolicy) 
+        
+        if (reconfigurationPolicy.equals("sercon"))
         {
-            case Sercon :
-                reconfiguration = new SerconVirtualMachineConsolidation(estimator);
-                break;
-              
-            default :
-                log_.error("Unknown virtual machine reconfiguration policy selected!");
+            reconfiguration = new SerconVirtualMachineConsolidation();
         }
+        else
+        {
+            try
+            {
+                log_.debug(String.format("Loading custom reconfiguration policy %s", reconfigurationPolicy));
+                Object reconfigurationPolicyObject = PluginUtils.createFromFQN(reconfigurationPolicy);
+                reconfiguration = (ReconfigurationPolicy) reconfigurationPolicyObject;
+            }
+            catch (Exception exception)
+            {
+                log_.error(String.format("Unable to load the custom reconfiguration policy %s", reconfigurationPolicy));
+                reconfiguration = new SerconVirtualMachineConsolidation();
+            }
+        }
+        
+        reconfiguration.setEstimator(estimator);
+        reconfiguration.initialize();
         
         return reconfiguration;
     }
     
     /**
-     * Creates a new virtual machine relocation policy.
      * 
-     * @param relocationPolicy  The desired relocation policy
-     * @param estimator         The resource demand estimator
-     * @return                  The selected relocation policy
+     * Creates a new virtual machine relocation.
+     * 
+     * @param policy            The relocation policy
+     * @param estimator         The estimator.
+     * @return  The virtual machine relocation implementation.
      */
-    public static VirtualMachineRelocation newVirtualMachineRelocation(Relocation relocationPolicy,
-                                                                       ResourceDemandEstimator estimator) 
+    public static VirtualMachineRelocation newVirtualMachineRelocation(
+            String policy,
+            ResourceDemandEstimator estimator)
     {
-        Guard.check(relocationPolicy);
-        log_.debug(String.format("Selecting the virtual machine relocation policy: %s", 
-                                 relocationPolicy));
+        // create using reflection.
+        String classURI = policy;
+        ClassLoader classLoader = GroupManagerPolicyFactory.class.getClassLoader();
         
-        VirtualMachineRelocation relocation = null;
-        switch (relocationPolicy) 
+        VirtualMachineRelocation relocationPolicy = null;
+        try
         {
-            case GreedyUnderloadRelocation :
-                relocation = new GreedyUnderloadRelocation(estimator);
-                break;
+            Class<?> relocationClass = classLoader.loadClass(classURI);
+            Object relocationObject;
+            relocationObject = relocationClass.getConstructor().newInstance();
+            relocationPolicy = (VirtualMachineRelocation) relocationObject;
+            log_.debug("Sucessfully created anomaly resolver" + classURI);
             
-            case GreedyOverloadRelocation :
-                relocation = new GreedyOverloadRelocation(estimator);
-                break;
-              
-            default :
-                log_.error("Unknown virtual machine relocation policy selected!");
         }
-        
-        return relocation;
+        catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+                | InvocationTargetException | NoSuchMethodException | SecurityException | ClassNotFoundException e)
+        {
+            e.printStackTrace();
+            relocationPolicy = new NoOperation();
+        }
+        relocationPolicy.setEstimator(estimator);
+        relocationPolicy.initialize();
+        return relocationPolicy;
     }
 }

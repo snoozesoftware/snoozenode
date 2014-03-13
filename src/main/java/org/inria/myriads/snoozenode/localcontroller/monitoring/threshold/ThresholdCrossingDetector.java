@@ -22,10 +22,10 @@ package org.inria.myriads.snoozenode.localcontroller.monitoring.threshold;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MathUtils;
-import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
@@ -77,7 +77,7 @@ public final class ThresholdCrossingDetector
         Guard.check(monitoringData);
         log_.debug("Starting threshold crossing detection");
 
-        List<AggregatedVirtualMachineData> dataMap = monitoringData.getData();
+        List<AggregatedVirtualMachineData> dataMap = monitoringData.getVirtualMachineAggregatedData();
         if (dataMap == null)
         {
             log_.error("The data map is NULL");
@@ -167,7 +167,7 @@ public final class ThresholdCrossingDetector
     {
         Guard.check(cpuUtilization, memoryUtilization, networkRxUtilization, networkTxUtilization);        
         boolean cpuUnderload = cpuUtilization < 
-                               ThresholdUtils.getMinThreshold(monitoringThresholds_.getCPU());
+                               ThresholdUtils.getMinThreshold(monitoringThresholds_.getCpu());
         boolean memoryUnderload = memoryUtilization <
                                   ThresholdUtils.getMinThreshold(monitoringThresholds_.getMemory());
         boolean networkRxUnderload = networkRxUtilization < 
@@ -199,7 +199,7 @@ public final class ThresholdCrossingDetector
     {
         Guard.check(cpuUtilization, memoryUtilization, networkRxUtilization, networkTxUtilization);        
         boolean cpuOverload = cpuUtilization >
-                              ThresholdUtils.getMaxThreshold(monitoringThresholds_.getCPU());
+                              ThresholdUtils.getMaxThreshold(monitoringThresholds_.getCpu());
         boolean memoryOverload = memoryUtilization >
                                  ThresholdUtils.getMaxThreshold(monitoringThresholds_.getMemory());
         boolean networkRxOverload = networkRxUtilization > 
@@ -234,6 +234,7 @@ public final class ThresholdCrossingDetector
                                      virtualMachineId));
             
             List<VirtualMachineMonitoringData> dataList = metaData.getMonitoringData();
+            // hard coded here
             ArrayList<Double> virtualMachineUtilization = computeAverageVirtualMachineUtilization(dataList);
             log_.debug(String.format("Average virtual machine %s utilization is %s", 
                                      virtualMachineId,

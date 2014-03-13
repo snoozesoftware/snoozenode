@@ -19,13 +19,17 @@
  */
 package org.inria.myriads.snoozenode.database.api;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedHostMonitoringData;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 
 /**
  * Local controller repository interface.
@@ -72,6 +76,8 @@ public interface LocalControllerRepository
      * @param groupManagerDescription   The group manager description
      * @return                          The updated meta data map
      */
+   
+    
     HashMap<String, VirtualMachineMetaData> 
         updateVirtualMachineMetaData(GroupManagerDescription groupManagerDescription);
 
@@ -90,4 +96,39 @@ public interface LocalControllerRepository
      * @return                          The virtual machines meta data
      */
     List<VirtualMachineMetaData> getVirtualMachines(int numberOfMonitoringEntries);
+
+    /**
+     * 
+     * Add aggregated metric data in the repository.
+     * 
+     * @param aggregatedData    The aggregated data.
+     */
+    void addAggregatedHostMonitoringData(List<AggregatedHostMonitoringData> aggregatedData);
+
+    
+    /**
+     * Get the host monitoring datas.
+     * 
+     * @return The host resources.
+     */
+    Map<String, Resource> getHostResources();
+
+    /**
+     * 
+     * Adds the vm monitoring data.
+     * 
+     * @param clonedData    the aggregated datas to add.
+     */
+    void addAggregatedVirtualMachineData(ArrayList<AggregatedVirtualMachineData> clonedData);
+    
+    /**
+     * 
+     * Gets the host monitoring values.
+     * 
+     * @param numberOfMonitoringEntries     The wanted number of monitoring values.
+     * @return  The host resources.
+     */
+    Map<String, Resource> getHostMonitoringValues(int numberOfMonitoringEntries);
+
+
 }

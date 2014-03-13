@@ -27,11 +27,9 @@ import java.util.Map;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.util.EstimatorUtils;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPolicy;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.util.SortUtils;
 import org.inria.myriads.snoozenode.util.OutputUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,25 +38,28 @@ import org.slf4j.LoggerFactory;
  * Implements a modified version of the Sercon consolidation algorithm.
  * 
  * @author Eugen Feller
+ * @author msimonin
  */
 public final class SerconVirtualMachineConsolidation 
-    implements ReconfigurationPolicy
+    extends ReconfigurationPolicy
 {
     /** Logging instance. */
     private static final Logger log_ = LoggerFactory.getLogger(SerconVirtualMachineConsolidation.class);
 
-    /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
-    
     /**
      * Constructor.
      * 
-     * @param estimator    The resource demand estimator
      */
-    public SerconVirtualMachineConsolidation(ResourceDemandEstimator estimator)
+    public SerconVirtualMachineConsolidation()
     {
         log_.debug("Initializing the Sercon VM consolidation algorithm");
-        estimator_ = estimator;
+        
+    }
+    
+    @Override
+    public void initialize()
+    {
+        log_.debug("Initializing the SerconVitualMachineConsolidation policy");
     }
     
     /**
@@ -93,8 +94,8 @@ public final class SerconVirtualMachineConsolidation
             leastLoadedController = localControllers.size() - 1;
             log_.debug(String.format("There are still %d localControllers", leastLoadedController));
             try
-            {          
-                SortUtils.sortLocalControllersDecreasing(localControllers, estimator_);                
+            {     
+                estimator_.sortLocalControllers(localControllers, true);
                 LocalControllerDescription localController = localControllers.get(leastLoadedController);
                 log_.debug(String.format("Getting local controller %s description", localController.getId()));
                 
@@ -108,7 +109,7 @@ public final class SerconVirtualMachineConsolidation
                 }
                 
                 OutputUtils.printVirtualMachines(virtualMachines);
-                SortUtils.sortVirtualMachinesDecreasing(virtualMachines, estimator_);    
+                estimator_.sortVirtualMachines(virtualMachines, true);
                 int numberOfPlacedVirtualMachines = placeVirtualMachines(virtualMachines, localControllers, mapping);
                 log_.debug(String.format("Total virtual machines count %d, assigned: %d", 
                                          virtualMachines.size(), numberOfPlacedVirtualMachines));
@@ -251,4 +252,6 @@ public final class SerconVirtualMachineConsolidation
         List<VirtualMachineMetaData> metaDataList = new ArrayList<VirtualMachineMetaData>(metaData.values());
         return metaDataList;
     }
+
+
 }

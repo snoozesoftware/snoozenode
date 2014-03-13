@@ -49,7 +49,8 @@ import org.inria.myriads.snoozeimages.communication.rest.api.ImagesRepositoryAPI
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupLeaderSchedulerSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.GroupLeaderPolicyFactory;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Dispatching;
@@ -120,7 +121,7 @@ public final class VirtualClusterManager
     private void initializeDispatchingPolicy()
     {
         GroupLeaderSchedulerSettings schedulerSettings = nodeConfiguration_.getGroupLeaderScheduler();
-        Dispatching virtualClusterDispatch = schedulerSettings.getDispatchingPolicy();
+        String virtualClusterDispatch = schedulerSettings.getDispatchingPolicy();
         virtualClusterDispatching_ = GroupLeaderPolicyFactory.newVirtualClusterPlacement(virtualClusterDispatch,
                                                                                          estimator_);
     }

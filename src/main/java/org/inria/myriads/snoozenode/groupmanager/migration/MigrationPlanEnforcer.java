@@ -42,9 +42,8 @@ import org.inria.myriads.snoozenode.groupmanager.migration.watchdog.MigrationWat
 import org.inria.myriads.snoozenode.groupmanager.migration.worker.MigrationWorker;
 import org.inria.myriads.snoozenode.message.ManagementMessage;
 import org.inria.myriads.snoozenode.message.ManagementMessageType;
-import org.inria.myriads.snoozenode.message.SystemMessage;
-import org.inria.myriads.snoozenode.message.SystemMessageType;
 import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
+import org.inria.myriads.snoozenode.util.OutputUtils;
 import org.inria.snoozenode.external.notifier.ExternalNotificationType;
 import org.inria.snoozenode.external.notifier.ExternalNotifier;
 import org.slf4j.Logger;
@@ -75,10 +74,10 @@ public final class MigrationPlanEnforcer
 
     /** Number of migrations. */
     private int numberOfMigrations_;
-    
-    
-    /** External Sender. */
+
+    /** External notifier.*/
     private ExternalNotifier externalNotifier_;
+    
     
     /**
      * Constructor.
@@ -88,9 +87,9 @@ public final class MigrationPlanEnforcer
      * @param externalNotifier           External notifier.
      */
     public MigrationPlanEnforcer(
+                                ExternalNotifier externalNotifier,
                                 GroupManagerRepository groupManagerRepository, 
-                                MigrationPlanListener listener,
-                                ExternalNotifier externalNotifier
+                                MigrationPlanListener listener
                                  )
     {
         Guard.check(groupManagerRepository);
@@ -184,6 +183,7 @@ public final class MigrationPlanEnforcer
             throw new MigrationPlanEnforcerException("Virtual machine meta data is invalid!");
         }
         
+        log_.debug("Metadata after migration : " + OutputUtils.toString(metaData));
         boolean isStarted = startVirtualMachineMonitoring(destinationAddress, metaData);       
         
         if (!isStarted)
@@ -325,15 +325,15 @@ public final class MigrationPlanEnforcer
             migrationRequest.getDestinationVirtualMachineLocation().getLocalControllerControlDataAddress().getAddress(),
             migrationRequest.getDestinationVirtualMachineLocation().getLocalControllerControlDataAddress().getPort()));
                 
-        ExternalNotifierUtils.send(
-                externalNotifier_,
-                ExternalNotificationType.MANAGEMENT,
-                new ManagementMessage(ManagementMessageType.PENDING , migrationRequest),
-                groupManagerRepository_.getGroupManagerId() + "." +
-                migrationRequest.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
-                migrationRequest.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
-                "MIGRATION"
-                );
+//        ExternalNotifierUtils.send(
+//                externalNotifier_,
+//                ExternalNotificationType.MANAGEMENT,
+//                new ManagementMessage(ManagementMessageType.PENDING , migrationRequest),
+//                groupManagerRepository_.getGroupManagerId() + "." +
+//                migrationRequest.getSourceVirtualMachineLocation().getLocalControllerId() + "." + 
+//                migrationRequest.getSourceVirtualMachineLocation().getVirtualMachineId() + "." +
+//                "MIGRATION"
+//                );
         
         MigrationWorker migrationThread = new MigrationWorker(migrationRequest);
         MigrationWatchdog watchdogThread = new MigrationWatchdog(migrationRequest, this);      
@@ -377,13 +377,13 @@ public final class MigrationPlanEnforcer
                                  migrationPlan.getNumberOfReleasedNodes()));
         
         log_.debug(String.format("Number of migrations: %s", numberOfMigrations_));
-        
-        ExternalNotifierUtils.send(
-                externalNotifier_,
-                ExternalNotificationType.SYSTEM,
-                new SystemMessage(SystemMessageType.RECONFIGURATION, migrationPlan),
-                "groupmanager." + groupManagerRepository_.getGroupManagerId()
-                );
+//        
+//        ExternalNotifierUtils.send(
+//                externalNotifier_,
+//                ExternalNotificationType.SYSTEM,
+//                new SystemMessage(SystemMessageType.RECONFIGURATION, migrationPlan),
+//                "groupmanager." + groupManagerRepository_.getGroupManagerId()
+//                );
         
         Map<VirtualMachineMetaData, LocalControllerDescription> mapping = migrationPlan.getMapping();
         for (Map.Entry<VirtualMachineMetaData, LocalControllerDescription> entry : mapping.entrySet())

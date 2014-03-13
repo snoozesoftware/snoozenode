@@ -22,12 +22,16 @@ package org.inria.myriads.snoozenode.configurator.api;
 import java.io.Serializable;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorSettings;
+import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyDetectorSettings;
+import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyResolverSettings;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.energymanagement.EnergyManagementSettings;
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.faulttolerance.FaultToleranceSettings;
+import org.inria.myriads.snoozenode.configurator.globals.GlobalsSettings;
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
 import org.inria.myriads.snoozenode.configurator.imagerepository.ImageRepositorySettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.configurator.networking.NetworkingSettings;
@@ -41,6 +45,14 @@ import org.inria.myriads.snoozenode.configurator.submission.SubmissionSettings;
  * Node parameters class.
  * 
  * @author Eugen Feller
+ */
+/**
+ * @author msimonin
+ *
+ */
+/**
+ * @author msimonin
+ *
  */
 public class NodeConfiguration 
     implements Serializable
@@ -93,6 +105,18 @@ public class NodeConfiguration
     /** Provisioner settings.*/
     private ProvisionerSettings provisionerSettings_;
     
+    /** HostMonitoring settings.*/
+    private HostMonitoringSettings hostMonitoringSettings_;
+    
+    /** anomaly detector settings.*/
+    private AnomalyDetectorSettings  anomalyDetectorSettings_;
+    
+    /** anomaly resolver settings.*/
+    private AnomalyResolverSettings anomalyResolverSettings_;
+    
+    /** Global settings.*/
+    private GlobalsSettings globalSettings_;
+    
     /** Empty constructor. */
     public NodeConfiguration()
     {
@@ -111,6 +135,10 @@ public class NodeConfiguration
         networking_ = new NetworkingSettings();
         imageRepositorySettings_ = new ImageRepositorySettings();
         provisionerSettings_ = new ProvisionerSettings();
+        hostMonitoringSettings_ = new HostMonitoringSettings();
+        anomalyDetectorSettings_ = new AnomalyDetectorSettings();
+        anomalyResolverSettings_ = new AnomalyResolverSettings();
+        globalSettings_ = new GlobalsSettings();
     }
 
     /**
@@ -263,5 +291,53 @@ public class NodeConfiguration
     public void setProvisionerSettings(ProvisionerSettings provisionerSettings)
     {
         provisionerSettings_ = provisionerSettings;
+    }
+
+    /**
+     * @return the serialversionuid
+     */
+    public static long getSerialversionuid()
+    {
+        return serialVersionUID;
+    }
+
+    /**
+     * @return the httpd
+     */
+    public HTTPdSettings getHttpd()
+    {
+        return httpd_;
+    }
+
+    /**
+     * @return the hostMonitoringSettings
+     */
+    public HostMonitoringSettings getHostMonitoringSettings()
+    {
+        return hostMonitoringSettings_;
+    }
+
+    /**
+     * @return the anomalyDetectorSettings
+     */
+    public AnomalyDetectorSettings getAnomalyDetectorSettings()
+    {
+        return anomalyDetectorSettings_;
+    }
+
+    /**
+     * @return the anomalyResolverSettings
+     */
+    public AnomalyResolverSettings getAnomalyResolverSettings()
+    {
+        return anomalyResolverSettings_;
+    }
+
+    /**
+     * @return the globalSettings
+     */
+    public GlobalsSettings getGlobalsSettings()
+    {
+        return globalSettings_;
     }
 }

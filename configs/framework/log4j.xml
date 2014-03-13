@@ -99,9 +99,14 @@
 	</logger>
 	
 	<logger name="org.inria.myriads.snoozecommon">
-		<level value="DEBUG"/>
+		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger>
+
+  <logger name="org.inria.myriads.snoozenode.communicator.CommunicatorFactory">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+  </logger>  
 
 	<logger name="org.inria.myriads.snoozenode.groupmanager.backend">
 		<level value="WARN"/>
@@ -114,7 +119,7 @@
 	</logger>
 	
 	<logger name="org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy">
-		<level value="DEBUG"/>
+		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger>  
 	
@@ -129,25 +134,42 @@
 	</logger>
 	
 	<logger name="org.inria.myriads.snoozenode.database">
-		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger>
+
+	<logger name="org.inria.myriads.snoozenode.estimator">
+		<appender-ref ref="FA"/>
+  </logger>
 
 	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring.consumer">
 		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger> 
 
+	<logger name="org.inria.myriads.snoozenode.localcontroller.anomaly">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+  </logger> 
+
 	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring.service.VirtualMachineMonitoringService">		
 		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger> 
 	
-	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl">
+	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring">
+		<appender-ref ref="FA"/>
+  </logger> 
+
+	<logger name="org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl.LibVirtVirtualMachineHostMonitor">
 		<level value="WARN"/>
 		<appender-ref ref="FA"/>
-	</logger> 
+  </logger> 
 							
+	<logger name="org.inria.myriads.snoozenode.groupmanager.anomaly">
+		<level value="WARN"/>
+		<appender-ref ref="FA"/>
+  </logger> 
+
 	<logger name="org.inria.myriads.snoozenode.groupmanager.virtualnetworkmanager">
 		<level value="WARN"/>
 		<appender-ref ref="FA"/>
@@ -159,12 +181,16 @@
 	</logger>
 	
 	<logger name="org.inria.myriads.snoozenode.util">
-		<level value="DEBUG"/>
+		<level value="WARN"/>
 		<appender-ref ref="FA"/>
 	</logger>
 	
 	<logger name="org.inria.myriads.snoozenode">
 		<level value="DEBUG"/>
+		<appender-ref ref="FA"/>
+  </logger>
+
+	<logger name="org.inria.myriads.snooze.plugins">
 		<appender-ref ref="FA"/>
 	</logger>
 </log4j:configuration>

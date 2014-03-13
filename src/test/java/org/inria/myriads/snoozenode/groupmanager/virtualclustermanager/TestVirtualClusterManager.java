@@ -1,5 +1,8 @@
 package org.inria.myriads.snoozenode.groupmanager.virtualclustermanager;
 
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -15,12 +18,7 @@ import org.inria.myriads.snoozecommon.globals.Globals;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupLeaderSchedulerSettings;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Dispatching;
-
-
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 
 /**
  * 
@@ -44,9 +42,9 @@ public class TestVirtualClusterManager extends TestCase
     {
         GroupLeaderRepository repository = EasyMock.createMock(GroupLeaderRepository.class);
         NodeConfiguration nodeConfiguration = EasyMock.createMock(NodeConfiguration.class);
-        ResourceDemandEstimator estimator = EasyMock.createMock(ResourceDemandEstimator.class);
+        StaticDynamicResourceDemandEstimator estimator = EasyMock.createMock(StaticDynamicResourceDemandEstimator.class);
         GroupLeaderSchedulerSettings groupLeaderScheduler = new GroupLeaderSchedulerSettings();
-        groupLeaderScheduler.setDispatchingPolicy(Dispatching.FirstFit);
+        groupLeaderScheduler.setDispatchingPolicy("firstfit");
         
        
         //gl -> gm1, gm2, gm3

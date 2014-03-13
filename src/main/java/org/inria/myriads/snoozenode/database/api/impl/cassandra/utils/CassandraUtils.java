@@ -50,6 +50,9 @@ public final class CassandraUtils
     public static final String LOCALCONTROLLERS_CF = "localcontrollers";
     
     /** localcontrollers monitoring column family. */
+    public static final String LOCALCONTROLLERS_MONITORING_CF = "localcontrollers_monitorings";
+    
+    /** localcontrollers monitoring column family. */
     public static  final String LOCALCONTROLLERS_MAPPING_CF = "localcontrollers_mappings";
     
     /** groupmanagers column family. */
@@ -249,7 +252,7 @@ public final class CassandraUtils
      */
     public static void unassignNodes(Keyspace keyspace, String columnFamily)
     {
-        log_.debug("Unassign all the rows from " + keyspace.getKeyspaceName());
+        log_.debug("Unassign all the rows from " + keyspace.getKeyspaceName() + " / " + columnFamily);
 
         RowIterator rowIterator = new RowIterator();
         rowIterator
@@ -260,6 +263,7 @@ public final class CassandraUtils
         Mutator<String> mutator = HFactory.createMutator(keyspace, StringSerializer.get());
         for (Row<String, String, String> row : rowIterator)
         {
+          log_.debug("Unassign : " + row.getKey());
           ColumnSlice<String, String> columnSlice = row.getColumnSlice();
           HColumn<String, String> isGroupLeaderColumn = columnSlice.getColumnByName("isGroupLeader");
           if (isGroupLeaderColumn != null && isGroupLeaderColumn.getValue().equals(CassandraUtils.stringTrue))
@@ -270,6 +274,7 @@ public final class CassandraUtils
           }
           for (HColumn<String, String>  column : row.getColumnSlice().getColumns())
           {
+              log_.debug("Unassign : " + row.getKey() + "/" + column.getName());
               mutator.addInsertion(
                       row.getKey(), 
                       columnFamily, 
@@ -291,6 +296,19 @@ public final class CassandraUtils
                           BooleanSerializer.get()));
         }
         mutator.execute();
+    }
+
+    /**
+     * 
+     * Create the key of the monitoring column family.
+     * 
+     * @param localControllerId     The localController Id.
+     * @param key                   The key to concatenate.
+     * @return  id | key
+     */
+    public static String createHostResourceKey(String localControllerId, String key)
+    {
+        return localControllerId + "|" + key;
     }
      
         

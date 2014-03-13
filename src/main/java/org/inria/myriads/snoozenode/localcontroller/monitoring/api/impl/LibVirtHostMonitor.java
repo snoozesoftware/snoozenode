@@ -21,6 +21,7 @@ package org.inria.myriads.snoozenode.localcontroller.monitoring.api.impl;
 
 import java.util.ArrayList;
 
+import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.HostMonitoringData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MathUtils;
@@ -38,9 +39,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Eugen Feller
  */
-public final class LibVirtHostMonitor 
-    implements HostMonitor 
-{
+public final class LibVirtHostMonitor extends HostMonitor{
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(LibVirtHostMonitor.class);
         
@@ -72,7 +71,6 @@ public final class LibVirtHostMonitor
      * @return                          The list of double values
      * @throws HostMonitoringException 
      */
-    @Override
     public ArrayList<Double> getTotalCapacity() 
         throws HostMonitoringException
     {
@@ -98,4 +96,19 @@ public final class LibVirtHostMonitor
         log_.debug(String.format("Total host capacity is: %s", totalCapacity));   
         return totalCapacity;
     }
+
+    @Override
+    public void initialize() throws HostMonitoringException
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public HostMonitoringData getResourceData() throws HostMonitoringException
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

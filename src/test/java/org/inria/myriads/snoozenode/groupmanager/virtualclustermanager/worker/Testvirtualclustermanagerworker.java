@@ -1,18 +1,23 @@
 package org.inria.myriads.snoozenode.groupmanager.virtualclustermanager.worker;
 
+import static org.easymock.EasyMock.expect;
+
 import java.util.ArrayList;
 
 import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.database.api.GroupLeaderRepository;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPlan;
+import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
 import org.inria.myriads.snoozenode.groupmanager.virtualclustermanager.listener.VirtualClusterSubmissionListener;
 
 /**
@@ -38,7 +43,7 @@ public class Testvirtualclustermanagerworker extends TestCase
     public void testSplitVirtualMachines()
     {
        
-        ResourceDemandEstimator estimator = EasyMock.createMock(ResourceDemandEstimator.class);
+        StaticDynamicResourceDemandEstimator estimator = EasyMock.createMock(StaticDynamicResourceDemandEstimator.class);
         DispatchingPolicy dispatchingPolicy = EasyMock.createMock(DispatchingPolicy.class);
         GroupLeaderRepository repository =  EasyMock.createMock(GroupLeaderRepository.class);
         VirtualClusterSubmissionListener submissionListener = 
@@ -90,5 +95,7 @@ public class Testvirtualclustermanagerworker extends TestCase
         assertEquals(1, freeVirtualMachines.size());
         assertTrue(freeVirtualMachines.contains(vm4));
     }
+    
+
 
 }

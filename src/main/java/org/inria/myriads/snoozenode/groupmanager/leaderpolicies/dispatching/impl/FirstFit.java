@@ -27,11 +27,9 @@ import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPlan;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.util.LeaderPolicyUtils;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.util.SortUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,23 +39,25 @@ import org.slf4j.LoggerFactory;
  * @author Eugen Feller
  */
 public final class FirstFit 
-    implements DispatchingPolicy 
+    extends DispatchingPolicy 
 {
     /** Logger. */
     private static final Logger log_ = LoggerFactory.getLogger(FirstFit.class);
 
-    /** Estimator.*/
-    private ResourceDemandEstimator estimator_;
     
     /** 
      * Constructor. 
      * 
-     * @param estimator     The estimator
      */
-    public FirstFit(ResourceDemandEstimator estimator) 
+    public FirstFit() 
     {
-        log_.debug("Initializing the first-fit virtual cluster dispatching policy");  
-        estimator_ = estimator;
+        log_.debug("Creating the first-fit virtual cluster dispatching policy");  
+    }
+    
+    @Override
+    public void initialize()
+    {
+        log_.debug("Initializing the first-fit virtual cluster dispatching policy");
     }
     
     /**
@@ -73,7 +73,10 @@ public final class FirstFit
         Guard.check(virtualMachines, groupManagerDescriptions);      
         log_.debug("Computing dispatching according to the first-fit policy");
          
-        SortUtils.sortGroupManagerDesceasing(groupManagerDescriptions, estimator_.getSortNorm());
+        //SortUtils.sortGroupManagerDesceasing(groupManagerDescriptions, estimator_.getSortNorm());
+        
+        estimator_.sortGroupManagers(groupManagerDescriptions, true);
+        
         LeaderPolicyUtils.printGroupManagerDescriptions(groupManagerDescriptions);
 
         ArrayList<GroupManagerDescription> candidateGroupManagers = new ArrayList<GroupManagerDescription>(); 

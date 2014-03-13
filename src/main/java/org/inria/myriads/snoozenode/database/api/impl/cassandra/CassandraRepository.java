@@ -4,8 +4,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import me.prettyprint.cassandra.serializers.BooleanSerializer;
+import me.prettyprint.cassandra.serializers.DoubleSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.service.CassandraHostConfigurator;
@@ -16,9 +19,11 @@ import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.Row;
+import me.prettyprint.hector.api.beans.Rows;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.MutationResult;
 import me.prettyprint.hector.api.mutation.Mutator;
+import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceQuery;
 
@@ -26,21 +31,26 @@ import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.ListenSettings;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
+import org.inria.myriads.snoozecommon.communication.localcontroller.HostResources;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerLocation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
+import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorSettings;
 import org.inria.myriads.snoozecommon.communication.localcontroller.wakeup.WakeupSettings;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.HostMonitoringData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
+import org.inria.myriads.snoozecommon.datastructure.LRUCache;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.virtualmachineimage.VirtualMachineImage;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.CassandraUtils;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.JsonSerializer;
 import org.inria.myriads.snoozenode.database.api.impl.cassandra.utils.RowIterator;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedHostMonitoringData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -648,6 +658,51 @@ public class CassandraRepository
             log_.debug("gets monitoring data for timestamp " + monitoring.getTimeStamp());
         }
     }
+    
+    /**
+     * 
+     * Fills the description with the host monitoring resources.
+     * 
+     * @param localControllerDescription    The local controller description.
+     * @param numberOfMonitoringEntries     The number of monitoring entries to retrieve.
+     */
+    protected void fillWithHostMonitoringData(
+            LocalControllerDescription localControllerDescription, 
+            int numberOfMonitoringEntries)
+    {
+        log_.debug("Gets the host monitoring datas from the cassandra cluster");
+        String localControllerId = localControllerDescription.getId();
+        Map<String, Resource> hostResources = localControllerDescription.getHostResources().getResources();
+        List<String> keys = new ArrayList<String>();
+        for (String key : hostResources.keySet())
+        {
+            String resourceKey = CassandraUtils.createHostResourceKey(localControllerId, key);
+            keys.add(resourceKey);
+        }
+        
+        MultigetSliceQuery<String, Long, Double> multiQuery = HFactory
+                .createMultigetSliceQuery(keyspace_, StringSerializer.get(), LongSerializer.get(), DoubleSerializer.get());
+        
+                multiQuery.setColumnFamily(CassandraUtils.LOCALCONTROLLERS_MONITORING_CF);
+                multiQuery.setRange(null, null, false, Integer.MAX_VALUE);
+                multiQuery.setKeys(keys);
+                
+       QueryResult<Rows<String, Long, Double>> result = multiQuery.execute();
+       int i = 0;
+       for (Row<String, Long, Double>  row: result.get())
+       {
+           LRUCache<Long, Double> history = new LRUCache<Long, Double>(numberOfMonitoringEntries);
+           String key = keys.get(i);
+           for (HColumn<Long, Double> col : row.getColumnSlice().getColumns())
+           {
+               history.put(col.getName(), col.getValue());
+           }
+           Resource resource = new Resource();
+           hostResources.put(key, resource);
+           i++;
+       }
+    }
+    
     /**
      * 
      * Gets the virtual machine meta data from a cassandra row.
@@ -916,6 +971,62 @@ public class CassandraRepository
     
     /**
      * 
+     * Adds aggregated monitoring data to Cassandra.
+     * 
+     * 
+     * @param localControllerId     The localControllerId.
+     * @param hostMonitoringData    The aggregated datas.
+     */
+    protected void addAggregatedHostMonitoringDataCassandra(
+            String localControllerId,
+            AggregatedHostMonitoringData hostMonitoringData
+            )
+    {
+
+        Guard.check(hostMonitoringData);   
+        log_.debug(String.format("Adding aggregated host  monitoring data to the database for LCs %s", 
+                                 localControllerId));
+        
+        LocalControllerDescription description = getLocalControllerDescriptionOnly(localControllerId,0);
+        if (description == null)
+        {
+            log_.error("Description not found in the cache");
+            return;
+        }
+        
+        Mutator<String> mutator = HFactory.createMutator(getKeyspace(), StringSerializer.get());
+        
+        for (HostMonitoringData  hostMonitoring: hostMonitoringData.getMonitoringData())
+        {
+            long timestamp = hostMonitoring.getTimeStamp();
+            for (Entry<String, Double>  monitoringData: hostMonitoring.getUsedCapacity().entrySet())
+            {
+                String resourceName = monitoringData.getKey();
+                double resourceValue = monitoringData.getValue();
+                //push to cassandra in localcontrollers_monitorings column family
+                // id = lcid | resourcename
+                
+                mutator.addInsertion(
+                        CassandraUtils.createHostResourceKey(localControllerId, resourceName),
+                        CassandraUtils.LOCALCONTROLLERS_MONITORING_CF,
+                        HFactory.createColumn(
+                                timestamp,
+                                resourceValue,
+                                ttlVirtualMachine_,
+                                new LongSerializer(),
+                                new DoubleSerializer()
+                                ));
+            }
+            mutator.execute();
+        }
+        
+        
+        
+       
+    }
+    
+    /**
+     * 
      * Add (serialize) a local controller to cassandra.
      * 
      * @param groupManagerId    The group manager Id.
@@ -937,6 +1048,16 @@ public class CassandraRepository
             LocalControllerStatus status = description.getStatus();
             NetworkAddress controlDataAddress = description.getControlDataAddress();
             LocalControllerLocation location = description.getLocation();
+            HostResources resources = description.getHostResources();
+            Map<String, Resource> copyResources = new HashMap<String, Resource>();
+            for ( Entry<String, Resource> hostResource : resources.getResources().entrySet())
+            {
+                copyResources.put(hostResource.getKey(), hostResource.getValue());
+                // empy resources
+                // empty copy
+                Resource resource = new Resource(hostResource.getValue(), 0);
+                hostResource.setValue(resource);
+            }
             
             Mutator<String> mutator = HFactory.createMutator(keyspace_, StringSerializer.get());
             mutator.addInsertion(
@@ -975,11 +1096,26 @@ public class CassandraRepository
                            id,
                            CassandraUtils.LOCALCONTROLLERS_CF,
                            HFactory.createColumn("localControllerLocation", location, ttl, StringSerializer.get(), new JsonSerializer(LocalControllerLocation.class)))
+                    .addInsertion(
+                            id,
+                            CassandraUtils.LOCALCONTROLLERS_CF,
+                            HFactory.createColumn("resources", resources, ttl, StringSerializer.get(), new JsonSerializer(HostResources.class)))
             //mapping add
                     .addInsertion(
                             controlDataAddress.toString(),
                             CassandraUtils.LOCALCONTROLLERS_MAPPING_CF,
                             HFactory.createColumn("id", id, ttl, StringSerializer.get(), StringSerializer.get()));
+            // monitoring add
+            for (Entry<String, Resource>  resource : copyResources.entrySet())
+            {
+                for (Entry<Long, Double>  history: resource.getValue().getHistory().entrySet())
+                {
+                    mutator.addInsertion(
+                            CassandraUtils.createHostResourceKey(id, resource.getKey()),
+                            CassandraUtils.LOCALCONTROLLERS_MONITORING_CF,
+                            HFactory.createColumn(history.getKey(), history.getValue(), LongSerializer.get(), DoubleSerializer.get()));
+                }
+            }
             log_.debug("executing mutation");         
             MutationResult result = mutator.execute();
             log_.debug(String.format("Insertion done in %d", result.getExecutionTimeMicro()));

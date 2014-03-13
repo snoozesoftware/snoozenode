@@ -83,7 +83,7 @@ public class TCPDataSender implements DataSender
      * @param data          The data object
      * @throws IOException  The I/O exception
      */
-    public void send(Object data)
+    public synchronized void send(Object data)
         throws IOException 
     {
        send(data, "0");
@@ -107,7 +107,7 @@ public class TCPDataSender implements DataSender
     }
 
     @Override
-    public void send(Object data, String senderId) throws IOException
+    public synchronized void send(Object data, String senderId) throws IOException
     {
         Guard.check(data);
         outputStream_.writeObject(data);

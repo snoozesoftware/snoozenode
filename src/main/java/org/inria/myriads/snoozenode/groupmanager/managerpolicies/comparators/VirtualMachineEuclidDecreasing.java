@@ -25,7 +25,7 @@ import java.util.Comparator;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MathUtils;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 
 /**
  * Euclid norm based virtual machine sorting in decreasing order.
@@ -41,12 +41,12 @@ public final class VirtualMachineEuclidDecreasing
     /**
      * Constructor.
      * 
-     * @param resourceDemandEstimator     The resource demand estimator
+     * @param estimator     The resource demand estimator
      */
-    public VirtualMachineEuclidDecreasing(ResourceDemandEstimator resourceDemandEstimator) 
+    public VirtualMachineEuclidDecreasing(ResourceDemandEstimator estimator) 
     {
-        Guard.check(resourceDemandEstimator);
-        estimator_ = resourceDemandEstimator;
+        Guard.check(estimator);
+        estimator_ = estimator;
     }
 
     /**

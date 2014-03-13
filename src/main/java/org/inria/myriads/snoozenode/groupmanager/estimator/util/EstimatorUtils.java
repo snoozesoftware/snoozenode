@@ -24,7 +24,7 @@ import java.util.List;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

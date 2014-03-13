@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.groupmanager.estimator.api.MemoryDemandEstimator;
+import org.inria.myriads.snoozenode.groupmanager.estimator.api.VirtualMachineMonitoringEstimator;
 import org.inria.myriads.snoozenode.util.UtilizationUtils;
 
 /**
@@ -32,7 +32,7 @@ import org.inria.myriads.snoozenode.util.UtilizationUtils;
  * @author Eugen Feller
  */
 public final class AverageMemoryDemandEstimator 
-    implements MemoryDemandEstimator
+    implements VirtualMachineMonitoringEstimator
 {    
     /**
      * Estimates the memory demand.

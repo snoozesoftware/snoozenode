@@ -21,24 +21,28 @@ package org.inria.myriads.snoozenode.localcontroller;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
+import org.inria.myriads.snoozecommon.communication.localcontroller.HostResources;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerLocation;
+import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
+import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorSettings;
 import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyDetectorSettings;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSavingAction;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.ShutdownDriver;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.SuspendDriver;
 import org.inria.myriads.snoozenode.configurator.imagerepository.ImageRepositorySettings;
-import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.configurator.provisioner.ProvisionerSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
@@ -52,12 +56,14 @@ import org.inria.myriads.snoozenode.heartbeat.listener.GroupLeaderHeartbeatArriv
 import org.inria.myriads.snoozenode.heartbeat.listener.GroupManagerHeartbeatFailureListener;
 import org.inria.myriads.snoozenode.localcontroller.actuator.ActuatorFactory;
 import org.inria.myriads.snoozenode.localcontroller.actuator.api.VirtualMachineActuator;
+import org.inria.myriads.snoozenode.localcontroller.anomaly.service.AnomalyDetectorService;
 import org.inria.myriads.snoozenode.localcontroller.connector.Connector;
 import org.inria.myriads.snoozenode.localcontroller.imagemanager.ImageManagerFactory;
 import org.inria.myriads.snoozenode.localcontroller.imagemanager.api.ImageManager;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.MonitoringFactory;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.HostMonitor;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.VirtualMachineMonitor;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.service.HostMonitoringService;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.service.InfrastructureMonitoring;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.service.VirtualMachineMonitoringService;
 import org.inria.myriads.snoozenode.localcontroller.powermanagement.PowerManagementFactory;
@@ -67,6 +73,8 @@ import org.inria.myriads.snoozenode.localcontroller.provisioner.VirtualMachinePr
 import org.inria.myriads.snoozenode.localcontroller.provisioner.api.VirtualMachineProvisioner;
 import org.inria.myriads.snoozenode.message.SystemMessage;
 import org.inria.myriads.snoozenode.message.SystemMessageType;
+import org.inria.myriads.snoozenode.monitoring.comunicator.MonitoringCommunicatorFactory;
+import org.inria.myriads.snoozenode.monitoring.comunicator.api.MonitoringCommunicator;
 import org.inria.myriads.snoozenode.util.ExternalNotifierUtils;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.inria.snoozenode.external.notifier.ExternalNotificationType;
@@ -90,6 +98,12 @@ public final class LocalControllerBackend
           
     /** Monitoring management of virtual machines. */
     private VirtualMachineMonitoringService virtualMachineMonitoringService_;
+    
+    /** Anomaly detector service. */
+    private AnomalyDetectorService anomalyDetectorService_;
+    
+    /** Monitoring management of the host.*/
+    private HostMonitoringService hostMonitoringService_;
     
     /** Node parameters. */
     private NodeConfiguration nodeConfiguration_;
@@ -118,6 +132,7 @@ public final class LocalControllerBackend
     /** Image manager.*/
     private ImageManager imageManager_;
     
+    
     /**
      * Constructor.
      * 
@@ -132,12 +147,13 @@ public final class LocalControllerBackend
         
         nodeConfiguration_ = configuration;
         initializeExternalNotifier();
-        initializeDatabase();
         initializePowerManagement();
         initializeProvisioner();
         initializeImageManager();
         startHypervisorServices();  
         createLocalControllerDescription();
+        // initialize db comes after description creation.
+        initializeDatabase();
         onGroupManagerHeartbeatFailure();
     }
 
@@ -190,8 +206,10 @@ public final class LocalControllerBackend
     private void initializeDatabase()
     {
         DatabaseType type = nodeConfiguration_.getDatabase().getType();
-        ExternalNotifierSettings externalNotifierSettings = nodeConfiguration_.getExternalNotifier();
-        localControllerRepository_ = DatabaseFactory.newLocalControllerRepository(type, externalNotifier_);
+        localControllerRepository_ = DatabaseFactory.newLocalControllerRepository(
+                localControllerDescription_, 
+                type,
+                externalNotifier_);
     }
     
     /**
@@ -253,16 +271,18 @@ public final class LocalControllerBackend
         throws HostMonitoringException
     {
         ArrayList<Double> totalCapacity = resourceMonitoring_.getHostMonitor().getTotalCapacity();
-        localControllerDescription_ =  ManagementUtils.createLocalController(nodeConfiguration_, totalCapacity);
+        MonitoringThresholds thresholds = resourceMonitoring_.getMonitoringSettings().getThresholds();
+        localControllerDescription_ =  
+                ManagementUtils.createLocalController(nodeConfiguration_, totalCapacity, thresholds);
     }
 
     /**
      * Starts the virtual machine monitoring service.
      * 
-     * @param groupManager  The group manager description
+     * @param communicator  The group manager description
      * @throws Exception    The exception
      */
-    private void startVirtualMachineMonitoringService(GroupManagerDescription groupManager) 
+    private void startVirtualMachineMonitoringService(MonitoringCommunicator communicator) 
         throws Exception
     {
         if (virtualMachineMonitoringService_ == null)
@@ -274,7 +294,31 @@ public final class LocalControllerBackend
                                                                                     );
         }
         
-        virtualMachineMonitoringService_.startService(groupManager.getListenSettings().getMonitoringDataAddress());
+        virtualMachineMonitoringService_.startService(communicator);
+    }
+    
+    
+    
+    /**
+     * 
+     * Starts the host monitoring service.
+     * 
+     * @param communicator  The communicator.
+     * @throws Exception    The exception.
+     */
+    private void startHostMonitoringService(MonitoringCommunicator communicator) 
+        throws Exception
+    {
+        if (hostMonitoringService_ == null)
+        {
+            hostMonitoringService_ = new HostMonitoringService(localControllerDescription_,  
+                                                               localControllerRepository_, 
+                                                               resourceMonitoring_,
+                                                               nodeConfiguration_
+                                                               );
+        }
+        
+        hostMonitoringService_.startService(communicator);
     }
     
     /**
@@ -288,9 +332,22 @@ public final class LocalControllerBackend
     {
         log_.debug("Initializing the group leader discovery");
         
+        log_.debug("Stopping the virtual machine monitoring service");
         if (virtualMachineMonitoringService_ != null)
         {
             virtualMachineMonitoringService_.stopService();
+        }
+        
+        log_.debug("Stopping the host monitoring service");
+        if (hostMonitoringService_ != null)
+        {
+            hostMonitoringService_.stopService();
+        }
+        
+        log_.debug("Terminates anomaly detector");
+        if (anomalyDetectorService_ != null)
+        {
+            anomalyDetectorService_.stopService();
         }
         
         ExternalNotifierUtils.send(
@@ -365,6 +422,10 @@ public final class LocalControllerBackend
             localControllerRepository_.updateVirtualMachineMetaData(groupManagerDescription);
         localControllerDescription_.setVirtualMachineMetaData(metaData);
         
+        Map<String, Resource> hostResources = localControllerRepository_.getHostResources();
+        HostResources resources = new HostResources();
+        resources.setResources(hostResources);
+        localControllerDescription_.setHostResources(resources);
         log_.debug(String.format("Update local controller location with : \n" +
                                  "localControllerId  : %s \n" + 
                                  "groupManagerId : %s \n" + 
@@ -400,9 +461,50 @@ public final class LocalControllerBackend
                                                          groupManager.getId(),
                                                          heartbeatTimeout,
                                                          this);
-        startVirtualMachineMonitoringService(groupManager);
+        
+        
+        MonitoringCommunicator communicator = 
+                MonitoringCommunicatorFactory.newVirtualMachineCommunicator(
+                        groupManager.getListenSettings().getMonitoringDataAddress(),
+                        nodeConfiguration_.getDatabase());
+        
+        startVirtualMachineMonitoringService(communicator);
+        startHostMonitoringService(communicator);
+        startAnomalyDetector(communicator);
     }
     
+    /**
+     * 
+     * Starts anomaly detector.
+     * 
+     * @param communicator  The communicator.
+     * @throws Exception    The exception.
+     */
+    private void startAnomalyDetector(MonitoringCommunicator communicator) throws Exception
+    {
+        AnomalyDetectorSettings anomalySettings = nodeConfiguration_.getAnomalyDetectorSettings();
+        if (!anomalySettings.isEnabled())
+        {
+            log_.debug("The anomaly detection is disabled");
+            return;
+        }
+
+        if (anomalyDetectorService_ == null)
+        {
+            anomalyDetectorService_ = new AnomalyDetectorService(
+                    localControllerDescription_,
+                    localControllerRepository_, 
+                    nodeConfiguration_.getDatabase(),
+                    resourceMonitoring_, 
+                    nodeConfiguration_.getEstimator(),
+                    nodeConfiguration_.getHostMonitoringSettings(),
+                    nodeConfiguration_.getAnomalyDetectorSettings()
+                   );
+        }
+        anomalyDetectorService_.startService(communicator);
+    }
+
+
     /**
      * Try to get a group manager assigned.
      * 

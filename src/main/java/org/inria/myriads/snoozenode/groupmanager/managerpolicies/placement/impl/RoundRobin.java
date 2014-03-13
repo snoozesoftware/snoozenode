@@ -29,10 +29,8 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.util.SortUtils;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +39,9 @@ import org.slf4j.LoggerFactory;
  * Implements the round-robin virtual machine placement policy.
  * 
  * @author Eugen Feller
+ * @author Matthieu Simonin
  */
-public final class RoundRobin implements PlacementPolicy
+public final class RoundRobin extends PlacementPolicy
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(RoundRobin.class);
@@ -50,21 +49,22 @@ public final class RoundRobin implements PlacementPolicy
     /** Running index variable. */
     private int runningIndex_;
 
-    /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
 
     /**
      * Constructor.
      * 
-     * @param estimator     The estimator
      */
-    public RoundRobin(ResourceDemandEstimator estimator)
+    public RoundRobin()
     {
-        Guard.check(estimator);
-        log_.debug("Initializing round robin virtual machine placement policy");
-        estimator_ = estimator;
     }
 
+    
+    @Override
+    public void initialize()
+    {
+        log_.debug("Initializing round robin virtual machine placement policy");
+    }
+    
     /**
      * Places a single virtual machine.
      * 
@@ -81,8 +81,8 @@ public final class RoundRobin implements PlacementPolicy
 
         Map<String, LocalControllerDescription> targetLocalControllers = 
                 new HashMap<String, LocalControllerDescription>();
-        List<VirtualMachineMetaData> unassignedVirtualMachines = new ArrayList<VirtualMachineMetaData>();      
-        SortUtils.sortLocalControllersDecreasing(localControllers, estimator_);
+        List<VirtualMachineMetaData> unassignedVirtualMachines = new ArrayList<VirtualMachineMetaData>();
+        estimator_.sortLocalControllers(localControllers, true);
 
         for (VirtualMachineMetaData virtualMachine : virtualMachines)
         {
@@ -132,4 +132,6 @@ public final class RoundRobin implements PlacementPolicy
         PlacementPlan placementPlan = new PlacementPlan(usedLocalControllers, unassignedVirtualMachines);
         return placementPlan;
     }
+
+
 }

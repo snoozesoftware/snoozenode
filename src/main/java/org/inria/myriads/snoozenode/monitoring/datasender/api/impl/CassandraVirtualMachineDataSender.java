@@ -67,12 +67,27 @@ public class CassandraVirtualMachineDataSender extends CassandraRepository imple
        try
        {
            LocalControllerDataTransporter dataTransporter = (LocalControllerDataTransporter) data;
+           // check what to add
+           if (dataTransporter.getHostMonitoringAggregatedData() != null)
+           {
+               this.addAggregatedHostMonitoringDataCassandra(
+                       dataTransporter.getLocalControllerId(), 
+                       dataTransporter.getHostMonitoringAggregatedData().get(0));
+           }
            
-           this.addAggregatedMonitoringDataCassandra(dataTransporter.getLocalControllerId(), dataTransporter.getData());
+           
+           if (dataTransporter.getVirtualMachineAggregatedData() != null)
+           {
+               this.addAggregatedMonitoringDataCassandra(
+                       dataTransporter.getLocalControllerId(), 
+                       dataTransporter.getVirtualMachineAggregatedData());    
+           }
+           
        }
        catch (Exception exception)
        {
-           log_.error("Cast error before sending it to the cassandra repository");
+           log_.error("Error before sending it to the cassandra repository");
+           log_.error(exception.getMessage());
            throw new IOException();
        }
     }

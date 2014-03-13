@@ -31,5 +31,7 @@ public enum LocalControllerState
     /** Overloaded. */
     OVERLOADED,
     /** Underloaded. */
-    UNDERLOADED,
+    UNDERLOADED, 
+    /** Anomaly*/
+    ANOMALY,
 }

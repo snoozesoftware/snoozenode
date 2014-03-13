@@ -29,11 +29,9 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.estimator.util.EstimatorUtils;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.util.SortUtils;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
 import org.inria.myriads.snoozenode.util.OutputUtils;
 import org.slf4j.Logger;
@@ -43,26 +41,26 @@ import org.slf4j.LoggerFactory;
  * Implements the first-fit virtual machine placement policy.
  * 
  * @author Eugen Feller
+ * @author Matthieu Simonin
  */
 public final class FirstFit 
-    implements PlacementPolicy 
+    extends PlacementPolicy 
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(FirstFit.class);
     
-    /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
-    
     /**
      * Constructor.
      * 
-     * @param estimator     The estimator
      */
-    public FirstFit(ResourceDemandEstimator estimator) 
+    public FirstFit() 
     {
-        Guard.check(estimator);
+    }
+    
+    @Override
+    public void initialize()
+    {
         log_.debug("Initializing first-fit virtual machine placement policy");
-        estimator_ = estimator;
     }
     
     /**
@@ -79,7 +77,7 @@ public final class FirstFit
         Guard.check(virtualMachines, localControllers);    
         log_.debug(String.format("Placing %d virtual machine", virtualMachines.size()));
                
-        SortUtils.sortLocalControllersDecreasing(localControllers, estimator_);
+        estimator_.sortLocalControllers(localControllers, true);
         OutputUtils.printLocalControllers(localControllers);
                 
         Map<String, LocalControllerDescription> targetLocalControllers =  
@@ -120,4 +118,6 @@ public final class FirstFit
         PlacementPlan placementPlan = new PlacementPlan(usedLocalControllers, unassignedVirtualMachines);
         return placementPlan;
     }
+
+
 }

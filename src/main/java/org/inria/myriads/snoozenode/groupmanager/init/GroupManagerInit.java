@@ -32,9 +32,11 @@ import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.ReconfigurationSettings;
 import org.inria.myriads.snoozenode.database.DatabaseFactory;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
+import org.inria.myriads.snoozenode.estimator.ResourceEstimatorFactory;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.exception.ResourceDemandEstimatorException;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.EnergySaverFactory;
 import org.inria.myriads.snoozenode.groupmanager.energysaver.saver.EnergySaver;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.MonitoringFactory;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.service.GroupManagerMonitoringService;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.service.LocalControllerMonitoringService;
@@ -189,12 +191,15 @@ public final class GroupManagerInit
     
     /**
      * Initializes the resource demand estimator.
+     * @throws ResourceDemandEstimatorException 
      */
-    private void initializeResourceDemandEstimator() 
-    {
-        estimator_ = new ResourceDemandEstimator(nodeConfiguration_.getEstimator(),
-                                                 nodeConfiguration_.getMonitoring().getThresholds(),
-                                                 nodeConfiguration_.getSubmission().getPackingDensity());      
+    private void initializeResourceDemandEstimator() throws ResourceDemandEstimatorException 
+    {     
+        estimator_ = ResourceEstimatorFactory.newResourceDemandEstimator(
+                nodeConfiguration_.getEstimator(),
+                nodeConfiguration_.getMonitoring(),
+                nodeConfiguration_.getHostMonitoringSettings()
+                );
     }
     
     /**
@@ -319,7 +324,7 @@ public final class GroupManagerInit
         NetworkAddress address = groupLeader.getListenSettings().getControlDataAddress();
         log_.debug(String.format("Joining group leader %s with control data port: %s",
                                  address.getAddress(), address.getPort()));
-
+        
         repository_.fillGroupManagerDescription(description_);
         
         GroupManagerAPI communicator = CommunicatorFactory.newGroupManagerCommunicator(address);

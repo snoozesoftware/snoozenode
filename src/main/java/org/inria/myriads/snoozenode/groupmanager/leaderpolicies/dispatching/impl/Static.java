@@ -28,7 +28,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPlan;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * @author Eugen Feller
  */
 public class Static 
-    implements DispatchingPolicy 
+    extends DispatchingPolicy 
 {
     /** Logger. */
     private static final Logger log_ = LoggerFactory.getLogger(Static.class);
@@ -59,6 +59,11 @@ public class Static
         log_.debug("Initializing the static virtual cluster dispatching policy");  
         estimator_ = estimator;
     }
+    
+    @Override
+    public void initialize()
+    {
+    }     
     
     /**
      * Assigns a virtual cluster.
@@ -116,5 +121,7 @@ public class Static
         DispatchingPlan dispatchPlan = new DispatchingPlan(groupManagerCandidates);
         return dispatchPlan;
 
-    }        
+    }
+
+   
 }

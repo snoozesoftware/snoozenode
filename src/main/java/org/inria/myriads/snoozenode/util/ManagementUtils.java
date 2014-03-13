@@ -20,15 +20,20 @@
 package org.inria.myriads.snoozenode.util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
 import org.inria.myriads.snoozecommon.communication.NodeRole;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.ListenSettings;
+import org.inria.myriads.snoozecommon.communication.localcontroller.HostResources;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
+import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
+import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.MigrationRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
@@ -36,6 +41,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
+import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorSettings;
 import org.inria.myriads.snoozenode.configurator.networking.NetworkingSettings;
 import org.inria.myriads.snoozenode.heartbeat.message.HeartbeatMessage;
 import org.inria.myriads.snoozenode.idgenerator.IdGeneratorFactory;
@@ -150,7 +156,9 @@ public final class ManagementUtils
      * @return                     The local controller information
      */
     public static LocalControllerDescription createLocalController(NodeConfiguration nodeConfiguration,
-                                                                   ArrayList<Double> totalCapacity) 
+                                                                   ArrayList<Double> totalCapacity,
+                                                                   MonitoringThresholds thresholds
+                                                                   ) 
     {
         Guard.check(nodeConfiguration);
         
@@ -163,6 +171,18 @@ public final class ManagementUtils
         localController.setHypervisorSettings(nodeConfiguration.getHypervisor());
         localController.setWakeupSettings(nodeConfiguration.getEnergyManagement().getDrivers().getWakeup());
         localController.setTotalCapacity(totalCapacity);
+        localController.setThresholds(thresholds);
+        Map<String, Resource> resources = localController.getHostResources().getResources();
+        // for each monitor.
+        for (HostMonitorSettings  monitors: nodeConfiguration.getHostMonitoringSettings().getHostMonitorSettings().values())
+        {
+            // for each resource managed by this monitor.
+            for (Resource resource : monitors.getResources())
+            {
+                Resource resourceCopy = new Resource(resource, 0);
+                resources.put(resourceCopy.getName(), resourceCopy);
+            }
+        }
         IdGenerator idGenerator = IdGeneratorFactory.createIdGenerator(nodeConfiguration.getNode());
         String id = idGenerator.generate(localController);
         if (StringUtils.isEmpty(id))

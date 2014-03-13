@@ -29,7 +29,8 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.monitoring.transport.GroupManagerDataTransporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

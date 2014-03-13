@@ -13,7 +13,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPlan;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
 
@@ -37,7 +37,7 @@ public class TestStatic extends TestCase
 {
 
     /** The resource demand estimator (mock).*/
-    private ResourceDemandEstimator estimator_;
+    private StaticDynamicResourceDemandEstimator estimator_;
     
     /** The static dispatch policy (under test).*/
     private DispatchingPolicy staticDispatch_;
@@ -58,7 +58,7 @@ public class TestStatic extends TestCase
      */
     public void setUp() 
     {
-      estimator_ = EasyMock.createMock(ResourceDemandEstimator.class);
+      estimator_ = EasyMock.createMock(StaticDynamicResourceDemandEstimator.class);
       staticDispatch_ = new Static(estimator_);
       virtualMachines_ = new ArrayList<VirtualMachineMetaData>();
       groupManagers_ = new ArrayList<GroupManagerDescription>();

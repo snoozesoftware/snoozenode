@@ -29,8 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-
-
 /**
  * 
  * GroupLeader cassandra repository.
@@ -110,8 +108,16 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
         if (!isGroupManagerAdded)
         {
             log_.error("Unable to add the groupmanager %s to the repository");
-        }        
-        // T ODO : batch this.
+        }
+        
+        // ignoring assigned local controller (dirty fix #.)
+        if (isGroupLeader)
+        {
+            log_.debug("Groupleader : Skipping assigned local controller");
+            return true;
+        }
+        
+        // TODO : batch this.
         // add associated local controller
         log_.debug("Adding associated localController for groupManager " + description.getId());
         for (LocalControllerDescription localController : description.getLocalControllers().values())

@@ -20,15 +20,14 @@
 package org.inria.myriads.snoozenode.groupmanager.leaderpolicies;
 
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.AssignmentPolicy;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.impl.RandomLocalController;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.impl.RoundRobinLocalController;
+import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.api.AssignmentPolicy;
+import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.api.impl.RandomLocalController;
+import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.api.impl.RoundRobinLocalController;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.DispatchingPolicy;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.impl.FirstFit;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching.impl.RoundRobin;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Assignment;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Dispatching;
+import org.inria.myriads.snoozenode.util.PluginUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,25 +55,40 @@ public final class GroupLeaderPolicyFactory
      * @param localControllerAssignmentPolicy    The local controller assignment strategy
      * @return                                   The group manager description
      */
-    public static AssignmentPolicy newLocalControllerAssignment(Assignment localControllerAssignmentPolicy) 
+    public static AssignmentPolicy newLocalControllerAssignment(String localControllerAssignmentPolicy) 
     {
         Guard.check(localControllerAssignmentPolicy);
         log_.debug(String.format("Selected local controller asasignment policy: %s", localControllerAssignmentPolicy));
         
-        AssignmentPolicy assignmentPolicy = null;     
-        switch (localControllerAssignmentPolicy) 
+        AssignmentPolicy assignmentPolicy = null;
+        
+        if (localControllerAssignmentPolicy.equals("random"))
         {
-            case Random :       
-                assignmentPolicy = new RandomLocalController();               
-                break;
-                
-            case RoundRobin :
-                assignmentPolicy = new RoundRobinLocalController(); 
-                break;
-                                
-            default:
-                log_.error("Unknown local controller assignment strategy selected");
+            assignmentPolicy = new RandomLocalController();
         }
+        else if (localControllerAssignmentPolicy.equals("roundrobin"))
+        {
+            assignmentPolicy = new RoundRobinLocalController();
+        }
+        else
+        {
+            // create a custom virtualcluster placement.
+            try
+            {
+                log_.debug(String.format("Creating a custom local controller assignement policy %s",
+                        localControllerAssignmentPolicy));
+                Object assignementPolicyObject = PluginUtils.createFromFQN(localControllerAssignmentPolicy);
+                assignmentPolicy = (AssignmentPolicy) assignementPolicyObject;
+            }
+            catch (Exception exception)
+            {
+                log_.error("Unable to create custom virtual cluster placement policy, falling back to default");
+                assignmentPolicy = new RoundRobinLocalController();
+            }     
+        }
+        
+        assignmentPolicy.initialize();
+        
         
         return assignmentPolicy;
     }
@@ -83,30 +97,43 @@ public final class GroupLeaderPolicyFactory
      * Assign a virtual cluster to group managers.
      * 
      * @param dispatchingPolicy     The virtual cluster dispatching policy
-     * @param demandEstimator       The resource demand estimator
+     * @param estimator       The resource demand estimator
      * @return                      The virtual cluster mapping
      */
-    public static DispatchingPolicy newVirtualClusterPlacement(Dispatching dispatchingPolicy,
-                                                               ResourceDemandEstimator demandEstimator)
+    public static DispatchingPolicy newVirtualClusterPlacement(String dispatchingPolicy,
+                                                               ResourceDemandEstimator estimator)
     {
-        Guard.check(dispatchingPolicy, demandEstimator);
+        Guard.check(dispatchingPolicy, estimator);
         log_.debug(String.format("Selected virtual cluster dispatching policy: %s", dispatchingPolicy));
         
         DispatchingPolicy assignmentPolicy = null;
-        switch (dispatchingPolicy) 
+        if (dispatchingPolicy.equals("firstfit"))
         {
-            case FirstFit :              
-                assignmentPolicy = new FirstFit(demandEstimator);
-                break;
- 
-            case RoundRobin :            
-                assignmentPolicy = new RoundRobin(demandEstimator);            
-                break;
-                
-            default:
-                log_.error("Unknown virtual cluster assignment policy selected");
+            assignmentPolicy = new FirstFit();
+        }
+        else if (dispatchingPolicy.equals("roundrobin"))
+        {
+            assignmentPolicy = new RoundRobin();
+        }
+        else
+        {
+            // create a custom virtualcluster placement.
+            try
+            {
+                log_.debug(String.format("Creating a custom virtual cluster placement policy %s",
+                        dispatchingPolicy));
+                Object assignementPolicyObject = PluginUtils.createFromFQN(dispatchingPolicy);
+                assignmentPolicy = (DispatchingPolicy) assignementPolicyObject;
+            }
+            catch (Exception exception)
+            {
+                log_.error("Unable to create custom virtual cluster placement policy, falling back to default");
+                assignmentPolicy = new FirstFit();
+            }     
         }
         
+        assignmentPolicy.setEstimator(estimator);
+        assignmentPolicy.initialize();
         return assignmentPolicy;       
     }    
 }

@@ -19,11 +19,14 @@
  */
 package org.inria.myriads.snoozenode.groupmanager.monitoring.consumer;
 
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.groupmanager.statemachine.api.StateMachine;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedHostMonitoringData;
+import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,19 +82,40 @@ public final class LocalControllerSummaryConsumer
             while (true)
             {                            
                 LocalControllerDataTransporter monitoringData = dataQueue_.take();
-                if (monitoringData.getData() == null)
+                List<AggregatedVirtualMachineData> virtualMachineMonitoringAggregatedData = monitoringData.getVirtualMachineAggregatedData();
+                List<AggregatedHostMonitoringData> hostMonitoringAggregatedData = monitoringData.getHostMonitoringAggregatedData();
+                boolean isStable = monitoringData.getState().equals(LocalControllerState.STABLE);
+                
+                if (
+                        virtualMachineMonitoringAggregatedData == null && 
+                        hostMonitoringAggregatedData == null &&
+                        isStable
+                        )
                 {
-                    log_.debug("Received heartbeat from localController");
-
+                    log_.debug("Received heartbeat from localController " + monitoringData.getLocalControllerId());
                     continue;
                 }
                 String localControllerId = monitoringData.getLocalControllerId();
-                repository_.addAggregatedMonitoringData(localControllerId, monitoringData.getData());
-                boolean isStable = monitoringData.getState().equals(LocalControllerState.STABLE);                
+                if (virtualMachineMonitoringAggregatedData != null)
+                {
+                    log_.debug("Treating virtual machines metrics");
+                    repository_.addAggregatedMonitoringData(localControllerId, virtualMachineMonitoringAggregatedData);
+                }
+
+                if (hostMonitoringAggregatedData != null)
+                {
+                    log_.debug("Treating hosts metrics");
+                    AggregatedHostMonitoringData hostMonitoringData = hostMonitoringAggregatedData.get(0);
+                    if (hostMonitoringData != null)
+                    {
+                        repository_.addAggregatedHostMonitoringData(hostMonitoringData.getLocalControllerId(), hostMonitoringData);
+                    }
+                }
+                
                 if (!isStable)
                 {
-                    log_.debug("Anomaly on local controller detected!");           
-                    stateMachine_.resolveAnomaly(localControllerId, monitoringData.getState());
+                    log_.debug("Anomaly on local controller detected!");
+                    stateMachine_.resolveAnomaly(localControllerId, monitoringData.getAnomaly());
                 }
             }
         }

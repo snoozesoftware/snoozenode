@@ -29,7 +29,6 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
@@ -42,24 +41,23 @@ import org.slf4j.LoggerFactory;
  * @author Eugen Feller
  */
 public final class Static 
-    implements PlacementPolicy 
+    extends PlacementPolicy 
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(Static.class);
     
-    /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
-    
     /**
      * Constructor.
      * 
-     * @param estimator     The estimator
      */
-    public Static(ResourceDemandEstimator estimator) 
+    public Static() 
     {
-        Guard.check(estimator);
+    }
+    
+    @Override
+    public void initialize()
+    {
         log_.debug("Initializing static virtual machine placement policy");
-        estimator_ = estimator;
     }
     
     /**
@@ -124,4 +122,6 @@ public final class Static
         PlacementPlan placementPlan = new PlacementPlan(usedLocalControllers, unassignedVirtualMachines);
         return placementPlan;
     }
+
+
 }

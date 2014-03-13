@@ -154,7 +154,8 @@ public final class VirtualMachineMonitorDataProducer
     {
         VirtualMachineMonitor virtualMachineMonitor = infrastructureMonitoring_.getVirtualMachineMonitor();
         String virtualMachineId = virtualMachineMetaData_.getVirtualMachineLocation().getVirtualMachineId();
-        int historySize = infrastructureMonitoring_.getMonitoringSettings().getNumberOfMonitoringEntries();
+        //int historySize = infrastructureMonitoring_.getMonitoringSettings().getNumberOfMonitoringEntries();
+        int historySize = 1; //send directly.
         int monitoringInterval =  infrastructureMonitoring_.getMonitoringSettings().getInterval();
         
         log_.debug(String.format("Starting virtual machine monitoring data producer for %s", virtualMachineId));
@@ -194,14 +195,16 @@ public final class VirtualMachineMonitorDataProducer
                         AggregatedVirtualMachineData data = createAggregatedVirtualMachineData(aggregatedData_);
                         dataQueue_.put(data);
                         aggregatedData_.clear();
-                    } else
-                    {
-                        log_.debug(String.format("Adding virtual machine %s monitoring data: %s to " +
-                                                 "the local monitoring data list", 
-                                                 virtualMachineId,
-                                                 monitoringData.getUsedCapacity()));
-                        aggregatedData_.add(monitoringData);
                     }
+//                    else
+//                    {
+                    // allways add monitoring datas.
+                    log_.debug(String.format("Adding virtual machine %s monitoring data: %s to " +
+                                             "the local monitoring data list", 
+                                             virtualMachineId,
+                                             monitoringData.getUsedCapacity()));
+                    aggregatedData_.add(monitoringData);
+//                    }
                 }
                 
                 beforeSleepTime_ = System.nanoTime();      

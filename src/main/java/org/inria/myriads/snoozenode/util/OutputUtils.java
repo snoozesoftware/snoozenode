@@ -19,15 +19,22 @@
  */
 package org.inria.myriads.snoozenode.util;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.MonitoringUtils;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
+import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitoringSettings;
+import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -179,26 +186,33 @@ public final class OutputUtils
         log_.debug(String.format("monitoring.numberOfMonitoringEntries: %d",
                                  configuration.getMonitoring().getNumberOfMonitoringEntries()));
         log_.debug(String.format("monitoring.thresholds.cpu: %s",
-                                 configuration.getMonitoring().getThresholds().getCPU()));
+                                 configuration.getMonitoring().getThresholds().getCpu()));
         log_.debug(String.format("monitoring.thresholds.memory: %s",
                                  configuration.getMonitoring().getThresholds().getMemory()));
         log_.debug(String.format("monitoring.thresholds.network: %s",
-                                 configuration.getMonitoring().getThresholds().getNetwork())); 
+                                 configuration.getMonitoring().getThresholds().getNetwork()));
+        log_.debug(String.format("monitoring.estimator.cpu: %s",
+                configuration.getMonitoring().getEstimatorPolicy().getCpuEstimatorName()));
+        log_.debug(String.format("monitoring.estimator.mem: %s",
+                configuration.getMonitoring().getEstimatorPolicy().getMemoryEstimatorName()));
+        log_.debug(String.format("monitoring.estimator.network: %s",
+                configuration.getMonitoring().getEstimatorPolicy().getNetworkEstimatorName()));
         log_.debug("-------------------");
         log_.debug("Estimation settings:");
         log_.debug("-------------------");
-        log_.debug(String.format("estimator.static: %s", 
-                                 configuration.getEstimator().isStatic())); 
-        log_.debug(String.format("estimator.sortNorm: %s",
-                                 configuration.getEstimator().getSortNorm()));
+//        log_.debug(String.format("estimator.static: %s", 
+//                                 configuration.getEstimator().isStatic())); 
+//        log_.debug(String.format("estimator.sortNorm: %s",
+//                                 configuration.getEstimator().getSortNorm()));
+        log_.debug(String.format("estimator.options %s", configuration.getEstimator().getOptions()));
         log_.debug(String.format("estimator.numberOfMonitoringEntries: %s",
                                  configuration.getEstimator().getNumberOfMonitoringEntries()));
-        log_.debug(String.format("estimator.policy.cpu: %s",
-                                 configuration.getEstimator().getPolicy().getCPU()));
-        log_.debug(String.format("estimator.policy.cpu: %s",
-                                 configuration.getEstimator().getPolicy().getMemory()));
-        log_.debug(String.format("estimator.policy.memory: %s",
-                                 configuration.getEstimator().getPolicy().getNetwork()));
+//        log_.debug(String.format("estimator.policy.cpu: %s",
+//                                 configuration.getEstimator().getPolicy().getCPU()));
+//        log_.debug(String.format("estimator.policy.cpu: %s",
+//                                 configuration.getEstimator().getPolicy().getMemory()));
+//        log_.debug(String.format("estimator.policy.memory: %s",
+//                                 configuration.getEstimator().getPolicy().getNetwork()));
         log_.debug("--------------------------------");
         log_.debug("Group leader scheduler settings:");
         log_.debug("--------------------------------");
@@ -267,7 +281,61 @@ public final class OutputUtils
                 configuration.getProvisionerSettings().getVncSettings().getVncPortRange()));
         log_.debug(String.format("provisioner.vnc.keymap: %s",
                 configuration.getProvisionerSettings().getVncSettings().getKeymap()));
-    }   
+        log_.debug("-----------------------");
+        log_.debug("HostMonitor Settings");
+        log_.debug("-----------------------");
+        HostMonitoringSettings hostMonitoringSettings = configuration.getHostMonitoringSettings();
+        HashMap<String, HostMonitorSettings> hostMonitorSettings = hostMonitoringSettings.getHostMonitorSettings();
+        for (Entry<String, HostMonitorSettings> h : hostMonitorSettings.entrySet())
+        {
+            log_.debug(String.format("localController.hostmonitor.type: %s",
+                    h.getKey()));
+            HostMonitorSettings hostMonitorSetting = h.getValue();
+            log_.debug(String.format("localController.hostmonitor..interval: %s",
+                    hostMonitorSetting.getInterval()));
+            log_.debug(String.format("localController.hostmonitor..options: %s",
+                    hostMonitorSetting.getOptions()));
+            log_.debug(String.format("localController.hostmonitor..type: %s",
+                    hostMonitorSetting.getName()));
+            for (Resource resource : hostMonitorSetting.getResources())
+            {
+                log_.debug(String.format("localController.hostmonitor.monitored: %s",
+                        resource.getName()));
+                log_.debug(String.format("localController.hostmonitor..thresholds..: %s",
+                        resource.getThresholds()));
+                log_.debug(String.format("localController.hostmonitor..numberOfMonitoringEntries..: %s",
+                        resource.getHistorySize()));
+            }
+            
+        }
+    }  
+    
+    public static void dump(Object object)
+    {
+        log_.debug(toString(object));
+    }
+    
+    public static String toString(Object object)
+    {
+        String dump = "";
+        try
+        {
+            ObjectMapper mapper = new ObjectMapper();
+            dump = mapper.writeValueAsString(object);
+            log_.debug(dump);
+        }
+        catch(Exception e)
+        {
+            log_.debug("Unable to dump the object");
+        }
+        
+        return dump;
+    }
+    
+    public static void printVirtualMachinesMetaData(LocalControllerRepository repository)
+    {
+        
+    }
     
 
 }

@@ -19,4 +19,4 @@
 # along with this program; if not, see <http://www.gnu.org/licenses>.
 #
 
-mvn package -Pdeb-pkg -Dmaven.test.skip=true -Dmaven.javadoc.skip=true
+mvn package -Pdeb-pkg -Dmaven.test.skip=true -Dmaven.javadoc.skip=false

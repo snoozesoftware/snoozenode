@@ -2,6 +2,7 @@ package org.inria.myriads.snoozenode.util;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -18,6 +19,10 @@ public final class PluginUtils
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(PluginUtils.class);
+    
+    
+    public static String pluginsDirectory_ = ".";
+    
     
     /**
      * Hide the consturctor.
@@ -78,4 +83,31 @@ public final class PluginUtils
       
       return classLoaded;
     }
+
+
+    public static Class getClassFromPluginsDirectory(String classURI) throws MalformedURLException, ClassNotFoundException
+    {
+        return getClassFromDirectory(pluginsDirectory_, classURI);
+    }
+
+    public static Object createFromFQN(String fqn) throws Exception
+    {
+        log_.debug(String.format("instantiate the class %s from fqn", fqn));
+        Class<?> customClass = null;
+        Object customObject = null; 
+        try
+        {
+            customClass = PluginUtils.getClassFromPluginsDirectory(fqn);
+            customObject =
+                customClass.getConstructor().newInstance();
+        }
+        catch (MalformedURLException | ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e)
+        {            
+            e.printStackTrace();
+            throw new Exception("Unable to instantiate the custom class");
+        }        
+        return customObject;
+    }
+
+
 }

@@ -85,6 +85,7 @@ public final class TCPWorkerThread
             while (!isTerminated_) 
             {
                 Object data = inputStream_.readObject();
+                log_.debug("Data received");
                 dataHandler_.onDataArrival(data, id_);
             }
         } 
@@ -93,6 +94,7 @@ public final class TCPWorkerThread
             if (!isTerminated_)
             {
                 log_.debug("I/O exception during read! Treating it as failure!");
+                log_.debug(exception.getMessage());
                 dataHandler_.onFailure(id_);
             }      
         }

@@ -19,53 +19,34 @@
  */
 package org.inria.myriads.snoozenode.configurator.estimator;
 
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Estimator settings.
  * 
  * @author Eugen Feller
+ * @author Matthieu Simonin
  */
 public final class EstimatorSettings 
 {
-    /** Policies. */
-    private EstimatorPolicy policy_;
     
-    /** Virtual machine demand measure. */
-    private SortNorm sortNorm_;
+    /** Name.*/
+    private String name_;
+     
 
     /** Number of monitoring entries. */
     private int numberOfMonitoringEntries_;
     
-    /** Static estimations. */
-    private boolean isStatic_;
+    /** Options : key, values. */
+    private Map<String, String> options_;
     
     /** Constructor. */
     public EstimatorSettings()
     {
-        policy_ = new EstimatorPolicy();
+        options_ = new HashMap<String, String>();
     }
     
-    /**
-     * Sets the sort norm.
-     * 
-     * @param sortNorm  The sort norm
-     */
-    public void setSortNorm(SortNorm sortNorm) 
-    {
-        sortNorm_ = sortNorm;
-    }
-
-    /**
-     * Returns the demand measure.
-     * 
-     * @return  The sort norm
-     */
-    public SortNorm getSortNorm() 
-    {
-        return sortNorm_;
-    }
-
     /**
      * Sets the number of monitoring entries.
      * 
@@ -87,32 +68,35 @@ public final class EstimatorSettings
     }
 
     /**
-     * Sets the used capacity flag.
-     * 
-     * @param isStatic  true if static estimations are desired, false otherwise
+     * @return the name
      */
-    public void setStatic(boolean isStatic) 
+    public String getName()
     {
-        isStatic_ = isStatic;
+        return name_;
     }
 
     /**
-     * Returns the static flag.
-     * 
-     * @return  true if static estimations are desired, false otherwise
+     * @param name the name to set
      */
-    public boolean isStatic() 
+    public void setName(String name)
     {
-        return isStatic_;
+        name_ = name;
     }
 
     /**
-     * Returns the policy.
-     * 
-     * @return  The policy
+     * @return the options
      */
-    public EstimatorPolicy getPolicy() 
+    public Map<String, String> getOptions()
     {
-        return policy_;
+        return options_;
     }
+
+    /**
+     * @param options the options to set
+     */
+    public void setOptions(Map<String, String> options)
+    {
+        options_ = options;
+    }
+    
 }

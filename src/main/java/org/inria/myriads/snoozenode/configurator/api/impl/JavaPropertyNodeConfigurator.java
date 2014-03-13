@@ -23,11 +23,17 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.NodeRole;
+import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
+import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorDriver;
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorSettings;
 import org.inria.myriads.snoozecommon.communication.localcontroller.hypervisor.HypervisorTransport;
@@ -36,6 +42,8 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.wakeup.Wakeu
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.NetworkUtils;
 import org.inria.myriads.snoozecommon.util.StringUtils;
+import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyDetectorSettings;
+import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyResolverSettings;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfigurator;
 import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
@@ -44,12 +52,16 @@ import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSav
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.ShutdownDriver;
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.SuspendDriver;
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
+import org.inria.myriads.snoozenode.configurator.estimator.HostEstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.faulttolerance.FaultToleranceSettings;
+import org.inria.myriads.snoozenode.configurator.globals.GlobalsSettings;
 import org.inria.myriads.snoozenode.configurator.httpd.HTTPdSettings;
 import org.inria.myriads.snoozenode.configurator.imagerepository.DiskHostingType;
 import org.inria.myriads.snoozenode.configurator.imagerepository.ImageRepositorySettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.EstimatorPolicySettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitorSettings;
+import org.inria.myriads.snoozenode.configurator.monitoring.HostMonitoringSettings;
 import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringSettings;
-import org.inria.myriads.snoozenode.configurator.monitoring.MonitoringThresholds;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 import org.inria.myriads.snoozenode.configurator.networking.NetworkingSettings;
 import org.inria.myriads.snoozenode.configurator.node.NodeSettings;
@@ -61,12 +73,6 @@ import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerScheduler
 import org.inria.myriads.snoozenode.configurator.submission.SubmissionSettings;
 import org.inria.myriads.snoozenode.database.enums.DatabaseType;
 import org.inria.myriads.snoozenode.exception.NodeConfiguratorException;
-import org.inria.myriads.snoozenode.groupmanager.estimator.enums.Estimator;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Assignment;
-import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.enums.Dispatching;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Reconfiguration;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.enums.Relocation;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
 import org.inria.myriads.snoozenode.idgenerator.enums.IdGeneration;
 import org.inria.myriads.snoozenode.monitoring.TransportProtocol;
 
@@ -116,10 +122,237 @@ public final class JavaPropertyNodeConfigurator
         setEnergyManagementSettings();
         setImageRepositorySettings();
         setProvisionerSettings();
+        setHostMonitoringSettings();
+        setAnomalyDetectorSettings();
+        setAnomalyResolverSettings();
+        setGlobalsSettings();
         
         fileInput.close();
     }
     
+
+
+    /**
+     * 
+     * @throws NodeConfiguratorException Exception
+     */
+    private void setGlobalsSettings() throws NodeConfiguratorException
+    {
+       GlobalsSettings globals = nodeConfiguration_.getGlobalsSettings();
+       
+       String pluginsDirectory = getProperty("globals.pluginsDirectory", "/usr/share/snoozenode/plugins");
+       globals.setPluginsDirectory(pluginsDirectory);
+        
+    }
+
+
+
+    /**
+     * @throws NodeConfiguratorException Exception
+     */
+    private void setAnomalyDetectorSettings() throws NodeConfiguratorException
+    {
+        AnomalyDetectorSettings anomalyDetectorSettings = nodeConfiguration_.getAnomalyDetectorSettings();
+        
+        boolean  isEnabled = Boolean.valueOf(getProperty("localController.anomaly.detector.enable", "false"));
+        anomalyDetectorSettings.setEnabled(isEnabled);
+        
+        String name = getProperty("localController.anomaly.detector");
+        anomalyDetectorSettings.setName(name);
+        
+        String numberOfEntries = getProperty("localController.anomaly.detector.numberOfMonitoringEntries");
+        anomalyDetectorSettings.setNumberOfMonitoringEntries(Integer.valueOf(numberOfEntries));
+        
+        String interval = getProperty("localController.anomaly.detector.interval");
+        anomalyDetectorSettings.setInterval(Integer.valueOf(interval));
+        
+        String options = getProperty("localController.anomaly.detector.options");
+        Map<String, String> map = umarshal(options);
+        anomalyDetectorSettings.setOptions(map);
+        
+    }
+    
+    /**
+     * @throws NodeConfiguratorException Exception
+     */
+    private void setAnomalyResolverSettings() throws NodeConfiguratorException
+    {
+        AnomalyResolverSettings anomalyResolverSettings = nodeConfiguration_.getAnomalyResolverSettings();
+        String name = getProperty("groupManager.anomaly.resolver");
+        anomalyResolverSettings.setName(name);
+        
+        String numberOfEntries = getProperty("groupManager.anomaly.resolver.numberOfMonitoringEntries");
+        anomalyResolverSettings.setNumberOfMonitoringEntries(Integer.valueOf(numberOfEntries));
+        
+        String options = getProperty("groupManager.anomaly.resolver.options");
+        Map<String, String> map = umarshal(options);
+        anomalyResolverSettings.setOptions(map);
+        
+    }
+
+
+
+    /**
+     * 
+     * Deserialize the string options to a hasmap.
+     * 
+     * @param options   Json key,value string
+     * @return  the options hashmap
+     * @throws NodeConfiguratorException Exception
+     */
+    private Map<String, String> umarshal(String options) throws NodeConfiguratorException
+    {
+        Map<String, String> map = new HashMap<String, String>();
+        ObjectMapper mapper = new ObjectMapper();
+        try
+        {
+            map = mapper.readValue(options, 
+                    new TypeReference<HashMap<String, String>>() { });
+        }
+        catch (IOException e)
+        {
+            throw new NodeConfiguratorException(e.getMessage());
+        }
+        return map;
+    }
+
+
+
+    /**
+     * 
+     * @throws NodeConfiguratorException The exception
+     */
+    private void setHostMonitoringSettings() throws NodeConfiguratorException
+    {
+        String separator = ",";
+        HostMonitoringSettings hostMonitoringSettings = nodeConfiguration_.getHostMonitoringSettings();
+        
+        // default interval
+        String interval = getProperty("localController.hostmonitor.interval");
+        
+        // default estimator
+        String estimator = getProperty("localController.hostmonitor.estimator");
+        
+        // default numberOfMonitoringEntries
+        String numberOfMonitoringEntries = getProperty("localController.hostmonitor.numberOfMonitoringEntries");
+        
+        String stringHostMonitorTypes = getProperty("localController.hostmonitor");
+        
+        String[] hostMonitors = stringHostMonitorTypes.split(separator);
+        for (String hostMonitor : hostMonitors)
+        {
+            HostMonitorSettings hostMonitorSettings = new HostMonitorSettings();
+            String hostMonitorName = getProperty(
+                    buildHostMonitorProperty("localController.hostmonitor",
+                            hostMonitor.toLowerCase()));
+            hostMonitorSettings.setName(hostMonitorName);
+            
+            String options = getProperty(buildHostMonitorProperty("localController.hostmonitor",
+                    hostMonitor.toLowerCase(), "options"));
+            Map<String, String> map = umarshal(options);
+            hostMonitorSettings.setOptions(map);
+            
+            // default numberOfMonitoringEntries
+            String defaultNumberOfMonitoringEntries = getProperty(
+                    buildHostMonitorProperty("localController.hostmonitor",
+                            hostMonitor.toLowerCase(),
+                            "numberOfMonitoringEntries"),
+                     numberOfMonitoringEntries);
+            //default interval 
+            String defaultInterval = getProperty(
+                    buildHostMonitorProperty("localController.hostmonitor",
+                            hostMonitor.toLowerCase(),
+                            "interval"),
+                     interval);
+            
+            hostMonitorSettings.setInterval(Integer.valueOf(defaultInterval));
+            //default threshold
+            String stringDefaultThresholds = 
+                    getProperty(buildHostMonitorProperty(
+                            "localController.hostmonitor",
+                            hostMonitor.toLowerCase(),
+                            "thresholds"),
+                            "0,1,1"); 
+            // default estimator
+            String stringDefaultEstimator =  
+                    getProperty(buildHostMonitorProperty(
+                            "localController.hostmonitor",
+                            hostMonitor.toLowerCase(),
+                            "estimator"), 
+                      estimator); 
+
+            // published metrics
+            String stringPublished = getProperty(
+                    buildHostMonitorProperty("localController.hostmonitor", 
+                            hostMonitor.toLowerCase(),
+                            "published"));
+            
+            String[] published = stringPublished.split(separator);
+            for (String resourceName : published)
+            {
+                 //number of monitoring entries.
+                int localNumberOfMonitoringEntries = 0;
+                String stringLocalNumberOfMonitoringEntries = 
+                         getProperty(buildHostMonitorProperty(
+                                 "localController.hostmonitor", 
+                                 hostMonitor.toLowerCase(), 
+                                 "numberOfMonitoringEntries",
+                                 resourceName), 
+                          defaultNumberOfMonitoringEntries);
+                
+                localNumberOfMonitoringEntries = Integer.valueOf(stringLocalNumberOfMonitoringEntries);
+                 
+                 
+                String stringLocalThresholds = 
+                         getProperty(buildHostMonitorProperty(
+                                 "localController.hostmonitor",
+                                 hostMonitor.toLowerCase(), 
+                                 "thresholds",
+                                 resourceName),
+                          stringDefaultThresholds);
+                 
+                List<Double> thresholds = 
+                        StringUtils.convertStringToDoubleArray(stringLocalThresholds, separator);
+                 
+                Resource resource = new Resource(localNumberOfMonitoringEntries);
+                resource.setName(resourceName);
+                resource.setThresholds(thresholds);
+                //register the resource settings.
+                hostMonitorSettings.add(resource);
+                //register the estimator
+                hostMonitorSettings.add(resourceName, new HostEstimatorSettings(stringDefaultEstimator));
+            }
+            //register the host monitor setting (and all its resource)
+            hostMonitoringSettings.add(hostMonitor, hostMonitorSettings);
+        }
+    }
+
+    /**
+     * 
+     * Concatenate the string.
+     * 
+     * @param strings   The strings inputs.
+     * @return  The concatenated string.
+     */
+    private String buildHostMonitorProperty(String ... strings)
+    {
+        String result = "";
+        int i = 0; 
+        for (String string : strings)
+        {   
+            if (i == 0)
+            {
+                result += string;
+            }
+            else
+            {
+                result += "." + string;
+            }
+            i++;
+        }
+        return result;
+        
+    }
 
 
     /**
@@ -414,7 +647,21 @@ public final class JavaPropertyNodeConfigurator
             MonitoringThresholds monitoringThresholds = new MonitoringThresholds(cpuThresholds,
                                                                                  memoryUtilizationThresholds,
                                                                                  networkUtilizationThresholds);
+            
             monitoringSettings.setThresholds(monitoringThresholds);
+            
+            
+            // estimators.
+            String cpuDemandEstimator = getProperty("monitoring.estimator.cpu"); 
+            String memoryDemandEstimator = getProperty("monitoring.estimator.memory");
+            String networkDemandEstimator = getProperty("monitoring.estimator.network");
+            
+            EstimatorPolicySettings policySettings = new EstimatorPolicySettings();
+            policySettings.setCpuEstimatorName(cpuDemandEstimator);
+            policySettings.setMemoryEstimatorName(memoryDemandEstimator);
+            policySettings.setNetworkEstimatorName(networkDemandEstimator);
+            
+            monitoringSettings.setEstimatorPolicy(policySettings);
         }    
     /**
      * Sets the utilization settings.
@@ -454,24 +701,17 @@ public final class JavaPropertyNodeConfigurator
     private void setEstimatorSettings()
         throws NodeConfiguratorException
     {
-        EstimatorSettings estimatorSettings = nodeConfiguration_.getEstimator();       
-        String isStatic = getProperty("estimator.static");
-        estimatorSettings.setStatic(Boolean.valueOf(isStatic)); 
-                
-        String sortNorm = getProperty("estimator.sortNorm");
-        estimatorSettings.setSortNorm(SortNorm.valueOf(sortNorm)); 
+        EstimatorSettings estimatorSettings = nodeConfiguration_.getEstimator();
+        String name = getProperty("estimator");
+        estimatorSettings.setName(name);
         
+        String optionsString = getProperty("estimator.options", "{}");
+        Map<String, String> options = umarshal(optionsString);
+        estimatorSettings.setOptions(options);
+            
         String numberOfMonitoringEntries = getProperty("estimator.numberOfMonitoringEntries");
         estimatorSettings.setNumberOfMonitoringEntries(Integer.valueOf(numberOfMonitoringEntries));
-                
-        String cpuDemandEstimator = getProperty("estimator.policy.cpu");
-        estimatorSettings.getPolicy().setCPU(Estimator.valueOf(cpuDemandEstimator)); 
-        
-        String memoryDemandEstimator = getProperty("estimator.policy.memory");
-        estimatorSettings.getPolicy().setMemory(Estimator.valueOf(memoryDemandEstimator));
-        
-        String networkDemandEstimator = getProperty("estimator.policy.network");
-        estimatorSettings.getPolicy().setNetwork(Estimator.valueOf(networkDemandEstimator));
+
     }
     
     /**
@@ -484,10 +724,10 @@ public final class JavaPropertyNodeConfigurator
     {
         GroupLeaderSchedulerSettings groupLeader = nodeConfiguration_.getGroupLeaderScheduler();
         String assignmentPolicy = getProperty("groupLeaderScheduler.assignmentPolicy"); 
-        groupLeader.setAssignmentPolicy(Assignment.valueOf(assignmentPolicy));
+        groupLeader.setAssignmentPolicy(assignmentPolicy);
         
         String dispatchingPolicy = getProperty("groupLeaderScheduler.dispatchingPolicy");
-        groupLeader.setDispatchingPolicy(Dispatching.valueOf(dispatchingPolicy));
+        groupLeader.setDispatchingPolicy(dispatchingPolicy);
     }
 
     /**
@@ -502,20 +742,11 @@ public final class JavaPropertyNodeConfigurator
         String placementPolicy = getProperty("groupManagerScheduler.placementPolicy");   
         groupManager.setPlacementPolicy(String.valueOf(placementPolicy));
         
-        String pluginsDirectory = getProperty("groupManagerScheduler.pluginsDirectory");
-        groupManager.setPluginsDirectory(pluginsDirectory);
-        
-        String overloadPolicy = getProperty("groupManagerScheduler.relocation.overloadPolicy");
-        groupManager.getRelocationSettings().setOverloadPolicy(Relocation.valueOf(overloadPolicy));
-                
-        String underloadPolicy = getProperty("groupManagerScheduler.relocation.underloadPolicy");   
-        groupManager.getRelocationSettings().setUnderloadPolicy(Relocation.valueOf(underloadPolicy));
-        
         String isEnabled = getProperty("groupManagerScheduler.reconfiguration.enabled"); 
         groupManager.getReconfigurationSettings().setEnabled(Boolean.valueOf(isEnabled));
         
         String policy = getProperty("groupManagerScheduler.reconfiguration.policy"); 
-        groupManager.getReconfigurationSettings().setPolicy(Reconfiguration.valueOf(policy));
+        groupManager.getReconfigurationSettings().setPolicy(policy);
         
         String interval = getProperty("groupManagerScheduler.reconfiguration.interval");
         groupManager.getReconfigurationSettings().setInterval(interval);
@@ -616,4 +847,25 @@ public final class JavaPropertyNodeConfigurator
         content = content.trim();
         return content;             
     }
+    
+    
+    /**
+     * @param tag                           The tag   
+     * @param defaultValue                  Default value
+     * @return                              The string associated to the tag
+     * @throws NodeConfiguratorException    The exception.
+     */
+    private String getProperty(String tag, String defaultValue)
+        throws NodeConfiguratorException
+    {
+        String content = properties_.getProperty(tag);
+        if (content == null) 
+        {
+           content = defaultValue;
+        }
+        
+        content = content.trim();
+        return content;             
+    }
+    
 }
