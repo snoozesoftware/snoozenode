@@ -46,11 +46,13 @@ public interface ImageManager
 
     
     
+
     /**
      * 
      * Remove the disk.
      * 
-     * @param image     the image to remove.
+     * @param image                         The virtual machine image
+     * @param imageRepositorySettings       The image repository settings.
      * @return  true iff everything is fine.
      */
     boolean removeDisk(VirtualMachineImage image, ImageRepositorySettings imageRepositorySettings);

@@ -106,7 +106,8 @@ public class BackingImageManager implements ImageManager
             return true;
         }
         // we should create a container for the new image disk.
-        NetworkAddress destinationAddress = migrationRequest.getDestinationVirtualMachineLocation().getLocalControllerControlDataAddress();
+        NetworkAddress destinationAddress = 
+                migrationRequest.getDestinationVirtualMachineLocation().getLocalControllerControlDataAddress();
         LocalControllerAPI localControllerCommunicator = new RESTLocalControllerCommunicator(destinationAddress);
         boolean isPrepared = localControllerCommunicator.prepareMigration(virtualMachineImage);
         
@@ -135,7 +136,8 @@ public class BackingImageManager implements ImageManager
         String sourcePath = "";
         String destinationPath = virtualMachineImage.getPath();
         
-        try{
+        try
+        {
             String command = "";
             if (backingStore != null)
             {

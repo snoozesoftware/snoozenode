@@ -22,14 +22,25 @@ package org.inria.myriads.snoozenode.localcontroller.monitoring.listener;
 /**
  * Virtual machine monitoring callback.
  * 
- * @author Eugen Feller
+ * @author Matthieu Simonin
  */
 public interface HostMonitoringListener 
 {
     /**
+     * 
+     * On Monitoring Failure.
+     * 
+     * @param monitorId     monitor Id.
+     * @return  true iff everything is true.
      */
     boolean onMonitoringFailure(String monitorId);
 
+    /**
+     * 
+     * Get the number of active monitor.
+     * 
+     * @return the number of active monitor.
+     */
     int getNumberOfActiveMonitor();
         
 

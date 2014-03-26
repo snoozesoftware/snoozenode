@@ -95,7 +95,7 @@ public final class LocalControllerBackend
     
     /** Local actuator. */
     private VirtualMachineActuator virtualMachineActuator_;
-          
+    
     /** Monitoring management of virtual machines. */
     private VirtualMachineMonitoringService virtualMachineMonitoringService_;
     
@@ -232,7 +232,7 @@ public final class LocalControllerBackend
      * 
      * @throws Exception   The exception
      */
-    private void startHypervisorServices() 
+    private void startHypervisorServices()
         throws Exception
     {
         log_.debug("Initializing the hypervisor services");

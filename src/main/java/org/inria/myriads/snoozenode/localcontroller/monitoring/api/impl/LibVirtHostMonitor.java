@@ -39,7 +39,8 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Eugen Feller
  */
-public final class LibVirtHostMonitor extends HostMonitor{
+public final class LibVirtHostMonitor extends HostMonitor
+{
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(LibVirtHostMonitor.class);
         
@@ -100,14 +101,11 @@ public final class LibVirtHostMonitor extends HostMonitor{
     @Override
     public void initialize() throws HostMonitoringException
     {
-        // TODO Auto-generated method stub
-        
     }
 
     @Override
     public HostMonitoringData getResourceData() throws HostMonitoringException
     {
-        // TODO Auto-generated method stub
         return null;
     }
 

@@ -35,15 +35,21 @@ public class GangliaHostMonitor extends HostMonitor
     private static final Logger log_ = LoggerFactory.getLogger(GangliaHostMonitor.class);
     
     /** List of monitored resources.*/
-    List<String> resourceNames_;
+    private List<String> resourceNames_;
         
+    /** Address.*/
     private NetworkAddress address_;
     
     /** socket Address. */
     private InetSocketAddress socketAddress_;
 
+    /** hostname.*/
     private String hostname_;
 
+    
+    /**
+     * Constructor.
+     */
     public GangliaHostMonitor()
     {
         log_.debug("Building a new Ganglia host monitor");
@@ -73,16 +79,16 @@ public class GangliaHostMonitor extends HostMonitor
         address_ = new NetworkAddress();
         address_.setAddress(address);
         address_.setPort(Integer.valueOf(port));
-        hostname_= address_.getAddress();
-        
-        
+        hostname_ = address_.getAddress();
     }
     
+    @Override
     public HostMonitoringData getResourceData() 
     {
         HostMonitoringData resource = new HostMonitoringData();
 
-        try{
+        try
+        {
             log_.debug("Connecting to ganglia daemon");
             socketAddress_ = new InetSocketAddress(address_.getAddress(), address_.getPort());
             Socket clientSocket = new Socket();
@@ -119,7 +125,7 @@ public class GangliaHostMonitor extends HostMonitor
             clientSocket.close();
             log_.debug("Returning resource");
         }
-        catch(Exception exception)
+        catch (Exception exception)
         {
             log_.warn("Unable to parse the gmond xml" + exception.getMessage());
             return resource;
@@ -130,10 +136,23 @@ public class GangliaHostMonitor extends HostMonitor
     @Override
     public ArrayList<Double> getTotalCapacity() throws HostMonitoringException
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
+    /**
+     * @return the resourceNames
+     */
+    public List<String> getResourceNames()
+    {
+        return resourceNames_;
+    }
 
-
+    /**
+     * @param resourceNames the resourceNames to set
+     */
+    public void setResourceNames(List<String> resourceNames)
+    {
+        resourceNames_ = resourceNames;
+    }
+    
 }
