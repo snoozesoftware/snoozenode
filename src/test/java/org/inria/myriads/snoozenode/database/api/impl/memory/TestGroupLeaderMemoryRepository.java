@@ -1,6 +1,9 @@
 package org.inria.myriads.snoozenode.database.api.impl.memory;
 
 
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
+
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -10,6 +13,8 @@ import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.AssignedGroupManager;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
+import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
 import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNotifierSettings;
 
@@ -26,106 +31,24 @@ import org.inria.myriads.snoozenode.configurator.monitoring.external.ExternalNot
 public class TestGroupLeaderMemoryRepository extends TestCase
 {
     /** Group Leader memory under test.*/
-    private GroupLeaderMemoryRepository repository_;
+    private BootstrapMemoryRepository repository_;
 
     
     @Override
     protected void setUp() throws Exception
     {
-        String[] virtualMachineSubnets = {"192.168.122.0/30"};
-        GroupManagerDescription groupLeader = new GroupManagerDescription();
-       new ExternalNotifierSettings();
-        
-        EasyMock.createMock(NodeConfiguration.class);
-        repository_ = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets, 0);
+        repository_ = new BootstrapMemoryRepository();
     }
     
-    /**
-     * Empty repository.
-     * -> null
-     * 
-     */
-    public void testGetAssignedGroupManagerEmptyRepository()
+    public void testGetGroupManagers()
     {
-        NetworkAddress address = new NetworkAddress();
-        address.setAddress("10.0.0.1");
-        address.setPort(5000);
-        AssignedGroupManager assignedGroupManager = repository_.getAssignedGroupManager(address);
-        assertNull(assignedGroupManager);
-    }
-    
-    
-    /**
-     * No assigment found.
-     *  
-     */
-    public void testGetAssignedGroupManagerNoAssignement()
-    {
-        GroupManagerDescription gm1 = new GroupManagerDescription();
-        LocalControllerDescription lc1 = new LocalControllerDescription();
-        lc1.setId("lc1");
-        NetworkAddress address = new NetworkAddress();
-        address.setAddress("10.0.0.1");
-        address.setPort(5000);
-        lc1.setControlDataAddress(address);
-        gm1.getLocalControllers().put("lc1", lc1);
-        repository_.addGroupManagerDescription(gm1);
-        
-        NetworkAddress address2 = new NetworkAddress();
-        address2.setAddress("10.0.0.2");
-        address2.setPort(5000);
-        AssignedGroupManager assignedGroupManager = repository_.getAssignedGroupManager(address2);
-        assertNull(assignedGroupManager);
-    }
-    
-    /**
-     * One assigment found.
-     *  
-     */
-    public void testGetAssignedGroupManagerOneAssignement()
-    {
-        GroupManagerDescription gm1 = new GroupManagerDescription();
-        LocalControllerDescription lc1 = new LocalControllerDescription();
-        lc1.setId("lc1");
-        NetworkAddress address = new NetworkAddress();
-        address.setAddress("10.0.0.1");
-        address.setPort(5000);
-        lc1.setControlDataAddress(address);
-        gm1.getLocalControllers().put("lc1", lc1);
-        repository_.addGroupManagerDescription(gm1);
-        
-        NetworkAddress address2 = new NetworkAddress();
-        address2.setAddress("10.0.0.1");
-        address2.setPort(5000);
-        AssignedGroupManager assignedGroupManager = repository_.getAssignedGroupManager(address2);
-        
-        assertEquals("lc1", assignedGroupManager.getLocalControllerId());
-        assertEquals(gm1, assignedGroupManager.getGroupManager());
-    }
 
-    /**
-     * Test generate ips pool for 1 subnet.
-     */
-    public void testGenerateAddressPoolOneSubnet()
-    {
-        String[] virtualMachineSubnets = {"192.168.122.0/30"};
-        GroupManagerDescription groupLeader = new GroupManagerDescription();
-
-        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets, 0);
-        List<String> ips = repository.generateAddressPool(virtualMachineSubnets);
-        assertEquals(2, ips.size());
+        GroupManagerAPI groupManagerCommunicator = EasyMock.createMock(GroupManagerAPI.class);
+        NetworkAddress groupLeader = new NetworkAddress();
+        expect(CommunicatorFactory.newGroupManagerCommunicator(groupLeader)).andReturn(groupManagerCommunicator);
+        
+        
+        
     }
     
-    /**
-     * Test generate ips pool for 2 subnets.
-     */
-    public void testGenerateAddressPoolTwoSubnets()
-    {
-        String[] virtualMachineSubnets = {"192.168.122.0/22", "10.0.0.1/22"};
-        GroupManagerDescription groupLeader = new GroupManagerDescription();
-        GroupLeaderMemoryRepository repository = new GroupLeaderMemoryRepository(groupLeader, virtualMachineSubnets, 0);
-        List<String> ips = repository.generateAddressPool(virtualMachineSubnets);
-        assertEquals(2044, ips.size());
-
-    }
 }

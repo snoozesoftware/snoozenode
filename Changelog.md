@@ -1,5 +1,13 @@
 # Changelog
 
+## Version 2.1.3
+
+Bug fixes
+
+  - #81 handle destroy image with backingImageManager and src=dest path.
+
+Features : 
+  - #82 Get the vm lists even if in-memory database is used.
 
 ## Version 2.1.2 - 14-01-21
 

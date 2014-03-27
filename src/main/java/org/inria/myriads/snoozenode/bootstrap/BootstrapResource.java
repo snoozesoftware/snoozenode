@@ -291,6 +291,7 @@ public final class BootstrapResource extends ServerResource
     @Override
     public VirtualMachinesList getVirtualMachineDescriptions(HostListRequest hostListRequest)
     {
+        Guard.check(hostListRequest);
         if (!isBackendActive())
         {
             log_.debug("Backend is not initialized yet!");
