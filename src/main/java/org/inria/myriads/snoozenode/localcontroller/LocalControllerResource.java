@@ -428,7 +428,7 @@ public final class LocalControllerResource extends ServerResource
             log_.error("Unable to destroy the virtual machine");
             return false; 
         }
-        
+        log_.debug("Removing the disk");
         VirtualMachineImage image = virtualMachine.getImage();
         boolean isRemoved = backend_.getImageManager().removeDisk(
                 image, 
