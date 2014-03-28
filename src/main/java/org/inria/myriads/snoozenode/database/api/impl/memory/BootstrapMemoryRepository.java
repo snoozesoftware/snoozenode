@@ -26,6 +26,7 @@ import java.util.List;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
+import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupManagerRepositoryInformation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerList;
 import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
@@ -178,6 +179,7 @@ public final class BootstrapMemoryRepository
         return localControllers;
     }
 
+    
     @Override
     public List<VirtualMachineMetaData> getVirtualMachineDescriptions(
             String groupManagerId, 
@@ -188,52 +190,134 @@ public final class BootstrapMemoryRepository
             GroupManagerDescription groupLeader
             )
     {
-        List<VirtualMachineMetaData> virtualMachines = new ArrayList<VirtualMachineMetaData>();
+        //return the list of int GMs.
+        List<GroupManagerDescription> groupManagers = 
+                getGroupManagers(groupLeader, groupManagerId);
+        log_.debug("grouManagers = " + groupManagers);
         
-        if (isNullOrEmpty(groupManagerId))
+        // return the list of int LCs.
+        List<LocalControllerDescription> localControllers = 
+                getLocalControllers(groupLeader, groupManagers, localControllerId, numberOfMonitoringEntries);
+
+        log_.debug("localControllers = " + localControllers);
+        List<VirtualMachineMetaData> virtualMachines = getVirtualMachines(localControllers);
+        
+        log_.debug("virtualMachines = " + virtualMachines);
+        
+        return virtualMachines;
+    }
+
+    /**
+     * 
+     * Gets the virtual machines.
+     * 
+     * @param localControllers  The localControllers
+     * @return  The virtual machines list
+     */
+    protected List<VirtualMachineMetaData> getVirtualMachines(List<LocalControllerDescription> localControllers)
+    {
+        List<VirtualMachineMetaData> virtualMachines = new ArrayList<VirtualMachineMetaData>();
+        for (LocalControllerDescription localController : localControllers)
         {
-            log_.debug("Unable to get virtualmachines : groupmanager id is missing");
-            return virtualMachines;
+            virtualMachines.addAll(localController.getVirtualMachineMetaData().values());
         }
-        if (isNullOrEmpty(localControllerId))
+        return virtualMachines;
+    }
+
+
+    /**
+     * 
+     * Gets the localControllers List.
+     * 
+     * @param groupLeader                   The groupLeader Address
+     * @param groupManagers                 The groupManagers Address.
+     * @param localControllerId             The localController Id.
+     * @param numberOfMonitoringEntries     The number of monitoring entries
+     * @return  The localControllers list.
+     */
+    protected List<LocalControllerDescription> getLocalControllers(
+            GroupManagerDescription groupLeader,
+            List<GroupManagerDescription> groupManagers, 
+            String localControllerId,
+            int numberOfMonitoringEntries)
+    {
+        
+        List<LocalControllerDescription> localControllersList = new ArrayList<LocalControllerDescription>();
+        
+        for (GroupManagerDescription groupManager : groupManagers)
         {
-            log_.debug("Unable to get virtualmachines : localcontroller id is missing");
-            return virtualMachines;
+            NetworkAddress groupManagerAddress = groupManager.getListenSettings().getControlDataAddress();  
+            GroupManagerAPI groupManagerCommunicator = 
+                    CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress);
+            GroupManagerRepositoryInformation groupManagerInformation = groupManagerCommunicator.getGroupManagerRepositoryInformation(numberOfMonitoringEntries);
+            ArrayList<LocalControllerDescription> localControllers = 
+                    groupManagerInformation.getLocalControllerDescriptions();
+            if (!isNullOrEmpty(localControllerId))
+            {
+                log_.debug("lookup localcontroller");
+                for (LocalControllerDescription localController : localControllers)
+                {
+                    if (localController.getId().equals(localControllerId))
+                    {
+                        log_.debug("found the localcontrollerid");
+                        localControllersList.add(localController);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                log_.debug("add all localcontrollers");
+                localControllersList.addAll(localControllers);
+            }
         }
+        
+        return localControllersList;
+    }
+
+
+    /**
+     * 
+     * Gets the groupmanager list.
+     * 
+     * @param groupLeader           The group leader.
+     * @param groupManagerId        The groupmanager id.
+     * @return the group managers list.
+     */
+    protected List<GroupManagerDescription> getGroupManagers(GroupManagerDescription groupLeader, String groupManagerId)
+    {
         NetworkAddress groupLeaderAddress = groupLeader.getListenSettings().getControlDataAddress();
         GroupManagerAPI groupLeaderCommunicator = 
             CommunicatorFactory.newGroupManagerCommunicator(groupLeaderAddress);
 
-        log_.debug("Gets the localcontrollers of groupmanager " + groupManagerId);
-        GroupManagerDescription groupManager = groupLeaderCommunicator.getGroupManagerDescription(groupManagerId);
+        List<GroupManagerDescription> groupManagers = new ArrayList<GroupManagerDescription>();
         
-        if (groupManager == null)
+        GroupLeaderRepositoryInformation groupLeaderInformation =
+                groupLeaderCommunicator.getGroupLeaderRepositoryInformation(0);
+        
+        if (!isNullOrEmpty(groupManagerId))
         {
-            log_.debug("The group manager doesn't exist");
-            return virtualMachines;
+            log_.debug("Lookup the groupmanager");
+            for (GroupManagerDescription groupManager : groupLeaderInformation.getGroupManagerDescriptions())
+            {
+                if (groupManager.getId().equals(groupManagerId))
+                {
+                    log_.debug("Add the specified group manager");
+                    groupManagers.add(groupManager);
+                    break;
+                }
+            }
+        }
+        else
+        {
+            log_.debug("Add all group managers");
+            groupManagers.addAll(groupLeaderInformation.getGroupManagerDescriptions());
         }
         
-        NetworkAddress groupManagerAddress = groupManager.getListenSettings().getControlDataAddress();
-        GroupManagerAPI groupManagerCommunicator = 
-            CommunicatorFactory.newGroupManagerCommunicator(groupManagerAddress);
-        
-        LocalControllerDescription localController = 
-                groupManagerCommunicator.getLocalControllerDescription(localControllerId);
-            
-        if (localController == null)
-        {
-            log_.debug("The local controller doesn't exist");
-            return virtualMachines;
-        }
-        
-        NetworkAddress localControllerAddress = localController.getControlDataAddress();
-        LocalControllerAPI localControllerCommunicator = 
-            CommunicatorFactory.newLocalControllerCommunicator(localControllerAddress);
-        
-        virtualMachines = localControllerCommunicator.getVirtualMachines(numberOfMonitoringEntries);
-                                
-        return virtualMachines;
+        return groupManagers;
     }
+
+
 
     @Override
     public MigrationRequest createMigrationRequest(ClientMigrationRequestSimple migrationRequest)

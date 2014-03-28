@@ -4,6 +4,19 @@ snoozenode (2.2.0-0) unstable; urgency=low
 
  -- Matthieu Simonin <matthieu.simonin@inria.fr>  Wed,  28 Jun 2013 14:27:28 -0700
 
+snoozenode (2.1.3-0) unstable; urgency=low
+
+   * Add vm list even if in memory db is used
+   * fix virtual machine meta data copy constructor (image field missing)
+
+ -- Matthieu Simonin <matthieu.simonin@inria.fr>  Wed,  28 Jun 2013 14:27:28 -0700
+
+snoozenode (2.1.2-0) unstable; urgency=low
+
+   * TODO
+
+ -- Matthieu Simonin <matthieu.simonin@inria.fr>  Wed,  28 Jun 2013 14:27:28 -0700
+
 snoozenode (2.1.1-0) unstable; urgency=low
 
    * Fix localBacking file issue.

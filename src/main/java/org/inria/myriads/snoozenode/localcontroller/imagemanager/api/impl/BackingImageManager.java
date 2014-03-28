@@ -172,15 +172,7 @@ public class BackingImageManager implements ImageManager
     @Override
     public boolean removeDisk(VirtualMachineImage image, ImageRepositorySettings imageRepositorySettings)
     {
-        
-        String sourcePath = imageRepositorySettings.getSource();
-        String destinationPath = imageRepositorySettings.getDestination();
-        if (sourcePath.equals(destinationPath))
-        {
-            // Meaning that everything is on a shared directory.
-            // nothing to do
-            return true;
-        }
+        Guard.check(image, imageRepositorySettings);
         
         log_.debug("removing the disk image");
         File imagePath = new File(image.getPath());
