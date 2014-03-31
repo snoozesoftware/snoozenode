@@ -120,11 +120,7 @@ public class LibvirtProvisioner implements VirtualMachineProvisioner
         {
             log_.debug("Adding the serial console");
             xmlDescription = virtualMachine.getXmlRepresentation();
-            xmlDesc = parser.addSerial(xmlDescription, "pty", "0");
-            virtualMachine.setXmlRepresentation(xmlDesc);
-            
-            xmlDescription = virtualMachine.getXmlRepresentation();
-            xmlDesc = parser.addConsole(xmlDescription, "pty", "0", "serial");
+            xmlDesc = parser.addSerial(xmlDescription);
             virtualMachine.setXmlRepresentation(xmlDesc);
         }
         
