@@ -4,6 +4,7 @@
 
 Bug fixes
 
+  - #83 fix serial console template issue.
   - #81 handle destroy image with backingImageManager and src=dest path.
 
 Features : 
