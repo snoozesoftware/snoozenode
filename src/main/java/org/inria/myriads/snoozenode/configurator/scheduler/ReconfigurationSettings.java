@@ -19,6 +19,9 @@
  */
 package org.inria.myriads.snoozenode.configurator.scheduler;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 /**
  * Reconfiguration settings.
@@ -35,6 +38,17 @@ public class ReconfigurationSettings
     
     /** Interval. */
     private String interval_;
+    
+    /** Options. */
+    private Map<String,String> options_;
+    
+    /**
+     * Constructor. 
+     */
+    public ReconfigurationSettings()
+    {
+        options_ = new HashMap<String, String>();
+    }
     
     /**
      * Sets the interval.
@@ -94,5 +108,23 @@ public class ReconfigurationSettings
     public String getPolicy() 
     {
         return policy_;
+    }
+
+    /**
+     * @return the options
+     */
+    public Map<String, String> getOptions()
+    {
+        return options_;
+    }
+
+   
+
+    /**
+     * @param options the options to set
+     */
+    public void setOptions(Map<String, String> options)
+    {
+        options_ = options;
     }
 }

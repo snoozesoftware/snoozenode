@@ -22,6 +22,7 @@ package org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguratio
 import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozenode.configurator.scheduler.ReconfigurationSettings;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 
 /**
@@ -33,6 +34,9 @@ public abstract class ReconfigurationPolicy
 
     /** Resource demand estimator.*/
     protected ResourceDemandEstimator estimator_;
+    
+    /** Reconfiguration Settings.*/
+    protected ReconfigurationSettings reconfigurationSettings_;
     
     /**
      * Initializes the reconfiguration policy. 
@@ -61,6 +65,22 @@ public abstract class ReconfigurationPolicy
     public void setEstimator(ResourceDemandEstimator estimator)
     {
         estimator_ = estimator;
+    }
+
+    /**
+     * @return the reconfigurationSettings
+     */
+    public ReconfigurationSettings getReconfigurationSettings()
+    {
+        return reconfigurationSettings_;
+    }
+
+    /**
+     * @param reconfigurationSettings the reconfigurationSettings to set
+     */
+    public void setReconfigurationSettings(ReconfigurationSettings reconfigurationSettings)
+    {
+        reconfigurationSettings_ = reconfigurationSettings;
     }
     
     

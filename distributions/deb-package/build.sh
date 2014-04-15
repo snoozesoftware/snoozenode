@@ -20,7 +20,7 @@
 #
 
 SNOOZE_PACKAGE_NAME="snoozenode"
-SNOOZE_JAR_NAME="uber-snoozenode-2.2.0-SNAPSHOT.jar"
+SNOOZE_JAR_NAME="uber-snoozenode-3.0.0-SNAPSHOT.jar"
 
 # Update config files
 cp -R ../../configs/framework/quartz.properties $SNOOZE_PACKAGE_NAME/debian/input/configs/
