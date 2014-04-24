@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 2.1.4
+
+  - implement searchVirtualMachine in GroupManagerCassandraRepository.
+
 ## Version 2.1.3
 
 Bug fixes

@@ -54,37 +54,30 @@
 
 
 	<logger name="org.apache.commons.httpclient">
-		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>	
 	</logger>
 
 	<logger name="httpclient.wire">
-		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>	
 	</logger>
 
 	<logger name="httpclient.content">
-		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>	
 	</logger>
 	
 	<logger name="org.restlet">
-		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>
 	</logger>
 		
 	<logger name="LogService">
-		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>
 	</logger>
     
 	<logger name="org.mortbay.jetty">
-		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>
 	</logger>
 
 	<logger name="org.apache.http">
-		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>
 	</logger>
 
@@ -94,7 +87,6 @@
 	</logger>
 	    
 	<logger name="org.eclipse.jetty">
-		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>
 	</logger>
 	
