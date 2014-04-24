@@ -206,7 +206,7 @@ public final class VirtualClusterManager
     protected void setVirtualMachineLocation(VirtualMachineMetaData virtualMachine, String hostId)
     {
         Guard.check(virtualMachine, hostId);
-        if (hostId.equals(Globals.DEFAULT_INITIALIZATION))
+        if (hostId.equals(Globals.DEFAULT_INITIALIZATION) || StringUtils.isBlank(hostId))
         {
             log_.debug("No binding : fallback to default location");
             return;
