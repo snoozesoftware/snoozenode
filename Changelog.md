@@ -3,6 +3,7 @@
 ## Version 2.1.4
 
   - implement searchVirtualMachine in GroupManagerCassandraRepository.
+  - implement getLocalControllerList in GroupManagerResource.
 
 ## Version 2.1.3
 

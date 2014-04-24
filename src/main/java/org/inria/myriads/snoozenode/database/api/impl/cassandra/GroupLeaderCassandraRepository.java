@@ -291,7 +291,13 @@ public class GroupLeaderCassandraRepository extends CassandraRepository implemen
     public ArrayList<LocalControllerDescription> getLocalControllerList() 
     {
         
-        return null;
+        return this.getLocalControllerDescriptionsOnly(
+                null,
+                null,
+                -1,
+                0,
+                false,
+                true);
     }
 
     /**
