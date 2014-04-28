@@ -20,6 +20,8 @@
 package org.inria.myriads.snoozenode.estimator.api.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -609,4 +611,6 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
     {
         return sortNorm_;
     }
+
+
 }

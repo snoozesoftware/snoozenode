@@ -20,6 +20,7 @@
 package org.inria.myriads.snoozenode.groupmanager.leaderpolicies;
 
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozenode.configurator.scheduler.GroupLeaderSchedulerSettings;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.api.AssignmentPolicy;
 import org.inria.myriads.snoozenode.groupmanager.leaderpolicies.assignment.api.impl.RandomLocalController;
@@ -100,12 +101,14 @@ public final class GroupLeaderPolicyFactory
      * @param estimator       The resource demand estimator
      * @return                      The virtual cluster mapping
      */
-    public static DispatchingPolicy newVirtualClusterPlacement(String dispatchingPolicy,
-                                                               ResourceDemandEstimator estimator)
+    public static DispatchingPolicy newVirtualClusterPlacement(
+            GroupLeaderSchedulerSettings schedulerSettings,
+            ResourceDemandEstimator estimator
+            )
     {
-        Guard.check(dispatchingPolicy, estimator);
-        log_.debug(String.format("Selected virtual cluster dispatching policy: %s", dispatchingPolicy));
+        Guard.check(schedulerSettings);
         
+        String dispatchingPolicy = schedulerSettings.getAssignmentPolicy();
         DispatchingPolicy assignmentPolicy = null;
         if (dispatchingPolicy.equals("firstfit"))
         {
@@ -133,7 +136,9 @@ public final class GroupLeaderPolicyFactory
         }
         
         assignmentPolicy.setEstimator(estimator);
+        assignmentPolicy.setGroupLeaderSchedulingSettings(schedulerSettings);
         assignmentPolicy.initialize();
+        
         return assignmentPolicy;       
     }    
 }

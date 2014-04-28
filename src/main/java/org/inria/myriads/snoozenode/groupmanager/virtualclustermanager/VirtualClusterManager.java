@@ -121,9 +121,10 @@ public final class VirtualClusterManager
     private void initializeDispatchingPolicy()
     {
         GroupLeaderSchedulerSettings schedulerSettings = nodeConfiguration_.getGroupLeaderScheduler();
-        String virtualClusterDispatch = schedulerSettings.getDispatchingPolicy();
-        virtualClusterDispatching_ = GroupLeaderPolicyFactory.newVirtualClusterPlacement(virtualClusterDispatch,
-                                                                                         estimator_);
+        virtualClusterDispatching_ = GroupLeaderPolicyFactory.newVirtualClusterPlacement(
+                schedulerSettings,
+                estimator_
+                );
     }
     
     /**
