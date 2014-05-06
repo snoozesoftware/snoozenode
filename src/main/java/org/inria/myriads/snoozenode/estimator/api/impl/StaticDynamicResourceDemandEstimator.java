@@ -384,6 +384,15 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
 
         return true;        
     }
+    
+    @Override
+    public GroupManagerSummaryInformation computeGroupManagerCapacity(GroupManagerDescription groupManager)
+    {
+        ArrayList<LocalControllerDescription> localControllers = 
+                new ArrayList<LocalControllerDescription>(groupManager.getLocalControllers().values());
+        
+        return generateGroupManagerSummaryInformation(localControllers);
+    }
         
     /**
      * Estimates the local controller utilization.
@@ -611,6 +620,8 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
     {
         return sortNorm_;
     }
+
+
 
 
 }

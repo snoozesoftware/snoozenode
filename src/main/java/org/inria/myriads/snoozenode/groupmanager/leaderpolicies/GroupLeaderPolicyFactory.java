@@ -108,7 +108,7 @@ public final class GroupLeaderPolicyFactory
     {
         Guard.check(schedulerSettings);
         
-        String dispatchingPolicy = schedulerSettings.getAssignmentPolicy();
+        String dispatchingPolicy = schedulerSettings.getDispatchingPolicy();
         DispatchingPolicy assignmentPolicy = null;
         if (dispatchingPolicy.equals("firstfit"))
         {
