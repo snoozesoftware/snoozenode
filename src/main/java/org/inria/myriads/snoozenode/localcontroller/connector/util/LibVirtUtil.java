@@ -96,17 +96,21 @@ public final class LibVirtUtil
         log_.debug("Building the hypervisorConnection");
         String hypervisorConnection = "";
         HypervisorDriver driver = settings.getDriver();
+        String connectionAddress;
         switch(driver)
         {
         case test:
-            hypervisorConnection = driver + ":///default";
+            connectionAddress = listenAddress + ":" + settings.getPort();
+            hypervisorConnection = driver + "+" + settings.getTransport() + "://" + 
+                                          connectionAddress + "/default";
+            
             break;
         case xen: 
             hypervisorConnection  = driver + "+" + settings.getTransport() + "://" + 
                     listenAddress + "/";
             break;
         default:
-            String connectionAddress = listenAddress + ":" + settings.getPort();
+            connectionAddress = listenAddress + ":" + settings.getPort();
             hypervisorConnection = driver + "+" + settings.getTransport() + "://" + 
                                           connectionAddress + "/system";
             break;
