@@ -35,6 +35,7 @@ import org.inria.myriads.snoozenode.configurator.energymanagement.EnergyManageme
 import org.inria.myriads.snoozenode.configurator.energymanagement.enums.PowerSavingAction;
 import org.inria.myriads.snoozenode.configurator.estimator.EstimatorSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
+import org.inria.myriads.snoozenode.configurator.scheduler.ReconfigurationSettings;
 import org.inria.myriads.snoozenode.configurator.scheduler.RelocationSettings;
 import org.inria.myriads.snoozenode.database.api.GroupManagerRepository;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
@@ -139,8 +140,8 @@ public class GroupManagerStateMachine
         anomalyResolver_ = createAnomalyResolver(nodeConfiguration.getAnomalyResolverSettings(), estimator, repository);
         // Reconfiguration
         GroupManagerSchedulerSettings schedulerSettings = nodeConfiguration.getGroupManagerScheduler();
-        String reconfiguration = schedulerSettings.getReconfigurationSettings().getPolicy();
-        reconfiguration_ = GroupManagerPolicyFactory.newVirtualMachineReconfiguration(reconfiguration, estimator);  
+        ReconfigurationSettings settings = schedulerSettings.getReconfigurationSettings();
+        reconfiguration_ = GroupManagerPolicyFactory.newVirtualMachineReconfiguration(settings, estimator);  
     }
     
     /**

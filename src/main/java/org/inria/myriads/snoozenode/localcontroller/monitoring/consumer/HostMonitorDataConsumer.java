@@ -6,21 +6,25 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 
-import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.HostMonitoringData;
 import org.inria.myriads.snoozenode.configurator.api.NodeConfiguration;
-import org.inria.myriads.snoozenode.configurator.database.DatabaseSettings;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.service.HostMonitoringService;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.service.InfrastructureMonitoring;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedHostMonitoringData;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
-import org.inria.myriads.snoozenode.monitoring.comunicator.MonitoringCommunicatorFactory;
 import org.inria.myriads.snoozenode.monitoring.comunicator.api.MonitoringCommunicator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 
+ * Host Monitor data consumer.
+ * 
+ * @author msimonin
+ *
+ */
 public class HostMonitorDataConsumer implements Runnable
 {
 
@@ -45,17 +49,19 @@ public class HostMonitorDataConsumer implements Runnable
     /** Local Controller Id.*/
     private String localControllerId_;
     
+   
     /**
      * 
      * Constructor.
      * 
-     * @param repository
-     * @param groupManagerAddress
-     * @param dataQueue
-     * @param monitoring
-     * @param nodeConfiguration
-     * @param hostMonitoringService
-     * @throws IOException
+     * @param localController       The local Controller Description.
+     * @param repository            The repository.
+     * @param communicator          The communicator.
+     * @param dataQueue             The data queue. 
+     * @param monitoring            The infrastructure monitoring.
+     * @param nodeConfiguration     The node configuration
+     * @param hostMonitoringService The host monitoring service (listener)
+     * @throws IOException          The exception.
      */
     public HostMonitorDataConsumer(
             LocalControllerDescription localController,
@@ -110,6 +116,13 @@ public class HostMonitorDataConsumer implements Runnable
         terminate();
     }
 
+    /**
+     * 
+     * Sends regular data.
+     * 
+     * @param hostData          The host data to send
+     * @throws IOException      The exception.
+     */
     private void sendRegularData(AggregatedHostMonitoringData hostData) throws IOException
     {
         log_.debug("Sending regular datas");
@@ -126,6 +139,12 @@ public class HostMonitorDataConsumer implements Runnable
 
     }
 
+    /**
+     * 
+     * output metrics.
+     * 
+     * @param hostData  The host Data.
+     */
     private void outputMetrics(AggregatedHostMonitoringData hostData)
     {
         String output = "\n------- metric collected -----\n";
@@ -133,7 +152,7 @@ public class HostMonitorDataConsumer implements Runnable
         for (HostMonitoringData m : hostData.getMonitoringData())
         {
             output += "Timestamp :" + m.getTimeStamp() + "\n";
-            for(Entry<String, Double> c : m.getUsedCapacity().entrySet())
+            for (Entry<String, Double> c : m.getUsedCapacity().entrySet())
             {
                 output += "metric : " + c.getKey() + "value : " + c.getValue() + "\n";
             }
@@ -142,6 +161,12 @@ public class HostMonitorDataConsumer implements Runnable
         log_.debug(output);
     }
 
+    /**
+     * 
+     * Sends heartbeat data.
+     * 
+     * @throws IOException  exception.
+     */
     private void sendHeartbeatData() throws IOException
     {
         log_.debug("Sending heartbeat datas");

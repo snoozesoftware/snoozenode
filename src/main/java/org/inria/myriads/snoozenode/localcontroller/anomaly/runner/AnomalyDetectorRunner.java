@@ -1,26 +1,15 @@
 package org.inria.myriads.snoozenode.localcontroller.anomaly.runner;
 
-import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
 
-import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.database.api.LocalControllerRepository;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.AnomalyDetector;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.listener.AnomalyDetectorListener;
-import org.inria.myriads.snoozenode.localcontroller.anomaly.runner.AnomalyDetectorRunner;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.producer.VirtualMachineHeartbeatDataProducer;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.AggregatedVirtualMachineData;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.transport.LocalControllerDataTransporter;
-import org.inria.myriads.snoozenode.util.OutputUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,10 +34,10 @@ public class AnomalyDetectorRunner implements Runnable
     /** interval.*/
     private int interval_;
     
-    /** anomalyDetectorListener */
+    /** anomalyDetectorListener. */
     private AnomalyDetectorListener listener_;
     
-    /** anomalyDetectorEstimator*/
+    /** anomalyDetectorEstimator. */
     private AnomalyDetector anomalyDetector_;
 
     /** number of monitoring entries to take into account.*/
@@ -56,13 +45,15 @@ public class AnomalyDetectorRunner implements Runnable
     
 
     /**
-     * Anomaly detector
-     * @param anomalyDetector 
      * 
-     * @param 
+     * The anomaly detector runner.
+     * 
+     * @param repository        The local controller repository.
+     * @param anomalyDetector   The anomaly detector.
+     * @param listener           The listener.
      */
     public AnomalyDetectorRunner(
-            LocalControllerRepository repository, 
+            LocalControllerRepository repository,
             AnomalyDetector anomalyDetector, 
             AnomalyDetectorListener listener)
     {
@@ -81,17 +72,18 @@ public class AnomalyDetectorRunner implements Runnable
     /** The run() method. */
     public void run() 
     {
-        long pastTimestamp = 0 ; 
+        long pastTimestamp = 0;
         try
         {
-            boolean isDetected = false;
             while (!isTerminated_)
             {    
                 log_.debug("Anomaly detector waked up");
                 if (pastTimestamp > 0)
                 {
-                    Map<String, Resource> hostResources = repository_.getHostMonitoringValues(numberOfMonitoringEntries_);
-                    List<VirtualMachineMetaData> virtualMachines = repository_.getVirtualMachines(numberOfMonitoringEntries_);
+                    Map<String, Resource> hostResources =
+                            repository_.getHostMonitoringValues(numberOfMonitoringEntries_);
+                    List<VirtualMachineMetaData> virtualMachines =
+                            repository_.getVirtualMachines(numberOfMonitoringEntries_);
                     
                     //logic to extract in this class
                     Object anomaly = anomalyDetector_.detectAnomaly(hostResources, virtualMachines);
@@ -129,8 +121,4 @@ public class AnomalyDetectorRunner implements Runnable
             lockObject_.notify();
         }
     }
-
-    
-
-    
 }

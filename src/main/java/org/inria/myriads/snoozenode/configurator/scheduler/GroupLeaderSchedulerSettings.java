@@ -19,18 +19,23 @@
  */
 package org.inria.myriads.snoozenode.configurator.scheduler;
 
+import java.util.Map;
+
 /**
  * Group leader scheduler settings.
  * 
  * @author Eugen Feller
  */
-public final class GroupLeaderSchedulerSettings 
+public class GroupLeaderSchedulerSettings 
 {
     /** Local controller assignment policy. */
     private String assignmentPolicy_;
 
     /** Virtual cluster dispatching policy. */
     private String dispatchingPolicy_;
+    
+    /** Options. */
+    private Map<String,String> options_;
 
     /**
      * Sets the virtual cluster dispatching policy.
@@ -70,5 +75,21 @@ public final class GroupLeaderSchedulerSettings
     public void setAssignmentPolicy(String assignmentPolicy) 
     {
         assignmentPolicy_ = assignmentPolicy;
+    }
+
+    /**
+     * @return the options
+     */
+    public Map<String, String> getOptions()
+    {
+        return options_;
+    }
+
+    /**
+     * @param options the options to set
+     */
+    public void setOptions(Map<String, String> options)
+    {
+        options_ = options;
     }
 }

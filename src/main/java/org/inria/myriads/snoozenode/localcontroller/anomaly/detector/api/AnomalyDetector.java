@@ -8,8 +8,14 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.Resource;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyDetectorSettings;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.LocalControllerState;
 
+/**
+ * 
+ * Anomaly detector.
+ * 
+ * @author msimonin
+ *
+ */
 public abstract class AnomalyDetector
 {
     
@@ -21,12 +27,24 @@ public abstract class AnomalyDetector
 
     /** Monitoring estimator.*/
     protected ResourceDemandEstimator monitoringEstimator_;
-    
+
+    /**
+     * 
+     * Sets the settings.
+     * 
+     * @param anomalyDetectorSettings       The settings.
+     */
     public void setSettings(AnomalyDetectorSettings anomalyDetectorSettings)
     {
         settings_ = anomalyDetectorSettings;
     }
     
+    /**
+     * 
+     * Gets the settings.
+     * 
+     * @return  The anomlay detector settings.
+     */
     public AnomalyDetectorSettings getSettings()
     {
         return settings_;
@@ -35,8 +53,18 @@ public abstract class AnomalyDetector
     /** Initialize the detector. Called after constructor and setters.*/
     public abstract void initialize();
     
-    /** Routines to detect an anomaly.*/
-    public abstract Object detectAnomaly(Map<String, Resource> hostResources, List<VirtualMachineMetaData> virtualMachines);
+    
+    /**
+     * 
+     * Routines to detect anomaly.
+     * 
+     * @param hostResources     The host resources.
+     * @param virtualMachines   The virtual machines. 
+     * @return  the anomaly object.
+     */
+    public abstract Object detectAnomaly(
+            Map<String, Resource> hostResources,
+            List<VirtualMachineMetaData> virtualMachines);
    
     /**
      * @return the localController

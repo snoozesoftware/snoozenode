@@ -23,6 +23,13 @@ import org.inria.myriads.snoozenode.monitoring.comunicator.api.MonitoringCommuni
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 
+ * Anomaly detectort service.
+ * 
+ * @author msimonin
+ *
+ */
 public class AnomalyDetectorService implements AnomalyDetectorListener
 {
     /** Define the logger. */
@@ -43,25 +50,25 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
     /** Anomaly detector.*/
     private AnomalyDetector anomalyDetector_;
 
-    /** Communicator with upper level*/
+    /** Communicator with upper level.*/
     private MonitoringCommunicator communicator_;
 
-    /** Virtual machine estimator settings*/
-    private EstimatorSettings estimatorSettings_;
-
-    /** host monitor monitoring settings.*/
-    private HostMonitoringSettings hostMonitoringSettings_;
-
+    /** anomaly detector settings.*/
     private AnomalyDetectorSettings anomalyDetectorSettings_;
     
+
     /**
+     * 
      * Constructor.
      * 
-     * @param localController       The local controller description
-     * @param repository            The local controller repository
-     * @param monitoring            The infrastructure monitoring
-     * @param databaseSettings      The database settings
-     * @throws ResourceDemandEstimatorException 
+     * @param localController                       The local controller description
+     * @param repository                            The local controller repository
+     * @param databaseSettings                      The database settings.
+     * @param monitoring                            The infrastructur monitoring.
+     * @param estimatorSettings                     The estimator settings.
+     * @param hostMonitoringSettings                The host monitoring settings.
+     * @param anomalyDetectorSettings               The anomaly detector settings.
+     * @throws ResourceDemandEstimatorException     The resource demand estimator exception.
      */
     public AnomalyDetectorService(
             LocalControllerDescription localController,
@@ -78,14 +85,8 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
         
         localController_ = localController;
         repository_ = repository;
-        estimatorSettings_ = estimatorSettings;
-        hostMonitoringSettings_ = hostMonitoringSettings;
         anomalyDetectorSettings_ = anomalyDetectorSettings;
         
-        // two steps first 
-        // (1) the metrics estimator 
-        // (2) the detector logic (based on this estimator)
-        //monitoringEstimator_ = new MonitoringEstimator(estimatorSettings_, hostMonitoringSettings_);
         monitoringEstimator_ = ResourceEstimatorFactory.newResourceDemandEstimator(
                 estimatorSettings,
                 monitoring.getMonitoringSettings(),
@@ -100,12 +101,13 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
     }
 
     /**
+     * 
      * Starts the virtual machine monitor service.
      * 
-     * @param groupManagerAddress      The group manager address
-     * @throws Exception               The exception
+     * @param communicator      The communicator.
+     * @throws Exception        The exception.
      */
-    public synchronized void startService(MonitoringCommunicator communicator) 
+    public synchronized void startService(MonitoringCommunicator communicator)
         throws Exception
     {
         log_.debug("Starting the anomaly detector service");
@@ -115,6 +117,9 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
     
     
 
+    /**
+     * Starts the anomaly runner.
+     */
     private void startAnomalyDetectorRunner()
     {
         log_.debug("Start Anomaly detector");
@@ -125,7 +130,6 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
     /**
      * Stops the service.
      * 
-     * @throws InterruptedException 
      */
     public void stopService() 
     {
@@ -134,11 +138,6 @@ public class AnomalyDetectorService implements AnomalyDetectorListener
     }
     
         
-    /**
-     * Anomaly detected.
-     * 
-     * 
-     */
     @Override
     public synchronized void onAnomalyDetected(Object anomaly)
     {

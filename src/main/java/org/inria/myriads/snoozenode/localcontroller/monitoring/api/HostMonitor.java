@@ -31,15 +31,12 @@ import org.inria.myriads.snoozenode.exception.HostMonitoringException;
  * @author msimonin
  *
  */
-/**
- * @author msimonin
- *
- */
 public abstract class HostMonitor 
 {
-    
+    /** Host Monitoring Settings.*/
     protected HostMonitorSettings settings_;
     
+    /** LocalControllerDescription.*/
     protected LocalControllerDescription localController_;
     
     /**
@@ -56,12 +53,13 @@ public abstract class HostMonitor
      */
     public abstract ArrayList<Double> getTotalCapacity() throws HostMonitoringException;
 
+    
     /**
      * 
+     * Gets the resources monitored by this producer.
      * 
-     * Gets the monitoring data in charge of this monitor.
-     * 
-     * @return
+     * @return  The resource monitored by this producer.
+     * @throws HostMonitoringException  Host Monitoring exception.
      */
     public abstract HostMonitoringData getResourceData() throws HostMonitoringException;
 
@@ -73,8 +71,9 @@ public abstract class HostMonitor
         return settings_;
     }
 
+   
     /**
-     * @param hostMonitoringSettings the hostMonitoringSettings to set
+     * @param settings      The settings
      */
     public void setSettings(HostMonitorSettings settings)
     {

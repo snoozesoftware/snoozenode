@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.inria.myriads</groupId>
   <artifactId>snoozenode</artifactId>
-  <version>2.2.0-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>snoozenode</name>
   <url>http://snooze.inria.fr</url>
@@ -111,7 +111,7 @@
                      </execution>
                   </executions>
                </plugin>
-            </plugins>
+             </plugins>
          </build>
       </profile>
    </profiles>
@@ -337,7 +337,7 @@
 		<dependency>
 			<groupId>org.inria.myriads</groupId>
 			<artifactId>snoozecommon</artifactId>
-			<version>2.2.0-SNAPSHOT</version>
+			<version>3.0.0-SNAPSHOT</version>
 		</dependency>
 
 	 	<dependency>
@@ -362,7 +362,7 @@
 		<dependency>
 			<groupId>org.inria.myriads</groupId>
 			<artifactId>snoozeimages</artifactId>
-			<version>2.2.0-SNAPSHOT</version>
+			<version>3.0.0-SNAPSHOT</version>
 		</dependency>
 		
     </dependencies>

@@ -20,6 +20,8 @@
 package org.inria.myriads.snoozenode.estimator.api.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -382,6 +384,15 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
 
         return true;        
     }
+    
+    @Override
+    public GroupManagerSummaryInformation computeGroupManagerCapacity(GroupManagerDescription groupManager)
+    {
+        ArrayList<LocalControllerDescription> localControllers = 
+                new ArrayList<LocalControllerDescription>(groupManager.getLocalControllers().values());
+        
+        return generateGroupManagerSummaryInformation(localControllers);
+    }
         
     /**
      * Estimates the local controller utilization.
@@ -609,4 +620,8 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
     {
         return sortNorm_;
     }
+
+
+
+
 }

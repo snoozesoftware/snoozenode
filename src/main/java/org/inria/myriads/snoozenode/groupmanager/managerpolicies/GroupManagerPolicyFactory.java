@@ -23,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
+import org.inria.myriads.snoozenode.configurator.scheduler.ReconfigurationSettings;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.impl.FirstFit;
@@ -110,20 +111,20 @@ public final class GroupManagerPolicyFactory
     /**
      * Creates a new virtual machine reconfiguration policy.
      * 
-     * @param reconfigurationPolicy  The desired reconfiguration policy
+     * @param settings  The desired reconfiguration policy
      * @param estimator              The resource demand estimator
      * @return                       The selected reconfiguration policy
      */
-    public static ReconfigurationPolicy newVirtualMachineReconfiguration(String reconfigurationPolicy,
+    public static ReconfigurationPolicy newVirtualMachineReconfiguration(ReconfigurationSettings settings,
                                                                          ResourceDemandEstimator estimator) 
     {
-        Guard.check(reconfigurationPolicy);
+        Guard.check(settings);
         log_.debug(String.format("Selected virtual machine reconfiguration policy: %s", 
-                                 reconfigurationPolicy));
-        
+                                 settings.getPolicy()));
+        String policy = settings.getPolicy();
         ReconfigurationPolicy reconfiguration = null;
         
-        if (reconfigurationPolicy.equals("sercon"))
+        if (policy.equals("sercon"))
         {
             reconfiguration = new SerconVirtualMachineConsolidation();
         }
@@ -131,18 +132,19 @@ public final class GroupManagerPolicyFactory
         {
             try
             {
-                log_.debug(String.format("Loading custom reconfiguration policy %s", reconfigurationPolicy));
-                Object reconfigurationPolicyObject = PluginUtils.createFromFQN(reconfigurationPolicy);
+                log_.debug(String.format("Loading custom reconfiguration policy %s", policy));
+                Object reconfigurationPolicyObject = PluginUtils.createFromFQN(policy);
                 reconfiguration = (ReconfigurationPolicy) reconfigurationPolicyObject;
             }
             catch (Exception exception)
             {
-                log_.error(String.format("Unable to load the custom reconfiguration policy %s", reconfigurationPolicy));
+                log_.error(String.format("Unable to load the custom reconfiguration policy %s", policy));
                 reconfiguration = new SerconVirtualMachineConsolidation();
             }
         }
         
         reconfiguration.setEstimator(estimator);
+        reconfiguration.setReconfigurationSettings(settings);
         reconfiguration.initialize();
         
         return reconfiguration;

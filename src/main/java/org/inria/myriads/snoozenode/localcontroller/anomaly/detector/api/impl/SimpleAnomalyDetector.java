@@ -34,15 +34,13 @@ public class SimpleAnomalyDetector extends AnomalyDetector
     /** Total Capacity.*/ 
     private List<Double> totalCapacity_;
     
-    /** monitoring Thresholds*/
+    /** monitoring Thresholds.*/
     private MonitoringThresholds monitoringThresholds_;
     
 
     /**
      * Constructor.
      * 
-     * @param monitoringThresholds  The monitoring thresholds
-     * @param totalCapacity         The total local controller capacity
      */
     public SimpleAnomalyDetector()
     {
@@ -58,7 +56,9 @@ public class SimpleAnomalyDetector extends AnomalyDetector
     }
     
     @Override
-    public LocalControllerState detectAnomaly(Map<String, Resource> hostResources, List<VirtualMachineMetaData> virtualMachines)
+    public LocalControllerState detectAnomaly(
+            Map<String, Resource> hostResources,
+            List<VirtualMachineMetaData> virtualMachines)
     {
         List<Double> virtualMachinesUtilization = computeVirtualMachinesUtilization(virtualMachines);
         Map<String, Double> hostEstimation = monitoringEstimator_.estimateHostResourceUtilization(hostResources);
@@ -76,7 +76,6 @@ public class SimpleAnomalyDetector extends AnomalyDetector
      * Starts the threshold crossing detection.
      *  
      * @param hostUtilization     The host utilization
-     * @param monitoringData      The monitoring data
      * @return                    true if underloaded, false otherwise
      */
     private LocalControllerState startThresholdCrossingDetection(List<Double> hostUtilization)
@@ -188,13 +187,21 @@ public class SimpleAnomalyDetector extends AnomalyDetector
         return false;
     }
     
+    /**
+     * 
+     * Computes virtual machines utilization.
+     * 
+     * @param virtualMachines   The virtual machines list.
+     * @return  list of the utilization.
+     */
     private List<Double> computeVirtualMachinesUtilization(List<VirtualMachineMetaData> virtualMachines)
     {
         ArrayList<Double> virtualMachinesUtilization = MathUtils.createEmptyVector();
         for (VirtualMachineMetaData virtualMachine : virtualMachines)
         {
             
-            List<Double> virtualMachineEstimation = monitoringEstimator_.estimateVirtualMachineResourceDemand(virtualMachine);
+            List<Double> virtualMachineEstimation = 
+                    monitoringEstimator_.estimateVirtualMachineResourceDemand(virtualMachine);
             virtualMachinesUtilization = MathUtils.addVectors(virtualMachineEstimation, virtualMachinesUtilization);
         }
         return virtualMachinesUtilization;

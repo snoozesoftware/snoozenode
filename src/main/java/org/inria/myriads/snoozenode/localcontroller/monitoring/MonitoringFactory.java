@@ -80,6 +80,15 @@ public final class MonitoringFactory
         return new LibVirtHostMonitor(connector, networkCapacity);
     }
     
+    /**
+     * 
+     * Creates a new host monitor.
+     * 
+     * @param localController           The local Controller Description
+     * @param hostMonitorSettings       The host monitoring settings.
+     * @return  the newly created host monitor.
+     * @throws HostMonitoringException  The monitoring exception.
+     */
     public static HostMonitor newHostMonitor(
             LocalControllerDescription localController,
             HostMonitorSettings hostMonitorSettings) throws HostMonitoringException

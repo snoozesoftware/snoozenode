@@ -71,7 +71,6 @@ public class VirtualMachineInformation
     public VirtualMachineInformation()
     {
         super();
-        // TODO Auto-generated constructor stub
     }
 
 

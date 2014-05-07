@@ -71,6 +71,16 @@ public abstract class ResourceDemandEstimator
      */
     public abstract ArrayList<Double> computeLocalControllerCapacity(LocalControllerDescription localController);
     
+    
+    /**
+     * 
+     * Estimates the group manager utilization.
+     * 
+     * @param groupManager      The Group Manager Description
+     * @return                  The estimated group manager utilization (summary).
+     */
+    public abstract GroupManagerSummaryInformation computeGroupManagerCapacity(GroupManagerDescription groupManager);
+    
     /**
      * Returns the current group manager summary data.
      * 

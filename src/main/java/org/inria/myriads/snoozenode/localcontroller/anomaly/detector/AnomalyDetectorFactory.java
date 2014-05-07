@@ -1,15 +1,8 @@
 package org.inria.myriads.snoozenode.localcontroller.anomaly.detector;
 
-import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
-import java.util.List;
-
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
-import org.inria.myriads.snoozecommon.communication.localcontroller.MonitoringThresholds;
 import org.inria.myriads.snoozenode.configurator.anomaly.AnomalyDetectorSettings;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
-import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
-import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.AnomalyDetector;
 import org.inria.myriads.snoozenode.localcontroller.anomaly.detector.api.impl.SimpleAnomalyDetector;
 import org.inria.myriads.snoozenode.util.PluginUtils;
@@ -20,11 +13,11 @@ import org.slf4j.LoggerFactory;
  * @author msimonin
  *
  */
-public class AnomalyDetectorFactory
+public final class AnomalyDetectorFactory
 {
 
     /** Define the logger. */
-    final static Logger log_ = LoggerFactory.getLogger(AnomalyDetectorFactory.class);
+    static final Logger log_ = LoggerFactory.getLogger(AnomalyDetectorFactory.class);
     
     /**
      *  Hide Constructor. 
@@ -34,6 +27,15 @@ public class AnomalyDetectorFactory
                 
     }
 
+    /**
+     * 
+     * Creates a new anomaly detector.
+     * 
+     * @param estimator                 The estimator.
+     * @param localController           The local controller description.
+     * @param anomalyDetectorSettings   The anomaly detector settings.
+     * @return  The newly created anomaly detector.
+     */
     public static AnomalyDetector newAnomalyDetectorEstimator(
             ResourceDemandEstimator estimator,
             LocalControllerDescription localController,

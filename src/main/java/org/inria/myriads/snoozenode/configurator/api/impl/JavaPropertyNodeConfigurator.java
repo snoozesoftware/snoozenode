@@ -728,6 +728,11 @@ public final class JavaPropertyNodeConfigurator
         
         String dispatchingPolicy = getProperty("groupLeaderScheduler.dispatchingPolicy");
         groupLeader.setDispatchingPolicy(dispatchingPolicy);
+        
+        String options = getProperty("groupManagerScheduler.reconfiguration.options", "{}");
+        Map<String, String> map = umarshal(options);
+        groupLeader.setOptions(map);
+        
     }
 
     /**
@@ -750,6 +755,11 @@ public final class JavaPropertyNodeConfigurator
         
         String interval = getProperty("groupManagerScheduler.reconfiguration.interval");
         groupManager.getReconfigurationSettings().setInterval(interval);
+        
+        String options = getProperty("groupManagerScheduler.reconfiguration.options", "{}");
+        Map<String, String> map = umarshal(options);
+        groupManager.getReconfigurationSettings().setOptions(map);
+        
     }
     
     /**

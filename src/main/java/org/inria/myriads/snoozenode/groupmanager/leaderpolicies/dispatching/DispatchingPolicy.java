@@ -20,9 +20,11 @@
 package org.inria.myriads.snoozenode.groupmanager.leaderpolicies.dispatching;
 
 import java.util.List;
+import java.util.Map;
 
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozenode.configurator.scheduler.GroupLeaderSchedulerSettings;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 
 /**
@@ -35,6 +37,9 @@ public abstract class DispatchingPolicy
     
     /** Resource Demand Estimator.*/
     protected ResourceDemandEstimator estimator_;
+    
+    /** Scheduler Settings.*/
+    protected GroupLeaderSchedulerSettings schedulerSettings_;
     
     /**
      * Dispatches a virtual cluster.
@@ -65,5 +70,11 @@ public abstract class DispatchingPolicy
     public void setEstimator(ResourceDemandEstimator estimator)
     {
         estimator_ = estimator;
+    }
+
+    public void setGroupLeaderSchedulingSettings(GroupLeaderSchedulerSettings schedulerSettings)
+    {
+        schedulerSettings_ = schedulerSettings;
+        
     }
 }
