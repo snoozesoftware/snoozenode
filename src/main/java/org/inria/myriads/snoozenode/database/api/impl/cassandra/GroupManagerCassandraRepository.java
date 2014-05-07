@@ -436,10 +436,13 @@ public class GroupManagerCassandraRepository extends CassandraRepository impleme
     {
         // ?
     }
+    
     @Override
     public String searchVirtualMachine(String virtualMachineId)
     {
-        return null;
+        VirtualMachineMetaData virtualMachine = 
+                getVirtualMachineMetaDataCassandra(virtualMachineId, 0);
+        return virtualMachine.getVirtualMachineLocation().getLocalControllerId();
     }
     @Override
     public boolean updateVirtualMachineLocation(VirtualMachineLocation oldVirtualMachineLocation,

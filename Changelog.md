@@ -1,9 +1,15 @@
 # Changelog
 
+## Version 2.1.4
+
+  - implement searchVirtualMachine in GroupManagerCassandraRepository.
+  - implement getLocalControllerList in GroupManagerResource.
+
 ## Version 2.1.3
 
 Bug fixes
 
+  - #83 fix serial console template issue.
   - #81 handle destroy image with backingImageManager and src=dest path.
 
 Features : 
