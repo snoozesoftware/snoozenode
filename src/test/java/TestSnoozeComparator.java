@@ -46,9 +46,9 @@ public class TestSnoozeComparator extends TestCase
         LocalControllerDescription lc3 = new LocalControllerDescription();
         lc3.setId("lc3");
         
-        expect(estimator.computeLocalControllerCapacity(lc1)).andReturn(caplc1).anyTimes();
-        expect(estimator.computeLocalControllerCapacity(lc2)).andReturn(caplc2).anyTimes();
-        expect(estimator.computeLocalControllerCapacity(lc3)).andReturn(caplc3).anyTimes();
+        expect(estimator.computeLocalControllerUsedCapacity(lc1)).andReturn(caplc1).anyTimes();
+        expect(estimator.computeLocalControllerUsedCapacity(lc2)).andReturn(caplc2).anyTimes();
+        expect(estimator.computeLocalControllerUsedCapacity(lc3)).andReturn(caplc3).anyTimes();
         
         replay(estimator);
         

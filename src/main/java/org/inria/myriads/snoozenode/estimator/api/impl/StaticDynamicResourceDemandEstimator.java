@@ -50,7 +50,6 @@ import org.inria.myriads.snoozenode.groupmanager.estimator.api.VirtualMachineMon
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.sort.SortNorm;
 import org.inria.myriads.snoozenode.util.ThresholdUtils;
 import org.inria.myriads.snoozenode.util.UtilizationUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -318,7 +317,7 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
     {                   
         //Monitoring estimator
         List<Double> virtualMachineCapacity = computeVirtualMachineCapacity(virtualMachine);
-        List<Double> localControllerCapacity = computeLocalControllerCapacity(localController);
+        List<Double> localControllerCapacity = computeLocalControllerUsedCapacity(localController);
         List<Double> newLocalControllerCapacity = MathUtils.addVectors(virtualMachineCapacity, 
                                                                        localControllerCapacity);  
         log_.debug(String.format("Local controller %s capacity: %s, VM capacity: %s, new LC capacity: %s", 
@@ -386,12 +385,28 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
     }
     
     @Override
-    public GroupManagerSummaryInformation computeGroupManagerCapacity(GroupManagerDescription groupManager)
+    public ArrayList<Double> computeGroupManagerCapacity(GroupManagerDescription groupManager)
     {
         ArrayList<LocalControllerDescription> localControllers = 
                 new ArrayList<LocalControllerDescription>(groupManager.getLocalControllers().values());
         
-        return generateGroupManagerSummaryInformation(localControllers);
+        GroupManagerSummaryInformation summary = generateGroupManagerSummaryInformation(localControllers);
+        
+        ArrayList<Double> capacity = summary.getActiveCapacity();
+        capacity = MathUtils.addVectors(capacity, summary.getPassiveCapacity());
+        
+        if (isStatic_)
+        {
+            // active + passive - requested
+            capacity = MathUtils.substractVector(summary.getRequestedCapacity(), capacity);
+        }
+        else
+        {
+            // active + passive - used
+            capacity = MathUtils.substractVector(summary.getUsedCapacity(), capacity);
+            
+        }
+        return capacity;
     }
         
     /**
@@ -400,7 +415,7 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
      * @param localController    The local controller description
      * @return                   The estimated local controller utilization
      */
-    public ArrayList<Double> computeLocalControllerCapacity(LocalControllerDescription localController)
+    public ArrayList<Double> computeLocalControllerUsedCapacity(LocalControllerDescription localController)
     {
        log_.debug(String.format("Computing local controller %s capacity", localController.getId()));
        
@@ -480,7 +495,7 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
         ArrayList<Double> usedCapacity = MathUtils.createEmptyVector();        
         for (LocalControllerDescription localController : localControllers) 
         {  
-            usedCapacity = MathUtils.addVectors(usedCapacity, computeLocalControllerCapacity(localController));
+            usedCapacity = MathUtils.addVectors(usedCapacity, computeLocalControllerUsedCapacity(localController));
         }      
         
         return usedCapacity;
@@ -619,6 +634,15 @@ public class StaticDynamicResourceDemandEstimator extends ResourceDemandEstimato
     public SortNorm getSortNorm() 
     {
         return sortNorm_;
+    }
+
+    @Override
+    public ArrayList<Double> computeLocalControllerCapacity(LocalControllerDescription localController)
+    {
+        ArrayList<Double> used = computeLocalControllerUsedCapacity(localController);
+        ArrayList<Double> total = localController.getTotalCapacity();
+        
+        return MathUtils.substractVector(total, used);
     }
 
 

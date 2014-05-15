@@ -123,7 +123,7 @@ public final class GreedyOverloadRelocation
     {
         log_.debug("Starting to compute the moderate loaded migration plan");
 
-        List<Double> capacity = estimator_.computeLocalControllerCapacity(sourceLocalController);    
+        List<Double> capacity = estimator_.computeLocalControllerUsedCapacity(sourceLocalController);    
         log_.debug(String.format("Local controller capacity: %s", capacity));
         
         List<Double> maxAllowedCapacity = estimator_.computeMaxAllowedCapacity(sourceLocalController);

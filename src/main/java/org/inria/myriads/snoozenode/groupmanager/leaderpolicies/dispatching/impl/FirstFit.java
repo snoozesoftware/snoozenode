@@ -71,7 +71,7 @@ public final class FirstFit
                                     List<GroupManagerDescription> groupManagerDescriptions)
     {
         Guard.check(virtualMachines, groupManagerDescriptions);      
-        log_.debug("Computing dispatching according to the first-fit policy");
+        log_.debug(String.format("Computing dispatching of %d vms of according to the first-fit policy", virtualMachines.size()));
          
         //SortUtils.sortGroupManagerDesceasing(groupManagerDescriptions, estimator_.getSortNorm());
         

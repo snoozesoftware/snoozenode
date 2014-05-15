@@ -19,17 +19,18 @@
  */
 package org.inria.myriads.snoozenode.configurator.scheduler;
 
+import java.util.Map;
+
 
 /**
  * Group manager scheduler settings.
  * 
  * @author Eugen Feller
  */
-public final class GroupManagerSchedulerSettings 
+public class GroupManagerSchedulerSettings 
 {
     /** Placement policy. */
     private String placementPolicy_;
-    
     
     /** Relocation parameters. */
     private RelocationSettings relocation_;
@@ -37,7 +38,10 @@ public final class GroupManagerSchedulerSettings
     /** Reconfiguration settings. */
     private ReconfigurationSettings reconfiguration_;
 
+    /** Options.*/
+    private Map<String, String> options_;
     
+   
     /** Empty constructor. */
     public GroupManagerSchedulerSettings()
     {
@@ -84,4 +88,28 @@ public final class GroupManagerSchedulerSettings
     {
         return placementPolicy_;
     }
+    
+    /**
+     * 
+     * Gets the options.
+     * 
+     * @return
+     */
+    public Map<String, String> getOptions()
+    {
+        return options_;
+    }
+
+    /**
+     * 
+     * Sets the options.
+     * 
+     * @param options
+     */
+    public void setOptions(Map<String, String> options)
+    {
+        options_ = options;
+    }
+
+    
 }

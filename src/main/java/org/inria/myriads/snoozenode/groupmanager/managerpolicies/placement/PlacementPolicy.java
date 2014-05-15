@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozenode.configurator.scheduler.GroupManagerSchedulerSettings;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 
 /**
@@ -35,6 +36,9 @@ public abstract class PlacementPolicy
     
     /** Resource demand estimator.*/
     protected ResourceDemandEstimator estimator_;
+    
+    /** Scheduler settings.*/
+    protected GroupManagerSchedulerSettings schedulerSettings_;
     
     /** Initialize.*/
     public abstract void initialize();
@@ -58,11 +62,25 @@ public abstract class PlacementPolicy
     }
 
     /**
+     * 
+     * Sets the estimator.
+     * 
      * @param estimator the estimator to set
      */
     public void setEstimator(ResourceDemandEstimator estimator)
     {
         estimator_ = estimator;
+    }
+
+    /**
+     * 
+     * Sets the scheduler Settings;
+     * 
+     * @param schedulerSettings     The scheduler settings.
+     */
+    public void setGroupManagerSettings(GroupManagerSchedulerSettings schedulerSettings)
+    {
+        schedulerSettings_ = schedulerSettings;
     }
     
    
