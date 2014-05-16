@@ -747,6 +747,10 @@ public final class JavaPropertyNodeConfigurator
         String placementPolicy = getProperty("groupManagerScheduler.placementPolicy");   
         groupManager.setPlacementPolicy(String.valueOf(placementPolicy));
         
+        String placementOptions = getProperty("groupManagerSchedulr.options", "{}");
+        Map<String, String> placementMap = umarshal(placementOptions);
+        groupManager.setOptions(placementMap);
+        
         String isEnabled = getProperty("groupManagerScheduler.reconfiguration.enabled"); 
         groupManager.getReconfigurationSettings().setEnabled(Boolean.valueOf(isEnabled));
         

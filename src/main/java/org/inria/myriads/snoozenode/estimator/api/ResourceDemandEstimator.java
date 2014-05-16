@@ -63,8 +63,19 @@ public abstract class ResourceDemandEstimator
     public abstract boolean hasEnoughGroupManagerCapacity(VirtualMachineMetaData virtualMachine,
             GroupManagerDescription groupManager);
     
+    
+    
     /**
-     * Estimates the local controller utilization.
+     * Estimates the local controller utilization (used).
+     * 
+     * @param localController    The local controller description
+     * @return                   The estimated local controller utilization
+     */
+    public abstract ArrayList<Double> computeLocalControllerUsedCapacity(LocalControllerDescription localController);
+    
+    
+    /**
+     * Estimates the local controller capacity (total - used).
      * 
      * @param localController    The local controller description
      * @return                   The estimated local controller utilization
@@ -74,12 +85,12 @@ public abstract class ResourceDemandEstimator
     
     /**
      * 
-     * Estimates the group manager utilization.
+     * Estimates the group manager capacity (total - used).
      * 
      * @param groupManager      The Group Manager Description
      * @return                  The estimated group manager utilization (summary).
      */
-    public abstract GroupManagerSummaryInformation computeGroupManagerCapacity(GroupManagerDescription groupManager);
+    public abstract ArrayList<Double> computeGroupManagerCapacity(GroupManagerDescription groupManager);
     
     /**
      * Returns the current group manager summary data.

@@ -104,6 +104,7 @@ public final class GroupManagerPolicyFactory
         }
         
         placement.setEstimator(estimator);
+        placement.setGroupManagerSettings(schedulerSettings);
         placement.initialize();
         return placement;
     }
