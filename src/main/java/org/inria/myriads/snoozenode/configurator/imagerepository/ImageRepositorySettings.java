@@ -20,6 +20,7 @@
 package org.inria.myriads.snoozenode.configurator.imagerepository;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
+import org.inria.myriads.snoozecommon.globals.Globals;
 
 /**
  * Database settings.
@@ -46,7 +47,8 @@ public final class ImageRepositorySettings
      */
     public ImageRepositorySettings()
     {
-     
+        source_ = Globals.DEFAULT_INITIALIZATION;
+        destination_ = Globals.DEFAULT_INITIALIZATION;
     }
 
     /**
