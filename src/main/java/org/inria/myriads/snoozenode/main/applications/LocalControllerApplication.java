@@ -41,7 +41,7 @@ public final class LocalControllerApplication extends Application
      * Constructor.
      * 
      * @param parentContext  The parent context
-     * @throws Exception 
+     * @throws Exception Exception
      */
     public LocalControllerApplication(Context parentContext) 
         throws Exception 

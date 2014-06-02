@@ -87,7 +87,7 @@ public final class ZooKeeperLeaderElection
      * @param zooKeeperParameters        The zookeeper parameters
      * @param groupManagerDescription    The group manager description
      * @param listener                   The leader election listener
-     * @throws Exception 
+     * @throws Exception                 Exception 
      */
     public ZooKeeperLeaderElection(ZooKeeperSettings zooKeeperParameters, 
                                    GroupManagerDescription groupManagerDescription, 

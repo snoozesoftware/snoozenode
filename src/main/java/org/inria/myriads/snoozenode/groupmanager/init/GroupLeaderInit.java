@@ -83,7 +83,7 @@ public final class GroupLeaderInit
      * @param nodeConfiguration         The node configuration
      * @param groupLeaderDescription    The group leader description
      * @param externalNotifier          external notifier.
-     * @throws Exception 
+     * @throws Exception                Exception 
      */
     public GroupLeaderInit(NodeConfiguration nodeConfiguration, 
             GroupManagerDescription groupLeaderDescription,

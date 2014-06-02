@@ -261,7 +261,7 @@ public final class VirtualMachineMonitoringService
     /**
      * Stops the service.
      * 
-     * @throws InterruptedException 
+     * @throws InterruptedException Exception 
      */
     public void stopService() 
         throws InterruptedException

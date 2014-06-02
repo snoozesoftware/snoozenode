@@ -350,7 +350,7 @@ public final class MigrationPlanEnforcer
      * Enforces the migration plan.
      * 
      * @param migrationPlan                         The migration plan
-     * @throws MigrationPlanEnforcerException 
+     * @throws MigrationPlanEnforcerException       Exception 
      */
     public void enforceMigrationPlan(ReconfigurationPlan migrationPlan) 
         throws MigrationPlanEnforcerException 

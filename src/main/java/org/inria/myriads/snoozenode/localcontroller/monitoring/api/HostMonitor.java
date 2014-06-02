@@ -34,7 +34,7 @@ public interface HostMonitor
      * Returns the total capacity.
      * 
      * @return                          The list of double values
-     * @throws HostMonitoringException 
+     * @throws HostMonitoringException  Exception 
      */
     ArrayList<Double> getTotalCapacity() 
         throws HostMonitoringException;

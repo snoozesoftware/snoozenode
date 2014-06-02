@@ -64,7 +64,7 @@ public final class HeartbeatMulticastReceiver
      * @param heartbeatAddress      The heartbeat address
      * @param timeout               The timeout
      * @param heartbeatEvent        The  heartbeat callback
-     * @throws IOException  
+     * @throws IOException          Exception
      */
     public HeartbeatMulticastReceiver(NetworkAddress heartbeatAddress, 
                                       int timeout, 
