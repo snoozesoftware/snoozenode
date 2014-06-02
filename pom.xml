@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.inria.myriads</groupId>
   <artifactId>snoozenode</artifactId>
-  <version>2.1.5-SNAPSHOT</version>
+  <version>2.1.5</version>
   <packaging>jar</packaging>
   <name>snoozenode</name>
   <url>http://snooze.inria.fr</url>
@@ -38,6 +38,7 @@
     <connection>scm:git:http://github.com/snoozesoftware/snoozenode.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/snoozesoftware/snoozenode.git</developerConnection>
     <url>https://github.com/snoozesoftware/snoozenode.git</url>
+    <tag>snoozenode-2.1.5</tag>
   </scm>
 
   <repositories>
@@ -325,7 +326,7 @@
 		<dependency>
 			<groupId>org.inria.myriads</groupId>
 			<artifactId>snoozecommon</artifactId>
-			<version>2.1.5-SNAPSHOT</version>
+			<version>2.1.5</version>
 		</dependency>
 
 	 	<dependency>
@@ -350,7 +351,7 @@
 		<dependency>
 			<groupId>org.inria.myriads</groupId>
 			<artifactId>snoozeimages</artifactId>
-			<version>2.1.5-SNAPSHOT</version>
+			<version>2.1.5</version>
 		</dependency>
 		
     </dependencies>
