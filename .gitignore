@@ -6,3 +6,4 @@ target
 .checkstyle
 .project
 .settings
+.DS_Store
