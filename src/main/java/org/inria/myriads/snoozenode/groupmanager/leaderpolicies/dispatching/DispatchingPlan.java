@@ -59,7 +59,6 @@ public final class DispatchingPlan
      * Merge a dispatching plan. 
      * 
      * @param dispatchPlan      The dispatch plan to merge with.
-     * @return 
      * 
      * */
     public void merge(DispatchingPlan dispatchPlan)

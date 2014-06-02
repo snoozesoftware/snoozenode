@@ -57,7 +57,7 @@ public final class LibVirtVirtualMachineMonitor
      * Constructor.
      * 
      * @param connector                     The hypervisor connector
-     * @throws VirtualMachineMonitoringException 
+     * @throws VirtualMachineMonitoringException Exception 
      */
     public LibVirtVirtualMachineMonitor(Connector connector) 
         throws VirtualMachineMonitoringException
@@ -72,7 +72,7 @@ public final class LibVirtVirtualMachineMonitor
      * 
      * @param virtualMachineId                       The virtual machine identifier
      * @return                                       The virtual machine information
-     * @throws VirtualMachineMonitoringException 
+     * @throws VirtualMachineMonitoringException     Exception 
      */
     @Override
     public VirtualMachineInformation getVirtualMachineInformation(String virtualMachineId) 

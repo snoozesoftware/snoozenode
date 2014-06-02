@@ -70,7 +70,7 @@ public final class WakeupResources
      * 
      * @param localControllers         The local controllers
      * @return                         true if everything ok, false otherwise
-     * @throws InterruptedException 
+     * @throws InterruptedException    Exception 
      */
     public boolean wakeupLocalControllers(List<LocalControllerDescription> localControllers)
         throws InterruptedException 

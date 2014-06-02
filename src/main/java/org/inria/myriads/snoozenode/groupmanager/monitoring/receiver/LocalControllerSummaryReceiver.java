@@ -65,7 +65,7 @@ public final class LocalControllerSummaryReceiver extends TCPDataReceiver
      * @param dataQueue          The data queue
      * @param stateMachine       The state machine
      * @param repository         The group manager repository
-     * @throws Exception 
+     * @throws Exception         Exception 
      */
     public LocalControllerSummaryReceiver(NetworkAddress networkAddress, 
                                           int timeOut,

@@ -41,7 +41,7 @@ public final class BootstrapApplication extends Application
      * Constructor.
      * 
      * @param parentContext     The parent context
-     * @throws Exception 
+     * @throws Exception        Exception 
      */
     public BootstrapApplication(Context parentContext) 
         throws Exception 

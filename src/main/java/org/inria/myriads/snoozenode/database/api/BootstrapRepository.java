@@ -42,7 +42,7 @@ public interface BootstrapRepository
      * 
      * @param virtualMachineId              The virtual machine id.
      * @param numberOfMonitoringEntries     The number of wanted monitoring entries.
-     * @param groupLeaderDescription 
+     * @param groupLeaderDescription        Group leader description. 
      * @return                              The virtualMachine metadata.
      */
     VirtualMachineMetaData getVirtualMachineMetaData(

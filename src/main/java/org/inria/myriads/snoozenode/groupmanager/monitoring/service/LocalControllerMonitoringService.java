@@ -85,7 +85,7 @@ public final class LocalControllerMonitoringService
     /**
      * Starts the monitoring.
      * 
-     * @throws Exception 
+     * @throws Exception        Exception 
      */
     public void startMonitoring() 
         throws Exception

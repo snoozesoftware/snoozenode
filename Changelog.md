@@ -2,6 +2,11 @@
 
 ## Version 2.1.4
 
+  - #95 enable qemu domain type.
+  - fix javadoc errors.
+
+## Version 2.1.4
+
   - implement searchVirtualMachine in GroupManagerCassandraRepository.
   - implement getLocalControllerList in GroupManagerResource.
 

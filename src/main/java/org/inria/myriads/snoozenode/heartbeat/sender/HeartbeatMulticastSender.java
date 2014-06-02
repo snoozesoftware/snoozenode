@@ -67,7 +67,7 @@ public final class HeartbeatMulticastSender
      * @param heartbeatAddress      The heartbeat address
      * @param heartbeatInterval     The heartbeat interval
      * @param hearbeatMessage       The heartbeat message
-     * @throws IOException 
+     * @throws IOException          Exception 
      */
     public HeartbeatMulticastSender(NetworkAddress heartbeatAddress,
                                     int heartbeatInterval,

@@ -57,7 +57,7 @@ public final class MonitoringFactory
      * @param timeOut           The time out
      * @param repository        The repository
      * @return                  The group leader monitoring data receiver
-     * @throws Exception 
+     * @throws Exception        Exception 
      */
     public static GroupManagerSummaryReceiver 
         newGroupManagerSummaryReceiver(NetworkAddress networkAddress, 
@@ -77,7 +77,7 @@ public final class MonitoringFactory
      * @param stateMachine       The state machine
      * @param repository         The group manager repository
      * @return                   The summary data receiver
-     * @throws Exception 
+     * @throws Exception        ExceptionÈ
      */
     public static LocalControllerSummaryReceiver
         newLocalControllerSummaryReceiver(NetworkAddress networkAddress, 
@@ -97,7 +97,7 @@ public final class MonitoringFactory
      * @param stateMachine         The state machine
      * @param repository           The repository
      * @return                     The local controller monitoring data consumer
-     * @throws Exception 
+     * @throws Exception           Exception 
      */
     public static LocalControllerSummaryConsumer 
         newLocalControllerSummaryConsumer(BlockingQueue<LocalControllerDataTransporter> dataQueue,

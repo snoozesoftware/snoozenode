@@ -41,7 +41,7 @@ public final class GroupManagerApplication extends Application
      * Constructor.
      * 
      * @param parentContext     The parent context
-     * @throws Exception 
+     * @throws Exception        Exception 
      */
     public GroupManagerApplication(Context parentContext) 
         throws Exception 

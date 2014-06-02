@@ -45,13 +45,13 @@ public interface ImageManager
     boolean prepareMigration(VirtualMachineImage virtualMachineImage);
 
     
-    
     /**
      * 
-     * Remove the disk.
+     * Removes the disk.
      * 
-     * @param image     the image to remove.
-     * @return  true iff everything is fine.
+     * @param image                     virtual machine image.
+     * @param imageRepositorySettings   image repository settings.
+     * @return  true iff everything is false.
      */
     boolean removeDisk(VirtualMachineImage image, ImageRepositorySettings imageRepositorySettings);
     
