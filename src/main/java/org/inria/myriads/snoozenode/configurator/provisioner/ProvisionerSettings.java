@@ -18,6 +18,14 @@ public class ProvisionerSettings
     /** Image disk settings. */
     private ImageDiskSettings firstCdSettings_;
 
+    
+    public ProvisionerSettings()
+    {
+        firstHdSettings_ = new ImageDiskSettings();
+        firstCdSettings_ = new ImageDiskSettings();
+        vncSettings_ = new VncSettings();
+    }
+    
     /**
      * @return the enableSerial
      */
@@ -57,6 +65,7 @@ public class ProvisionerSettings
     {
         return firstHdSettings_;
     }
+
 
     /**
      * @param firstHdSettings the firstHdSettings to set

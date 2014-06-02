@@ -109,11 +109,17 @@ public final class LibVirtUtil
             hypervisorConnection  = driver + "+" + settings.getTransport() + "://" + 
                     listenAddress + "/";
             break;
-        default:
+        // kvm connection -> qemu+tcp://
+        case kvm:
+            driver = HypervisorDriver.qemu;
+        case qemu:
             connectionAddress = listenAddress + ":" + settings.getPort();
             hypervisorConnection = driver + "+" + settings.getTransport() + "://" + 
                                           connectionAddress + "/system";
             break;
+        default:
+                
+            
         }
         log_.debug(String.format("hypervisorConnection : %s",  hypervisorConnection));
         return hypervisorConnection;
