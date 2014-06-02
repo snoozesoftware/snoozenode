@@ -38,8 +38,12 @@ public class LocalBackingImageManager implements ImageManager
     /** The destination path (where the images will be stored).*/
     private String destination_; 
     
+    
     /**
-     * Constructor. 
+     * 
+     * Constructor.
+     * 
+     * @param settings     Image repository settings.
      */
     public LocalBackingImageManager(ImageRepositorySettings settings)
     {

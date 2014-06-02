@@ -36,7 +36,7 @@ public interface LeaderElectionListener
     /**
      * Initialize group manager.
      * 
-     * @throws Exception 
+     * @throws Exception    Exception 
      */
     void onInitGroupManager() 
         throws Exception;

@@ -130,8 +130,8 @@ public final class GroupManagerInit
     /**
      * Stops the group manager services.
      * 
-     * @throws IOException 
-     * @throws SchedulerException 
+     * @throws IOException          Exception
+     * @throws SchedulerException   Exception
      */
     public void stopServices()  
         throws SchedulerException, IOException

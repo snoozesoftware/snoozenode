@@ -35,9 +35,9 @@ public final class CommunicatorFactory
      * 
      * Build a communicator.
      * 
-     * @param groupLeader   node address
-     * @param databaseSettings 
-     * @return  DataSender
+     * @param groupLeader       node address
+     * @param databaseSettings  data base settings 
+     * @return  DataSender      data sender  
      * @throws IOException  Exception
      */
     public static Communicator newGroupManagerCommunicator(

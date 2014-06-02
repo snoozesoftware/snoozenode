@@ -71,7 +71,7 @@ public final class BootstrapBackend
      * Bootstrap backend constructor.
      * 
      * @param nodeParameters  The node parameters
-     * @throws Exception 
+     * @throws Exception      Exception 
      */
     public BootstrapBackend(NodeConfiguration nodeParameters) 
         throws Exception 

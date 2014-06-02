@@ -50,7 +50,7 @@ public final class SerializationUtils
      *  
      * @param obj                   The object to serialize
      * @return                      The byte array
-     * @throws IOException          
+     * @throws IOException          Exception          
      */
     public static byte[] serializeObject(Object obj) 
         throws IOException 
@@ -70,10 +70,10 @@ public final class SerializationUtils
     /** 
      * Deserialize object.
      *  
-     * @param byteArray               The byte array
-     * @return                        The return object
-     * @throws IOException                 
-     * @throws ClassNotFoundException      
+     * @param byteArray                 The byte array
+     * @return                          The return object
+     * @throws IOException              Exception                 
+     * @throws ClassNotFoundException   Exception   
      */
     public static Object deserializeObject(byte[] byteArray) 
         throws IOException, ClassNotFoundException 

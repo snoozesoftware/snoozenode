@@ -45,7 +45,7 @@ public final class LeaderElectionFactory
      * @param groupManagerDescription      The group manager description
      * @param listener                     The leader election callback
      * @return                             The leader election object
-     * @throws Exception 
+     * @throws Exception                   Exception 
      */
     public static LeaderElection newLeaderElection(ZooKeeperSettings zooKeeperParameters, 
                                                    GroupManagerDescription groupManagerDescription, 

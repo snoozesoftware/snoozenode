@@ -60,7 +60,7 @@ public final class GroupManagerSummaryReceiver extends TCPDataReceiver
      * @param networkAddress   The network address
      * @param timeOut          The timeout
      * @param repository       The group leader repository
-     * @throws Exception 
+     * @throws Exception       Exception 
      */
     public GroupManagerSummaryReceiver(NetworkAddress networkAddress, 
                                        int timeOut,

@@ -72,8 +72,7 @@ public final class GroupLeaderMemoryRepository
 
     /** 
      * Constructor.
-     * @param groupLeaderDescription 
-     * 
+     * @param groupLeaderDescription   The group leader description 
      * @param virtualMachineSubnets    The virtual machine subnet
      * @param maxCapacity              The maximum capacity
      */

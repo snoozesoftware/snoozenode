@@ -48,7 +48,7 @@ public final class MonitoringFactory
      * 
      * @param connector                             The connector object
      * @return                                      The virtual machine monitor
-     * @throws VirtualMachineMonitoringException 
+     * @throws VirtualMachineMonitoringException    Exception 
      */
     public static VirtualMachineMonitor newVirtualMachineMonitor(Connector connector) 
         throws VirtualMachineMonitoringException

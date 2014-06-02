@@ -70,7 +70,7 @@ public final class LibVirtHostMonitor
      * Returns a vector of total host capacity.
      * 
      * @return                          The list of double values
-     * @throws HostMonitoringException 
+     * @throws HostMonitoringException  Exception 
      */
     @Override
     public ArrayList<Double> getTotalCapacity() 

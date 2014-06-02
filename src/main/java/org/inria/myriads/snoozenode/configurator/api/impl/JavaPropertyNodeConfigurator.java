@@ -87,8 +87,8 @@ public final class JavaPropertyNodeConfigurator
      * Initialize parameters.
      *  
      * @param configurationFile             The configuration file
-     * @throws NodeConfiguratorException 
-     * @throws IOException 
+     * @throws NodeConfiguratorException    Exception
+     * @throws IOException                  Exception 
      */
     public JavaPropertyNodeConfigurator(String configurationFile) 
         throws NodeConfiguratorException, IOException

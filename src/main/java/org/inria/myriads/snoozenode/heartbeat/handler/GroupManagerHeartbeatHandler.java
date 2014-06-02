@@ -57,7 +57,7 @@ public final class GroupManagerHeartbeatHandler
      * @param groupManagerId        The group manager id
      * @param timeout               The timeout
      * @param heartbeatFailure      The heartbeat failure callback
-     * @throws Exception        
+     * @throws Exception            Exception        
      */
     public GroupManagerHeartbeatHandler(NetworkAddress heartbeatAddress,
                                         String groupManagerId,

@@ -120,7 +120,7 @@ public final class GroupManagerBackend
     /**
      * Starts the heartbeat multicast listener.
      * 
-     * @throws Exception 
+     * @throws Exception    Exception 
      */
     public void onInitGroupManager() 
         throws Exception
