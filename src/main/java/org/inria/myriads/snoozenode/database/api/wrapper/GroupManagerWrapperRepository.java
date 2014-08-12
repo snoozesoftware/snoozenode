@@ -117,13 +117,17 @@ public class GroupManagerWrapperRepository implements GroupManagerRepository
     @Override
     public boolean dropLocalController(String localControllerId, boolean forceDelete)
     {
+        
+        LocalControllerDescription localController = repository_.getLocalControllerDescription(localControllerId, 0, true);
+        LocalControllerDescription localControllerCopy = new LocalControllerDescription(localController, 0 , true);
+        
         boolean isDropped = repository_.dropLocalController(localControllerId, forceDelete);
         if (isDropped)
         {
             ExternalNotifierUtils.send(
                     externalNotifier_,
                     ExternalNotificationType.SYSTEM,
-                    new SystemMessage(SystemMessageType.LC_FAILED, localControllerId),
+                    new SystemMessage(SystemMessageType.LC_FAILED, localControllerCopy),
                     "groupmanager." + getGroupManagerId());
         }
         
